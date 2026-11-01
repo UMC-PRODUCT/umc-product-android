@@ -127,7 +127,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
             route?.eventId?.let { putExtra("notificationEventId", it) }
             // Intent identity excludes extras. Each displayed notification needs its own identity.
             addCategory("$packageName.notification.$notificationId")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val contentIntent = launchIntent?.let {
             PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

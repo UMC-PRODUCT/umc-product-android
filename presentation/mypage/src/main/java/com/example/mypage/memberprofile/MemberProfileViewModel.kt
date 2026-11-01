@@ -1,5 +1,8 @@
 package com.example.mypage.memberprofile
 
+import com.umc.domain.model.mypage.UserReportReason
+import com.umc.domain.usecase.member.ReportMemberUseCase
+
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.mypage.activityhistory.ActivityHistoryBuilder
@@ -48,6 +51,7 @@ enum class MemberReportReason(val label: String) {
 @HiltViewModel
 class MemberProfileViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val reportMemberUseCase: ReportMemberUseCase,
     private val getMemberProfileUseCase: GetMemberProfileUseCase, //회원 정보 조회
     private val getBlockedMemberIdsUseCase: GetBlockedMemberIdsUseCase, //내가 차단한 회원 목록
     private val blockMemberUseCase: BlockMemberUseCase, //회원 차단
@@ -149,6 +153,7 @@ class MemberProfileViewModel @Inject constructor(
 
     /** 메뉴의 사용자 신고 → 신고 사유 시트 */
     fun onClickReportMenu() = updateState {
+        if (isProcessing || isMine) return@updateState this
         copy(isMenuOpen = false, isReportSheetOpen = true, reportReasons = persistentSetOf(), reportDetail = "")
     }
 
@@ -186,13 +191,16 @@ class MemberProfileViewModel @Inject constructor(
     // ---------------- 신고 ----------------
 
     fun onToggleReportReason(reason: MemberReportReason) = updateState {
+        if (isProcessing) return@updateState this
         val updated = if (reason in reportReasons) reportReasons - reason else reportReasons + reason
         copy(reportReasons = updated.toImmutableSet())
     }
 
-    fun onReportDetailChange(text: String) = updateState { copy(reportDetail = text) }
+    fun onReportDetailChange(text: String) = updateState {
+        if (isProcessing || text.length > MEMBER_REPORT_DETAIL_MAX_LENGTH) this else copy(reportDetail = text)
+    }
 
-    fun onDismissReportSheet() = updateState { copy(isReportSheetOpen = false) }
+    fun onDismissReportSheet() = updateState { dismissReportSheet() }
 
     /** 시트의 신고하기 → 신고 확인 창 */
     fun onClickReportSubmit() {
@@ -202,10 +210,28 @@ class MemberProfileViewModel @Inject constructor(
 
     /** 신고 확인 창에서 신고하기를 눌렀을 때 */
     fun onConfirmReport() {
-        updateState { copy(dialog = null, isReportSheetOpen = false) }
-        // TODO 서버에 회원 신고 API 가 아직 없다 (메시지·게시글·댓글 신고만 있음).
-        //  API 가 생기면 memberId, reportReasons, reportDetail 을 보내고 성공 시 MEMBER_REPORT_DONE 을 띄운다.
-        emitEvent(MemberProfileEvent.ShowToast(AppStrings.MEMBER_REPORT_FAIL, isSuccess = false))
+        val snapshot = uiState.value
+        val id = memberId?.takeIf { it > 0 } ?: return
+        if (snapshot.dialog != MemberProfileDialog.REPORT || !snapshot.canSubmitReport || snapshot.isMine) return
+        val reasons = snapshot.reportReasons.map { UserReportReason.valueOf(it.name) }.toSet()
+        updateState { copy(dialog = null, isProcessing = true) }
+        viewModelScope.launch {
+            try {
+                when (val result = reportMemberUseCase(id, reasons, snapshot.reportDetail)) {
+                    is ApiState.Success -> {
+                        updateState { copy(isReportSheetOpen = false, reportReasons = persistentSetOf(), reportDetail = "") }
+                        emitEvent(MemberProfileEvent.ShowToast(AppStrings.MEMBER_REPORT_DONE, isSuccess = true))
+                    }
+                    is ApiState.Fail -> {
+                        val message = if (result.failState.code == "COMMUNITY-0016") AppStrings.CHAT_REPORT_ALREADY_EXISTS
+                            else result.failState.message.ifBlank { AppStrings.MEMBER_REPORT_FAIL }
+                        emitEvent(MemberProfileEvent.ShowToast(message, isSuccess = false))
+                    }
+                }
+            } finally {
+                updateState { copy(isProcessing = false) }
+            }
+        }
     }
 }
 
@@ -225,15 +251,18 @@ data class MemberProfileUiState(
     val isBlockStateKnown: Boolean = false, //차단 여부를 서버에서 확인했는지 (확인 전에는 차단 메뉴를 막는다)
     val isMenuOpen: Boolean = false,
     val dialog: MemberProfileDialog? = null,
-    val isProcessing: Boolean = false, //차단·해제 요청 진행 중
+    val isProcessing: Boolean = false, //차단·해제·신고 요청 진행 중
 
     val isReportSheetOpen: Boolean = false,
     val reportReasons: ImmutableSet<MemberReportReason> = persistentSetOf(),
     val reportDetail: String = "",
 ) : UiState {
+    internal fun dismissReportSheet(): MemberProfileUiState =
+        if (isProcessing) this else copy(isReportSheetOpen = false)
+
     /** 사유를 하나 이상 고르고 상세 내용을 입력해야 신고할 수 있다 */
     val canSubmitReport: Boolean
-        get() = reportReasons.isNotEmpty() && reportDetail.isNotBlank()
+        get() = !isProcessing && !isMine && reportReasons.isNotEmpty() && reportDetail.isNotBlank() && reportDetail.length <= MEMBER_REPORT_DETAIL_MAX_LENGTH
 }
 
 sealed interface MemberProfileEvent : UiEvent {

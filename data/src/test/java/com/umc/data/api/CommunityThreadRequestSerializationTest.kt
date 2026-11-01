@@ -21,11 +21,24 @@ class CommunityThreadRequestSerializationTest {
     }
 
     @Test
-    fun reportRequestsUseTheServerReasonKey() {
+    fun messageReportsSendReasonsArrayEvenForOneSelection() {
         CommunityMessageReportReason.entries.forEach { reason ->
-            assertEquals("{\"reason\":\"${reason.name}\"}", gson.toJson(ReportMessageRequest(reason)))
+            assertEquals("{\"reasons\":[\"${reason.name}\"]}", gson.toJson(ReportMessageRequest(listOf(reason))))
         }
-        assertEquals("reason", ReportMessageRequest::class.java.getDeclaredField("reason")
+        assertEquals("reasons", ReportMessageRequest::class.java.getDeclaredField("reasons")
             .getAnnotation(SerializedName::class.java)?.value)
+    }
+
+    @Test
+    fun messageReportContainsAllSelectedReasonsInOnePayload() {
+        val reasons = listOf(CommunityMessageReportReason.SPAM, CommunityMessageReportReason.ABUSE, CommunityMessageReportReason.ETC)
+        assertEquals("{\"reasons\":[\"SPAM\",\"ABUSE\",\"ETC\"]}", gson.toJson(ReportMessageRequest(reasons)))
+    }
+
+    @Test
+    fun messageReportReceiptReadsAllAcceptedReasons() {
+        val json = """{"reportId":"1","messageId":"2","reason":"SPAM","reasons":["SPAM","ABUSE"],"createdAt":"2026-11-02T00:00:00Z"}"""
+        val receipt = gson.fromJson(json, com.umc.domain.model.community.thread.CommunityMessageReportReceipt::class.java)
+        assertEquals(listOf(CommunityMessageReportReason.SPAM, CommunityMessageReportReason.ABUSE), receipt.reasons)
     }
 }

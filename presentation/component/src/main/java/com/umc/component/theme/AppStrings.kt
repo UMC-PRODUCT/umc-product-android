@@ -652,6 +652,13 @@ object AppStrings {
 
     // Community Chatting
     const val CHAT_ROOM_DEFAULT = "채팅방"
+    const val CHAT_BLOCK_STATUS_LOADING = "차단 정보를 확인하고 있어요."
+    const val CHAT_BLOCK_STATUS_FAILED = "차단 정보를 불러오지 못했어요."
+    const val CHAT_BLOCK_STATUS_REQUIRED = "차단 정보를 확인한 후 다시 시도해주세요."
+    const val CHAT_REPLY_PREVIEW_HIDDEN = "원문 미리보기를 표시할 수 없어요."
+    const val CHAT_BLOCKED_MESSAGE = "차단한 사용자의 메시지입니다."
+    const val CHAT_SHOW_BLOCKED_MESSAGE = "메시지 보기"
+    const val CHAT_HIDE_BLOCKED_MESSAGE = "메시지 숨기기"
     const val CHAT_UNKNOWN_USER = "알 수 없음"
     const val CHAT_ME = "나"
     const val CHAT_CONFIRM = "확인"

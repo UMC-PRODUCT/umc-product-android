@@ -1,5 +1,8 @@
 package com.umc.data.dataSource.remote.member
 
+import com.umc.data.request.member.ReportMemberRequest
+import com.umc.data.response.member.ReportMemberResponse
+
 import com.umc.data.api.MemberApi
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.request.member.DeleteUserRequest
@@ -46,6 +49,9 @@ class MemberRemoteDataSourceImpl @Inject constructor(
     override suspend fun deleteUser(request: DeleteUserRequest): ApiState<Unit> {
         return apiCall { memberApi.deleteUser() }
     }
+
+    override suspend fun reportMember(memberId: Long, request: ReportMemberRequest): ApiState<ReportMemberResponse> =
+        apiCall { memberApi.reportMember(memberId, request) }
 
     override suspend fun blockMember(memberId: Long): ApiState<MemberBlockResponse> {
         return apiCall { memberApi.blockMember(memberId) }

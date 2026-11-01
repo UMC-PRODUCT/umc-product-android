@@ -1,5 +1,7 @@
 package com.umc.domain.repository.member
 
+import com.umc.domain.model.mypage.UserReportReason
+
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
@@ -18,6 +20,8 @@ interface MemberRepository {
     suspend fun updateMyProfile(profileImageId : String): ApiState<UserInfo>
     suspend fun updateMyLink(request: UpdateLinkRequest): ApiState<UserInfo>
     suspend fun deleteUser(kakaoAccessToken : String, googleAccessToken : String): ApiState<Unit>
+
+    suspend fun reportMember(memberId: Long, reasons: Set<UserReportReason>, detail: String): ApiState<Unit>
 
     /** 회원 차단. 성공하면 차단 여부(true)를 돌려준다 */
     suspend fun blockMember(memberId: Long): ApiState<Boolean>

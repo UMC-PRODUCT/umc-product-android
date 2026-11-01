@@ -64,32 +64,9 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState != null) {
             PendingDeepLink.uri = savedInstanceState.getString("pendingDeepLink")?.let(android.net.Uri::parse)
         }
-        if (savedInstanceState == null) {
-            val payload = listOf("schemaVersion", "type", "threadId", "notificationEventId", "deepLink", "deeplink").associateWith { intent?.getStringExtra(it).orEmpty() }.filterValues { it.isNotEmpty() }.orEmpty()
-            val route = CommunityNotification.parse(payload)
-            val eventId = intent?.getStringExtra("notificationEventId") ?: route?.eventId
-            val preferences = getSharedPreferences("fcm_routes", MODE_PRIVATE)
-            val seen = preferences.getStringSet("consumed", emptySet()).orEmpty()
-            val duplicate = eventId != null && eventId in seen
-            val link = if (duplicate) null else route?.uri() ?: intent?.data
-            if (!duplicate && eventId != null) {
-                preferences.edit().putStringSet("consumed", (seen.toList().takeLast(199) + eventId).toSet()).apply()
-            }
-            if (link != null && shouldRestartTask()) {
-                // 이미 떠 있는 앱 위로 링크가 새 인스턴스로 열린 경우. 링크를 비우면 NavController 가 하던
-                // 태스크 초기화가 사라져 인스턴스가 쌓이므로, 같은 방식으로 태스크를 비우고 다시 시작한다.
-                startActivity(
-                    Intent(this, MainActivity::class.java)
-                        .setData(link)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                )
-                finish()
-                return
-            }
-            // 인증 중 프로세스가 종료되어도 보류 링크를 유지한다
-            if (link != null) PendingDeepLink.uri = link
-            intent?.data = null
-        }
+        acceptDeepLink(intent)
+        // 자동 딥링크 처리는 막고 인증 상태에 맞춰 MainNavHost에서 소비한다.
+        intent?.data = null
         // 상태바는 투명으로 두고 뒤에 비치는 Scaffold 배경색(UmcApp)이 화면별로 칠한다.
         // 아이콘 명암은 시스템 다크모드를 따라 자동으로 바뀐다
         enableEdgeToEdge()
@@ -110,18 +87,30 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        startActivity(Intent(intent).setClass(this, MainActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
-        finish()
+        setIntent(intent)
+        acceptDeepLink(intent)
+        intent.data = null
     }
 
-    /** NEW_TASK 로 열렸지만 태스크 루트가 아니고 CLEAR_TASK 도 없다면, 기존 스택 위에 중복 생성된 것이다. */
-    private fun shouldRestartTask(): Boolean {
-        val flags = intent?.flags ?: return false
-        return !isTaskRoot &&
-            (flags and Intent.FLAG_ACTIVITY_NEW_TASK) != 0 &&
-            (flags and Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0
+    private fun acceptDeepLink(incoming: Intent?) {
+        val payload = listOf("schemaVersion", "type", "threadId", "notificationEventId", "deepLink", "deeplink")
+            .associateWith { incoming?.getStringExtra(it).orEmpty() }
+            .filterValues { it.isNotEmpty() }
+        val route = CommunityNotification.parse(payload)
+        val eventId = incoming?.getStringExtra("notificationEventId") ?: route?.eventId
+        val preferences = getSharedPreferences("fcm_routes", MODE_PRIVATE)
+        val seen = preferences.getStringSet("consumed", emptySet()).orEmpty()
+        if (eventId != null && eventId in seen) return
+        val link = route?.uri() ?: incoming?.data ?: return
+        if (eventId != null) {
+            preferences.edit().putStringSet("consumed", (seen.toList().takeLast(199) + eventId).toSet()).apply()
+        }
+        PendingDeepLink.uri = link
+        // 같은 Activity의 회전/복원에서 처리한 알림 payload를 다시 소비하지 않는다.
+        listOf("schemaVersion", "type", "threadId", "notificationEventId", "deepLink", "deeplink")
+            .forEach { incoming?.removeExtra(it) }
     }
+
 }
 
 @Composable

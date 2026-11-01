@@ -96,6 +96,8 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun onAction(action: CommunityChattingAction) {
         when (action) {
+            CommunityChattingAction.OnRetryBlockedMembers -> refreshBlockedMembers()
+            is CommunityChattingAction.OnToggleBlockedMessage -> updateState { toggleBlockedMessage(action.messageId) }
             is CommunityChattingAction.OnStartEdit -> {
                 val message = state.value.messages.find { it.messageId == action.messageId }
                 if (message != null && state.value.editCommandId == null) updateState {
@@ -137,7 +139,7 @@ class CommunityChattingViewModel @Inject constructor(
                 summarizeUnreadMessages()
             CommunityChattingAction.OnRetryUnreadSummary -> {
                 updateState { copy(aiFeatureStatus = null) }
-                summarizeUnreadMessages(requestedMessages = lastSummaryMessages)
+                summarizeUnreadMessages(requestedMessages = lastSummaryMessages.takeIf { it.isNotEmpty() })
             }
             CommunityChattingAction.OnDismissUnreadSummary -> {
                 summaryGeneration++
@@ -172,7 +174,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnReact -> toggleReaction(action.message, action.emoji)
             is CommunityChattingAction.OnReportMessage -> reportMessage(
                 messageId = action.messageId,
-                reason = action.reason,
+                reasons = action.reasons,
             )
             CommunityChattingAction.OnToggleMuted -> toggleMuted()
             CommunityChattingAction.OnTogglePinned -> togglePinned()
@@ -319,7 +321,11 @@ class CommunityChattingViewModel @Inject constructor(
                 requestedMessages != null -> requestedMessages
                 else -> current.summaryCandidateMessages
             }
-            val input = SummarizeUnreadChatUseCase.prepareInput(boundedMessages.asReversed())
+            if (current.blockedMembersStatus != BlockedMembersStatus.LOADED) {
+                updateState { copy(unreadSummaryError = AppStrings.CHAT_BLOCK_STATUS_REQUIRED) }
+                return@launch
+            }
+            val input = SummarizeUnreadChatUseCase.prepareInput(current.summaryInputMessages(boundedMessages).asReversed())
             val targetMessages = input.messages
 
             if (targetMessages.isEmpty()) {
@@ -691,13 +697,14 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    fun reportMessage(messageId: String, reason: CommunityMessageReportReason) = viewModelScope.launch {
+    fun reportMessage(messageId: String, reasons: Set<CommunityMessageReportReason>) = viewModelScope.launch {
+        if (reasons.isEmpty()) return@launch
         val current = uiState.value
         val message = current.messages.find { it.messageId == messageId } ?: return@launch
         if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
         if (!reportingMessageIds.add(messageId)) return@launch
         try {
-            when (val result = threadRepository.reportMessage(messageId, reason)) {
+            when (val result = threadRepository.reportMessage(messageId, reasons)) {
                 is ApiState.Success -> emitEvent(CommunityChattingEvent.MessageReported)
                 is ApiState.Fail -> {
                     val failure = result.failState
@@ -1535,10 +1542,37 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
+    private var blockedMembersJob: Job? = null
+
+    private fun refreshBlockedMembers() {
+        blockedMembersJob?.cancel()
+        // 조회 중에도 프로필에서 새로 차단한 메시지가 이전 요약에 노출되지 않게 한다.
+        summaryGeneration++
+        updateState { withoutUnreadSummary().copy(blockedMembersStatus = BlockedMembersStatus.LOADING) }
+        blockedMembersJob = viewModelScope.launch {
+            when (val result = memberRepository.getBlockedMemberIds()) {
+                is ApiState.Success -> {
+                    val ids = result.data.map { it.toString() }.toSet()
+                    if (ids != state.value.blockedMemberIds) summaryGeneration++
+                    updateState {
+                        withoutUnreadSummary().copy(
+                            blockedMembersStatus = BlockedMembersStatus.LOADED,
+                            blockedMemberIds = ids, revealedBlockedMessageIds = emptySet(),
+                        )
+                    }
+                }
+                is ApiState.Fail -> updateState { copy(blockedMembersStatus = BlockedMembersStatus.FAILED) }
+            }
+        }
+    }
+
     fun onForegroundChanged(active: Boolean) {
         if (foreground == active) return
         foreground = active
-        if (active) onNetworkAvailable()
+        if (active) {
+            refreshBlockedMembers()
+            onNetworkAvailable()
+        }
     }
 
     fun onNetworkAvailable() {
