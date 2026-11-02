@@ -4,18 +4,24 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.act.challenger.AdminChallenger
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
+import com.umc.domain.model.act.challenger.ChallengerPointPermission
+import com.umc.domain.model.act.challenger.canManageChallengerPoints
+import com.umc.domain.model.act.challenger.challengerPointPermission
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.PunishCategory
 import com.umc.domain.model.enums.RewardType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
+import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.challenger.DeleteChallengerPointUseCase
 import com.umc.domain.usecase.challenger.GetAdminChallengerDetailUseCase
 import com.umc.domain.usecase.challenger.GetAdminChallengerListUseCase
 import com.umc.domain.usecase.challenger.GrantChallengerPointUseCase
+import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -24,11 +30,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val PAGE_SIZE = 100
 private const val MAX_PAGES = 20
+
+// 서버 Grant/EditChallengerPointRequest 의 @Size(max = 200). Java String 길이(UTF-16)와 Kotlin length 가 같다
+internal const val POINT_DESCRIPTION_MAX_LENGTH = 200
 
 @HiltViewModel
 class AdminChallengerViewModel @Inject constructor(
@@ -36,6 +46,8 @@ class AdminChallengerViewModel @Inject constructor(
     private val getAdminChallengerDetailUseCase: GetAdminChallengerDetailUseCase, //관리자 챌린저 상세 조회
     private val grantChallengerPointUseCase: GrantChallengerPointUseCase, //챌린저 상벌점 부여
     private val deleteChallengerPointUseCase: DeleteChallengerPointUseCase, //챌린저 상벌점 기록 삭제
+    private val getUserInfoUseCase: GetUserInfoUseCase, //저장된 내 정보(역할) 조회
+    private val getMyProfileUseCase: GetMyProfileUseCase, //저장된 내 정보가 없을 때 서버에서 조회
 ) : BaseViewModel<AdminChallengerUiState, AdminChallengerEvent>(
     AdminChallengerUiState()
 ) {
@@ -52,8 +64,26 @@ class AdminChallengerViewModel @Inject constructor(
     }
 
     fun refresh() {
-        // 이미 목록이 있으면 탭 재진입 때 깜빡임 없이 조용히 갱신하고, 비었거나 오류였으면 로딩을 보인다.
-        getChallengers(showLoading = uiState.value.sections.isEmpty())
+        viewModelScope.launch {
+            // 상세 조회 권한이 생길 수 없는 역할(파트장·기타 운영진·지부장)은 목록 대신 권한 안내를 보인다.
+            // 내 정보를 끝내 못 얻으면 지금처럼 목록을 조회하고 판단은 서버에 맡긴다.
+            val canManage = loadMyInfo()?.canManageChallengerPoints() ?: true
+            if (!canManage) {
+                challengerListJob?.cancel()
+                updateState { copy(manageAccess = AdminChallengerAccess.DENIED, sections = persistentListOf()) }
+                return@launch
+            }
+            updateState { copy(manageAccess = AdminChallengerAccess.ALLOWED) }
+            // 이미 목록이 있으면 탭 재진입 때 깜빡임 없이 조용히 갱신하고, 비었거나 오류였으면 로딩을 보인다.
+            getChallengers(showLoading = uiState.value.sections.isEmpty())
+        }
+    }
+
+    //저장된 내 정보. 로그아웃하면 id 만 지워지고 역할은 남으므로 id 로 유효한지 본다.
+    private suspend fun loadMyInfo(): UserInfo? {
+        val cached = getUserInfoUseCase().first()
+        if (cached.id > 0L) return cached
+        return (getMyProfileUseCase() as? ApiState.Success)?.data
     }
 
     fun openPartFilter() {
@@ -82,6 +112,7 @@ class AdminChallengerViewModel @Inject constructor(
         selectedPart: UserPart? = uiState.value.selectedPart,
         showLoading: Boolean = true,
     ) {
+        if (uiState.value.manageAccess == AdminChallengerAccess.DENIED) return
         challengerListJob?.cancel()
         challengerListJob = viewModelScope.launch {
             if (debounce) delay(300)
@@ -163,10 +194,17 @@ class AdminChallengerViewModel @Inject constructor(
         viewModelScope.launch {
             updateState { copy(detailLoadState = AdminChallengerLoadState.LOADING) }
             startLoading()
+            val myInfo = loadMyInfo()
             resultResponse(
                 response = getAdminChallengerDetailUseCase(challengerId),
                 successCallback = { detail ->
-                    updateState { copy(detail = detail, detailLoadState = AdminChallengerLoadState.SUCCESS) }
+                    updateState {
+                        copy(
+                            detail = detail,
+                            detailLoadState = AdminChallengerLoadState.SUCCESS,
+                            pointPermission = myInfo.pointPermissionFor(detail),
+                        )
+                    }
                 },
                 errorCallback = {
                     updateState { copy(detailLoadState = AdminChallengerLoadState.ERROR) }
@@ -177,12 +215,15 @@ class AdminChallengerViewModel @Inject constructor(
     }
 
     //상벌점 기록 수정 모드 전환
+    //지금은 수정 모드에서 삭제만 할 수 있어 삭제 권한이 있을 때만 켠다.
     fun toggleDetailEditMode() {
+        if (!uiState.value.pointPermission.canDelete) return
         updateState { copy(isDetailEditMode = !isDetailEditMode) }
     }
 
     //삭제할 상벌점 기록 선택
     fun selectDeleteTarget(pointId: Long?) {
+        if (pointId != null && !uiState.value.pointPermission.canDelete) return
         updateState { copy(deleteTarget = pointId) }
     }
 
@@ -190,7 +231,7 @@ class AdminChallengerViewModel @Inject constructor(
     fun deleteSelectedPoint() {
         val targetId = uiState.value.deleteTarget ?: return
         // 응답 전에 '삭제하기'를 다시 눌러도 같은 DELETE 가 중복으로 나가지 않게 한다.
-        if (uiState.value.isPointSubmitting) return
+        if (uiState.value.isPointSubmitting || !uiState.value.pointPermission.canDelete) return
         val challengerId = uiState.value.detail?.challengerId
         updateState { copy(isPointSubmitting = true) }
         viewModelScope.launch {
@@ -312,7 +353,10 @@ class AdminChallengerViewModel @Inject constructor(
         pointValue: Int? = null,
     ) {
         // 응답 전에 '등록하기'를 다시 눌러도 같은 POST 가 중복으로 나가지 않게 한다.
-        if (challengerId <= 0L || uiState.value.isPointSubmitting) return
+        if (challengerId <= 0L || uiState.value.isPointSubmitting || !uiState.value.pointPermission.canGrant) return
+        // 서버는 사유가 비었거나 200자를 넘으면 400 을 준다. 앞뒤 공백은 잘라 보낸다.
+        val reason = description.trim()
+        if (reason.isEmpty() || reason.length > POINT_DESCRIPTION_MAX_LENGTH) return
         updateState { copy(isPointSubmitting = true) }
         viewModelScope.launch {
             startLoading()
@@ -321,7 +365,7 @@ class AdminChallengerViewModel @Inject constructor(
                     id = challengerId,
                     request = ChallengerPointRequest(
                         pointType = pointType,
-                        description = description,
+                        description = reason,
                         pointValue = pointValue,
                     )
                 ),
@@ -384,9 +428,20 @@ data class AdminChallengerUiState(
     val customReason: String = "",
     //상벌점 등록/삭제 요청 진행 중 여부
     val isPointSubmitting: Boolean = false,
+    //상세 화면 대상 챌린저에 대한 내 상벌점 권한
+    val pointPermission: ChallengerPointPermission = ChallengerPointPermission.NONE,
+    //챌린저 관리 탭 사용 가능 여부
+    val manageAccess: AdminChallengerAccess = AdminChallengerAccess.CHECKING,
 ) : UiState
 
 enum class AdminChallengerLoadState { LOADING, SUCCESS, ERROR }
+
+enum class AdminChallengerAccess { CHECKING, ALLOWED, DENIED }
+
+//상세 조회가 성공했다면 서버가 조회를 허용한 것이므로 부여·사유 수정도 허용된다. 삭제만 역할로 판정한다.
+private fun UserInfo?.pointPermissionFor(detail: ChallengerManageDialogModel): ChallengerPointPermission =
+    (this?.challengerPointPermission(detail.gisuId, detail.schoolId) ?: ChallengerPointPermission.NONE)
+        .withServerReadAllowed()
 
 data class AdminChallengerSectionUi(
     val partName: String,

@@ -141,6 +141,37 @@ private fun EmptyScreen() {
 }
 
 @Composable
+private fun ChallengerNoAccess(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_locked_filled),
+            contentDescription = null,
+            tint = grey400(),
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        UText(
+            text = AppStrings.CHALLENGER_MANAGE_NO_ACCESS_TITLE,
+            style = HeadlineBold,
+            color = grey800(),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        UText(
+            text = AppStrings.CHALLENGER_MANAGE_NO_ACCESS_CONTENT,
+            style = Subheadline,
+            color = grey600(),
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
 internal fun ChallengerLoading(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxWidth(),
@@ -212,6 +243,11 @@ fun AdminChallengerScreen(
         contentPadding = PaddingValues(bottom = 30.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
+        // 상벌점을 관리할 수 없는 역할이면 검색·목록 대신 권한 안내만 보인다.
+        if (uiState.manageAccess == AdminChallengerAccess.DENIED) {
+            item { ChallengerNoAccess(modifier = Modifier.padding(top = 120.dp)) }
+            return@LazyColumn
+        }
         item {
             SearchBar(
                 searchKeyword = uiState.searchKeyword,
@@ -541,6 +577,16 @@ private fun PreviewMainError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(loadState = AdminChallengerLoadState.ERROR)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "권한 없음 (파트장·기타 운영진·지부장)")
+@Composable
+private fun PreviewMainNoAccess() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(manageAccess = AdminChallengerAccess.DENIED)
         )
     }
 }
