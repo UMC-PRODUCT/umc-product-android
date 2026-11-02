@@ -1596,7 +1596,7 @@ private fun UnreadSummaryCard(
     }
 }
 
-private const val COMMUNITY_THREAD_SHARE_LINK_BASE = "umc://thread"
+private const val COMMUNITY_THREAD_SHARE_LINK_BASE = "https://api.university.neordinary.com/community/threads"
 private val INITIAL_UNREAD_SCROLL_OFFSET = 96.dp
 private val MESSAGE_TIME_MIN_WIDTH = 32.dp
 
