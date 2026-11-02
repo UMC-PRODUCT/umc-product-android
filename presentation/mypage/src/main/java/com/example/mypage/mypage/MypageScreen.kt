@@ -60,9 +60,11 @@ import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.black
+import com.umc.component.theme.kakaoColor
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.base.CollectUiEvents
@@ -150,6 +152,24 @@ fun MypageRoute(
                     openWebpage(context, uiState.linkedinUrl)
                 }
             }
+            //인스타그램 누를 때
+            is MypageEvent.NavigateToInstagramLink -> {
+                if (uiState.instagramUrl.isBlank()) {
+                    selectedOutLinkType = OutLinkType.INSTAGRAM
+                    showOutLinkDialog = true
+                } else {
+                    openWebpage(context, uiState.instagramUrl)
+                }
+            }
+            //개인 사이트 누를 때
+            is MypageEvent.NavigateToPersonalSite -> {
+                if (uiState.personalUrl.isBlank()) {
+                    selectedOutLinkType = OutLinkType.PERSONAL
+                    showOutLinkDialog = true
+                } else {
+                    openWebpage(context, uiState.personalUrl)
+                }
+            }
             //프로필 누를 때 (이동)
             is MypageEvent.NavigateToEditProfile -> onNavigateToEditProfile()
             //챌린저 기록 추가 누를 때 (이동)
@@ -225,6 +245,8 @@ fun MypageRoute(
         onGithubClick = viewModel::navigateToGithub, //깃허브 이동
         onLinkedinClick = viewModel::navigateToLinkedin, //링크드인 이동
         onBlogClick = viewModel::navigateToBlog, //블로그 이동
+        onInstagramLinkClick = viewModel::navigateToInstagramLink, //내 인스타그램 이동
+        onPersonalSiteClick = viewModel::navigateToPersonalSite, //개인 사이트 이동
         onAddActivityClick = viewModel::navigateToAddActivity, //챌린저 기록 추가(코드 입력)
         onAssistClick = viewModel::navigateToAssistUmc, //UMC 어시스트(카톡) 이동
         onNoticeSettingClick = viewModel::navigateToSettingNotice, //알림 설정 이동
@@ -258,6 +280,8 @@ fun MypageRoute(
             OutLinkType.GITHUB -> "Github를"
             OutLinkType.LINKEDIN -> "LinkedIn을"
             OutLinkType.BLOG -> "Blog를"
+            OutLinkType.INSTAGRAM -> "Instagram을"
+            OutLinkType.PERSONAL -> "개인 사이트를"
             else -> ""
         }
 
@@ -436,7 +460,7 @@ private fun openPermissionPage(context: Context) {
 /**
  * 카카오톡 앱 채널 채팅창을 호출하거나 웹 링크로 라우팅하는 메서드
  */
-private fun openKakaoChannel(context: Context, channelId: String){
+internal fun openKakaoChannel(context: Context, channelId: String){
 
     if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
         // 카카오톡이 설치되어 있다면 앱 내 채널 채팅창으로 이동
@@ -468,6 +492,8 @@ fun MypageScreen(
     onGithubClick: () -> Unit,
     onLinkedinClick: () -> Unit,
     onBlogClick: () -> Unit,
+    onInstagramLinkClick: () -> Unit,
+    onPersonalSiteClick: () -> Unit,
     onAddActivityClick: () -> Unit,
     onAssistClick: () -> Unit,
     onNoticeSettingClick: () -> Unit,
@@ -503,22 +529,23 @@ fun MypageScreen(
         ) {
 
 
-            item {
-                //내 활동 섹션 - 운영진에게 받은 6자리 코드로 기수 활동 기록을 계정에 붙인다
-                MypageSectionTitle(
-                    text = AppStrings.MYPAGE_MYACTIVITY
-                )
-                MypageListCard {
-                    MypageListItem(
-                        R.drawable.ic_plus_circle,
-                        AppStrings.MYPAGE_ADDACTIVITY,
-                        onClick = onAddActivityClick
-                    )
-                }
-            }
+            // 챌린저 기록 추가는 마이페이지 > 활동 이력 화면으로 옮겼다 (설정 시안에는 내 활동 섹션이 없다)
+            // item {
+            //     //내 활동 섹션 - 운영진에게 받은 6자리 코드로 기수 활동 기록을 계정에 붙인다
+            //     MypageSectionTitle(
+            //         text = AppStrings.MYPAGE_MYACTIVITY
+            //     )
+            //     MypageListCard {
+            //         MypageListItem(
+            //             R.drawable.ic_plus_circle,
+            //             AppStrings.MYPAGE_ADDACTIVITY,
+            //             onClick = onAddActivityClick
+            //         )
+            //     }
+            // }
 
             item {
-                //외부 링크 3종 섹션
+                //외부 링크 5종 섹션 (외부 앱·웹으로 나가는 행은 오른쪽에 외부 이동 화살표)
                 MypageSectionTitle(
                     text = AppStrings.MYPAGE_OUT_LINK
                 )
@@ -526,17 +553,32 @@ fun MypageScreen(
                     MypageListItem(
                         R.drawable.ic_github_link,
                         AppStrings.GITHUB,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onGithubClick
                     )
                     MypageListItem(
                         R.drawable.ic_linkedin_link,
                         AppStrings.LINKEDIN,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onLinkedinClick
                     )
                     MypageListItem(
                         R.drawable.ic_blog_link,
                         AppStrings.BLOG,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onBlogClick
+                    )
+                    MypageListItem(
+                        R.drawable.ic_instagram,
+                        AppStrings.INSTAGRAM,
+                        trailingIconRes = R.drawable.ic_open_link,
+                        onClick = onInstagramLinkClick
+                    )
+                    MypageListItem(
+                        R.drawable.ic_blog_link,
+                        AppStrings.PERSONAL_SITE,
+                        trailingIconRes = R.drawable.ic_open_link,
+                        onClick = onPersonalSiteClick
                     )
                 }
             }
@@ -550,6 +592,7 @@ fun MypageScreen(
                     MypageListItem(
                         R.drawable.ic_inquire_umc,
                         AppStrings.MYPAGE_INQUIRE_UMC_KAKAO,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onAssistClick
                     )
                 }
@@ -564,11 +607,13 @@ fun MypageScreen(
                     MypageListItem(
                         R.drawable.ic_bottom_nav_notice,
                         AppStrings.MYPAGE_SETTING_NOTICE,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onNoticeSettingClick
                     )
                     MypageListItem(
                         R.drawable.ic_location,
                         AppStrings.MYPAGE_SETTING_LOCATION,
+                        trailingIconRes = R.drawable.ic_open_link,
                         onClick = onLocationSettingClick
                     )
                 }
@@ -621,7 +666,7 @@ fun MypageScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
-                        backgroundColor = grey000(),
+                        backgroundColor = grey50(),
                         textColor = red500(),
                         textStyle = UmcTypographyTokens.Body,
                         cornerRadius = 12.dp,
@@ -633,7 +678,7 @@ fun MypageScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
-                        backgroundColor = grey000(),
+                        backgroundColor = grey50(),
                         textColor = grey800(),
                         textStyle = UmcTypographyTokens.Body,
                         cornerRadius = 12.dp,
@@ -674,7 +719,7 @@ fun MypageTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -727,7 +772,7 @@ fun MypageListCard(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .padding(top = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp),
         content = content
     )
@@ -741,6 +786,7 @@ fun MypageListItem(
     iconRes: Int,
     text: String,
     showArrow: Boolean = true,
+    trailingIconRes: Int = R.drawable.ic_arrow_next, //오른쪽 아이콘. 외부 앱·웹으로 나가는 행은 R.drawable.ic_open_link
     onClick: () -> Unit
 ) {
     Row(
@@ -767,7 +813,7 @@ fun MypageListItem(
         )
         if (showArrow) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_next),
+                painter = painterResource(id = trailingIconRes),
                 contentDescription = null,
                 tint = grey400()
             )
@@ -780,7 +826,9 @@ fun MypageListItem(
  */
 @Composable
 fun SocialBadge(platform: LoginType) {
-    val bgColor = if (platform == LoginType.KAKAO) Color(0xFFFEE500) else grey100()
+    val bgColor = if (platform == LoginType.KAKAO) kakaoColor() else grey100()
+    // 카카오 노랑은 다크 모드에서도 그대로라, 그 위 글자도 모드와 상관없이 카카오 가이드의 레이블색(검정 85%)으로 둔다
+    val textColor = if (platform == LoginType.KAKAO) Color.Black.copy(alpha = 0.85f) else grey700()
 
     Surface(
         modifier = Modifier
@@ -798,7 +846,7 @@ fun SocialBadge(platform: LoginType) {
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             style = UmcTypographyTokens.Caption1Bold,
-            color = grey700()
+            color = textColor
         )
     }
 }
@@ -824,7 +872,8 @@ fun MypageSocialLinkCard(
                     id = if (targetPlatform == LoginType.KAKAO) R.drawable.ic_kakao else R.drawable.ic_google
                 ),
                 contentDescription = null,
-                tint = Color.Unspecified,
+                // 카카오 아이콘은 단색이라 black으로 칠해 다크 모드에서 흰색으로 보이게 하고, 구글은 로고 색을 그대로 쓴다
+                tint = if (targetPlatform == LoginType.KAKAO) black() else Color.Unspecified,
                 modifier = Modifier.size(24.dp)
             )
             UText(
@@ -893,6 +942,8 @@ private fun MypageScreenPreviewContent(uiState: MypageUiState) {
             onGithubClick = {},
             onLinkedinClick = {},
             onBlogClick = {},
+            onInstagramLinkClick = {},
+            onPersonalSiteClick = {},
             onAddActivityClick = {},
             onAssistClick = {},
             onNoticeSettingClick = {},

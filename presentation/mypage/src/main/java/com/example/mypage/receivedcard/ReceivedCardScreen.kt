@@ -27,6 +27,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,9 +53,10 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -60,11 +64,11 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.white
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserCardPartType
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 수신된 명함 파트별(Android, iOS, Server 등) 메인 컬러와 투명도 기반 그라데이션 브러시를 보관하는 데이터 클래스
@@ -113,6 +117,7 @@ fun ReceivedCardRoute(
         onBackClick = onNavigateToBack,
         onSearchQueryChange = { query -> viewModel.onSearchQueryChanged(query) },
         onClearSearch = { viewModel.clearSearchQuery() },
+        onRetry = viewModel::retry,
     )
 
 }
@@ -123,8 +128,10 @@ fun ReceivedCardScreen(
     onBackClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onClearSearch: () -> Unit,
+    onRetry: () -> Unit = {},
 
 ){
+    // 명함 상세(메모·삭제) 팝업은 디자인이 나오면 다시 붙인다. 메모 저장·삭제 로직은 ReceivedCardViewModel 에 남아 있다.
 
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() } //상호작용 수집
@@ -134,7 +141,7 @@ fun ReceivedCardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
 
     ) {
 
@@ -206,9 +213,21 @@ fun ReceivedCardScreen(
                 .height(16.dp)
         )
 
+        if (uiState.isLoading) CircularProgressIndicator(Modifier.padding(16.dp))
+        uiState.error?.let { error ->
+            UText(error, modifier = Modifier.padding(horizontal = 16.dp))
+            TextButton(onClick = onRetry) { UText("다시 시도") }
+        }
+        if (!uiState.isLoading && uiState.error == null && uiState.filteredCards.isEmpty()) {
+            UText(
+                if (uiState.searchQuery.isBlank()) "보관한 명함이 없어요." else "검색 결과가 없어요.",
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+
         //4. 명함 lazyGrid
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Adaptive(minSize = 150.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -237,7 +256,7 @@ fun ReceivedCardScreenTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -248,7 +267,7 @@ fun ReceivedCardScreenTopBar(
                 .padding(12.dp)
                 .clickable { onBackClick() },
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = null,
+            contentDescription = "뒤로가기",
             tint = Color.Unspecified,
         )
 
@@ -340,7 +359,7 @@ private fun ReceivedCardItem(
                     text = card.part,
                     enabled = false,
                     backgroundColor = partTheme.badgeColor,
-                    textColor = grey000(),
+                    textColor = grey50(),
                     textStyle = UmcTypographyTokens.Caption1,
                     cornerRadius = 4.dp,
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
@@ -352,7 +371,7 @@ private fun ReceivedCardItem(
                     text = "${card.generation}기",
                     enabled = false,
                     backgroundColor = partTheme.badgeColor,
-                    textColor = grey000(),
+                    textColor = grey50(),
                     textStyle = UmcTypographyTokens.Caption1,
                     cornerRadius = 4.dp,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
@@ -361,5 +380,22 @@ private fun ReceivedCardItem(
             }
 
         }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+private fun ReceivedCardScreenPreview() {
+    val cards = persistentListOf(
+        UserCard(name = "김유엠", nickname = "유엠", university = "중앙대학교", part = "ANDROID", generation = "11", memberNo = "1"),
+        UserCard(name = "이유엠", nickname = "이엠", university = "숙명여자대학교", part = "WEB_PRODUCT_ENGINEER", generation = "11", memberNo = "2"),
+    )
+    UmcTheme {
+        ReceivedCardScreen(
+            uiState = ReceivedCardUiState(allCards = cards, filteredCards = cards),
+            onBackClick = {},
+            onSearchQueryChange = {},
+            onClearSearch = {},
+        )
     }
 }

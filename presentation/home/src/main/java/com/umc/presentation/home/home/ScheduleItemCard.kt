@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -35,8 +35,8 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.home.schedule.ScheduleTagChips
@@ -74,7 +74,7 @@ fun ActiveScheduleItem(
 
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -87,7 +87,7 @@ fun ActiveScheduleItem(
                 modifier = Modifier
                     .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = indigo100()
+                color = main100()
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,12 +96,12 @@ fun ActiveScheduleItem(
                     UText(
                         text = item.dayOfWeek,
                         style = UmcTypographyTokens.Caption2Bold,
-                        color = indigo500()
+                        color = main500()
                     )
                     UText(
                         text = item.day,
                         style = UmcTypographyTokens.CalloutBold,
-                        color = indigo500()
+                        color = main500()
                     )
                 }
             }
@@ -170,7 +170,7 @@ fun DefaultScheduleItem(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
@@ -182,7 +182,7 @@ fun DefaultScheduleItem(
                 modifier = Modifier
                     .size(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = grey000(),
+                color = grey50(),
                 border = BorderStroke(1.dp, grey200())
             ) {
                 Column(

@@ -27,12 +27,12 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.domain.model.notice.NoticeVoteParticipant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -50,7 +50,7 @@ fun NoticeVoteStatusScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Row(
             modifier = Modifier
@@ -83,7 +83,7 @@ fun NoticeVoteStatusScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = indigo500(), trackColor = indigo100())
+                CircularProgressIndicator(color = main500(), trackColor = main100())
             }
             return@Column
         }
@@ -117,7 +117,7 @@ fun NoticeVoteStatusScreen(
                     UText(
                         text = AppStrings.NOTICE_VOTE_PEOPLE_COUNT.format(section.participants.size),
                         style = UmcTypographyTokens.Subheadline,
-                        color = indigo500(),
+                        color = main500(),
                     )
                 }
 

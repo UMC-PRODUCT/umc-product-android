@@ -30,7 +30,12 @@ data class MemberResponse(
     @SerializedName("hasLocalCredential") val hasLocalCredential: Boolean?,
     @SerializedName("totalActivityDays") val totalActivityDays: Long?,
     @SerializedName("currentGisuMemberInfo") val currentGisuMemberInfo: CurrentGisuMemberInfoResponse?,
-    @SerializedName("challengerHistory") val challengerHistory: List<ChallengerHistoryResponse>?
+    @SerializedName("challengerHistory") val challengerHistory: List<ChallengerHistoryResponse>?,
+    @SerializedName("isSuperAdmin") val isSuperAdmin: Boolean? = null,
+
+    //v1 response (타인 프로필 조회 /member/profile/{memberId} 는 아직 v1 형태로 내려온다)
+    @SerializedName("roles") val roles: List<MemberRoleResponse>? = null,
+    @SerializedName("challengerRecords") val challengerRecords: List<MemberChallengerRecordResponse>? = null
 
 )
 {
@@ -39,6 +44,11 @@ data class MemberResponse(
         fun MemberResponse.toDomain(): UserInfo {
 
             val mappedProfile = profile?.toDomain() ?: ProfileInfo.empty()
+
+            // v1 응답(challengerHistory 없음)은 challengerRecords·roles 를 그대로 옮긴다
+            if (challengerHistory == null && (challengerRecords != null || roles != null)) {
+                return toDomainFromV1(mappedProfile)
+            }
 
             //[수정] v2의 challengerHistory -> 기존 팀원들이 쓰는 challengerRecords로 복원 매핑
             val mappedRecords: List<ChallengerRecord> = challengerHistory?.map { history ->
@@ -90,9 +100,48 @@ data class MemberResponse(
                 // 🌟 [v2 신규 필드 전달]
                 hasLocalCredential = hasLocalCredential ?: false,
                 totalActivityDays = totalActivityDays ?: 0L,
-                currentGisuMemberInfo = currentGisuMemberInfo?.toDomain()
+                currentGisuMemberInfo = currentGisuMemberInfo?.toDomain(),
+                isSuperAdmin = isSuperAdmin ?: false
             )
 
+        }
+
+        // v1 응답 매핑: 역할에 조직 정보(organizationType·organizationId)가 함께 오므로 그대로 쓴다
+        private fun MemberResponse.toDomainFromV1(mappedProfile: ProfileInfo): UserInfo {
+            val mappedRoles = roles?.map { it.toDomain() }.orEmpty()
+            val mappedRecords = challengerRecords?.map { record ->
+                with(MemberChallengerRecordResponse) {
+                    record.toDomain(
+                        memberId = id,
+                        name = name,
+                        nickname = nickname,
+                        email = email ?: "",
+                        schoolId = schoolId,
+                        schoolName = schoolName,
+                        profileImageLink = profileImageLink ?: "",
+                        status = status ?: "ACTIVE",
+                        roles = mappedRoles.filter { it.challengerId == record.challengerId }
+                    )
+                }
+            }.orEmpty()
+
+            return UserInfo(
+                id = id,
+                name = name,
+                nickname = nickname,
+                email = email ?: "",
+                schoolId = schoolId,
+                schoolName = schoolName,
+                profileImageLink = profileImageLink ?: "",
+                status = status ?: "ACTIVE",
+                roles = mappedRoles,
+                challengerRecords = mappedRecords,
+                profile = mappedProfile,
+                hasLocalCredential = hasLocalCredential ?: false,
+                totalActivityDays = totalActivityDays ?: 0L,
+                currentGisuMemberInfo = currentGisuMemberInfo?.toDomain(),
+                isSuperAdmin = isSuperAdmin ?: false
+            )
         }
 
     }
@@ -224,6 +273,56 @@ data class ChallengerHistoryResponse(
                 roles = mappedRoles,
 
                 // 🔄 루트 유저 정보에서 주입받아 호환성 유지
+                name = name,
+                nickname = nickname,
+                email = email,
+                schoolId = schoolId,
+                schoolName = schoolName,
+                profileImageLink = profileImageLink,
+                status = status
+            )
+        }
+    }
+}
+
+// v1 챌린저 기록 (타인 프로필 조회 응답)
+data class MemberChallengerRecordResponse(
+    @SerializedName("challengerId") val challengerId: Long,
+    @SerializedName("gisuId") val gisuId: Long,
+    @SerializedName("gisu") val gisu: Long,
+    @SerializedName("chapterId") val chapterId: Long?,
+    @SerializedName("chapterName") val chapterName: String?,
+    @SerializedName("part") val part: String?,
+    @SerializedName("challengerStatus") val challengerStatus: String?,
+    @SerializedName("points") val points: List<MemberPointResponse>?,
+    @SerializedName("totalPoints") val totalPoints: Double?
+) {
+    companion object {
+        fun MemberChallengerRecordResponse.toDomain(
+            memberId: Long,
+            name: String,
+            nickname: String,
+            email: String,
+            schoolId: Long,
+            schoolName: String,
+            profileImageLink: String,
+            status: String,
+            roles: List<UserRole>
+        ): ChallengerRecord {
+            val mappedPoints = points?.map { it.toDomain() }.orEmpty()
+            return ChallengerRecord(
+                challengerId = challengerId,
+                memberId = memberId,
+                gisuId = gisuId,
+                gisu = gisu,
+                chapterId = chapterId,
+                chapterName = chapterName,
+                part = part,
+                challengerStatus = challengerStatus,
+                challengerPoints = mappedPoints,
+                points = mappedPoints,
+                totalPoint = totalPoints,
+                roles = roles,
                 name = name,
                 nickname = nickname,
                 email = email,

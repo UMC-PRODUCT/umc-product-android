@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -58,7 +59,6 @@ import com.example.mypage.mypage.MypageUiState
 import com.example.mypage.mypage.SocialBadge
 import com.example.mypage.nearby.NearbyEvent
 import com.example.mypage.nearby.NearbyViewModel
-import com.example.mypage.qrcode.QrCodeUtils
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
@@ -66,9 +66,9 @@ import com.umc.component.component.UText
 import com.umc.component.component.UToast
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -77,11 +77,12 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo400
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main400
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.component.theme.white
+import com.umc.domain.model.enums.LinkType
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.mypage.NearbyUserInfo
@@ -104,6 +105,8 @@ import com.umc.component.base.CollectUiEvents
 @Composable
 fun MycardRoute(
     targetMemberId: String? = null, //유저 qr 딥링크로 받았을 때
+    viewProfileOnly: Boolean = false,
+    onNavigateBack: () -> Unit = {},
     openExchangeDialog: Boolean = false, //홈에서 명함 교환 받을 시
     viewModel: MycardViewModel = hiltViewModel(),
     nearbyViewModel: NearbyViewModel = hiltViewModel(), //nearbyConnection 전용 관리 viewModel
@@ -111,6 +114,8 @@ fun MycardRoute(
     onNavigateToMyqrCode:() -> Unit, // QR 코드 화면으로 이동
     onNavigateToEditCard: () -> Unit, //명함 편집
     onNavigateToReceivedCard: () -> Unit, //받은 명함 이동
+    onNavigateToMyStudy: () -> Unit, //나의 스터디(활동 탭 > 스터디 커리큘럼)로 이동
+    onNavigateToActivityHistory: () -> Unit, //활동 이력 화면으로 이동
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -128,9 +133,6 @@ fun MycardRoute(
     // 차단 지점: 홈 배너 진입(openExchangeDialog), 명함 교환 버튼, 내 QR 코드, QR 딥링크 수신.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
-
-    // 나의 스터디·나의 활동·프로젝트는 이동할 화면이 아직 없어 개발 중 안내 다이얼로그만 띄운다.
-    var showFeatureInDevelopmentDialog by remember { mutableStateOf(false) }
 
 
     // 화면 복귀(ON_RESUME) 라이프사이클 시 최신 내 정보를 동기화하는 관찰자
@@ -151,7 +153,7 @@ fun MycardRoute(
 
     // QR 딥링크로 전달된 상대방 회원 ID 존재 시 회원 조회 수행
     LaunchedEffect(targetMemberId) {
-        if (!targetMemberId.isNullOrEmpty()) {
+        if (!viewProfileOnly && !targetMemberId.isNullOrEmpty()) {
             // [임시] 명함 교환 차단 — 원래 동작: viewModel.searchUser(targetMemberId.toLong())
             showExchangeBlockedDialog = true
         }
@@ -159,7 +161,7 @@ fun MycardRoute(
 
     // 홈 화면 등 외부에서 명함 교환 요청 플래그를 가지고 진입 시 다이얼로그 즉시 오픈
     LaunchedEffect(openExchangeDialog) {
-        if (openExchangeDialog && !hasOpenedExchangeDialog) {
+        if (!viewProfileOnly && openExchangeDialog && !hasOpenedExchangeDialog) {
             // [임시] 명함 교환 차단 — 원래 동작: nearbyViewModel.openBottomSheet()
             showExchangeBlockedDialog = true
             hasOpenedExchangeDialog = true //오픈 후 즉시 처리 완료 상태로 변경!
@@ -169,7 +171,7 @@ fun MycardRoute(
 
     //내 프로필 정보가 업데이트 될 때 NearbyViewModel에도 이를 반영
     LaunchedEffect(uiState.userInfo) {
-        if (uiState.userInfo.name.isNotEmpty()) {
+        if (!viewProfileOnly && uiState.userInfo.name.isNotEmpty()) {
             val nearbyInfo = NearbyUserInfo(
                 name = uiState.userInfo.name,
                 info = "${uiState.userInfo.schoolName} · ${uiState.myRecentInfoString.ifEmpty { "0기" }}",
@@ -198,6 +200,7 @@ fun MycardRoute(
 
             }
 
+            is MycardEvent.ShowError -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             is MycardEvent.ProfileLoadFailed -> {
                 Toast.makeText(context, AppStrings.MYCARD_PROFILE_LOAD_ERROR_TITLE, Toast.LENGTH_SHORT).show()
             }
@@ -208,13 +211,14 @@ fun MycardRoute(
 
     MycardScreen(
         uiState = uiState,
+        onNavigateBack = onNavigateBack,
         onNavigateToMypage = onNavigateToMypage,
         // [임시] 명함 교환 차단 — 원래 동작: onNavigateToMyqrCode (QR 공유도 교환 경로라 함께 막는다)
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
-        onNavigateToMyStudy = { showFeatureInDevelopmentDialog = true },
-        onNavigateToMyActivity = { showFeatureInDevelopmentDialog = true },
+        onNavigateToMyStudy = onNavigateToMyStudy,
+        onNavigateToActivityHistory = onNavigateToActivityHistory,
         onRetryProfile = viewModel::getUserInfo,
         // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
         onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
@@ -228,16 +232,6 @@ fun MycardRoute(
             onDismissRequest = { showExchangeBlockedDialog = false },
             confirmText = AppStrings.CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
-        )
-    }
-
-    if (showFeatureInDevelopmentDialog) {
-        UDialog(
-            title = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_TITLE,
-            content = AppStrings.MYCARD_FEATURE_IN_DEVELOPMENT_CONTENT,
-            onDismissRequest = { showFeatureInDevelopmentDialog = false },
-            confirmText = AppStrings.CONFIRM,
-            onConfirm = { showFeatureInDevelopmentDialog = false },
         )
     }
 
@@ -289,8 +283,9 @@ fun MycardScreen(
     onNavigateToReceivedCard: ()-> Unit, //받은 명함 이동
     onNavigateToEditCard: () -> Unit, //명함 편집 이동,
     onNavigateToMyStudy: () -> Unit, //나의 스터디 이동,
-    onNavigateToMyActivity: () -> Unit, //나의 활동 이동,
+    onNavigateToActivityHistory: () -> Unit, //활동 이력 이동,
     onOpenExchangeBottomSheet: () -> Unit, //명함 교환 BottomSheet 열기,
+    onNavigateBack: () -> Unit = {},
     onRetryProfile: () -> Unit, //내 프로필 조회 실패 시 다시 시도
 ){
 
@@ -303,13 +298,19 @@ fun MycardScreen(
 
         item{
             MycardTopBar(
-                onMypageClick = onNavigateToMypage
+                onMypageClick = onNavigateToMypage,
+                showBackButton = uiState.isViewingMemberProfile,
+                onBackClick = onNavigateBack,
             )
         }
 
         item {
             // 이미 불러온 정보가 있으면(id != 0) 재조회에 실패해도 카드를 유지한다
-            if (uiState.isProfileLoadFailed && uiState.userInfo.id == 0L) {
+            if (uiState.isProfileLoading && uiState.userInfo.id == 0L) {
+                Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            } else if (uiState.isProfileLoadFailed && uiState.userInfo.id == 0L) {
                 MycardProfileLoadError(
                     isLoading = uiState.isProfileLoading,
                     onRetry = onRetryProfile
@@ -323,40 +324,44 @@ fun MycardScreen(
             }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            MycardSectionTitle(AppStrings.MYCARD_CARD_TITLE)
-            MycardListCard {
-                MycardListItem(
-                    iconRes = R.drawable.ic_received_card,
-                    text = AppStrings.MYCARD_CARD_CONTENT_RECEIVED,
-                    cardCount = uiState.cardCount,
-                    onClick = onNavigateToReceivedCard
-                )
-                MycardListItem(
-                    iconRes = R.drawable.ic_edit_card,
-                    text = AppStrings.MYCARD_CARD_EDIT,
-                    onClick = onNavigateToEditCard
-                )
+        if (!uiState.isViewingMemberProfile) {
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                MycardSectionTitle(AppStrings.MYCARD_CARD_TITLE)
+                MycardListCard {
+                    // [보류] 받은 명함 메뉴는 숨긴다. 다시 열 때 아래 줄과 보관 명함 수 오류 안내를 함께 되살린다.
+                    // uiState.cardStorageError?.let { UText(it, modifier = Modifier.padding(horizontal = 16.dp)) }
+                    // MycardListItem(
+                    //     iconRes = R.drawable.ic_received_card,
+                    //     text = AppStrings.MYCARD_CARD_CONTENT_RECEIVED,
+                    //     cardCount = if (uiState.cardStorageError == null && uiState.cardStatistics != null) uiState.cardCount else -1,
+                    //     onClick = onNavigateToReceivedCard
+                    // )
+                    MycardListItem(
+                        iconRes = R.drawable.ic_edit_card,
+                        text = AppStrings.MYCARD_CARD_EDIT,
+                        onClick = onNavigateToEditCard
+                    )
+                }
             }
-        }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            MycardSectionTitle(AppStrings.MYCARD_ACTVITY_TITLE)
-            MycardListCard {
-                MycardListItem(
-                    iconRes = R.drawable.ic_my_study,
-                    text = AppStrings.MYCARD_ACTVITY_MYSTUDY,
-                    studyCount = 0,
-                    onClick = onNavigateToMyStudy
-                )
-                MycardListItem(
-                    iconRes = R.drawable.ic_my_actvity,
-                    text = AppStrings.MYCARD_ACTVITY_MYACTIVTY_PROJECT,
-                    onClick = onNavigateToMyActivity
-                )
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                MycardSectionTitle(AppStrings.MYCARD_ACTVITY_TITLE)
+                MycardListCard {
+                    MycardListItem(
+                        iconRes = R.drawable.ic_my_study,
+                        text = AppStrings.MYCARD_ACTVITY_MYSTUDY,
+                        onClick = onNavigateToMyStudy
+                    )
+                    MycardListItem(
+                        iconRes = R.drawable.ic_activity_history,
+                        text = AppStrings.MYCARD_ACTVITY_HISTORY,
+                        onClick = onNavigateToActivityHistory
+                    )
+                }
             }
+
         }
 
         // 바닥 여백
@@ -383,7 +388,7 @@ private fun MycardProfileLoadError(
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -418,8 +423,8 @@ private fun MycardProfileLoadError(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                backgroundColor = indigo500(),
-                pressedColor = indigo600(),
+                backgroundColor = main500(),
+                pressedColor = main600(),
                 textColor = white(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 12.dp,
@@ -433,25 +438,37 @@ private fun MycardProfileLoadError(
  */
 @Composable
 fun MycardTopBar(
-    onMypageClick: () -> Unit //마이페이지 클릭
+    onMypageClick: () -> Unit, //마이페이지 클릭
+    showBackButton: Boolean = false,
+    onBackClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
         .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = if (showBackButton) Arrangement.Start else Arrangement.SpaceBetween
     ) {
+        if (showBackButton) {
+            androidx.compose.material3.IconButton(onClick = onBackClick) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = "뒤로가기",
+                    tint = grey950(),
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
         UText(
-            text = AppStrings.MYPAGE_TITLE,
+            text = if (showBackButton) "프로필" else AppStrings.MYPAGE_TITLE,
             style = UmcTypographyTokens.Title2Bold,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
 
         )
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (!showBackButton) Row(verticalAlignment = Alignment.CenterVertically) {
             //설정 버튼
             Box(
                 modifier = Modifier
@@ -497,8 +514,8 @@ fun MycardProfileCard(
         label = "CardFlipAnimation"
     )
 
-    val color1 = indigo400()
-    val color2 = indigo500()
+    val color1 = main400()
+    val color2 = main500()
 
     //원형 그라데이션 배경
     val radialGradient = remember {
@@ -556,6 +573,8 @@ fun MycardProfileCard(
 
 /**
 * 명함 카드 앞면 레이아웃 컴포저블
+*
+* 프로필 이미지 옆에 이름/닉네임, 파트, 구분선, 대학교·기수를 차례로 둔다
 */
 @Composable
 private fun CardFrontContent(
@@ -565,108 +584,81 @@ private fun CardFrontContent(
     onMyQrcodeClick: () -> Unit, //내 QR 코드 화면으로 이동
     ) {
         Column {
-            //[상단 Header] 로고 + Business card 텍스트 + 우상단 전환 버튼
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-
-                    //로고 이미지
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_logo_umc),
-                        contentDescription = "UMC Logo",
-                        tint = grey000()
-                    )
-
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
-                    UText(
-                        text = AppStrings.MYCARD_INTRODUCE,
-                        style = UmcTypographyTokens.Caption2,
-                        color = grey000()
-                    )
-                }
-
-                // 우상단 전환 버튼 (뒤집기)
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(indigo400())
-                        .clickable { onFlipClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_flip),
-                        contentDescription = "flip",
-                        tint = grey000(),
-                        modifier = Modifier
-                            .padding(6.dp)
-                    )
-                }
-            }
+            CardHeader(onFlipClick = onFlipClick)
 
             Spacer(
                 modifier = Modifier.height(16.dp)
             )
 
-
             //프로필 이미지 + 유저 정보
             Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                    model = uiState.userInfo.profileImageLink,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, grey200(), CircleShape),
-                    placeholder = painterResource(R.drawable.ic_profile_default),
-                    error = painterResource(R.drawable.ic_profile_default)
-                )
+                CardProfileImage(imageUrl = uiState.userInfo.profileImageLink)
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     //이름 및 닉네임
                     UText(
                         text = "${uiState.userInfo.name}/${uiState.userInfo.nickname}",
                         style = UmcTypographyTokens.Title3Bold,
-                        color = grey000()
+                        color = white()
                     )
 
-                    Spacer(
-                        modifier = Modifier.height(6.dp)
+                    //파트 (파트가 없는 운영진은 직함)
+                    if (uiState.cardPartText.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        UText(
+                            text = uiState.cardPartText,
+                            style = UmcTypographyTokens.Callout,
+                            color = main100()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    androidx.compose.material3.HorizontalDivider(
+                        thickness = 1.dp,
+                        color = main100().copy(alpha = 0.5f)
                     )
-                    //학교
-                    UText(
-                        text = uiState.userInfo.schoolName,
-                        style = UmcTypographyTokens.Subheadline,
-                        color = indigo100()
-                    )
-                    //내 최신 커리어
-                    UText(
-                        text = uiState.myRecentInfoString,
-                        style = UmcTypographyTokens.Subheadline,
-                        color = indigo100()
-                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    //대학교 + 기수
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        UText(
+                            text = uiState.userInfo.schoolName,
+                            style = UmcTypographyTokens.Footnote,
+                            color = main100(),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        uiState.cardGeneration?.let { generation ->
+                            UText(
+                                text = AppStrings.MYCARD_GENERATION_FORMAT.format(generation),
+                                style = UmcTypographyTokens.Footnote,
+                                color = main100()
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            //명함 교환 & QR 코드 버튼
-            CardBottomButtons(
-                onExchangeCardClick = onExchangeCardClick,
-                onMyQrcodeClick = onMyQrcodeClick
-            )
+            // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+            // Spacer(modifier = Modifier.height(24.dp))
+            // if (!uiState.isViewingMemberProfile) CardBottomButtons(
+            //     onExchangeCardClick = onExchangeCardClick,
+            //     onMyQrcodeClick = onMyQrcodeClick
+            // )
         }
     }
 
 /**
  * 명함 카드 뒷면 레이아웃 컴포저블
+ *
+ * 프로필 이미지 옆에 이메일, GitHub, LinkedIn, URL(블로그·개인 사이트)을 아이콘과 함께 나열한다 (비어 있는 항목은 빼고 보여준다).
+ * 보여줄 항목이 하나도 없으면 프로필 이미지 대신 빈 상태 안내를 가운데에 둔다.
+ * 내 명함은 다른 회원에게 보이는 그대로(공개 명함 조회 결과만) 그리고, 조회 전·실패면 항목 없이 프로필 이미지만 둔다
  */
 @Composable
 private fun CardBackContent(
@@ -675,109 +667,153 @@ private fun CardBackContent(
     onExchangeCardClick: () -> Unit, //명함 교환 화면으로 이동
     onMyQrcodeClick: () -> Unit, //내 QR 코드 화면으로 이동
 ) {
-
-    //비동기로 qr코드 만들기
-    val qrBitmap = remember(uiState.myQrcodeData) {
-        if (uiState.myQrcodeData.isNotEmpty()) {
-            QrCodeUtils.generateQrCode(uiState.myQrcodeData)
-        } else null
-    }
-
+    val profile = uiState.userInfo.profile
+    val card = uiState.publicCard
+    // 공개 명함을 아직 못 받은 내 명함 (로그인 이메일·비공개 링크가 드러나지 않게 프로필 정보로 대신 그리지 않는다)
+    val isCardPending = !uiState.isViewingMemberProfile && card == null
+    fun linkOf(type: LinkType, memberValue: String): String =
+        if (uiState.isViewingMemberProfile) memberValue else card?.linkOf(type)?.link.orEmpty()
+    val email = if (uiState.isViewingMemberProfile) uiState.userInfo.email else card?.contact?.email.orEmpty()
+    val github = linkOf(LinkType.GITHUB, profile.github)
+    val linkedIn = linkOf(LinkType.LINKEDIN, profile.linkedIn)
+    val blog = linkOf(LinkType.BLOG, profile.blog)
+    val personal = linkOf(LinkType.PERSONAL, profile.personal)
+    // 행마다 비어 있거나 열 수 없는 값은 숨기므로, 같은 기준으로 보여줄 항목이 남는지 본다
+    val hasContent = email.isNotBlank() ||
+        listOf(github, linkedIn, blog, personal)
+            .any { com.umc.domain.model.mypage.validCardWebLink(it) != null }
 
     Column {
-        //[상단 Header] 로고 + Business card 텍스트 + 우상단 전환 버튼
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-
-                //로고 이미지
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_logo_umc),
-                    contentDescription = "UMC Logo",
-                    tint = grey000()
-                )
-
-                Spacer(
-                    modifier = Modifier.width(8.dp)
-                )
-                UText(
-                    text = AppStrings.MYCARD_INTRODUCE,
-                    style = UmcTypographyTokens.Caption2,
-                    color = grey000()
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(indigo400())
-                    .clickable { onFlipClick() },
-                contentAlignment = Alignment.Center
-            ) {
-
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_flip),
-                    contentDescription = "flip",
-                    tint = grey000(),
-                    modifier = Modifier
-                        .padding(6.dp)
-                )
-            }
-
-        }
+        CardHeader(onFlipClick = onFlipClick)
 
         Spacer(
             modifier = Modifier.height(16.dp)
         )
 
-
-        // [중단 Info] QR 코드 이미지 + 소셜/연락처 리스트
+        if (!hasContent && !isCardPending) {
+            CardBackEmptyContent(showGuide = !uiState.isViewingMemberProfile)
+        } else
+        // [중단 Info] 프로필 이미지 + 이메일·링크 리스트
         Row(verticalAlignment = Alignment.CenterVertically) {
-            //QR 코드 공간
-            Box(
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(grey000())
-                    .padding(7.dp), // QR 코드 테두리 여백
-                contentAlignment = Alignment.Center
-            ) {
-                if (qrBitmap != null) {
-                    Image(
-                        bitmap = qrBitmap,
-                        contentDescription = "UserCard QR Code",
-                        modifier = Modifier.size(55.dp)
-                    )
-                } else {
-                    // QR 데이터 생성 중이거나 예외 발생 시 로딩/플래스홀더
-                    UText(
-                        text = "QR",
-                        style = UmcTypographyTokens.Caption1Bold,
-                        color = Color.Gray
-                    )
-                }
-            }
+            CardProfileImage(imageUrl = uiState.userInfo.profileImageLink)
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // 아이콘 + 링크 리스트 (GitHub, LinkedIn, Blog 등)
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                SocialLinkItem(iconRes = R.drawable.ic_github_link, text = uiState.userInfo.profile.github)
-                SocialLinkItem(iconRes = R.drawable.ic_linkedin_link, text = uiState.userInfo.profile.linkedIn)
-                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = uiState.userInfo.profile.blog)
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CardEmailItem(email = email)
+                SocialLinkItem(iconRes = R.drawable.ic_github_link, text = github)
+                SocialLinkItem(iconRes = R.drawable.ic_linkedin_link, text = linkedIn)
+                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = blog)
+                SocialLinkItem(iconRes = R.drawable.ic_blog_link, text = personal)
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        CardBottomButtons(
-            onExchangeCardClick = onExchangeCardClick,
-            onMyQrcodeClick = onMyQrcodeClick
-        )
+        // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+        // Spacer(modifier = Modifier.height(24.dp))
+        // if (!uiState.isViewingMemberProfile) CardBottomButtons(
+        //     onExchangeCardClick = onExchangeCardClick,
+        //     onMyQrcodeClick = onMyQrcodeClick
+        // )
     }
+}
+
+/**
+ * 명함 뒷면에 보여줄 연락처·링크가 없을 때의 안내
+ *
+ * @param showGuide 내 명함일 때만 프로필 정보 편집으로 채우라는 설명을 덧붙인다
+ */
+@Composable
+private fun CardBackEmptyContent(showGuide: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 70.dp), // 앞면 프로필 이미지 높이와 맞춰 뒤집어도 카드 높이가 크게 변하지 않게 한다
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        UText(
+            text = AppStrings.MYCARD_BACK_EMPTY_TITLE,
+            style = UmcTypographyTokens.CalloutBold,
+            color = white(),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        if (showGuide) {
+            Spacer(modifier = Modifier.height(4.dp))
+            UText(
+                text = AppStrings.MYCARD_BACK_EMPTY_DESCRIPTION,
+                style = UmcTypographyTokens.Footnote,
+                color = white(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * 명함 앞·뒷면 공통 상단: 로고 + BUSINESS CARD 텍스트 + 우상단 전환 버튼
+ */
+@Composable
+private fun CardHeader(onFlipClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+
+            //로고 이미지
+            Icon(
+                painter = painterResource(id = R.drawable.ic_logo_umc),
+                contentDescription = "UMC Logo",
+                tint = white(),
+                modifier = Modifier.size(width = 47.dp, height = 15.16.dp)
+            )
+
+            Spacer(
+                modifier = Modifier.width(8.dp)
+            )
+            UText(
+                text = AppStrings.MYCARD_INTRODUCE,
+                style = UmcTypographyTokens.Caption2,
+                color = white()
+            )
+        }
+
+        // 우상단 전환 버튼 (뒤집기)
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(main400())
+                .clickable { onFlipClick() },
+            contentAlignment = Alignment.Center
+        ) {
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_flip),
+                contentDescription = "flip",
+                tint = white(),
+                modifier = Modifier
+                    .padding(6.dp)
+            )
+        }
+    }
+}
+
+/**
+ * 명함 앞·뒷면 공통 원형 프로필 이미지
+ */
+@Composable
+private fun CardProfileImage(imageUrl: String) {
+    AsyncImage(
+        model = imageUrl,
+        contentDescription = null,
+        modifier = Modifier
+            .size(70.dp)
+            .clip(CircleShape)
+            .border(1.dp, grey200(), CircleShape),
+        placeholder = painterResource(R.drawable.ic_profile_default),
+        error = painterResource(R.drawable.ic_profile_default)
+    )
 }
 
 
@@ -799,12 +835,12 @@ private fun CardBottomButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(42.dp),
-            backgroundColor = grey000(),
-            textColor = indigo500(),
+            backgroundColor = grey50(),
+            textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_wifi), // 추후 아이콘 리소스 연결
-            prevIconTint = indigo500(),
+            prevIconTint = main500(),
             onClick = onExchangeCardClick
         )
 
@@ -814,12 +850,12 @@ private fun CardBottomButtons(
             modifier = Modifier
                 .weight(1f)
                 .height(42.dp),
-            backgroundColor = grey000(),
-            textColor = indigo500(),
+            backgroundColor = grey50(),
+            textColor = main500(),
             textStyle = UmcTypographyTokens.CalloutBold,
             cornerRadius = 8.dp,
             prevIcon = painterResource(R.drawable.ic_qrcode), // 추후 아이콘 리소스 연결
-            prevIconTint = indigo500(),
+            prevIconTint = main500(),
             onClick = onMyQrcodeClick
         )
     }
@@ -833,13 +869,16 @@ private fun SocialLinkItem(
     @DrawableRes iconRes: Int,
     text: String
 ) {
+    val link = com.umc.domain.model.mypage.validCardWebLink(text) ?: return
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     Row(
+        modifier = Modifier.clickable(onClickLabel = "링크 열기") { runCatching { uriHandler.openUri(link) } },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = grey000(),
+            tint = white(),
             modifier = Modifier.size(16.dp)
         )
 
@@ -848,9 +887,45 @@ private fun SocialLinkItem(
         )
 
         UText(
-            text = text.ifEmpty { "링크 없음" },
+            text = link,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             style = UmcTypographyTokens.Footnote,
-            color = grey000()
+            color = white()
+        )
+    }
+}
+
+/**
+ * 명함 뒷면 이메일 행 컴포저블 (누르면 메일 앱으로 연결)
+ */
+@Composable
+private fun CardEmailItem(email: String) {
+    if (email.isBlank()) return
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    Row(
+        modifier = Modifier.clickable(onClickLabel = "메일 보내기") { runCatching { uriHandler.openUri("mailto:$email") } },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_mail),
+            contentDescription = null,
+            tint = white(),
+            modifier = Modifier.size(16.dp)
+        )
+
+        Spacer(
+            modifier = Modifier.width(8.dp)
+        )
+
+        UText(
+            text = email,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            style = UmcTypographyTokens.Footnote,
+            color = white()
         )
     }
 }
@@ -881,7 +956,7 @@ fun MycardListCard(content: @Composable ColumnScope.() -> Unit) {
             .padding(top = 16.dp)
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp),
         content = content
     )
@@ -896,7 +971,6 @@ fun MycardListItem(
     text: String,
     showArrow: Boolean = true,
     cardCount: Int = -1,
-    studyCount: Int = -1,
     onClick: () -> Unit
 ) {
     Row(
@@ -926,23 +1000,8 @@ fun MycardListItem(
             UButton(
                 text = "${cardCount}장",
                 enabled = false,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
-                textStyle = UmcTypographyTokens.Caption1Bold,
-                cornerRadius = 4.dp,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                onClick = {}
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        if (studyCount> -1) {
-            UButton(
-                text = "${studyCount}건",
-                enabled = false,
-                backgroundColor = indigo100(),
-                textColor = indigo500(),
+                backgroundColor = main100(),
+                textColor = main500(),
                 textStyle = UmcTypographyTokens.Caption1Bold,
                 cornerRadius = 4.dp,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
@@ -963,6 +1022,70 @@ fun MycardListItem(
 }
 
 
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun CardBackEmptyPreview() {
+    UmcTheme {
+        Box(
+            modifier = Modifier
+                .background(main500())
+                .padding(20.dp)
+        ) {
+            CardBackContent(
+                // 공개 명함을 받았지만 공개 항목이 하나도 없는 상태
+                uiState = MycardUiState(publicCard = com.umc.domain.model.mypage.BusinessCard()),
+                onFlipClick = {},
+                onExchangeCardClick = {},
+                onMyQrcodeClick = {},
+            )
+        }
+    }
+}
+
+@PreviewScreenSizes
+@Composable
+private fun MycardScreenPreview() {
+    UmcTheme {
+        MycardScreen(
+            uiState = MycardUiState(
+                userInfo = com.umc.domain.model.UserInfo(
+                    id = 1,
+                    name = "이름",
+                    nickname = "닉네임",
+                    email = "abcdefg@gmail.com",
+                    schoolName = "유엠대학교",
+                    profile = com.umc.domain.model.ProfileInfo(
+                        id = 1,
+                        linkedIn = "https://linkedin.com/in/umc",
+                        instagram = "",
+                        github = "https://github.com/umc",
+                        blog = "https://blog.umc.com",
+                        personal = "",
+                    ),
+                ),
+                cardPartText = "Mobile PE",
+                cardGeneration = 11,
+                publicCard = com.umc.domain.model.mypage.BusinessCard(
+                    contact = com.umc.domain.model.mypage.BusinessCardContact(email = "abcdefg@gmail.com"),
+                    links = listOf(
+                        com.umc.domain.model.mypage.BusinessCardLink(LinkType.GITHUB, "https://github.com/umc"),
+                        com.umc.domain.model.mypage.BusinessCardLink(LinkType.LINKEDIN, "https://linkedin.com/in/umc"),
+                        com.umc.domain.model.mypage.BusinessCardLink(LinkType.BLOG, "https://blog.umc.com"),
+                    ),
+                ),
+            ),
+            onNavigateToMypage = {},
+            onNavigateToMyqrCode = {},
+            onNavigateToReceivedCard = {},
+            onNavigateToEditCard = {},
+            onNavigateToMyStudy = {},
+            onNavigateToActivityHistory = {},
+            onOpenExchangeBottomSheet = {},
+            onRetryProfile = {},
+        )
+    }
+}
+
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 private fun MycardScreenProfileLoadFailedPreview() {
@@ -974,7 +1097,7 @@ private fun MycardScreenProfileLoadFailedPreview() {
             onNavigateToReceivedCard = {},
             onNavigateToEditCard = {},
             onNavigateToMyStudy = {},
-            onNavigateToMyActivity = {},
+            onNavigateToActivityHistory = {},
             onOpenExchangeBottomSheet = {},
             onRetryProfile = {},
         )

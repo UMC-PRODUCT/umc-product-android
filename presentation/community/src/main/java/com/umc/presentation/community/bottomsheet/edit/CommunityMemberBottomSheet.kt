@@ -1,9 +1,22 @@
 package com.umc.presentation.community.bottomsheet.edit
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import com.umc.component.theme.grey950
+import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
 import android.widget.Toast
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,48 +28,49 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.umc.component.R
+import com.umc.component.base.CollectUiEvents
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
-import com.umc.component.component.UTextField
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.red100
-import com.umc.component.theme.red500
+import com.umc.component.theme.main500
+import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
+import com.umc.presentation.community.component.CommunityMemberSearchField
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
-import com.umc.component.base.CollectUiEvents
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * 커뮤니티 스레드의 현재 멤버를 관리하는 BottomSheet입니다.
@@ -66,7 +80,6 @@ import com.umc.component.base.CollectUiEvents
  * - 챌린저 검색
  * - 멤버 선택/해제
  * - 새 멤버 초대
- * - 기존 멤버 삭제
  * - 검색 결과 페이지네이션
  * - 프로필 이미지 표시
  */
@@ -79,12 +92,12 @@ fun CommunityMemberBottomSheet(
     viewModel: CommunityMemberBottomSheetViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val searchFocusRequester = remember { FocusRequester() }
+    var searchFocused by remember { mutableStateOf(false) }
+    val sheetHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
+    var toastData by remember(threadId) { mutableStateOf<UToastData?>(null) }
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-    )
 
     /**
      * BottomSheet가 열릴 때 threadId를 기준으로
@@ -96,200 +109,182 @@ fun CommunityMemberBottomSheet(
         )
     }
 
-    /**
-     * ViewModel에서 발생한 일회성 이벤트를 처리합니다.
-     *
-     * 멤버 추가/삭제 성공 또는 에러 발생 시 Toast를 표시합니다.
-     */
-    CollectUiEvents(viewModel.uiEvent) { event ->
-        when (event) {
-            is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
-                val message = when {
-                    event.addedMemberCount > 0 &&
-                            event.removedMemberCount > 0 -> {
-                        "${event.addedMemberCount}명을 추가하고 " +
-                                "${event.removedMemberCount}명을 삭제했어요."
-                    }
-
-                    event.addedMemberCount > 0 -> {
-                        "${event.addedMemberCount}명을 추가했어요."
-                    }
-
-                    event.removedMemberCount > 0 -> {
-                        "${event.removedMemberCount}명을 삭제했어요."
-                    }
-
-                    else -> {
-                        "멤버 구성이 변경되었어요."
-                    }
-                }
-
-                Toast.makeText(
-                    context,
-                    message,
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                onInviteSuccess()
-            }
-
-            is CommunityMemberBottomSheetEvent.MemberKickSuccess -> {
-                Toast.makeText(
-                    context,
-                    "멤버를 삭제했어요.",
-                    Toast.LENGTH_SHORT,
-                ).show()
-
-                onInviteSuccess()
-            }
-
-            is CommunityMemberBottomSheetEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
-            }
-        }
-    }
-
-    ModalBottomSheet(
+    CommunityInviteSheet(
+        height = sheetHeight,
+        toast = {
+            UToastHost(data = toastData, onDismiss = { toastData = null })
+        },
         onDismissRequest = {
             viewModel.resetAfterDismiss()
             onDismissRequest()
         },
-        sheetState = sheetState,
-        containerColor = grey000(),
-        dragHandle = {
-            BottomSheetDefaults.DragHandle(
-                color = grey600(),
-            )
-        },
-        shape = RoundedCornerShape(
-            topStart = 28.dp,
-            topEnd = 28.dp,
-        ),
     ) {
-        Column(
+        val focusManager = LocalFocusManager.current
+        val keyboard = LocalSoftwareKeyboardController.current
+
+        /**
+         * ViewModel에서 발생한 일회성 이벤트를 처리합니다.
+         *
+         * 멤버 초대 성공 또는 에러 발생 시 Toast를 표시합니다.
+         */
+        CollectUiEvents(viewModel.uiEvent) { event ->
+            when (event) {
+                is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
+                    focusManager.clearFocus()
+                    keyboard?.hide()
+                    val message = "${event.addedMemberCount}명을 추가했어요."
+
+                    Toast.makeText(
+                        context,
+                        message,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+
+                    onInviteSuccess()
+                }
+
+                is CommunityMemberBottomSheetEvent.ShowToast -> {
+                    toastData = UToastData(event.message, UToastState.ERROR)
+                }
+            }
+        }
+
+        CommunityMemberSheetContent(
+            state = state,
+            isSearchFieldFocused = searchFocused,
+            onQueryChange = viewModel::searchMembers,
+            onConfirmClick = {
+                if (state.isSearching || searchFocused) viewModel.updateMembers()
+                else { searchFocusRequester.requestFocus(); keyboard?.show() }
+            },
+            onToggleMember = { member ->
+                viewModel.toggleMember(
+                    member = member,
+                )
+            },
+            onLoadMore = {
+                viewModel.loadMoreMembers()
+            },
+            modifier = Modifier.weight(1f),
+            searchFieldModifier = Modifier.focusRequester(searchFocusRequester).onFocusChanged { searchFocused = it.isFocused },
+        )
+    }
+}
+
+/**
+ * BottomSheet 안쪽 콘텐츠입니다.
+ *
+ * ViewModel·포커스 제어와 분리해 Preview에서 상태별로 그릴 수 있도록 합니다.
+ */
+@Composable
+private fun CommunityMemberSheetContent(
+    state: CommunityMemberBottomSheetState,
+    isSearchFieldFocused: Boolean,
+    onQueryChange: (String) -> Unit,
+    onConfirmClick: () -> Unit,
+    onToggleMember: (CommunityChallengerUiModel) -> Unit,
+    onLoadMore: () -> Unit,
+    modifier: Modifier = Modifier,
+    searchFieldModifier: Modifier = Modifier,
+) {
+    // 검색 필드에 포커스만 둬도 검색 화면 헤더(초대 버튼)로 바뀐다
+    val isSearchMode = state.isSearching || isSearchFieldFocused
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+    ) {
+        CommunityMemberBottomSheetHeader(
+            title = if (isSearchMode) {
+                "초대할 챌린저를 검색하세요"
+            } else {
+                "초대할 챌린저를 추가하세요"
+            },
+            isSearching = isSearchMode,
+            isConfirmEnabled = if (isSearchMode) state.isConfirmEnabled else state.canManage && !state.isUpdatingMembers,
+            isUpdatingMembers = state.isUpdatingMembers,
+            onConfirmClick = onConfirmClick,
+        )
+
+        Spacer(
+            modifier = Modifier.height(24.dp),
+        )
+
+        /**
+         * 챌린저 이름 검색 필드입니다.
+         *
+         * 실제 검색 API 호출과 300ms 디바운스 처리는
+         * ViewModel에서 수행합니다.
+         */
+        CommunityMemberSearchField(
+            value = state.query,
+            onValueChange = onQueryChange,
+            modifier = searchFieldModifier,
+            placeholder = "이름을 입력해주세요",
+            fieldHeight = 52.dp,
+            showClearButton = true,
+        )
+
+        Spacer(
+            modifier = Modifier.height(24.dp),
+        )
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(620.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+                .weight(1f),
         ) {
-            CommunityMemberBottomSheetHeader(
-                title = if (state.isSearching) {
-                    "초대할 챌린저를 검색하세요"
-                } else {
-                    "초대할 챌린저를 추가하세요"
-                },
-                showConfirmButton = state.isSearching,
-                isConfirmEnabled = state.isConfirmEnabled,
-                isUpdatingMembers = state.isUpdatingMembers,
-                onConfirmClick = {
-                    viewModel.updateMembers()
-                },
-            )
+            when {
+                // 최초 데이터 또는 검색 결과 로딩 중
+                state.isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(
+                            Alignment.Center,
+                        ),
+                        color = main500(),
+                    )
+                }
 
-            Spacer(
-                modifier = Modifier.height(18.dp),
-            )
+                // 멤버 조회 또는 검색 실패
+                state.errorMessage != null &&
+                        state.displayedMembers.isEmpty() -> {
+                    CommunityMemberEmptyContent(
+                        text = state.errorMessage.orEmpty(),
+                    )
+                }
 
-            /**
-             * 챌린저 이름 검색 필드입니다.
-             *
-             * 실제 검색 API 호출과 300ms 디바운스 처리는
-             * ViewModel에서 수행합니다.
-             */
-            UTextField(
-                value = state.query,
-                onValueChange = viewModel::searchMembers,
-                placeholder = "이름을 입력하세요",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                prevIcon = painterResource(
-                    id = R.drawable.ic_search,
-                ),
-                prevIconTint = grey500(),
-                prevIconSize = 24.dp,
-                backgroundColor = grey100(),
-                focusBackgroundColor = grey000(),
-                strokeColor = grey100(),
-                focusStrokeColor = grey900(),
-                cornerRadius = 8.dp,
-            )
+                // 현재 멤버 또는 검색 결과가 없는 상태
+                state.isEmpty -> {
+                    CommunityMemberEmptyContent(
+                        text = if (state.isSearching) {
+                            "검색 결과가 없습니다."
+                        } else {
+                            "아직 초대한 챌린저가 없어요"
+                        },
+                        iconRes = if (state.isSearching) R.drawable.ic_search else R.drawable.ic_community_invite_empty,
+                    )
+                }
 
-            Spacer(
-                modifier = Modifier.height(28.dp),
-            )
+                // 검색 중일 때 검색 결과 표시
+                state.isSearching -> {
+                    CommunityMemberSearchContent(
+                        members = state.displayedMembers,
+                        selectedMembers = state.selectedMembers,
+                        enabled = state.canManage && !state.isUpdatingMembers,
+                        isLoadingMore = state.isLoadingMore,
+                        hasNext = state.hasNext,
+                        errorMessage = state.errorMessage,
+                        onToggleClick = onToggleMember,
+                        onLoadMore = onLoadMore,
+                    )
+                }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-            ) {
-                when {
-                    // 최초 데이터 또는 검색 결과 로딩 중
-                    state.isLoading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(
-                                Alignment.Center,
-                            ),
-                            color = indigo500(),
-                        )
-                    }
-
-                    // 멤버 조회 또는 검색 실패
-                    state.errorMessage != null &&
-                            state.displayedMembers.isEmpty() -> {
-                        CommunityMemberEmptyContent(
-                            text = state.errorMessage.orEmpty(),
-                        )
-                    }
-
-                    // 현재 멤버 또는 검색 결과가 없는 상태
-                    state.isEmpty -> {
-                        CommunityMemberEmptyContent(
-                            text = if (state.isSearching) {
-                                "검색 결과가 없어요"
-                            } else {
-                                "현재 참여 중인 챌린저가 없어요"
-                            },
-                        )
-                    }
-
-                    // 검색 중일 때 검색 결과 표시
-                    state.isSearching -> {
-                        CommunityMemberSearchContent(
-                            members = state.displayedMembers,
-                            selectedMembers = state.selectedMembers,
-                            maxCount = state.maxMemberCount,
-                            isLoadingMore = state.isLoadingMore,
-                            hasNext = state.hasNext,
-                            onToggleClick = { member ->
-                                viewModel.toggleMember(
-                                    member = member,
-                                )
-                            },
-                            onLoadMore = {
-                                viewModel.loadMoreMembers()
-                            },
-                        )
-                    }
-
-                    // 검색 중이 아닐 때 현재 스레드 멤버 표시
-                    else -> {
-                        CommunityCurrentMemberContent(
-                            members = state.currentMembers,
-                            deletingMemberId = state.deletingMemberId,
-                            onDeleteClick = { member ->
-                                viewModel.kickMember(
-                                    member = member,
-                                )
-                            },
-                        )
-                    }
+                // 검색 중이 아닐 때 현재 스레드 멤버 표시
+                else -> {
+                    CommunityCurrentMemberContent(
+                        members = state.currentMembers,
+                    )
                 }
             }
         }
@@ -299,55 +294,38 @@ fun CommunityMemberBottomSheet(
 /**
  * BottomSheet 상단 Header입니다.
  *
- * 검색 중일 때만 확인 버튼을 표시합니다.
+ * 기본 화면은 추가, 검색/선택 화면은 초대 버튼을 표시합니다.
  */
 @Composable
-private fun CommunityMemberBottomSheetHeader(
+internal fun CommunityMemberBottomSheetHeader(
     title: String,
-    showConfirmButton: Boolean,
+    isSearching: Boolean,
     isConfirmEnabled: Boolean,
     isUpdatingMembers: Boolean,
     onConfirmClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         UText(
             text = title,
             style = UmcTypographyTokens.Title3Bold,
-            color = grey800(),
-            modifier = Modifier.weight(1f),
+            color = grey950(),
+            modifier = Modifier.weight(1f).heightIn(min = 32.dp),
         )
-
-        if (showConfirmButton) {
-            UButton(
-                text = if (isUpdatingMembers) {
-                    "처리 중"
-                } else {
-                    "확인"
-                },
-                onClick = onConfirmClick,
-                enabled = isConfirmEnabled,
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(36.dp),
-                backgroundColor = if (isConfirmEnabled) {
-                    indigo500()
-                } else {
-                    grey100()
-                },
-                textColor = if (isConfirmEnabled) {
-                    grey000()
-                } else {
-                    grey400()
-                },
-                textStyle = UmcTypographyTokens.SubheadlineBold,
-                cornerRadius = 8.dp,
-            )
-        }
+        UButton(
+            text = if (isUpdatingMembers) "처리 중" else if (isSearching) "초대" else "추가",
+            onClick = onConfirmClick,
+            enabled = isConfirmEnabled,
+            modifier = Modifier.widthIn(min = 50.dp).heightIn(min = 32.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+            backgroundColor = if (isConfirmEnabled) main500() else grey100(),
+            textColor = if (isConfirmEnabled) grey50() else grey400(),
+            textStyle = UmcTypographyTokens.SubheadlineBold,
+            cornerRadius = 8.dp,
+        )
     }
 }
 
@@ -355,13 +333,12 @@ private fun CommunityMemberBottomSheetHeader(
  * 현재 스레드에 참여 중인 멤버 목록을 표시합니다.
  */
 @Composable
-private fun CommunityCurrentMemberContent(
+internal fun CommunityCurrentMemberContent(
     members: ImmutableList<CommunityChallengerUiModel>,
-    deletingMemberId: Long?,
-    onDeleteClick: (CommunityChallengerUiModel) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(
             items = members,
@@ -371,10 +348,6 @@ private fun CommunityCurrentMemberContent(
         ) { member ->
             CommunityCurrentMemberRow(
                 member = member,
-                isDeleting = deletingMemberId == member.memberId,
-                onDeleteClick = {
-                    onDeleteClick(member)
-                },
             )
         }
     }
@@ -386,13 +359,11 @@ private fun CommunityCurrentMemberContent(
 @Composable
 private fun CommunityCurrentMemberRow(
     member: CommunityChallengerUiModel,
-    isDeleting: Boolean,
-    onDeleteClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CommunityMemberProfile(
@@ -427,22 +398,6 @@ private fun CommunityCurrentMemberRow(
             )
         }
 
-        UButton(
-            text = if (isDeleting) {
-                "삭제 중"
-            } else {
-                "삭제"
-            },
-            onClick = onDeleteClick,
-            enabled = !isDeleting,
-            modifier = Modifier
-                .width(58.dp)
-                .height(32.dp),
-            backgroundColor = red100(),
-            textColor = red500(),
-            textStyle = UmcTypographyTokens.SubheadlineBold,
-            cornerRadius = 6.dp,
-        )
     }
 }
 
@@ -453,12 +408,13 @@ private fun CommunityCurrentMemberRow(
  * 리스트 하단 접근 시 다음 페이지를 요청합니다.
  */
 @Composable
-private fun CommunityMemberSearchContent(
+internal fun CommunityMemberSearchContent(
     members: ImmutableList<CommunityChallengerUiModel>,
     selectedMembers: ImmutableList<CommunityChallengerUiModel>,
-    maxCount: Int,
+    enabled: Boolean,
     isLoadingMore: Boolean,
     hasNext: Boolean,
+    errorMessage: String? = null,
     onToggleClick: (CommunityChallengerUiModel) -> Unit,
     onLoadMore: () -> Unit,
 ) {
@@ -470,6 +426,12 @@ private fun CommunityMemberSearchContent(
             member.partLabel
         }
         .toList()
+
+    // derivedStateOf 는 처음 한 번만 만들어지므로, 파라미터를 직접 읽으면 처음 값에 묶여 다음 페이지를 영영 부르지 못한다
+    val currentHasNext by rememberUpdatedState(hasNext)
+    val currentIsLoadingMore by rememberUpdatedState(isLoadingMore)
+    // 추가 페이지 요청이 실패하면 hasNext 가 남아 같은 요청을 쉬지 않고 반복하므로, 오류가 있는 동안은 자동으로 부르지 않는다(검색어를 바꾸면 오류가 지워진다)
+    val currentHasError by rememberUpdatedState(errorMessage != null)
 
     /**
      * 리스트 마지막 영역에 가까워졌을 때
@@ -485,8 +447,9 @@ private fun CommunityMemberSearchContent(
             lastVisibleItemIndex != null &&
                     lastVisibleItemIndex >=
                     listState.layoutInfo.totalItemsCount - 3 &&
-                    hasNext &&
-                    !isLoadingMore
+                    currentHasNext &&
+                    !currentIsLoadingMore &&
+                    !currentHasError
         }
     }
 
@@ -499,6 +462,7 @@ private fun CommunityMemberSearchContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         groupedMembers.forEach { (partLabel, partMembers) ->
             item(
@@ -506,13 +470,13 @@ private fun CommunityMemberSearchContent(
             ) {
                 UText(
                     text = partLabel,
-                    style = UmcTypographyTokens.BodyBold,
-                    color = grey900(),
+                    style = UmcTypographyTokens.Callout,
+                    color = grey950(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = 4.dp,
-                            bottom = 8.dp,
+                            top = 0.dp,
+                            bottom = 0.dp,
                         ),
                 )
             }
@@ -528,19 +492,12 @@ private fun CommunityMemberSearchContent(
                         selectedMember.memberId == member.memberId
                     }
 
-                // 최대 인원 도달 후에도 이미 선택된 멤버는 해제 가능
-                val isEnabled =
-                    isChecked ||
-                            selectedMembers.size < maxCount
-
                 CommunityMemberSearchRow(
                     member = member,
                     isChecked = isChecked,
-                    isEnabled = isEnabled,
+                    isEnabled = enabled,
                     onToggleClick = {
-                        if (isEnabled) {
-                            onToggleClick(member)
-                        }
+                        onToggleClick(member)
                     },
                 )
             }
@@ -567,7 +524,7 @@ private fun CommunityMemberSearchContent(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = indigo500(),
+                        color = main500(),
                         strokeWidth = 2.dp,
                     )
                 }
@@ -580,7 +537,7 @@ private fun CommunityMemberSearchContent(
  * 검색 결과의 챌린저 한 명을 표시하는 Row입니다.
  */
 @Composable
-private fun CommunityMemberSearchRow(
+internal fun CommunityMemberSearchRow(
     member: CommunityChallengerUiModel,
     isChecked: Boolean,
     isEnabled: Boolean,
@@ -589,11 +546,9 @@ private fun CommunityMemberSearchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                enabled = isEnabled,
-                onClick = onToggleClick,
-            )
-            .padding(vertical = 12.dp),
+            .toggleable(value = isChecked, enabled = isEnabled, role = Role.Checkbox,
+                onValueChange = { onToggleClick() })
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CommunityMemberProfile(
@@ -626,7 +581,7 @@ private fun CommunityMemberSearchRow(
 
             UText(
                 text = member.school,
-                style = UmcTypographyTokens.Footnote,
+                style = UmcTypographyTokens.Caption1,
                 color = if (isEnabled) {
                     grey600()
                 } else {
@@ -659,31 +614,32 @@ private fun CommunityMemberSearchRow(
  * 목록에 표시할 멤버가 없을 때 사용하는 Empty UI입니다.
  */
 @Composable
-private fun CommunityMemberEmptyContent(
+internal fun CommunityMemberEmptyContent(
     text: String,
+    @DrawableRes iconRes: Int = R.drawable.ic_community_invite_empty,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 28.dp),
+            .padding(top = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             painter = painterResource(
-                id = R.drawable.ic_people,
+                id = iconRes,
             ),
             contentDescription = null,
             tint = grey400(),
-            modifier = Modifier.size(42.dp),
+            modifier = Modifier.size(48.dp),
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp),
+            modifier = Modifier.height(16.dp),
         )
 
         UText(
             text = text,
-            style = UmcTypographyTokens.Body,
+            style = UmcTypographyTokens.Callout,
             color = grey600(),
         )
     }
@@ -696,43 +652,304 @@ private fun CommunityMemberEmptyContent(
  * URL이 없으면 기본 프로필 아이콘을 표시합니다.
  */
 @Composable
-private fun CommunityMemberProfile(
-    profileImage: String,
+private fun CommunityMemberProfile(profileImage: String) {
+    CommunityChatProfileImage(profileImage, useThreadStyle = true)
+}
+
+/** 이름/닉네임을 표시하며 기수는 이름 뒤에 붙이지 않는다. */
+private fun buildMemberTitle(member: CommunityChallengerUiModel): String = member.displayName
+
+/**
+ * Preview용 시트 틀입니다.
+ *
+ * 실제 시트는 Dialog 위에 그려져 Preview에 나오지 않으므로,
+ * 시트 높이·배경·핸들 영역(48dp)과 하단 토스트 위치만 흉내 냅니다.
+ */
+@Composable
+internal fun CommunityMemberSheetPreviewFrame(
+    toastData: UToastData? = null,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (profileImage.isNotBlank()) {
-        AsyncImage(
-            model = profileImage,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(560.dp)
+            .background(grey50()),
+    ) {
+        Column(
             modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape),
+                .fillMaxSize()
+                .padding(top = 48.dp),
+            content = content,
         )
-    } else {
-        Icon(
-            painter = painterResource(
-                id = R.drawable.ic_profile_default,
+
+        UToastHost(
+            data = toastData,
+            onDismiss = {},
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 8.dp),
+        )
+    }
+}
+
+private val previewCurrentMembers = persistentListOf(
+    CommunityChallengerUiModel(
+        memberId = 1L,
+        name = "김챌린저",
+        nickname = "챌린",
+        school = "UMC대학교",
+        generation = 9L,
+        partLabel = "Android",
+    ),
+    CommunityChallengerUiModel(
+        memberId = 2L,
+        name = "이유엠",
+        nickname = "",
+        school = "한국대학교",
+        generation = 9L,
+        partLabel = "iOS",
+    ),
+    CommunityChallengerUiModel(
+        memberId = 3L,
+        name = "박프로덕트",
+        nickname = "프덕",
+        school = "서울대학교",
+        generation = 8L,
+        partLabel = "Web",
+    ),
+)
+
+// 검색 결과에 이미 참여 중인 멤버(1번)를 섞어, displayedMembers에서 걸러지는지 함께 본다
+private val previewSearchResults = persistentListOf(
+    previewCurrentMembers[0],
+    CommunityChallengerUiModel(
+        memberId = 11L,
+        name = "김안드",
+        nickname = "안드",
+        school = "UMC대학교",
+        generation = 9L,
+        partLabel = "Android",
+    ),
+    CommunityChallengerUiModel(
+        memberId = 12L,
+        name = "김코틀린",
+        nickname = "",
+        school = "한국대학교",
+        generation = 9L,
+        partLabel = "Android",
+    ),
+    CommunityChallengerUiModel(
+        memberId = 13L,
+        name = "김스위프트",
+        nickname = "스윕",
+        school = "부산대학교",
+        generation = 8L,
+        partLabel = "iOS",
+    ),
+)
+
+// 기존 멤버 + 새로 고른 1명 → addedMembers가 생겨 초대 버튼이 활성화된다
+private val previewSelectedMembers =
+    (previewCurrentMembers + previewSearchResults[1]).toImmutableList()
+
+@Composable
+private fun CommunityMemberSheetPreviewContent(
+    state: CommunityMemberBottomSheetState,
+    modifier: Modifier = Modifier,
+    isSearchFieldFocused: Boolean = false,
+) {
+    CommunityMemberSheetContent(
+        state = state,
+        isSearchFieldFocused = isSearchFieldFocused,
+        onQueryChange = {},
+        onConfirmClick = {},
+        onToggleMember = {},
+        onLoadMore = {},
+        modifier = modifier,
+    )
+}
+
+/**
+ * 현재 참여 중인 멤버 목록 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetCurrentMembersPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                currentMembers = previewCurrentMembers,
             ),
-            contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.weight(1f),
         )
     }
 }
 
 /**
- * 챌린저 이름/닉네임과 기수 정보를 화면 표시용 문자열로 변환합니다.
+ * 참여 멤버가 없는 상태 Preview
  */
-private fun buildMemberTitle(
-    member: CommunityChallengerUiModel,
-): String {
-    return buildString {
-        append(member.displayName)
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetEmptyPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+            ),
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
 
-        if (member.generation > 0) {
-            append("(")
-            append(member.generation)
-            append("기)")
-        }
+/**
+ * 멤버 조회 로딩 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetLoadingPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                isLoading = true,
+            ),
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/**
+ * 검색 필드에 포커스만 두고 아직 고르지 않은 상태 Preview (초대 버튼 비활성)
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetSearchFocusedPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                currentMembers = previewCurrentMembers,
+            ),
+            modifier = Modifier.weight(1f),
+            isSearchFieldFocused = true,
+        )
+    }
+}
+
+/**
+ * 검색 결과에서 새 멤버를 고른 상태 Preview (초대 버튼 활성)
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetSearchPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                query = "김",
+                isSearching = true,
+                currentMembers = previewCurrentMembers,
+                searchResults = previewSearchResults,
+                selectedMembers = previewSelectedMembers,
+                hasNext = true,
+            ),
+            modifier = Modifier.weight(1f),
+            isSearchFieldFocused = true,
+        )
+    }
+}
+
+/**
+ * 검색 결과가 없는 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetSearchNoResultPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                query = "없는이름",
+                isSearching = true,
+                currentMembers = previewCurrentMembers,
+            ),
+            modifier = Modifier.weight(1f),
+            isSearchFieldFocused = true,
+        )
+    }
+}
+
+/**
+ * 초대를 서버에 반영 중이면서 다음 페이지를 불러오는 상태 Preview
+ * (헤더 "처리 중", 검색 결과 비활성)
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetUpdatingPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                query = "김",
+                isSearching = true,
+                isLoadingMore = true,
+                isUpdatingMembers = true,
+                currentMembers = previewCurrentMembers,
+                searchResults = previewSearchResults,
+                selectedMembers = previewSelectedMembers,
+                hasNext = true,
+            ),
+            modifier = Modifier.weight(1f),
+            isSearchFieldFocused = true,
+        )
+    }
+}
+
+/**
+ * 멤버 조회·검색 실패 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetErrorPreview() {
+    CommunityMemberSheetPreviewFrame {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                query = "김",
+                isSearching = true,
+                errorMessage = "챌린저를 불러오지 못했어요.",
+            ),
+            modifier = Modifier.weight(1f),
+            isSearchFieldFocused = true,
+        )
+    }
+}
+
+/**
+ * 최대 인원 초과 UToast가 표시된 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+private fun CommunityMemberSheetMaxCountToastPreview() {
+    CommunityMemberSheetPreviewFrame(
+        toastData = UToastData(
+            message = "최대 ${DEFAULT_COMMUNITY_MAX_MEMBER_COUNT}명까지 초대할 수 있습니다.",
+            state = UToastState.ERROR,
+        ),
+    ) {
+        CommunityMemberSheetPreviewContent(
+            state = CommunityMemberBottomSheetState(
+                canManage = true,
+                query = "김",
+                isSearching = true,
+                currentMembers = previewCurrentMembers,
+                searchResults = previewSearchResults,
+                selectedMembers = previewSelectedMembers,
+            ),
+            modifier = Modifier.weight(1f),
+            isSearchFieldFocused = true,
+        )
     }
 }

@@ -43,14 +43,14 @@ import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import kotlinx.coroutines.flow.collectLatest
@@ -116,7 +116,7 @@ fun EmailLoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Icon(
             modifier = Modifier
@@ -152,7 +152,7 @@ fun EmailLoginScreen(
                 placeholder = AppStrings.EMAIL_LOGIN_EMAIL_PLACEHOLDER,
                 textStyle = UmcTypographyTokens.Headline,
                 textColor = if (uiState.isLoginFailed) red500() else grey950(),
-                backgroundColor = if (uiState.isLoginFailed) red100() else grey000(),
+                backgroundColor = if (uiState.isLoginFailed) red100() else grey50(),
                 strokeColor = if (uiState.isLoginFailed) red500() else grey200(),
                 focusStrokeColor = if (uiState.isLoginFailed) red500() else grey900(),
                 cornerRadius = 10.dp,
@@ -186,7 +186,7 @@ fun EmailLoginScreen(
                 placeholder = AppStrings.EMAIL_LOGIN_PASSWORD_PLACEHOLDER,
                 textStyle = UmcTypographyTokens.Headline,
                 textColor = if (uiState.isLoginFailed) red500() else grey950(),
-                backgroundColor = if (uiState.isLoginFailed) red100() else grey000(),
+                backgroundColor = if (uiState.isLoginFailed) red100() else grey50(),
                 strokeColor = if (uiState.isLoginFailed) red500() else grey200(),
                 focusStrokeColor = if (uiState.isLoginFailed) red500() else grey900(),
                 cornerRadius = 10.dp,
@@ -259,8 +259,8 @@ fun EmailLoginScreen(
                 text = AppStrings.LOGIN,
                 onClick = onClickLogin,
                 enabled = uiState.enableLoginButton,
-                backgroundColor = if (uiState.enableLoginButton) indigo500() else grey100(),
-                textColor = if (uiState.enableLoginButton) grey000() else grey300(),
+                backgroundColor = if (uiState.enableLoginButton) main500() else grey100(),
+                textColor = if (uiState.enableLoginButton) grey50() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,
                 modifier = Modifier

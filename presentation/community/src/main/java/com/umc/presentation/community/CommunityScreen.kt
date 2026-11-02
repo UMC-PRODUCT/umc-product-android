@@ -18,9 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.UmcTheme
+import com.umc.presentation.community.model.CommunityCategory
+import com.umc.presentation.community.model.CommunityThreadUiModel
+import kotlinx.collections.immutable.toImmutableList
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.component.CommunityEmptyContent
 import com.umc.presentation.community.component.CommunityErrorContent
@@ -51,7 +57,7 @@ fun CommunityScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -98,7 +104,11 @@ fun CommunityScreen(
                     }
 
                     state.isEmpty -> {
-                        CommunityEmptyContent()
+                        CommunityEmptyContent(
+                            onCreateThreadClick = {
+                                onAction(CommunityAction.OnCreateThreadClick)
+                            },
+                        )
                     }
 
                     else -> {
@@ -120,15 +130,16 @@ fun CommunityScreen(
             }
         }
 
-        // 로딩 또는 에러 상태가 아닐 때 새 스레드 생성 버튼 표시
-        if (!state.isLoading && !state.isError) {
+        // 로딩·에러·빈 화면이 아닐 때 새 스레드 생성 버튼 표시
+        // 빈 화면은 CommunityEmptyContent에 같은 생성 버튼이 있어 겹치지 않도록 숨김
+        if (!state.isLoading && !state.isError && !state.isEmpty) {
             CommunityFloatingButton(
                 onClick = {
                     onAction(CommunityAction.OnCreateThreadClick)
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 20.dp),
+                    .padding(bottom = 18.dp),
             )
         }
 
@@ -187,7 +198,7 @@ private fun CommunityThreadList(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = 10.dp,
+            top = 4.dp,
             bottom = 96.dp,
         ),
     ) {
@@ -215,14 +226,15 @@ private fun CommunityThreadList(
                     onLongClick = {
                         onThreadLongClick(thread.id)
                     },
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(bottom = 10.dp),
+                    useUpdatedListStyle = true,
                 )
             }
 
             item(
                 key = "normal_section_space",
             ) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(2.dp))
             }
         }
 
@@ -249,7 +261,8 @@ private fun CommunityThreadList(
                 onLongClick = {
                     onThreadLongClick(thread.id)
                 },
-                modifier = Modifier.padding(bottom = 8.dp),
+                modifier = Modifier.padding(bottom = 10.dp),
+                useUpdatedListStyle = true,
             )
         }
     }
@@ -264,8 +277,62 @@ private fun CommunitySectionTitle(
 ) {
     UText(
         text = text,
-        style = UmcTypographyTokens.HeadlineBold,
+        style = UmcTypographyTokens.HeadlineBold.copy(letterSpacing = (-0.41).sp),
         color = grey950(),
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
     )
+}
+
+@Preview(name = "커뮤니티 기본 목록 · Figma 1:3825", widthDp = 412, heightDp = 734, showBackground = true)
+@Composable
+private fun CommunityListPreview() {
+    val titles = listOf(
+        "iOS 3주차 과제 인증방",
+        "정기 모임 일정 안내",
+        "OT 장소 변경 안내",
+        "리액트 상태관리 질문 있어요",
+        "이번 주 회식 어때요?",
+    )
+    val categories = listOf(
+        CommunityCategory.STUDY, CommunityCategory.PROJECT,
+        CommunityCategory.PROJECT, CommunityCategory.QNA, CommunityCategory.FREE,
+    )
+    UmcTheme(darkTheme = false) {
+        CommunityScreen(
+            state = CommunityState(
+                isLoading = false,
+                threads = titles.mapIndexed { index, title ->
+                    CommunityThreadUiModel(
+                        id = "preview-$index",
+                        title = title,
+                        contentPreview = "다들 과제 인증 완료했나요? 오늘 자정까지...",
+                        category = categories[index],
+                        dayText = "화요일",
+                        unreadCount = 3,
+                        isPinned = index < 2,
+                        isJoined = true,
+                    )
+                }.toImmutableList(),
+            ),
+            onAction = {},
+        )
+    }
+}
+
+/**
+ * 스레드가 없는 빈 화면 Preview
+ *
+ * 높이가 낮은 화면에서도 플로팅 버튼 없이 빈 화면의 생성 버튼만 보이는지 확인합니다.
+ */
+@Preview(name = "커뮤니티 빈 화면 · 낮은 높이", widthDp = 412, heightDp = 480, showBackground = true)
+@Composable
+private fun CommunityEmptyPreview() {
+    UmcTheme(darkTheme = false) {
+        CommunityScreen(
+            state = CommunityState(
+                isLoading = false,
+            ),
+            onAction = {},
+        )
+    }
 }

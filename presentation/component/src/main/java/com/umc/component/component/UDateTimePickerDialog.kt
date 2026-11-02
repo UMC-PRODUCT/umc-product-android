@@ -105,7 +105,7 @@ fun UDateTimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = grey000(),
+        containerColor = grey50(),
         shape = RoundedCornerShape(12.dp),
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -153,7 +153,7 @@ fun UDateTimePickerDialog(
                         ,
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = indigo500(),
+                        focusedBorderColor = main500(),
                         unfocusedBorderColor = grey200()
                     ),
                     //입력 시 자동으로 0000.00.00 형태로 바꿔주는 함수
@@ -236,7 +236,7 @@ fun UDateTimePickerDialog(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = indigo500(),
+                            focusedBorderColor = main500(),
                             unfocusedBorderColor = grey200()
                         ),
                         //분 입력 시 자동으로 :00 형태로 바꿔주는 함수
@@ -326,7 +326,7 @@ fun UDateTimePickerDialog(
                             onConfirm(utcResult)
                         }
                     },
-                    backgroundColor = if (isConfirmEnabled) indigo500() else grey000(),
+                    backgroundColor = if (isConfirmEnabled) main500() else grey50(),
                     textColor = if (isConfirmEnabled) grey100() else grey300(),
                     modifier = Modifier
                         .weight(1f)
@@ -349,7 +349,7 @@ fun AmPmToggleButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) indigo100() else grey100())
+            .background(if (isSelected) main100() else grey100())
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
@@ -357,7 +357,7 @@ fun AmPmToggleButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
         UText(
             text = text,
             style = UmcTypographyTokens.CalloutBold,
-            color = if (isSelected) indigo500() else grey400()
+            color = if (isSelected) main500() else grey400()
         )
     }
 }

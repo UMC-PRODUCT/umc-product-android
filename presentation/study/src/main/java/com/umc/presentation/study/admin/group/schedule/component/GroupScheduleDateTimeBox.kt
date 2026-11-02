@@ -53,7 +53,7 @@ fun GroupScheduleDateTimeBox(
                 color = grey300(),
                 shape = RoundedCornerShape(12.dp)
             )
-            .background(grey000()),
+            .background(grey50()),
     ) {
         // 하루 종일 설정
         Row(
@@ -137,7 +137,7 @@ private fun DateTimeRow(
             Box(
                 modifier = Modifier
                     .background(
-                        indigo100(),
+                        main100(),
                         RoundedCornerShape(999.dp)
                     )
                     .padding(
@@ -148,7 +148,7 @@ private fun DateTimeRow(
                 UText(
                     text = value,
                     style = HeadlineBold,
-                    color = indigo500(),
+                    color = main500(),
                 )
             }
         }

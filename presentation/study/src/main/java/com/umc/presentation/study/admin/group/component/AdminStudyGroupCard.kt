@@ -57,7 +57,7 @@ fun AdminStudyGroupCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    grey000(),
+                    grey50(),
                     RoundedCornerShape(12.dp)
                 )
                 .padding(16.dp)
@@ -95,7 +95,7 @@ fun AdminStudyGroupCard(
                         Box(
                             modifier = Modifier
                                 .background(
-                                    color = indigo100(),
+                                    color = main100(),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .padding(
@@ -106,7 +106,7 @@ fun AdminStudyGroupCard(
                             UText(
                                 text = item.partLabel,
                                 style = Caption1Bold,
-                                color = indigo600(),
+                                color = main600(),
                                 maxLines = 1,
                                 softWrap = false,
                             )
@@ -156,7 +156,7 @@ fun AdminStudyGroupCard(
                         modifier = Modifier
                             .width(208.dp)
                             .background(
-                                grey000(),
+                                grey50(),
                                 RoundedCornerShape(16.dp)
                             )
                     ) {
@@ -240,7 +240,7 @@ fun AdminStudyGroupCard(
                 Box(
                     modifier = Modifier
                         .background(
-                            grey000(),
+                            grey50(),
                             RoundedCornerShape(4.dp)
                         )
                         .border(
@@ -309,7 +309,7 @@ fun AdminStudyGroupCard(
                         R.drawable.ic_add_filled
                     ),
                     contentDescription = "스터디원 추가",
-                    tint = indigo500(),
+                    tint = main500(),
                     modifier = Modifier
                         .size(24.dp)
                         .clickable {

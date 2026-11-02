@@ -19,10 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.UserPart
 
 
@@ -44,7 +44,7 @@ fun GroupCreatePartBottomSheet(
         sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
         ),
-        containerColor = grey000(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600(),
@@ -92,7 +92,7 @@ fun GroupCreatePartBottomSheet(
                         color = if (
                             selectedPart == part
                         ) {
-                            indigo500()
+                            main500()
                         } else {
                             grey800()
                         },

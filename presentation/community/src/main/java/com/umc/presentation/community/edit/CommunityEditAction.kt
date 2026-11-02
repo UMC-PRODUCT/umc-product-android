@@ -1,5 +1,7 @@
 package com.umc.presentation.community.edit
 
+import com.umc.presentation.community.model.CommunityCategory
+
 /**
  * 스레드 수정 화면에서 발생하는 사용자 액션
  *
@@ -33,6 +35,11 @@ sealed interface CommunityEditAction {
     /** AI 카테고리 재분류 요청 */
     data object OnRetryClassificationClick : CommunityEditAction
 
+    /** 아이콘 선택 영역에서 카테고리 직접 선택 */
+    data class OnCategorySelected(
+        val category: CommunityCategory,
+    ) : CommunityEditAction
+
     /** 스레드 아이콘 변경 */
     data object OnChangeEmojiClick : CommunityEditAction
 
@@ -45,6 +52,6 @@ sealed interface CommunityEditAction {
     /** 스레드 삭제 확정 */
     data object OnConfirmDeleteClick : CommunityEditAction
 
-    /** 챌린저 추가/삭제 완료 */
+    /** 챌린저 초대 완료 */
     data object OnMemberInviteSuccess : CommunityEditAction
 }

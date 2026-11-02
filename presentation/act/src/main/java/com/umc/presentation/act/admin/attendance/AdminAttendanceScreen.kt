@@ -60,17 +60,16 @@ import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.black
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.act.check.AdminPendingUser
@@ -227,7 +226,7 @@ fun AdminSessionCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -260,7 +259,7 @@ fun AdminSessionCard(
                         )
                         Surface(
                             color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                                indigo100()
+                                main100()
                             } else {
                                 grey50()
                             },
@@ -270,7 +269,7 @@ fun AdminSessionCard(
                                 text = session.status.text,
                                 style = Caption2Bold,
                                 color = if (session.status == AdminSessionStatus.IN_PROGRESS) {
-                                    indigo500()
+                                    main500()
                                 } else {
                                     grey600()
                                 },
@@ -429,7 +428,7 @@ private fun CheckAttendanceListButton(
     UButton(
         modifier = Modifier.fillMaxWidth(),
         prevIcon = painterResource(id = R.drawable.ic_person),
-        prevIconTint = indigo500(),
+        prevIconTint = main500(),
         text = AppStrings.ADMIN_CHECK_PENDING_LIST_TRIGGER,
         textColor = black(),
         textStyle = CalloutBold,
@@ -456,7 +455,7 @@ private fun SuccessCheckAllAttendanceButton() {
         prevIconMargin = 8.dp,
         textColor = grey600(),
         textStyle = SubheadlineBold,
-        backgroundColor = grey000(),
+        backgroundColor = grey50(),
         borderColor = grey200(),
         borderWidth = 1.dp,
         onClick = {},
@@ -516,7 +515,7 @@ private fun StatItem(
             UText(
                 text = highlightedValue,
                 style = SubheadlineBold,
-                color = indigo500()
+                color = main500()
             )
             UText(
                 text = trailingValue,

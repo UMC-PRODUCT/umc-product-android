@@ -60,7 +60,6 @@ import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title2Bold
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -339,7 +338,7 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
             contentAlignment = Alignment.Center
         ) {
             UText(
-                text = "UMC", style = BodyBold, color = grey000()
+                text = "UMC", style = BodyBold, color = grey50()
             )
         }
 
@@ -569,7 +568,7 @@ private fun HistorySection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(grey000())
+                    .background(grey50())
                     .border(1.dp, grey200(), RoundedCornerShape(12.dp))
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)

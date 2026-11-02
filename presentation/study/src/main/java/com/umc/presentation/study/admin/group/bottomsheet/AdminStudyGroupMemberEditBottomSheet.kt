@@ -31,14 +31,14 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.red500
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 
@@ -95,7 +95,7 @@ fun AdminStudyGroupMemberEditBottomSheet(
         sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
         ),
-        containerColor = grey000(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600(),
@@ -141,7 +141,7 @@ fun AdminStudyGroupMemberEditBottomSheet(
                 prevIconTint = grey500(),
                 prevIconSize = 24.dp,
                 backgroundColor = grey100(),
-                focusBackgroundColor = grey000(),
+                focusBackgroundColor = grey50(),
                 strokeColor = grey100(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 8.dp,
@@ -169,7 +169,7 @@ fun AdminStudyGroupMemberEditBottomSheet(
                             modifier = Modifier.align(
                                 Alignment.Center
                             ),
-                            color = indigo500(),
+                            color = main500(),
                         )
                     }
 
@@ -238,12 +238,12 @@ private fun EditMemberHeader(
                     .width(52.dp)
                     .height(32.dp),
                 backgroundColor = if (isConfirmEnabled) {
-                    indigo500()
+                    main500()
                 } else {
                     grey100()
                 },
                 textColor = if (isConfirmEnabled) {
-                    grey000()
+                    grey50()
                 } else {
                     grey400()
                 },

@@ -38,11 +38,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 
 /**
  * UMC 공용 텍스트 입력 컴포넌트.
@@ -57,10 +57,10 @@ import com.umc.component.theme.indigo500
  * @param placeholderColor 힌트 텍스트 색상. 기본값 grey400
  * @param textColor 입력 텍스트 색상. 기본값 grey800
  * @param textStyle 입력 텍스트 스타일. 기본값 Callout
- * @param backgroundColor 배경색. 기본값 grey000 (흰색)
+ * @param backgroundColor 배경색. 기본값 grey50
  * @param focusBackgroundColor 포커스 상태의 배경색. 기본값은 backgroundColor와 동일
  * @param strokeColor 비포커스 상태의 테두리 색상. 기본값 grey300
- * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 indigo500
+ * @param focusStrokeColor 포커스 상태의 테두리 색상 및 커서 색상. 기본값 main500
  * @param cornerRadius 모서리 둥글기. 기본값 8dp
  * @param enabled false 이면 입력 불가. strokeColor는 항상 strokeColor로 고정
  * @param keyboardOptions 키보드 타입·IME 액션 등 설정. Next/Done/Search 등 IME 액션을 지정하거나 Password 키보드를 쓰면 자동으로 한 줄 입력이 된다
@@ -75,6 +75,8 @@ import com.umc.component.theme.indigo500
  * @param visualTransformation 입력 텍스트 표시 변환 (비밀번호 마스킹 등). null 이면 Password 키보드는 자동으로 마스킹하고 그 외에는 변환하지 않는다
  * @param interactionSource 포커스 상태를 호출부에서 관찰해야 할 때 외부에서 주입
  * @param verticalAlignment 입력 내용의 세로 정렬. 기본값은 중앙 정렬
+ * @param acceptInput 새 입력의 허용 여부. 거절한 입력은 내부 편집 상태에도 반영하지 않는다.
+ * @param onInputRejected 입력이 거절되었을 때 안내를 표시하는 콜백
  */
 @Composable
 fun UTextField(
@@ -85,9 +87,9 @@ fun UTextField(
     placeholderColor: Color = grey400(),
     textColor: Color = grey800(),
     textStyle: TextStyle = UmcTypographyTokens.Callout,
-    backgroundColor: Color = grey000(),
+    backgroundColor: Color = grey50(),
     strokeColor: Color = grey300(),
-    focusStrokeColor: Color = indigo500(),
+    focusStrokeColor: Color = main500(),
     cornerRadius: Dp = 8.dp,
     enabled: Boolean = true,
     focusBackgroundColor: Color = backgroundColor,
@@ -105,6 +107,8 @@ fun UTextField(
     visualTransformation: VisualTransformation? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    acceptInput: (String) -> Boolean = { true },
+    onInputRejected: () -> Unit = {},
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
 
@@ -147,8 +151,14 @@ fun UTextField(
     BasicTextField(
         value = fieldValue,
         onValueChange = {
-            fieldValue = it
-            onValueChange(it.text)
+            // Keep cursor/composition changes, but do not display rejected text even when
+            // the parent value stays unchanged and therefore does not trigger recomposition.
+            if (it.text == fieldValue.text || acceptInput(it.text)) {
+                fieldValue = it
+                onValueChange(it.text)
+            } else {
+                onInputRejected()
+            }
         },
         enabled = enabled,
         textStyle = textStyle.copy(color = textColor),

@@ -1,48 +1,29 @@
 package com.umc.presentation.community.edit
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.umc.component.component.DialogType
 import com.umc.component.component.UBasicDialog
-import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
-import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
-import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
-import com.umc.presentation.community.component.create.CommunityAiCard
-import com.umc.presentation.community.component.create.CommunityChallengerCard
-import com.umc.presentation.community.component.create.CommunityCreateTopBar
-import com.umc.presentation.community.component.create.CommunityDeleteButton
-import com.umc.presentation.community.component.create.CommunityThreadForm
+import com.umc.presentation.community.component.CommunityThreadEditorContent
+import com.umc.presentation.community.component.CommunityThreadEditorMode
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
+import com.umc.presentation.community.model.CommunityChallengerUiModel
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * 커뮤니티 스레드 수정 화면
  *
+ * 생성 화면과 같은 [CommunityThreadEditorContent]를 수정 모드로 사용합니다.
  * 챌린저 관리, 제목/특징 수정, AI 카테고리 재분류,
- * 스레드 수정 및 삭제 기능을 제공합니다.
+ * 스레드 수정(저장) 및 삭제 기능을 제공합니다.
  */
 @Composable
 fun CommunityEditScreen(
@@ -50,168 +31,66 @@ fun CommunityEditScreen(
     onAction: (CommunityEditAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(grey000())
-            .navigationBarsPadding(),
-    ) {
-        // 스레드 수정 화면 상단바
-        CommunityCreateTopBar(
-            title = "스레드 수정하기",
-            actionText = "완료",
-            isActionEnabled = state.isSaveEnabled,
-            onBackClick = {
-                onAction(
-                    CommunityEditAction.OnBackClick
+    CommunityThreadEditorContent(
+        mode = CommunityThreadEditorMode.Edit(
+            canDelete = state.canEdit,
+        ),
+        title = state.title,
+        description = state.description,
+        aiState = state.aiState,
+        aiCategory = state.aiCategory,
+        selectedCategory = state.selectedCategory,
+        canRequestClassification = state.canRequestClassification,
+        isSubmitEnabled = state.isSaveEnabled,
+        challengers = state.selectedChallengers,
+        maxChallengerCount = state.maxChallengerCount,
+        currentChallengerCount = state.currentChallengerCount,
+        isLoading = state.isLoading,
+        onBackClick = {
+            onAction(CommunityEditAction.OnBackClick)
+        },
+        onSubmitClick = {
+            onAction(CommunityEditAction.OnSaveClick)
+        },
+        onTitleChanged = { title ->
+            onAction(
+                CommunityEditAction.OnTitleChanged(
+                    title = title,
                 )
-            },
-            onActionClick = {
-                onAction(
-                    CommunityEditAction.OnSaveClick
+            )
+        },
+        onDescriptionChanged = { description ->
+            onAction(
+                CommunityEditAction.OnDescriptionChanged(
+                    description = description,
                 )
-            },
-            modifier = Modifier.padding(
-                horizontal = 16.dp,
-                vertical = 8.dp,
-            ),
-        )
-
-        if (state.isLoading) {
-            // 스레드 상세 조회가 끝나기 전에는 빈 입력칸과 기본 카테고리 카드를 보여주지 않는다.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(
-                    color = indigo500(),
+            )
+        },
+        onCategorySelected = { category ->
+            onAction(
+                CommunityEditAction.OnCategorySelected(
+                    category = category,
                 )
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-            ) {
-                // 스레드 수정 입력 영역
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(
-                            start = 24.dp,
-                            end = 24.dp,
-                            top = 8.dp,
-                            bottom = 240.dp,
-                        ),
-                ) {
-
-                    // 현재 스레드에 참여 중인 챌린저 명단
-                    UText(
-                        text = "챌린저 명단",
-                        style = UmcTypographyTokens.HeadlineBold,
-                        color = grey950(),
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(8.dp)
-                    )
-
-                    // 클릭 시 챌린저 관리 BottomSheet 표시
-                    CommunityChallengerCard(
-                        challengers = state.selectedChallengers,
-                        maxCount = state.maxChallengerCount,
-                        currentCount = state.currentChallengerCount,
-                        onClick = {
-                            onAction(
-                                CommunityEditAction.OnChallengerCardClick
-                            )
-                        },
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(32.dp),
-                    )
-
-                    // 스레드 제목 및 특징 수정 영역
-                    CommunityThreadForm(
-                        title = state.title,
-                        description = state.description,
-                        onTitleChanged = { title ->
-                            onAction(
-                                CommunityEditAction.OnTitleChanged(
-                                    title = title,
-                                )
-                            )
-                        },
-                        onDescriptionChanged = { description ->
-                            onAction(
-                                CommunityEditAction.OnDescriptionChanged(
-                                    description = description,
-                                )
-                            )
-                        },
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(32.dp),
-                    )
-                }
-
-                // 화면 하단 AI 분류 및 스레드 삭제 영역
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(
-                            horizontal = 24.dp,
-                            vertical = 16.dp,
-                        ),
-                ) {
-                    // AI 카테고리 분류 카드
-                    CommunityAiCard(
-                        aiState = state.aiState,
-                        classifiedCategory = state.classifiedCategory,
-                        canRequestClassification =
-                            state.canRequestClassification,
-                        onRequestClassificationClick = {
-                            onAction(
-                                CommunityEditAction
-                                    .OnRetryClassificationClick
-                            )
-                        },
-                        onRetryClassificationClick = {
-                            onAction(
-                                CommunityEditAction
-                                    .OnRetryClassificationClick
-                            )
-                        },
-                        onChangeEmojiClick = {
-                            onAction(
-                                CommunityEditAction.OnChangeEmojiClick
-                            )
-                        },
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(16.dp),
-                    )
-
-                    // 스레드 삭제 버튼
-                    CommunityDeleteButton(
-                        onClick = {
-                            onAction(
-                                CommunityEditAction.OnDeleteThreadClick
-                            )
-                        },
-                    )
-                }
-            }
-        }
-    }
+            )
+        },
+        // 클릭 시 챌린저 관리 BottomSheet 표시
+        onChallengerCardClick = {
+            onAction(CommunityEditAction.OnChallengerCardClick)
+        },
+        onRequestClassificationClick = {
+            onAction(CommunityEditAction.OnRetryClassificationClick)
+        },
+        onRetryClassificationClick = {
+            onAction(CommunityEditAction.OnRetryClassificationClick)
+        },
+        onChangeEmojiClick = {
+            onAction(CommunityEditAction.OnChangeEmojiClick)
+        },
+        onDeleteClick = {
+            onAction(CommunityEditAction.OnDeleteThreadClick)
+        },
+        modifier = modifier,
+    )
 
     // 스레드 삭제 확인 Dialog
     if (state.showDeleteDialog) {
@@ -284,7 +163,7 @@ private fun CommunityEditScreenLoadingPreview() {
 }
 
 /**
- * 스레드 상세 조회 완료 Preview
+ * 스레드 상세 조회 완료 Preview (저장 버튼 + 하단 삭제 버튼)
  */
 @Preview(showBackground = true)
 @Composable
@@ -292,11 +171,26 @@ private fun CommunityEditScreenLoadedPreview() {
     UmcTheme {
         CommunityEditScreen(
             state = CommunityEditState(
+                threadId = "1",
                 title = "알고리즘 스터디",
                 description = "매주 코딩테스트 문제를 함께 풉니다.",
+                selectedChallengers = persistentListOf(
+                    CommunityChallengerUiModel(
+                        memberId = 2L,
+                        name = "김챌린저",
+                        nickname = "챌린",
+                        school = "UMC대학교",
+                        generation = 9L,
+                        partLabel = "Android",
+                        profileImage = "",
+                    ),
+                ),
+                currentChallengerCount = 1,
                 isLoading = false,
+                canEdit = true,
                 aiState = CommunityAiState.SUCCESS,
-                classifiedCategory = CommunityCategory.STUDY,
+                aiCategory = CommunityCategory.STUDY,
+            selectedCategory = CommunityCategory.STUDY,
             ),
             onAction = {},
         )

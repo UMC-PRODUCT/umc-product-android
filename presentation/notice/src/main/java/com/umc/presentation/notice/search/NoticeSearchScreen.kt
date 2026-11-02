@@ -42,13 +42,13 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
@@ -123,7 +123,7 @@ fun NoticeSearchScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Row(
             modifier = Modifier
@@ -241,7 +241,7 @@ fun NoticeSearchResultScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Row(
             modifier = Modifier
@@ -282,7 +282,7 @@ fun NoticeSearchResultScreen(
         when {
             uiState.isPageLoading && uiState.resultList.isEmpty() -> {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = indigo500())
+                    CircularProgressIndicator(color = main500())
                 }
             }
 

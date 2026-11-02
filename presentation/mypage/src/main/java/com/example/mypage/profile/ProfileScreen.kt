@@ -13,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,12 +20,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -43,6 +40,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,7 +56,7 @@ import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -67,13 +66,12 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.UploadFileCategory
-import com.umc.domain.model.mypage.UserActiveItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
@@ -135,12 +133,8 @@ fun ProfileRoute(
 
     ProfileScreen(
         uiState = uiState,
-        githubText = uiState.githubLink,
-        onGithubChange = { viewModel.updateGithubLink(it) },
-        linkedinText = uiState.linkedinLink,
-        onLinkedinChange = { viewModel.updateLinkedinLink(it) },
-        blogText = uiState.blogLink,
-        onBlogChange = { viewModel.updateBlogLink(it) },
+        onLinkChange = viewModel::updateLink,
+        onToggleLinkVisibility = viewModel::toggleLinkVisibility,
         onBackPressed = viewModel::onClickBackPressed,
         onCompleteClick = viewModel::onClickComplete,
         onProfileImageClick = viewModel::onClickProfileImage,
@@ -155,12 +149,8 @@ fun ProfileRoute(
 @Composable
 fun ProfileScreen(
     uiState: ProfileUiState,
-    githubText: String,
-    onGithubChange: (String) -> Unit,
-    linkedinText: String,
-    onLinkedinChange: (String) -> Unit,
-    blogText: String,
-    onBlogChange: (String) -> Unit,
+    onLinkChange: (ProfileLinkField, String) -> Unit,
+    onToggleLinkVisibility: (ProfileLinkField) -> Unit,
     onBackPressed: () -> Unit,
     onCompleteClick: () -> Unit,
     onProfileImageClick: () -> Unit,
@@ -229,35 +219,24 @@ fun ProfileScreen(
                     )
                 }
 
-                //활동 이력 리스트
+                // 이메일·대외 링크 입력 (항목마다 오른쪽 위에서 공개·비공개를 고른다)
                 item {
-                    UText(text = "활동 이력", style = UmcTypographyTokens.HeadlineBold)
-                    Card(
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, grey300()),
-                        colors = CardDefaults.cardColors(containerColor = grey000())
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(vertical = 8.dp)
-                        ) {
-                            uiState.myActiveHistory.forEach { history ->
-                                ActiveHistoryItem(history)
-                            }
+                    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                        ProfileLinkField.entries.forEach { field ->
+                            LinkInputSection(
+                                field = field,
+                                value = uiState.linkOf(field),
+                                isPublic = field !in uiState.privateLinkFields,
+                                onValueChange = { onLinkChange(field, it) },
+                                onToggleVisibility = { onToggleLinkVisibility(field) }
+                            )
                         }
                     }
                 }
 
-                // 대외 링크 입력 (UTextField 적용)
+                // 공개 범위 안내
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                        LinkInputSection("GitHub URL", githubText, onGithubChange)
-                        LinkInputSection("LinkedIn URL", linkedinText, onLinkedinChange)
-                        LinkInputSection("블로그 URL", blogText, onBlogChange)
-                    }
+                    LinkVisibilityGuide()
                 }
             }
 
@@ -287,7 +266,7 @@ fun ProfileTopbar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -319,14 +298,14 @@ fun ProfileTopbar(
                 modifier = Modifier
                     .padding(end = 16.dp)
                     .size(20.dp),
-                color = indigo500(),
+                color = main500(),
                 strokeWidth = 2.dp
             )
         } else {
             UText(
                 text = AppStrings.COMPLETE,
                 style = UmcTypographyTokens.CalloutBold,
-                color = indigo500(),
+                color = main500(),
                 modifier = Modifier
                     .clickable { onCompleteClick() }
                     .padding(end = 16.dp)
@@ -371,7 +350,7 @@ fun ProfileImageSection(imageUri: Uri, defaultUrl: String, onImageClick: () -> U
                     .size(36.dp)
                     .align(Alignment.BottomEnd),
                 shape = CircleShape,
-                color = grey000(),
+                color = grey50(),
                 border = BorderStroke(1.dp, grey200())
             ) {
                 Icon(
@@ -417,90 +396,92 @@ fun ProfileInfoSection(title: String, content: String, platforms: ImmutableList<
 }
 
 /**
- * 기수별 활동 내역 및 파트/직함 배지를 표시하는 레코드 행 컴포저블
+ * 링크 항목 하나: 제목 + 공개·비공개 선택 버튼 + 입력 칸
  */
 @Composable
-fun ActiveHistoryItem(
-    history: UserActiveItem
+fun LinkInputSection(
+    field: ProfileLinkField,
+    value: String,
+    isPublic: Boolean,
+    onValueChange: (String) -> Unit,
+    onToggleVisibility: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        //1. 기수 정보 (ex. 10기)
-        UButton(
-            text = history.generation,
-            onClick = {},
-            modifier = Modifier
-                .height(24.dp),
-            backgroundColor = grey000(),
-            borderColor = grey200(),
-            borderWidth = 1.dp,
-            textColor = grey600(),
-            textStyle = UmcTypographyTokens.FootnoteBold,
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-        )
-
-
-        Spacer(
-            modifier = Modifier
-            .width(16.dp)
-        )
-
-
-        // 2. 활동 내용 (ex. Android Part 챌린저)
+    Column {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             UText(
-                text = history.partName, // "Android Part 챌린저" 등 합성된 문자열
-                style = UmcTypographyTokens.Subheadline,
-                color = grey600(),
-                modifier = Modifier
-                    .weight(1f)
+                text = field.title,
+                style = UmcTypographyTokens.HeadlineBold,
+                modifier = Modifier.weight(1f)
             )
-
-            UButton(
-                text = history.position,
-                onClick = {},
-                modifier = Modifier
-                    .height(24.dp),
-                backgroundColor = indigo100(),
-                borderWidth = 0.dp,
-                textColor = indigo500(),
-                textStyle = UmcTypographyTokens.FootnoteBold,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+            LinkVisibilityChip(
+                isPublic = isPublic,
+                onClick = onToggleVisibility
             )
         }
-
-
-
-    }
-}
-
-
-/**
- * 외부 링크 수정을 위한 UTextField 입력 컴포저블
- */
-@Composable
-fun LinkInputSection(title: String, value: String, onValueChange: (String) -> Unit) {
-    Column {
-        UText(
-            text = title,
-            style = UmcTypographyTokens.HeadlineBold
-        )
         UTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = "http://-",
+            placeholder = field.placeholder,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (field == ProfileLinkField.EMAIL) KeyboardType.Email else KeyboardType.Uri
+            ),
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth()
         )
     }
+}
+
+/**
+ * 링크 항목의 공개(열린 자물쇠)·비공개(잠긴 자물쇠) 선택 버튼
+ */
+@Composable
+private fun LinkVisibilityChip(
+    isPublic: Boolean,
+    onClick: () -> Unit,
+) {
+    val label = if (isPublic) AppStrings.PROFILE_LINK_PUBLIC else AppStrings.PROFILE_LINK_PRIVATE
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(grey50())
+            .border(1.dp, grey200(), RoundedCornerShape(6.dp))
+            .clickable(onClickLabel = AppStrings.PROFILE_LINK_VISIBILITY_CHANGE, role = Role.Button) { onClick() }
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = if (isPublic) R.drawable.ic_unlocked else R.drawable.ic_locked),
+            contentDescription = null,
+            tint = grey600(),
+            modifier = Modifier.size(16.dp)
+        )
+        UText(
+            text = label,
+            style = UmcTypographyTokens.Caption1,
+            color = grey600()
+        )
+    }
+}
+
+/**
+ * 링크 공개 범위 안내 박스
+ */
+@Composable
+private fun LinkVisibilityGuide() {
+    UText(
+        text = AppStrings.PROFILE_LINK_VISIBILITY_GUIDE,
+        style = UmcTypographyTokens.Footnote,
+        color = grey700(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(grey100(), RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    )
 }
 
 /**
@@ -535,31 +516,27 @@ private fun ProfileLoadError(isLoading: Boolean, onRetryClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            backgroundColor = indigo500(),
-            textColor = grey000(),
+            backgroundColor = main500(),
+            textColor = grey50(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 12.dp,
         )
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(showBackground = true, widthDp = 360, heightDp = 1400)
 @Composable
 private fun ProfileScreenPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(
                 linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
-                myActiveHistory = persistentListOf(
-                    UserActiveItem("11기", "Web PE Part", "챌린저")
-                ),
+                contactEmail = "example@email.com",
+                githubLink = "https://github.com/umc",
+                privateLinkFields = persistentSetOf(ProfileLinkField.GITHUB, ProfileLinkField.LINKEDIN, ProfileLinkField.PERSONAL),
             ),
-            githubText = "https://github.com/umc",
-            onGithubChange = {},
-            linkedinText = "",
-            onLinkedinChange = {},
-            blogText = "",
-            onBlogChange = {},
+            onLinkChange = { _, _ -> },
+            onToggleLinkVisibility = {},
             onBackPressed = {},
             onCompleteClick = {},
             onProfileImageClick = {},
@@ -574,12 +551,8 @@ private fun ProfileScreenLoadFailedPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(isProfileLoadFailed = true),
-            githubText = "",
-            onGithubChange = {},
-            linkedinText = "",
-            onLinkedinChange = {},
-            blogText = "",
-            onBlogChange = {},
+            onLinkChange = { _, _ -> },
+            onToggleLinkVisibility = {},
             onBackPressed = {},
             onCompleteClick = {},
             onProfileImageClick = {},

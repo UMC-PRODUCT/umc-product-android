@@ -16,6 +16,9 @@ data class CommunitySearchState(
     val searchResults: ImmutableList<CommunityThreadUiModel> = persistentListOf(),
     val hasSearched: Boolean = false,
     val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val nextOffset: Int? = null,
+    val loadMoreError: String? = null,
     val errorMessage: String? = null,
 ) {
     val isInitial: Boolean

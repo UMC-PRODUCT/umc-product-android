@@ -60,7 +60,7 @@ fun UTimePickerDialog(
                 .fillMaxWidth(0.8f)
                 .wrapContentHeight(),
             shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = grey000()),
+            colors = CardDefaults.cardColors(containerColor = grey50()),
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
             Column(
@@ -183,7 +183,7 @@ fun UTimePickerDialog(
                 ) {
                     UText(
                         text = AppStrings.CANCEL,
-                        color = indigo500(),
+                        color = main500(),
                         style = UmcTypographyTokens.Subheadline,
                         modifier = Modifier
                             .clickable { onDismiss() }
@@ -196,7 +196,7 @@ fun UTimePickerDialog(
 
                     UText(
                         text = AppStrings.CONFIRM,
-                        color = indigo500(),
+                        color = main500(),
                         style = UmcTypographyTokens.Subheadline,
                         modifier = Modifier
                             .clickable {
@@ -224,12 +224,12 @@ private fun TimeInputField(
     var isFocused by remember { mutableStateOf(false) }
 
     //포커싱 여부에 따른 색깔
-    val containerColor = if (isFocused) indigo100() else grey200()
-    val textColor = if (isFocused) indigo500() else grey800()
+    val containerColor = if (isFocused) main100() else grey200()
+    val textColor = if (isFocused) main500() else grey800()
 
     //포커스 시 8.dp 굵은 보더, 언포커스 시 보더 없음 처리
     val modifierWithBorder = if (isFocused) {
-        Modifier.border(4.dp, indigo500(), RoundedCornerShape(12.dp))
+        Modifier.border(4.dp, main500(), RoundedCornerShape(12.dp))
     } else {
         Modifier
     }
@@ -254,7 +254,7 @@ private fun TimeInputField(
                 textAlign = TextAlign.Center
             ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            cursorBrush = SolidColor(indigo500()), //텍스트 커서 색상도 테마 일치
+            cursorBrush = SolidColor(main500()), //텍스트 커서 색상도 테마 일치
             //가운데 정렬을 위한 컨테이너 래핑
             decorationBox = { innerTextField ->
                 Box(

@@ -1,5 +1,7 @@
 package com.umc.presentation.community.bottomsheet.edit
 
+import com.umc.domain.repository.community.CommunityThreadRepository
+import com.umc.domain.model.community.thread.CommunityThreadRole
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
@@ -7,9 +9,8 @@ import com.umc.domain.model.community.CommunityThreadMember
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.community.GetCommunityThreadMembersUseCase
-import com.umc.domain.usecase.community.InviteCommunityThreadMembersUseCase
-import com.umc.domain.usecase.community.KickCommunityThreadMemberUseCase
 import com.umc.domain.usecase.community.SearchCommunityCreateMembersUseCase
+import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import com.umc.presentation.community.model.CommunityChallengerUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,8 +18,11 @@ import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
@@ -32,19 +36,16 @@ import kotlinx.coroutines.launch
  * - 스레드 OWNER 검색 결과 제외
  * - 챌린저 선택/해제
  * - 새 멤버 초대
- * - 기존 멤버 삭제
  * - 멤버 변경사항 비교 및 반영
  */
 @HiltViewModel
 class CommunityMemberBottomSheetViewModel @Inject constructor(
+    private val getMemberProfileUseCase: GetMemberProfileUseCase,
+    private val threadRepository: CommunityThreadRepository,
     private val getCommunityThreadMembersUseCase:
     GetCommunityThreadMembersUseCase,
     private val searchCommunityCreateMembersUseCase:
     SearchCommunityCreateMembersUseCase,
-    private val inviteCommunityThreadMembersUseCase:
-    InviteCommunityThreadMembersUseCase,
-    private val kickCommunityThreadMemberUseCase:
-    KickCommunityThreadMemberUseCase,
     private val getMyProfileUseCase:
     GetMyProfileUseCase,
 ) : BaseViewModel<
@@ -54,8 +55,33 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     CommunityMemberBottomSheetState()
 ) {
 
+    private suspend fun enrichChallengerProfile(member: CommunityChallengerUiModel): CommunityChallengerUiModel {
+        if (member.nickname.isNotBlank()) return member
+        return profileRequests.withPermit {
+            when (val result = getMemberProfileUseCase(member.memberId)) {
+                is ApiState.Success -> member.copy(
+                    name = result.data.name.ifBlank { member.name },
+                    nickname = result.data.nickname,
+                    school = result.data.schoolName.ifBlank { member.school },
+                    profileImage = result.data.profileImageLink.ifBlank { member.profileImage },
+                )
+                is ApiState.Fail -> member
+            }
+        }
+    }
+
     /** 검색 디바운스 처리를 위한 Job */
     private var searchJob: Job? = null
+
+    /**
+     * 초대 가능 멤버 조회 Job
+     *
+     * 본인 학교 회원만 남기려고 서버 페이지를 여러 번 받을 수 있어,
+     * 검색어가 바뀌거나 검색을 닫으면 진행 중인 조회를 바로 멈춥니다.
+     */
+    private var loadJob: Job? = null
+    private var sessionGeneration = 0
+    private val profileRequests = Semaphore(4)
 
     /**
      * 현재 로그인한 사용자의 memberId
@@ -96,6 +122,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     fun initialize(
         threadId: String,
     ) {
+        sessionGeneration++
         if (threadId.isBlank()) {
             emitEvent(
                 CommunityMemberBottomSheetEvent.ShowToast(
@@ -106,6 +133,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         }
 
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             CommunityMemberBottomSheetState(
@@ -130,8 +158,21 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      */
     private fun loadCurrentMembers(
         threadId: String,
-    ) {
-        viewModelScope.launch {
+    ) = viewModelScope.launch {
+            val generation = sessionGeneration
+            val detail = threadRepository.getThread(threadId)
+            if (generation != sessionGeneration) return@launch
+            if (detail !is ApiState.Success || detail.data.myRole !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN)) {
+                updateState { copy(isLoading = false, canManage = false, currentMembers = persistentListOf(), selectedMembers = persistentListOf(), errorMessage = "멤버를 관리할 권한이 없어요.") }
+                return@launch
+            }
+            updateState {
+                copy(
+                    canManage = true,
+                    maxMemberCount = ((detail.data.maxMembers.toIntOrNull() ?: 1) - 1)
+                        .coerceIn(0, INVITE_MEMBER_LIMIT),
+                )
+            }
             val memberPage = getCommunityThreadMembersUseCase(
                 threadId = threadId,
                 query = null,
@@ -141,10 +182,13 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 offset = FIRST_OFFSET,
                 limit = CURRENT_MEMBER_PAGE_SIZE,
             ).getOrElse {
+                if (generation != sessionGeneration) return@launch
                 // 예외 메시지는 파싱 오류 원문 등이 그대로 들어올 수 있어 화면에 노출하지 않음
                 updateState {
                     copy(
                         isLoading = false,
+                        canManage = false,
+                        currentMembers = persistentListOf(), selectedMembers = persistentListOf(),
                         errorMessage = "현재 스레드 멤버를 불러오지 못했어요.",
                     )
                 }
@@ -157,6 +201,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
              * OWNER는 검색을 통해 다시 추가할 수 없도록
              * 이후 검색 결과 필터링에 사용합니다.
              */
+            if (generation != sessionGeneration) return@launch
             val ownerMemberIds = memberPage.items
                 .filter { member ->
                     member.role.equals(
@@ -175,20 +220,20 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
              * 스레드 멤버 조회 API에는 일부 화면 정보가 없을 수 있으므로
              * 검색 API를 이용해 상세 정보를 다시 매칭합니다.
              */
-            val currentMembers = memberPage.items
+            val activeMembers = memberPage.items
+                .filter { it.state.equals("ACTIVE", ignoreCase = true) }
                 .filterNot { member ->
                     member.role.equals(
                         OWNER_ROLE,
                         ignoreCase = true,
                     )
                 }
-                .map { threadMember ->
-                    findChallengerDetail(
-                        threadMember = threadMember,
-                    )
-                }
-                .toImmutableList()
+            val fallbackMembers = activeMembers.map { it to it.toFallbackUiModel() }
+            val currentMembers = enrichCommunityProfilesWithinBudget(fallbackMembers) { (source, _) ->
+                source to findChallengerDetail(source)
+            }.map { it.second }.toImmutableList()
 
+            if (generation != sessionGeneration) return@launch
             updateState {
                 copy(
                     currentMembers = currentMembers,
@@ -201,7 +246,6 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                     errorMessage = null,
                 )
             }
-        }
     }
 
     /**
@@ -234,7 +278,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             return threadMember.toFallbackUiModel()
         }
 
-        return when (
+        val detail = when (
             val response = searchCommunityCreateMembersUseCase(
                 cursor = null,
                 size = MEMBER_MATCH_PAGE_SIZE,
@@ -254,6 +298,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 threadMember.toFallbackUiModel()
             }
         }
+        return enrichChallengerProfile(detail)
     }
 
     /**
@@ -269,6 +314,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         query: String,
     ) {
         searchJob?.cancel()
+        loadJob?.cancel()
 
         val trimmedQuery = query.trim()
         val currentState = uiState.value
@@ -352,8 +398,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      * - 스레드 OWNER
      * - 현재 로그인한 본인
      *
-     * 기존 스레드 멤버도 검색 결과에는 포함되지만
-     * selectedMembers에 존재하면 체크된 상태로 표시됩니다.
+     * 기존 스레드 멤버는 초대 검색 결과에서 제외합니다.
      *
      * @param keyword 검색할 챌린저 이름
      * @param cursor 다음 페이지 조회용 cursor. 최초 조회 시 null
@@ -365,7 +410,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         cursor: Long?,
         append: Boolean,
     ) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             updateState {
                 if (append) {
                     copy(
@@ -380,65 +426,55 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 }
             }
 
-            when (
-                val response = searchCommunityCreateMembersUseCase(
-                    cursor = cursor,
-                    size = PAGE_SIZE,
-                    keyword = keyword,
+            val generation = sessionGeneration
+            val threadId = uiState.value.threadId
+            var offset = cursor?.toInt() ?: 0
+            var appendPage = append
+            while (true) {
+                val result = threadRepository.getInvitableMembers(
+                    threadId = threadId, query = keyword, offset = offset, limit = PAGE_SIZE,
                 )
-            ) {
-                is ApiState.Success -> {
-                    val page = response.data
-
-                    val searchedMembers = page.content
-                        .filterNot { participant ->
-                            // 스레드 OWNER는 추가 대상에서 제외
-                            participant.id in uiState.value.ownerMemberIds ||
-                                    // 현재 로그인한 본인도 추가 대상에서 제외
-                                    participant.id == myMemberId
+                // 네트워크 호출부가 취소를 실패 응답으로 바꿔 돌려주므로, 취소된 조회가 상태를 덮어쓰지 않게 여기서 멈춘다
+                ensureActive()
+                if (generation != sessionGeneration || uiState.value.threadId != threadId || uiState.value.query.trim() != keyword) return@launch
+                when (result) {
+                    is ApiState.Success -> {
+                        val page = result.data
+                        val candidates = page.items.mapNotNull { member ->
+                            val id = member.memberId.toLongOrNull() ?: return@mapNotNull null
+                            if (id == myMemberId || id in uiState.value.ownerMemberIds) return@mapNotNull null
+                            CommunityChallengerUiModel(
+                                memberId = id, name = member.name, nickname = "", school = "",
+                                generation = member.generation?.toLongOrNull() ?: 0L,
+                                partLabel = UserPart.from(member.part.orEmpty()).label, profileImage = "",
+                            )
                         }
-                        .map { participant ->
-                            participant.toCommunityChallengerUiModel()
+                        val detailedCandidates = enrichCommunityProfilesWithinBudget(candidates, enrich = ::enrichChallengerProfile)
+                        if (generation != sessionGeneration || uiState.value.threadId != threadId || uiState.value.query.trim() != keyword) return@launch
+                        val nextOffset = page.nextOffset?.toIntOrNull()
+                        // 본인 학교만 남기느라 이번 페이지에 보여줄 사람이 없으면, 빈 목록에서는 스크롤로 다음 페이지를 부를 수 없으므로 바로 이어 받는다
+                        val continueScan = candidates.isEmpty() && nextOffset != null
+                        updateState {
+                            copy(
+                                searchResults = ((if (appendPage) searchResults else emptyList()) + detailedCandidates)
+                                    .distinctBy { it.memberId }.toImmutableList(),
+                                nextCursor = page.nextOffset?.toLongOrNull(), hasNext = page.nextOffset != null,
+                                isLoading = if (continueScan) isLoading else false,
+                                isLoadingMore = if (continueScan) isLoadingMore else false,
+                            )
                         }
-
-                    updateState {
-                        val mergedMembers = if (append) {
-                            // 다음 페이지 결과를 기존 결과와 합친 후 memberId 기준 중복 제거
-                            (searchResults + searchedMembers)
-                                .distinctBy { member ->
-                                    member.memberId
-                                }
-                        } else {
-                            searchedMembers
-                        }.toImmutableList()
-
-                        copy(
-                            searchResults = mergedMembers,
-                            isLoading = false,
-                            isLoadingMore = false,
-                            nextCursor = page.nextCursor,
-                            hasNext = page.hasNext,
-                            errorMessage = null,
-                        )
+                        if (!continueScan) return@launch
+                        offset = nextOffset ?: return@launch
+                        appendPage = true
                     }
-                }
-
-                is ApiState.Fail -> {
-                    updateState {
-                        copy(
-                            isLoading = false,
-                            isLoadingMore = false,
-                            errorMessage =
-                                "챌린저 검색 결과를 불러오지 못했어요.",
-                        )
+                    is ApiState.Fail -> {
+                        updateState { copy(isLoading = false, isLoadingMore = false, errorMessage = "초대 가능한 멤버를 불러오지 못했어요.") }
+                        if (result.failState.code in setOf("403", "409", "COMMUNITY-0034") ||
+                            result.failState.code.endsWith("-403") || result.failState.code.endsWith("-409")) {
+                            loadCurrentMembers(threadId)
+                        }
+                        return@launch
                     }
-
-                    emitEvent(
-                        CommunityMemberBottomSheetEvent.ShowToast(
-                            message =
-                                "챌린저 검색 결과를 불러오지 못했어요.",
-                        )
-                    )
                 }
             }
         }
@@ -457,11 +493,13 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
         member: CommunityChallengerUiModel,
     ) {
         val currentState = uiState.value
+        if (!currentState.canManage || currentState.isUpdatingMembers) return
 
         // 검색 필터 외의 경로로 전달되더라도 본인과 OWNER 선택 방지
         if (
             member.memberId == myMemberId ||
-            member.memberId in currentState.ownerMemberIds
+            member.memberId in currentState.ownerMemberIds ||
+            currentState.currentMembers.any { it.memberId == member.memberId }
         ) {
             return
         }
@@ -480,7 +518,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             emitEvent(
                 CommunityMemberBottomSheetEvent.ShowToast(
                     message =
-                        "챌린저는 최대 ${currentState.maxMemberCount}명까지 추가할 수 있어요.",
+                        "최대 ${currentState.maxMemberCount}명까지 초대할 수 있습니다.",
                 )
             )
             return
@@ -510,13 +548,13 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      * 현재 멤버와 최종 선택된 멤버를 비교하여 변경사항을 적용합니다.
      *
      * - 새롭게 선택된 멤버 → invite API 호출
-     * - 기존 멤버 중 선택 해제된 멤버 → kick API 호출
+     * 기존 멤버는 유지하고 새롭게 선택한 멤버만 초대합니다.
      */
     fun updateMembers() {
         val currentState = uiState.value
 
         // 이미 멤버 변경 요청이 진행 중이라면 중복 요청 방지
-        if (currentState.isUpdatingMembers) {
+        if (!currentState.canManage || currentState.isUpdatingMembers) {
             return
         }
 
@@ -526,8 +564,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
             return
         }
 
+        val generation = sessionGeneration
         val addedMembers = currentState.addedMembers
-        val removedMembers = currentState.removedMembers
 
         viewModelScope.launch {
             updateState {
@@ -537,146 +575,33 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
                 )
             }
 
-            val result = runCatching {
-                // 새로 선택된 챌린저를 스레드에 초대
-                if (addedMembers.isNotEmpty()) {
-                    inviteCommunityThreadMembersUseCase(
-                        threadId = currentState.threadId,
-                        memberIds = addedMembers.map { member ->
-                            member.memberId
-                        },
-                    ).getOrThrow()
-                }
-
-                // 선택 해제된 기존 멤버를 스레드에서 제거
-                removedMembers.forEach { member ->
-                    kickCommunityThreadMemberUseCase(
-                        threadId = currentState.threadId,
-                        memberId = member.memberId.toString(),
-                    ).getOrThrow()
+            var addedCount = 0
+            var failedCount = 0
+            val failedNames = mutableListOf<String>()
+            if (addedMembers.isNotEmpty()) {
+                when (val result = threadRepository.inviteMembers(currentState.threadId, addedMembers.map { it.memberId })) {
+                    is ApiState.Success -> {
+                        addedCount = result.data.invitedMembers.size
+                        val invitedIds = result.data.invitedMembers.map { it.memberId }.toSet()
+                        val failed = addedMembers.filter { it.memberId.toString() !in invitedIds }
+                        failedCount += failed.size
+                        failedNames += failed.map { it.name }
+                    }
+                    is ApiState.Fail -> { failedCount += addedMembers.size; failedNames += addedMembers.map { it.name } }
                 }
             }
-
-            result.onSuccess {
-                /**
-                 * 최종 선택된 목록을 현재 스레드 멤버 목록으로 반영합니다.
-                 *
-                 * memberId 기준으로 중복 데이터를 한 번 더 제거합니다.
-                 */
-                val updatedCurrentMembers =
-                    currentState.selectedMembers
-                        .distinctBy { member ->
-                            member.memberId
-                        }
-                        .toImmutableList()
-
-                updateState {
-                    copy(
-                        currentMembers = updatedCurrentMembers,
-                        selectedMembers = updatedCurrentMembers,
-
-                        // 검색 관련 상태 초기화
-                        query = "",
-                        isSearching = false,
-                        isLoading = false,
-                        isLoadingMore = false,
-                        isUpdatingMembers = false,
-
-                        searchResults = persistentListOf(),
-                        nextCursor = null,
-                        hasNext = false,
-                        errorMessage = null,
-                    )
-                }
-
-                emitEvent(
-                    CommunityMemberBottomSheetEvent.MemberUpdateSuccess(
-                        addedMemberCount = addedMembers.size,
-                        removedMemberCount = removedMembers.size,
-                    )
-                )
-            }.onFailure {
-                updateState {
-                    copy(
-                        isUpdatingMembers = false,
-                        errorMessage = "스레드 멤버를 변경하지 못했어요.",
-                    )
-                }
-
-                emitEvent(
-                    CommunityMemberBottomSheetEvent.ShowToast(
-                        message = "스레드 멤버를 변경하지 못했어요.",
-                    )
-                )
+            if (generation != sessionGeneration) return@launch
+            // Includes role/capacity revalidation after 403/409 or partial success.
+            loadCurrentMembers(currentState.threadId).join()
+            updateState { copy(isUpdatingMembers = false, query = "", isSearching = false, searchResults = persistentListOf()) }
+            // 일부만 초대되어도 상위 수정 화면과 채팅방의 참여자 정보를 갱신한다.
+            if (addedCount > 0 || failedCount == 0) {
+                emitEvent(CommunityMemberBottomSheetEvent.MemberUpdateSuccess(addedCount))
             }
-        }
-    }
-
-    /**
-     * 현재 멤버 목록에서 삭제 버튼을 눌렀을 때 호출합니다.
-     *
-     * 해당 멤버를 스레드에서 즉시 제거한 뒤
-     * currentMembers와 selectedMembers에서도 함께 삭제합니다.
-     */
-    fun kickMember(
-        member: CommunityChallengerUiModel,
-    ) {
-        val currentState = uiState.value
-
-        // 이미 다른 멤버 삭제 요청이 진행 중이면 중복 요청 방지
-        if (currentState.deletingMemberId != null) {
-            return
-        }
-
-        // 현재 로그인한 본인이 목록에 존재하더라도 직접 삭제하지 못하도록 방지
-        if (member.memberId == myMemberId) {
-            return
-        }
-
-        viewModelScope.launch {
-            updateState {
-                copy(
-                    deletingMemberId = member.memberId,
-                    errorMessage = null,
-                )
-            }
-
-            kickCommunityThreadMemberUseCase(
-                threadId = currentState.threadId,
-                memberId = member.memberId.toString(),
-            ).onSuccess {
-                updateState {
-                    copy(
-                        currentMembers =
-                            currentMembers.filterNot { currentMember ->
-                                currentMember.memberId == member.memberId
-                            }.toImmutableList(),
-                        selectedMembers =
-                            selectedMembers.filterNot { selectedMember ->
-                                selectedMember.memberId == member.memberId
-                            }.toImmutableList(),
-                        deletingMemberId = null,
-                    )
-                }
-
-                emitEvent(
-                    CommunityMemberBottomSheetEvent.MemberKickSuccess(
-                        memberId = member.memberId,
-                    )
-                )
-            }.onFailure {
-                updateState {
-                    copy(
-                        deletingMemberId = null,
-                        errorMessage = "멤버를 삭제하지 못했어요.",
-                    )
-                }
-
-                emitEvent(
-                    CommunityMemberBottomSheetEvent.ShowToast(
-                        message = "멤버를 삭제하지 못했어요.",
-                    )
-                )
+            if (failedCount > 0) {
+                emitEvent(CommunityMemberBottomSheetEvent.ShowToast(
+                    "초대 ${addedCount}명 완료, ${failedCount}명 미완료(${failedNames.joinToString()}). 현재 멤버 목록을 다시 확인해주세요."
+                ))
             }
         }
     }
@@ -691,6 +616,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      */
     fun clearSearchOnly() {
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             copy(
@@ -713,7 +639,9 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      * 진행 중인 검색 Job도 함께 취소합니다.
      */
     fun resetAfterDismiss() {
+        sessionGeneration++
         searchJob?.cancel()
+        loadJob?.cancel()
 
         updateState {
             CommunityMemberBottomSheetState()
@@ -721,6 +649,8 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
     }
 
     companion object {
+        // 방장을 제외한 기존 참여자와 새 초대 대상의 최대 합계.
+        private const val INVITE_MEMBER_LIMIT = 99
 
         /** 챌린저 검색 API 한 페이지 조회 개수 */
         private const val PAGE_SIZE = 20

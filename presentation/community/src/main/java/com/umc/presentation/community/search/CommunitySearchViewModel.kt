@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadRole
+import com.umc.domain.model.community.canEditThread
 import com.umc.domain.usecase.community.GetCommunityThreadsUseCase
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
@@ -49,11 +50,21 @@ class CommunitySearchViewModel @Inject constructor(
 
     private val _event = Channel<CommunitySearchEvent>()
     val event = _event.receiveAsFlow()
+    private var searchGeneration = 0L
+
+    /**
+     * 강퇴 확인을 마쳐 검색 결과에서 뺀 스레드 ID
+     *
+     * 확인 전에 보낸 검색·추가 로드 요청이 늦게 도착하면 응답에 해당 스레드가 남아 있으므로,
+     * 진행 중인 요청을 끊지 않고 결과를 기록할 때마다 걸러 냅니다.
+     */
+    private val removedThreadIds = mutableSetOf<String>()
 
     fun onAction(
         action: CommunitySearchAction,
     ) {
         when (action) {
+            CommunitySearchAction.OnLoadMore -> loadMore()
             is CommunitySearchAction.OnQueryChanged -> {
                 updateQuery(
                     query = action.query,
@@ -100,6 +111,9 @@ class CommunitySearchViewModel @Inject constructor(
                 sendEvent(
                     CommunitySearchEvent.NavigateToThreadDetail(
                         threadId = action.threadId,
+                        isKicked = _state.value.searchResults.any { thread ->
+                            thread.id == action.threadId && thread.isKicked
+                        },
                     )
                 )
             }
@@ -109,12 +123,17 @@ class CommunitySearchViewModel @Inject constructor(
     private fun updateQuery(
         query: String,
     ) {
+        searchGeneration++
         _state.update {
             it.copy(
                 query = query,
                 hasSearched = false,
                 searchResults = persistentListOf(),
                 errorMessage = null,
+                isLoading = false,
+                isLoadingMore = false,
+                nextOffset = null,
+                loadMoreError = null,
             )
         }
     }
@@ -140,11 +159,7 @@ class CommunitySearchViewModel @Inject constructor(
             return
         }
 
-        _state.update {
-            it.copy(
-                query = trimmedQuery,
-            )
-        }
+        updateQuery(trimmedQuery)
 
         requestSearch(
             query = trimmedQuery,
@@ -154,18 +169,20 @@ class CommunitySearchViewModel @Inject constructor(
     private fun requestSearch(
         query: String,
     ) {
-        if (_state.value.isLoading) {
-            return
-        }
+        val generation = ++searchGeneration
 
         viewModelScope.launch {
+            if (generation != searchGeneration) return@launch
             _state.update {
                 it.copy(
                     query = query,
                     isLoading = true,
                     hasSearched = true,
-                    searchResults = persistentListOf(),
+                    searchResults = if (it.query == query) it.searchResults else persistentListOf(),
                     errorMessage = null,
+                    isLoadingMore = false,
+                    nextOffset = if (it.query == query) it.nextOffset else null,
+                    loadMoreError = null,
                 )
             }
 
@@ -174,7 +191,9 @@ class CommunitySearchViewModel @Inject constructor(
                 query = query,
                 offset = 0,
                 limit = SEARCH_PAGE_SIZE,
-            ).onSuccess { page ->
+            ).mapCatching { page -> page to validatedSearchOffset(page.nextOffset, 0) }
+                .onSuccess { (page, nextOffset) ->
+                if (generation != searchGeneration) return@onSuccess
                 val searchResults = buildList {
                     addAll(
                         page.pinnedThreads.map { thread ->
@@ -193,6 +212,8 @@ class CommunitySearchViewModel @Inject constructor(
                     )
                 }.distinctBy { thread ->
                     thread.id
+                }.filterNot { thread ->
+                    thread.id in removedThreadIds
                 }
 
                 _state.update { currentState ->
@@ -207,12 +228,13 @@ class CommunitySearchViewModel @Inject constructor(
                         hasSearched = true,
                         isLoading = false,
                         errorMessage = null,
+                        nextOffset = nextOffset,
                     )
                 }
             }.onFailure { throwable ->
+                if (generation != searchGeneration) return@onFailure
                 _state.update {
                     it.copy(
-                        searchResults = persistentListOf(),
                         hasSearched = true,
                         isLoading = false,
                         errorMessage = throwable.message
@@ -224,6 +246,7 @@ class CommunitySearchViewModel @Inject constructor(
     }
 
     private fun clearQuery() {
+        searchGeneration++
         _state.update {
             it.copy(
                 query = "",
@@ -231,7 +254,38 @@ class CommunitySearchViewModel @Inject constructor(
                 hasSearched = false,
                 isLoading = false,
                 errorMessage = null,
+                isLoadingMore = false,
+                nextOffset = null,
+                loadMoreError = null,
             )
+        }
+    }
+
+    private fun loadMore() {
+        val current = _state.value
+        val offset = current.nextOffset ?: return
+        if (current.isLoading || current.isLoadingMore || !current.hasSearched) return
+        val generation = searchGeneration
+        _state.update { it.copy(isLoadingMore = true, loadMoreError = null) }
+        viewModelScope.launch {
+            getCommunityThreadsUseCase("all", current.query, offset, SEARCH_PAGE_SIZE)
+                .mapCatching { page -> page to validatedSearchOffset(page.nextOffset, offset) }
+                .onSuccess { (page, nextOffset) ->
+                    if (generation != searchGeneration) return@onSuccess
+                    val incoming = (page.pinnedThreads.map { it.toSearchUiModel(true) } +
+                        page.threads.map { it.toSearchUiModel(false) })
+                        .filterNot { row -> row.id in removedThreadIds }
+                    _state.update {
+                        it.copy(
+                            searchResults = (it.searchResults + incoming).distinctBy { row -> row.id }.toImmutableList(),
+                            nextOffset = nextOffset,
+                            isLoadingMore = false,
+                        )
+                    }
+                }.onFailure {
+                    if (generation != searchGeneration) return@onFailure
+                    _state.update { it.copy(isLoadingMore = false, loadMoreError = "추가 결과를 불러오지 못했어요. 다시 시도해주세요.") }
+                }
         }
     }
 
@@ -244,6 +298,24 @@ class CommunitySearchViewModel @Inject constructor(
                     currentState.recentSearches.filterNot {
                         it == query
                     }.toImmutableList(),
+            )
+        }
+    }
+
+    /**
+     * 검색 결과에서 스레드를 제거합니다. (강퇴 확인 후 목록에서 제외되는 스레드)
+     *
+     * 이후 도착하는 검색·추가 로드 응답에서도 다시 나타나지 않도록 ID를 기억해 둡니다.
+     */
+    fun removeThread(
+        threadId: String,
+    ) {
+        removedThreadIds += threadId
+        _state.update {
+            it.copy(
+                searchResults = it.searchResults
+                    .filterNot { thread -> thread.id == threadId }
+                    .toImmutableList(),
             )
         }
     }
@@ -313,7 +385,9 @@ private fun CommunityThread.toSearchUiModel(
         isPinned = forcePinned || isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        canEdit = myRole.canEditThread(),
         isJoined = isJoined,
+        isKicked = isKicked,
     )
 }
 

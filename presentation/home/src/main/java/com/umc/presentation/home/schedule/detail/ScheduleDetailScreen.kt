@@ -55,14 +55,14 @@ import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.yellow500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.presentation.home.schedule.ScheduleTagChipItems
@@ -175,7 +175,7 @@ fun ScheduleDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
 
     ) {
 
@@ -200,7 +200,7 @@ fun ScheduleDetailScreen(
                             .fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = indigo500())
+                        CircularProgressIndicator(color = main500())
                     }
                 }
 
@@ -242,8 +242,8 @@ fun ScheduleDetailScreen(
                         ) {
                             UButton(
                                 text = uiState.dDay,
-                                backgroundColor = indigo100(),
-                                textColor = indigo500(),
+                                backgroundColor = main100(),
+                                textColor = main500(),
                                 textStyle = UmcTypographyTokens.FootnoteBold,
                                 onClick = {},
                                 modifier = Modifier
@@ -322,7 +322,7 @@ fun ScheduleDetailScreen(
                             UButton(
                                 text = AppStrings.HOME_PLAN_DETAIL_CHECK_CONFIRM,
                                 backgroundColor = grey950(), // accent 팔레트 제거로 yellow(구 warning)로 대체
-                                textColor = grey000(),
+                                textColor = grey50(),
                                 textStyle = UmcTypographyTokens.HeadlineBold,
                                 modifier = Modifier
                                     .fillMaxWidth()

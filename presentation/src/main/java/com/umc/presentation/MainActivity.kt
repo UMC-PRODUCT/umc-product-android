@@ -1,5 +1,10 @@
 package com.umc.presentation
 
+import com.umc.component.fcm.NotificationEventHistory
+import com.umc.component.fcm.isSupportedAppLink
+import com.umc.component.fcm.CommunityNotification
+import com.umc.component.fcm.FcmTokenSynchronizer
+import javax.inject.Inject
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -41,7 +46,7 @@ import androidx.navigation.toRoute
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -52,27 +57,18 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        PendingDeepLink.initialize(this)
         // 외부 링크로 처음 열린 경우 NavController 가 곧바로 목적지를 열지 않도록 링크를 보류한다.
         // 앱은 항상 스플래시(인증 판정)부터 시작하고, 홈에 도착한 뒤 원래 목적지로 이동한다.
-        if (savedInstanceState == null) {
-            val link = intent?.data
-            if (link != null && shouldRestartTask()) {
-                // 이미 떠 있는 앱 위로 링크가 새 인스턴스로 열린 경우. 링크를 비우면 NavController 가 하던
-                // 태스크 초기화가 사라져 인스턴스가 쌓이므로, 같은 방식으로 태스크를 비우고 다시 시작한다.
-                startActivity(
-                    Intent(this, MainActivity::class.java)
-                        .setData(link)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                )
-                finish()
-                return
-            }
-            // 링크 없이 시작했다면 이전에 남은 보류 링크도 비운다
-            PendingDeepLink.uri = link
-            intent?.data = null
+        if (savedInstanceState != null) {
+            PendingDeepLink.uri = savedInstanceState.getString("pendingDeepLink")?.let(android.net.Uri::parse)
         }
+        acceptDeepLink(intent)
+        // 자동 딥링크 처리는 막고 인증 상태에 맞춰 MainNavHost에서 소비한다.
+        intent?.data = null
         // 상태바는 투명으로 두고 뒤에 비치는 Scaffold 배경색(UmcApp)이 화면별로 칠한다.
         // 아이콘 명암은 시스템 다크모드를 따라 자동으로 바뀐다
         enableEdgeToEdge()
@@ -81,13 +77,49 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** NEW_TASK 로 열렸지만 태스크 루트가 아니고 CLEAR_TASK 도 없다면, 기존 스택 위에 중복 생성된 것이다. */
-    private fun shouldRestartTask(): Boolean {
-        val flags = intent?.flags ?: return false
-        return !isTaskRoot &&
-            (flags and Intent.FLAG_ACTIVITY_NEW_TASK) != 0 &&
-            (flags and Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("pendingDeepLink", PendingDeepLink.uri?.toString())
+        super.onSaveInstanceState(outState)
     }
+
+    override fun onResume() {
+        super.onResume()
+        tokenSynchronizer.refresh()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        acceptDeepLink(intent)
+        intent.data = null
+    }
+
+    private fun acceptDeepLink(incoming: Intent?) {
+        val payload = listOf("schemaVersion", "type", "threadId", "notificationEventId", "deepLink", "deeplink")
+            .associateWith { incoming?.getStringExtra(it).orEmpty() }
+            .filterValues { it.isNotEmpty() }
+        val route = CommunityNotification.parse(payload)
+        val eventId = incoming?.getStringExtra("notificationEventId") ?: route?.eventId
+        val preferences = getSharedPreferences("fcm_routes", MODE_PRIVATE)
+        val encoded = preferences.getString("consumed_ordered", null)
+        val legacy = preferences.getStringSet("consumed", emptySet()).orEmpty()
+        val seen = NotificationEventHistory.decode(encoded, legacy)
+        if (encoded == null || preferences.contains("consumed")) {
+            preferences.edit().putString("consumed_ordered", NotificationEventHistory.encode(seen))
+                .remove("consumed").apply()
+        }
+        if (eventId != null && eventId in seen) return
+        val link = (route?.uri() ?: incoming?.data)?.takeIf { isSupportedAppLink(it.toString()) } ?: return
+        if (eventId != null) {
+            preferences.edit().putString("consumed_ordered",
+                NotificationEventHistory.encode(NotificationEventHistory.record(seen, eventId))).apply()
+        }
+        PendingDeepLink.uri = link
+        // 같은 Activity의 회전/복원에서 처리한 알림 payload를 다시 소비하지 않는다.
+        listOf("schemaVersion", "type", "threadId", "notificationEventId", "deepLink", "deeplink")
+            .forEach { incoming?.removeExtra(it) }
+    }
+
 }
 
 @Composable
@@ -114,8 +146,8 @@ private fun UmcApp() {
 
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
-                // 상태바 뒤 영역 색. 홈은 헤더 없이 grey100 배경이라 같은 색으로 맞추고, 나머지는 grey000
-                containerColor = if (currentTab == MainTab.Home) grey100() else grey000(),
+                // 상태바 뒤 영역 색. 홈은 헤더 없이 grey100 배경이라 같은 색으로 맞추고, 나머지는 grey50
+                containerColor = if (currentTab == MainTab.Home) grey100() else grey50(),
                 bottomBar = {
                     if (showBottomBar) {
                         UmcBottomNavigationBar(
@@ -168,7 +200,7 @@ private fun UmcBottomNavigationBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .navigationBarsPadding()
     ) {
         HorizontalDivider(thickness = 1.dp, color = grey200())

@@ -25,11 +25,12 @@ fun StudyCurriculumCard(
     modifier: Modifier = Modifier,
 ) {
     Card(
+        // 좌우 여백은 화면(UserStudyScreen)의 16dp 하나로만 둔다
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(vertical = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = grey000()),
+        colors = CardDefaults.cardColors(containerColor = grey50()),
         elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -43,13 +44,13 @@ fun StudyCurriculumCard(
                     painter = painterResource(R.drawable.ic_document),
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = indigo500()
+                    tint = main500()
                 )
                 Spacer(Modifier.width(8.dp))
                 UText(
                     text = AppStrings.STUDY_PART_CURRICULUM.format(part.label.uppercase()),
                     style = UmcTypographyTokens.SubheadlineBold,
-                    color = indigo500(),
+                    color = main500(),
                     modifier = Modifier.weight(1f)
                 )
             }

@@ -58,8 +58,8 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -68,9 +68,9 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo400
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main400
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.UserCard
 import kotlinx.coroutines.flow.collectLatest
@@ -162,7 +162,7 @@ fun QrCodeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
         
     ) {
         
@@ -200,8 +200,8 @@ fun QrCodeScreen(
                     Card(
                         modifier = Modifier.size(280.dp),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = grey000())
-                        ,
+                        // QR 판독에 필요한 흰 여백이라 다크 모드에서도 흰색으로 둔다 (white()는 다크 모드에서 검정)
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(1.dp),
                         border = BorderStroke(1.dp, grey300())
                     ) {
@@ -252,8 +252,8 @@ fun QrCodeScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
-                        backgroundColor = indigo500(),
-                        textColor = grey000(),
+                        backgroundColor = main500(),
+                        textColor = grey50(),
                         textStyle = UmcTypographyTokens.HeadlineBold,
                         cornerRadius = 8.dp,
                         onClick = onShareClick
@@ -288,7 +288,7 @@ fun QrCodeScreenTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -324,8 +324,8 @@ fun MycardProfileCard(
     uiState: QrCodeUiState,
 ) {
 
-    val color1 = indigo400()
-    val color2 = indigo500()
+    val color1 = main400()
+    val color2 = main500()
 
     //원형 그라데이션 배경
     val radialGradient = remember {
@@ -371,7 +371,7 @@ fun MycardProfileCard(
                         UText(
                             text = "${uiState.userInfo.name}/${uiState.userInfo.nickname}",
                             style = UmcTypographyTokens.Title3Bold,
-                            color = grey000()
+                            color = grey50()
                         )
 
                         Spacer(
@@ -381,13 +381,13 @@ fun MycardProfileCard(
                         UText(
                             text = uiState.userInfo.schoolName,
                             style = UmcTypographyTokens.Subheadline,
-                            color = indigo100()
+                            color = main100()
                         )
                         //내 최신 커리어
                         UText(
                             text = uiState.myRecentInfoString,
                             style = UmcTypographyTokens.Subheadline,
-                            color = indigo100()
+                            color = main100()
                         )
                     }
                 }

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.auth.TokenManagerProvider
+import com.umc.component.fcm.FcmTokenSynchronizer
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -33,8 +34,12 @@ import javax.inject.Inject
 // 서버가 이미 사용된 챌린저 기록 추가 코드에 내려주는 에러 코드
 internal const val CODE_ALREADY_USED = "CHALLENGER-0012"
 
+// UMC 카카오톡 문의 채널 (설정의 문의하기, 활동 이력의 사용된 코드 안내에서 함께 쓴다)
+internal const val UMC_KAKAO_CHANNEL_ID = "_MDxhqX"
+
 @HiltViewModel
 class MypageViewModel @Inject constructor(
+    private val tokenSynchronizer: FcmTokenSynchronizer,
     private val getMyProfileUseCase: GetMyProfileUseCase, //내 프로필 정보 가져오기
     private val clearAllDataUseCase : ClearAllDataUseCase, //모든 정보 삭제하기
     private val deleteUserUseCase: DeleteUserUseCase, //회원 탈퇴
@@ -72,6 +77,8 @@ class MypageViewModel @Inject constructor(
                             githubUrl = userInfo.profile.github,
                             linkedinUrl = userInfo.profile.linkedIn,
                             blogUrl = userInfo.profile.blog,
+                            instagramUrl = userInfo.profile.instagram,
+                            personalUrl = userInfo.profile.personal,
                             isProfileLoadFailed = false
                         )
                     }
@@ -116,6 +123,12 @@ class MypageViewModel @Inject constructor(
     }
     fun navigateToBlog(){
         openOutLink(MypageEvent.NavigateToBlog)
+    }
+    fun navigateToInstagramLink(){
+        openOutLink(MypageEvent.NavigateToInstagramLink)
+    }
+    fun navigateToPersonalSite(){
+        openOutLink(MypageEvent.NavigateToPersonalSite)
     }
 
     /**
@@ -309,7 +322,7 @@ class MypageViewModel @Inject constructor(
                 successCallback = {
                     viewModelScope.launch {
                         // 회원 탈퇴 성공 시 dataStore의 모든 데이터 삭제
-                        clearAllDataUseCase()
+                        tokenSynchronizer.logout { clearAllDataUseCase() }
                         emitEvent(MypageEvent.MoveToOnBoardPage)
                     }
                 },
@@ -393,8 +406,7 @@ class MypageViewModel @Inject constructor(
     //로그아웃 확인 후 실제 로그아웃 처리
     fun logout(){
         viewModelScope.launch {
-            // 로그아웃 시 dataStore의 모든 데이터 삭제
-            clearAllDataUseCase()
+            tokenSynchronizer.logout { clearAllDataUseCase() }
             emitEvent(MypageEvent.MoveToOnBoardPage)
         }
     }
@@ -414,11 +426,13 @@ data class MypageUiState(
     val githubUrl : String = "",
     val blogUrl : String = "",
     val linkedinUrl : String = "",
+    val instagramUrl : String = "",
+    val personalUrl : String = "",
 
     // UMC 외부 링크
     val websiteUMC : String = "https://umc.it.kr",
     val instagramUMC : String = "https://www.instagram.com/uni_makeus_challenge/",
-    val kakaoInquireChannelId : String = "_MDxhqX", //카카오 문의 채널
+    val kakaoInquireChannelId : String = UMC_KAKAO_CHANNEL_ID, //카카오 문의 채널
 
     //구글 토큰
     val googleToken : String = "",
@@ -453,6 +467,8 @@ sealed interface MypageEvent : UiEvent {
     object NavigateToGithub : MypageEvent //깃허브 링크
     object NavigateToBlog : MypageEvent //블로그 링크
     object NavigateToLinkedin : MypageEvent //리으드인 링크
+    object NavigateToInstagramLink : MypageEvent //내 인스타그램 링크 (UMC 인스타그램은 NavigateToInstagramUmc)
+    object NavigateToPersonalSite : MypageEvent //개인 사이트 링크
 
     object NavigateToEditProfile : MypageEvent //프로필 수정
 

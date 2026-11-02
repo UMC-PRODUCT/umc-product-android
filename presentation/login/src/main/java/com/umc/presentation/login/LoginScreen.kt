@@ -56,11 +56,11 @@ import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo600
+import com.umc.component.theme.main600
 import com.umc.component.theme.mint100
 import com.umc.component.theme.teal600
 import com.umc.component.util.ULog
@@ -146,7 +146,7 @@ fun LoginScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         // ic_logo + 22dp spacer + 타이틀/서브타이틀 높이 추정값
         val logoBlockHeight = 120.dp
@@ -265,7 +265,7 @@ fun LoginScreen(
                     UText(
                         text = AppStrings.LOGIN_HELP_CENTER,
                         style = UmcTypographyTokens.Footnote,
-                        color = indigo600(),
+                        color = main600(),
                         textDecoration = TextDecoration.Underline,
                         modifier = Modifier.clickable { onClickHelpCenter() },
                     )

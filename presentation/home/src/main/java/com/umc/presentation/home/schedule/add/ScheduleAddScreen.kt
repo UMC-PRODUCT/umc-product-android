@@ -276,7 +276,7 @@ fun ScheduleAddScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
 
     ) {
         //1. 상단 바
@@ -312,7 +312,7 @@ fun ScheduleAddScreen(
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = grey300(),
-                        focusedBorderColor = indigo500()
+                        focusedBorderColor = main500()
                     )
                 )
             }
@@ -430,7 +430,7 @@ fun ScheduleAddScreen(
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = grey300(),
-                        focusedBorderColor = indigo500()
+                        focusedBorderColor = main500()
                     )
                 )
             }
@@ -545,7 +545,7 @@ fun ScheduleAddTopBar(
         UText(
             text = if (editMode) AppStrings.EDIT else AppStrings.REGISTER,
             style = UmcTypographyTokens.HeadlineBold,
-            color = if (registerOk) indigo500() else grey400(),
+            color = if (registerOk) main500() else grey400(),
             modifier = Modifier
                 .clickable(enabled = registerOk) { onRegisterClick() }
                 .padding(horizontal = 22.dp)
@@ -602,7 +602,7 @@ fun SelectableField(text: String, isPlaceholder: Boolean, onClick: () -> Unit, i
             .clickable(enabled = !isDisabled) { onClick() },
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, if (isDisabled) grey200() else grey300()),
-        color = if (isDisabled) grey100() else grey000()
+        color = if (isDisabled) grey100() else grey50()
     ) {
         Row(
             modifier = Modifier
@@ -639,7 +639,7 @@ fun AttendanceDateCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, grey300()),
-        color = grey000()
+        color = grey50()
     ) {
         Column {
             //체크인 시간
@@ -713,10 +713,10 @@ fun AttendanceTimeRow(
             }
             else{
                 UChip(text = "${dateText} · ${timeText}",
-                    backgroundColor = indigo100(),
+                    backgroundColor = main100(),
                     borderColor = grey200(),
                     borderWidth = 0.dp,
-                    textColor = indigo500(),
+                    textColor = main500(),
                     textStyle = UmcTypographyTokens.SubheadlineBold,
                     onClick = {onDateTimeClick()}
 

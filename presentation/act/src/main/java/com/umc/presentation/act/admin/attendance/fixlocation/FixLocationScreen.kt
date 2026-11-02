@@ -70,13 +70,13 @@ import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
@@ -174,7 +174,7 @@ fun FixLocationScreen(
             .height(550.dp)
             .imePadding()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(grey000())
+            .background(grey50())
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
@@ -242,7 +242,7 @@ fun FixLocationScreen(
             textColor = grey800(),
             textStyle = Body,
             backgroundColor = grey100(),
-            focusBackgroundColor = grey000(),
+            focusBackgroundColor = grey50(),
             strokeColor = grey100(),
             focusStrokeColor = grey900(),
             prevIcon = if (isSearchFocused) null else painterResource(R.drawable.ic_search),

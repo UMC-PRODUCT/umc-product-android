@@ -41,7 +41,7 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -50,8 +50,8 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main500
+import com.umc.component.theme.main700
 import com.umc.component.theme.red500
 import com.umc.domain.model.enums.SignUpType
 import com.umc.domain.model.school.SchoolInfo
@@ -107,7 +107,7 @@ fun SignUpRoute(
             ModalBottomSheet(
                 onDismissRequest = { showSchoolBottomSheet = false },
                 sheetState = sheetState,
-                containerColor = grey000(),
+                containerColor = grey50(),
             ) {
                 SchoolSelectBottomSheetContent(
                     schoolList = uiState.schoolList,
@@ -190,14 +190,14 @@ private fun SchoolItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .background(grey000())
+            .background(grey50())
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UText(
             text = school.schoolName,
             style = UmcTypographyTokens.Subheadline,
-            color = if (isSelected) indigo500() else grey800(),
+            color = if (isSelected) main500() else grey800(),
             modifier = Modifier.weight(1f),
         )
 
@@ -205,7 +205,7 @@ private fun SchoolItem(
             Icon(
                 painter = painterResource(id = R.drawable.ic_check_white),
                 contentDescription = null,
-                tint = indigo500(),
+                tint = main500(),
             )
         }
     }
@@ -223,7 +223,7 @@ fun SignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Icon(
             modifier = Modifier
@@ -330,9 +330,9 @@ fun SignUpScreen(
                 text = AppStrings.NEXT,
                 onClick = onClickNext,
                 enabled = uiState.enableNextButton,
-                backgroundColor = if (uiState.enableNextButton) indigo500() else grey100(),
-                pressedColor = indigo700(),
-                textColor = if (uiState.enableNextButton) grey000() else grey300(),
+                backgroundColor = if (uiState.enableNextButton) main500() else grey100(),
+                pressedColor = main700(),
+                textColor = if (uiState.enableNextButton) grey50() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,
                 modifier = Modifier

@@ -1,5 +1,6 @@
 package com.umc.presentation.community.edit
 
+import com.umc.presentation.community.model.isCommunityThreadInputValid
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -25,6 +26,8 @@ data class CommunityEditState(
 
     /** 현재 참여 중인 챌린저 수 */
     val currentChallengerCount: Int = 0,
+    /** 방장을 포함하는 서버 기준 전체 참여 인원. 화면용 챌린저 수와 구분합니다. */
+    val totalMemberCount: Int? = null,
 
     /** 스레드 최대 참여 가능 인원 */
     val maxChallengerCount: Int = 8,
@@ -32,8 +35,16 @@ data class CommunityEditState(
     /** 현재 AI 카테고리 분류 상태 */
     val aiState: CommunityAiState = CommunityAiState.GUIDE,
 
-    /** 현재 스레드의 분류 카테고리 */
-    val classifiedCategory: CommunityCategory? = null,
+    /** AI가 분류해 준 카테고리 (AI 카드 표시 전용, 진입 시 기존 카테고리로 시작) */
+    val aiCategory: CommunityCategory? = null,
+
+    /**
+     * 실제로 선택된 카테고리 (아이콘 선택·미리보기·저장 요청에 사용)
+     *
+     * 사용자가 아이콘을 직접 고르면 이것만 바뀌고,
+     * AI가 분류하면 [aiCategory]와 함께 갱신됩니다.
+     */
+    val selectedCategory: CommunityCategory? = null,
 
     /** 현재 스레드에 설정된 아이콘 */
     val selectedIcon: String = "BOOK",
@@ -43,6 +54,7 @@ data class CommunityEditState(
 
     /** 스레드 수정 API 요청 진행 여부 */
     val isSaving: Boolean = false,
+    val canEdit: Boolean = false,
 
     /** 스레드 삭제 API 요청 진행 여부 */
     val isDeleting: Boolean = false,
@@ -56,6 +68,8 @@ data class CommunityEditState(
     /** 스레드 삭제 확인 Dialog 표시 여부 */
     val showDeleteDialog: Boolean = false,
 ) {
+    val isLastRemainingOwner: Boolean
+        get() = canEdit && !isLoading && totalMemberCount == 1
 
     /** 현재 참여 인원 / 최대 참여 가능 인원 */
     val selectedChallengerCountText: String
@@ -64,13 +78,12 @@ data class CommunityEditState(
     /**
      * 수정 완료 버튼 활성화 여부
      *
-     * 제목과 특징이 입력되어 있고 카테고리가 존재하며,
+     * 제목이 입력되어 있고(특징은 선택 입력) 카테고리가 존재하며,
      * 현재 수정 요청 중이 아닐 때 활성화됩니다.
      */
     val isSaveEnabled: Boolean
-        get() = title.isNotBlank() &&
-                description.isNotBlank() &&
-                classifiedCategory != null &&
+        get() = canEdit && !isLoading && !isDeleting && isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
+                selectedCategory != null &&
                 !isSaving
 
     /**
@@ -80,7 +93,7 @@ data class CommunityEditState(
      * 현재 AI 분류 중이 아닐 때 활성화됩니다.
      */
     val canRequestClassification: Boolean
-        get() = title.isNotBlank() &&
+        get() = isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
                 description.isNotBlank() &&
                 aiState != CommunityAiState.LOADING
 }

@@ -120,6 +120,38 @@ class CommunityCreateViewModel @Inject constructor(
                     CommunityCreateEvent.NavigateToEmojiPicker
                 )
             }
+
+            is CommunityCreateAction.OnCategorySelected -> {
+                selectCategory(
+                    category = action.category,
+                )
+            }
+        }
+    }
+
+    /**
+     * 사용자가 아이콘 선택 영역에서 카테고리를 직접 선택합니다.
+     *
+     * 실제 선택값([CommunityCreateState.selectedCategory])만 바꾸고 AI 결과는 그대로 둡니다.
+     * 진행 중이거나 예약된 AI 분류가 선택값을 덮어쓰지 않도록 취소하고,
+     * 분류 중이었다면 안내 상태로 되돌립니다.
+     * 이후 "카테고리 분류"나 재분류를 누르면 AI 결과로 다시 바뀝니다.
+     */
+    private fun selectCategory(
+        category: CommunityCategory,
+    ) {
+        classificationJob?.cancel()
+
+        _state.update {
+            it.copy(
+                selectedCategory = category,
+                isCategorySelectedByUser = true,
+                aiState = if (it.aiState == CommunityAiState.LOADING) {
+                    CommunityAiState.GUIDE
+                } else {
+                    it.aiState
+                },
+            )
         }
     }
 
@@ -143,19 +175,22 @@ class CommunityCreateViewModel @Inject constructor(
                 // 재분류 중 제목을 고치면 위에서 Job 이 취소되므로 LOADING 에 갇히지 않게 되돌린다
                 aiState = if (
                     it.aiState == CommunityAiState.LOADING &&
-                    it.classifiedCategory != null
+                    it.aiCategory != null
                 ) {
                     CommunityAiState.NEEDS_RECLASSIFICATION
+                } else if (it.aiState == CommunityAiState.LOADING) {
+                    CommunityAiState.GUIDE
                 } else {
                     it.aiState
                 },
             )
         }
 
-        // 최초 분류 전이고 제목과 특징이 모두 입력된 경우에만 자동 분류
+        // 최초 분류 전(AI 결과·직접 선택 모두 없음)이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
-            previousState.classifiedCategory == null &&
-            title.isNotBlank() &&
+            previousState.aiCategory == null &&
+            !previousState.isCategorySelectedByUser &&
+            com.umc.presentation.community.model.isCommunityThreadInputValid(title, _state.value.description) &&
             _state.value.description.isNotBlank()
         ) {
             scheduleAutoClassification()
@@ -184,7 +219,7 @@ class CommunityCreateViewModel @Inject constructor(
                         CommunityAiState.GUIDE
                     }
 
-                    previousState.classifiedCategory != null -> {
+                    previousState.aiCategory != null -> {
                         CommunityAiState.NEEDS_RECLASSIFICATION
                     }
 
@@ -195,10 +230,11 @@ class CommunityCreateViewModel @Inject constructor(
             )
         }
 
-        // 최초 분류 전이고 제목과 특징이 모두 입력된 경우에만 자동 분류
+        // 최초 분류 전(AI 결과·직접 선택 모두 없음)이고 제목과 특징이 모두 입력된 경우에만 자동 분류
         if (
-            previousState.classifiedCategory == null &&
-            _state.value.title.isNotBlank() &&
+            previousState.aiCategory == null &&
+            !previousState.isCategorySelectedByUser &&
+            com.umc.presentation.community.model.isCommunityThreadInputValid(_state.value.title, description) &&
             description.isNotBlank()
         ) {
             scheduleAutoClassification()
@@ -251,10 +287,13 @@ class CommunityCreateViewModel @Inject constructor(
             )
 
             // AI 분류 결과 상태 반영
+            if (_state.value.title != latestState.title || _state.value.description != latestState.description) return@launch
             _state.update {
                 it.copy(
                     aiState = result.aiState,
-                    classifiedCategory = result.category,
+                    // AI가 분류하면 실제 선택값도 함께 갱신
+                    aiCategory = result.category,
+                    selectedCategory = result.category,
                 )
             }
         }
@@ -336,10 +375,13 @@ class CommunityCreateViewModel @Inject constructor(
                 description = latestState.description,
             )
 
+            if (_state.value.title != latestState.title || _state.value.description != latestState.description) return@launch
             _state.update {
                 it.copy(
                     aiState = result.aiState,
-                    classifiedCategory = result.category,
+                    // AI가 분류하면 실제 선택값도 함께 갱신
+                    aiCategory = result.category,
+                    selectedCategory = result.category,
                 )
             }
         }
@@ -409,23 +451,14 @@ class CommunityCreateViewModel @Inject constructor(
         if (!currentState.isCompleteEnabled) {
             sendEvent(
                 CommunityCreateEvent.ShowToast(
-                    message = "제목과 스레드 특징을 모두 입력해주세요.",
+                    message = "제목 1~80자·특징 500자 이하와 초대 대상을 확인해주세요.",
                 )
             )
             return
         }
 
-        val category = currentState.classifiedCategory
-
-        // AI 카테고리 분류가 완료되지 않은 경우 생성 방지
-        if (category == null) {
-            sendEvent(
-                CommunityCreateEvent.ShowToast(
-                    message = "카테고리 분류를 완료해주세요.",
-                )
-            )
-            return
-        }
+        // 분류하지 않았다면 기본값 자유로 생성
+        val category = currentState.selectedCategory
 
         // 본인은 참여자로 넣을 수 없다. 후보 목록이 범용 챌린저 검색이라 본인이 섞여 들어온다
         val myMemberId = currentState.myMemberId
@@ -465,30 +498,23 @@ class CommunityCreateViewModel @Inject constructor(
                 },
                 memberIds = memberIds,
             ).onSuccess { createdThread ->
-                _state.update {
-                    it.copy(
-                        isSubmitting = false,
-                    )
-                }
-
+                // Keep submission locked until navigation consumes the successful result.
                 // 생성된 threadId와 함께 성공 이벤트 전달
                 sendEvent(
                     CommunityCreateEvent.CreateSuccess(
                         threadId = createdThread.threadId,
                     )
                 )
-            }.onFailure { throwable ->
+            }.onFailure {
                 _state.update {
                     it.copy(
                         isSubmitting = false,
                     )
                 }
 
+                // 서버 메시지 대신 디자인에 정해진 문구의 에러 토스트를 띄운다.
                 sendEvent(
-                    CommunityCreateEvent.ShowToast(
-                        message = throwable.message
-                            ?: "스레드를 만들지 못했어요.",
-                    )
+                    CommunityCreateEvent.CreateFailed
                 )
             }
         }

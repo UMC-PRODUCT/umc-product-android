@@ -11,5 +11,6 @@ sealed interface CommunitySearchEvent {
 
     data class NavigateToThreadDetail(
         val threadId: String,
+        val isKicked: Boolean = false,
     ) : CommunitySearchEvent
 }

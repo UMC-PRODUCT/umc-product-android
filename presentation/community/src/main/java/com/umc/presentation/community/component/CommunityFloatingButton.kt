@@ -11,12 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.umc.component.R
+import androidx.compose.ui.unit.sp
+import com.umc.presentation.community.R
 import com.umc.component.component.UText
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.grey50
+import com.umc.component.theme.main500
 
 /**
  * 새로운 커뮤니티 스레드를 생성할 때 사용하는 플로팅 버튼
@@ -35,8 +38,8 @@ fun CommunityFloatingButton(
             height = 48.dp,
         ),
         shape = RoundedCornerShape(24.dp),
-        color = indigo500(),
-        shadowElevation = 6.dp,
+        color = main500(),
+        shadowElevation = 2.dp,
     ) {
         // 새 스레드 아이콘과 텍스트 표시
         Row(
@@ -48,17 +51,28 @@ fun CommunityFloatingButton(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_add),
+                painter = painterResource(id = R.drawable.ic_community_create),
                 contentDescription = null,
-                tint = grey000(),
-                modifier = Modifier.size(19.dp),
+                tint = grey50(),
+                modifier = Modifier.size(24.dp),
             )
 
             UText(
                 text = "새 스레드",
-                style = UmcTypographyTokens.Subheadline,
-                color = grey000(),
+                style = UmcTypographyTokens.HeadlineBold.copy(letterSpacing = (-0.41).sp),
+                color = grey50(),
             )
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun CommunityFloatingButtonPreview() {
+    UmcTheme {
+        CommunityFloatingButton(
+            onClick = {},
+        )
+    }
+}
+

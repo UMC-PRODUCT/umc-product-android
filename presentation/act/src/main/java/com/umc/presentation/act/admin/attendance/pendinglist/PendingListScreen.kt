@@ -53,8 +53,8 @@ import com.umc.component.theme.UmcTypographyTokens.CalloutBold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.main500
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -119,7 +119,7 @@ fun PendingListScreen(
             .fillMaxWidth()
             .height(550.dp)
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(grey000())
+            .background(grey50())
             .padding(horizontal = 16.dp)
     ) {
         DragHeader()
@@ -140,9 +140,9 @@ fun PendingListScreen(
                 UButton(
                     text = AppStrings.CONFIRM,
                     textStyle = SubheadlineBold,
-                    textColor = if(isConfirmEnabled) grey000() else grey300(),
+                    textColor = if(isConfirmEnabled) grey50() else grey300(),
                     enabled = isConfirmEnabled,
-                    backgroundColor = if (isConfirmEnabled) indigo500() else grey100(),
+                    backgroundColor = if (isConfirmEnabled) main500() else grey100(),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                     cornerRadius = 8.dp,
                     onClick = {
@@ -298,9 +298,9 @@ private fun PendingUserRow(
                 checked = isChecked,
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
-                    checkedColor = indigo500(),
+                    checkedColor = main500(),
                     uncheckedColor = grey400(),
-                    checkmarkColor = grey000()
+                    checkmarkColor = grey50()
                 )
             )
             Spacer(modifier = Modifier.width(8.dp))

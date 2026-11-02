@@ -7,6 +7,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadRole
+import com.umc.domain.model.community.canEditThread
 import com.umc.domain.usecase.community.GetCommunityThreadsUseCase
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
@@ -86,6 +87,9 @@ class CommunityViewModel @Inject constructor(
                 sendEvent(
                     CommunityEvent.NavigateToThreadDetail(
                         threadId = action.threadId,
+                        isKicked = _state.value.threads.any { thread ->
+                            thread.id == action.threadId && thread.isKicked
+                        },
                     )
                 )
             }
@@ -204,7 +208,6 @@ class CommunityViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        threads = persistentListOf(),
                         errorMessage =
                             "네트워크 연결을 확인하고 다시 시도해주세요.",
                     )
@@ -382,7 +385,7 @@ class CommunityViewModel @Inject constructor(
     private fun navigateToEditSelectedThread() {
         val selectedThread = _state.value.selectedThread ?: return
 
-        if (!selectedThread.isMine) return
+        if (!selectedThread.canEdit) return
 
         _state.update {
             it.copy(
@@ -513,7 +516,9 @@ private fun CommunityThread.toUiModel(
         isPinned = forcePinned || isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        canEdit = myRole.canEditThread(),
         isJoined = isJoined,
+        isKicked = isKicked,
     )
 }
 
@@ -568,6 +573,7 @@ private fun CommunityThreadDetail.toUiModel(): CommunityThreadUiModel {
         isPinned = isPinned,
         isNotificationEnabled = !isMuted,
         isMine = myRole == CommunityThreadRole.OWNER,
+        canEdit = myRole.canEditThread(),
         isJoined = isJoined,
     )
 }

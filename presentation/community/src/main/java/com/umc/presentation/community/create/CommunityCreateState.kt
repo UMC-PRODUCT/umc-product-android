@@ -1,6 +1,7 @@
 package com.umc.presentation.community.create
 
 import com.umc.presentation.community.DEFAULT_COMMUNITY_MAX_MEMBER_COUNT
+import com.umc.presentation.community.model.isCommunityThreadInputValid
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -27,8 +28,25 @@ data class CommunityCreateState(
     /** 현재 AI 카테고리 분류 상태 */
     val aiState: CommunityAiState = CommunityAiState.GUIDE,
 
-    /** AI를 통해 최종 분류된 카테고리 */
-    val classifiedCategory: CommunityCategory? = null,
+    /** AI가 분류해 준 카테고리 (AI 카드 표시 전용) */
+    val aiCategory: CommunityCategory? = null,
+
+    /**
+     * 실제로 선택된 카테고리 (아이콘 선택·미리보기·생성 요청에 사용)
+     *
+     * 기본값은 자유이며, 분류하지 않아도 자유로 생성할 수 있습니다.
+     * 사용자가 아이콘을 직접 고르면 이것만 바뀌고,
+     * AI가 분류하면 [aiCategory]와 함께 갱신됩니다.
+     */
+    val selectedCategory: CommunityCategory = CommunityCategory.FREE,
+
+    /**
+     * 사용자가 아이콘 영역에서 카테고리를 직접 골랐는지 여부
+     *
+     * [selectedCategory]가 기본값 자유로 시작하므로, 직접 고른 선택을
+     * 최초 자동 분류가 덮어쓰지 않도록 이 값으로 구분합니다.
+     */
+    val isCategorySelectedByUser: Boolean = false,
 
     /** 챌린저 선택 BottomSheet 표시 여부 */
     val showChallengerBottomSheet: Boolean = false,
@@ -50,22 +68,18 @@ data class CommunityCreateState(
     val isTitleValid: Boolean
         get() = title.isNotBlank()
 
-    /** 스레드 특징 입력 여부 */
-    val isDescriptionValid: Boolean
-        get() = description.isNotBlank()
-
     /**
      * 완료 버튼 활성화 여부
      *
-     * 제목, 특징, 챌린저, 카테고리가 모두 존재하고
+     * 제목과 챌린저가 존재하고(특징은 선택 입력)
      * 현재 생성 요청 중이 아니고 AI 분류 중이 아닐 때 활성화됩니다.
      * (재분류 중에는 이전 카테고리가 남아 있으므로 분류 중에는 막는다)
      */
     val isCompleteEnabled: Boolean
-        get() = isTitleValid &&
-                isDescriptionValid &&
+        get() = isCommunityThreadInputValid(title, description) && isTitleValid &&
+                myMemberId > 0L &&
                 selectedChallengers.isNotEmpty() &&
-                classifiedCategory != null &&
+                selectedChallengers.all { it.memberId > 0L && it.memberId != myMemberId } &&
                 aiState != CommunityAiState.LOADING &&
                 !isSubmitting
 
@@ -76,7 +90,7 @@ data class CommunityCreateState(
      * 현재 AI 분석 중이 아닐 때 요청할 수 있습니다.
      */
     val canRequestClassification: Boolean
-        get() = title.isNotBlank() &&
+        get() = isCommunityThreadInputValid(title, description) && title.isNotBlank() &&
                 description.isNotBlank() &&
                 aiState != CommunityAiState.LOADING
 }

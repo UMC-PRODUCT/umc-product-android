@@ -50,7 +50,7 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -58,8 +58,8 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main500
+import com.umc.component.theme.main700
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.enums.EmailVerifyType
@@ -135,7 +135,7 @@ fun FindPasswordScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Icon(
             modifier = Modifier
@@ -225,9 +225,9 @@ fun FindPasswordScreen(
                 text = AppStrings.COMPLETE,
                 onClick = onClickComplete,
                 enabled = uiState.enableCompleteButton,
-                backgroundColor = if (uiState.enableCompleteButton) indigo500() else grey100(),
-                pressedColor = indigo700(),
-                textColor = if (uiState.enableCompleteButton) grey000() else grey300(),
+                backgroundColor = if (uiState.enableCompleteButton) main500() else grey100(),
+                pressedColor = main700(),
+                textColor = if (uiState.enableCompleteButton) grey50() else grey300(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 10.dp,
                 modifier = Modifier
@@ -249,7 +249,7 @@ fun FindPasswordCompleteScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Icon(
             modifier = Modifier
@@ -297,9 +297,9 @@ fun FindPasswordCompleteScreen(
             UButton(
                 text = AppStrings.GO_LOGIN,
                 onClick = onClickLogin,
-                backgroundColor = indigo500(),
-                pressedColor = indigo700(),
-                textColor = grey000(),
+                backgroundColor = main500(),
+                pressedColor = main700(),
+                textColor = grey50(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 12.dp,
                 modifier = Modifier
@@ -361,7 +361,7 @@ private fun EmailVerifySection(
             backgroundColor = when {
                 isEmailError -> red100()
                 isEmailLocked -> grey100()
-                else -> grey000()
+                else -> grey50()
             },
             strokeColor = if (isEmailError) red500() else grey200(),
             focusStrokeColor = if (isEmailError) red500() else grey900(),
@@ -378,9 +378,9 @@ private fun EmailVerifySection(
             text = AppStrings.SIGN_UP_VERIFY_REQUEST,
             onClick = onClickVerify,
             enabled = isVerifyEnabled,
-            backgroundColor = if (isVerifyEnabled) indigo500() else grey100(),
-            pressedColor = indigo700(),
-            textColor = if (isVerifyEnabled) grey000() else grey300(),
+            backgroundColor = if (isVerifyEnabled) main500() else grey100(),
+            pressedColor = main700(),
+            textColor = if (isVerifyEnabled) grey50() else grey300(),
             textStyle = UmcTypographyTokens.HeadlineBold,
             cornerRadius = 10.dp,
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -413,7 +413,7 @@ private fun EmailVerifySection(
                 placeholder = AppStrings.SIGN_UP_VERIFY_CODE_6_PLACEHOLDER,
                 textStyle = UmcTypographyTokens.Body,
                 textColor = if (isVerified) grey400() else grey950(),
-                backgroundColor = if (isVerified) grey100() else grey000(),
+                backgroundColor = if (isVerified) grey100() else grey50(),
                 strokeColor = grey200(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 10.dp,

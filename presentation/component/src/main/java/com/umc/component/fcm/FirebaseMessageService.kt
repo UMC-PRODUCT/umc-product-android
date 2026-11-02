@@ -1,5 +1,11 @@
 package com.umc.component.fcm
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
+import android.content.pm.ApplicationInfo
+import androidx.core.content.ContextCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -12,14 +18,13 @@ import com.umc.domain.model.home.NotificationItem
 import com.umc.domain.usecase.appDataStore.notification.AddNotificationUseCase
 import com.umc.component.R
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import java.util.UUID
 
 
 /**
@@ -33,42 +38,55 @@ class FirebaseMessageService : FirebaseMessagingService() {
     @Inject
     lateinit var addNotificationUseCase: AddNotificationUseCase
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
+
 
     //새로운 토큰이 생성될 때 호출
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d("log_fcm", "획득한 토큰: $token")
-        /** 나중에 서버 API가 준비되면 여기로 토큰 송신**/
-
+        tokenSynchronizer.sync(token)
     }
 
-    //푸시 메시지를 받았을 때 호출
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-
-        // 알림(Notification) 페이로드가 포함된 경우
-        message.notification?.let {
-            Log.d("log_fcm", "데이터 없는 알람 수신")
-            val title = it.title ?: "데이터가 없어요"
-            val body = it.body ?: "그렇다네요"
-            saveNotificationToDataStore(title, body)
-            showNotification(title, body)
+        runBlocking {
+            tokenSynchronizer.withActiveSession {
+                val route = CommunityNotification.parse(message.data)
+                val debugLogging = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+                if (debugLogging) {
+                    val routingFields = message.data.filterKeys {
+                        it in setOf("schemaVersion", "type", "threadId", "deepLink", "deeplink", "deep_link")
+                    }.mapValues { (_, value) -> value.take(500).replace('\n', ' ').replace('\r', ' ') }
+                    Log.d("log_fcm", "received keys=${message.data.keys.sorted()} routing=$routingFields " +
+                        "parsedThread=${route?.threadId} activeThread=${ActiveCommunityThread.threadId}")
+                }
+                val eventId = route?.eventId ?: message.messageId
+                if (eventId != null) {
+                    val prefs = getSharedPreferences("fcm_events", Context.MODE_PRIVATE)
+                    synchronized(FirebaseMessageService::class.java) {
+                        val seen = prefs.getStringSet("displayed", emptySet()).orEmpty()
+                        if (eventId in seen) {
+                            if (debugLogging) Log.d("log_fcm", "suppressed: duplicate event")
+                            return@withActiveSession
+                        }
+                        prefs.edit().putStringSet("displayed", (seen.toList().takeLast(199) + eventId).toSet()).commit()
+                    }
+                }
+                val title = message.data["title"] ?: message.notification?.title ?: "UMC"
+                val body = message.data["body"] ?: message.notification?.body ?: "새 알림이 도착했어요."
+                saveNotificationToDataStore(title, body)
+                if (route != null && ActiveCommunityThread.threadId == route.threadId) {
+                    if (debugLogging) Log.d("log_fcm", "suppressed: active thread")
+                    return@withActiveSession
+                }
+                if (debugLogging) Log.d("log_fcm", "notification requested: routePresent=${route != null}")
+                showNotification(title, body, route)
+            }
         }
-
-        // 데이터(Data) 페이로드가 포함된 경우
-        if (message.data.isNotEmpty()) {
-            Log.d("log_fcm", "데이터 있는 알람 수신")
-            val title = message.data["title"] ?: "데이터가 있대요"
-            val body = message.data["body"] ?: "글헣다네욘"
-            saveNotificationToDataStore(title, body)
-            showNotification(title, body)
-        }
-
     }
 
     // DataStore에 알림 저장
-    private fun saveNotificationToDataStore(title: String, body: String) {
+    private suspend fun saveNotificationToDataStore(title: String, body: String) {
         val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
         val notificationItem = NotificationItem(
             title = title,
@@ -76,18 +94,19 @@ class FirebaseMessageService : FirebaseMessagingService() {
             date = currentTime
         )
 
-        serviceScope.launch {
-            try {
-                addNotificationUseCase(notificationItem)
-                Log.d("log_fcm", "알림 DataStore 저장 성공: $title")
-            } catch (e: Exception) {
-                Log.e("log_fcm", "알림 DataStore 저장 실패: ${e.message}")
-            }
+        try {
+            addNotificationUseCase(notificationItem)
+            Log.d("log_fcm", "알림 DataStore 저장 성공: $title")
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            Log.e("log_fcm", "알림 DataStore 저장 실패: ${e.message}")
         }
     }
 
     //포그라운드에서 메시지 받았을 때 처리
-    private fun showNotification(title: String, body: String){
+    private fun showNotification(title: String, body: String, route: CommunityNotification?) {
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         val channelId = "umc_product_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -101,15 +120,28 @@ class FirebaseMessageService : FirebaseMessagingService() {
         }
 
 
+        val notificationId = UUID.randomUUID().toString()
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            action = Intent.ACTION_VIEW
+            data = route?.uri()
+            route?.eventId?.let { putExtra("notificationEventId", it) }
+            // Intent identity excludes extras. Each displayed notification needs its own identity.
+            addCategory("$packageName.notification.$notificationId")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val contentIntent = launchIntent?.let {
+            PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
         // 알람 빌더 생성
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_app_store_logo) //일단 UMC 로고 임시
             .setContentTitle(title)
             .setContentText(body)
+            .setContentIntent(contentIntent)
             .setAutoCancel(true) // 클릭하면 알림이 자동으로 사라짐
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         // 알람 띄우기 (ID를 시스템으로 설정해서 쌓이도록)
-        notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
+        notificationManager.notify(notificationId, 0, builder.build())
     }
 }

@@ -41,7 +41,7 @@ fun GroupScheduleAttendanceBox(
                 grey300(),
                 RoundedCornerShape(12.dp)
             )
-            .background(grey000()),
+            .background(grey50()),
     ) {
         AttendanceRow(
             title = "체크인 시작",
@@ -106,7 +106,7 @@ private fun AttendanceRow(
             Box(
                 modifier = Modifier
                     .background(
-                        indigo100(),
+                        main100(),
                         RoundedCornerShape(999.dp)
                     )
                     .padding(
@@ -117,7 +117,7 @@ private fun AttendanceRow(
                 UText(
                     text = value,
                     style = HeadlineBold,
-                    color = indigo500(),
+                    color = main500(),
                 )
             }
         }

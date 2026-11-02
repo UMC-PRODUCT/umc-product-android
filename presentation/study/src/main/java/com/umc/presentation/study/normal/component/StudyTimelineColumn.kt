@@ -38,7 +38,7 @@ fun StudyTimelineColumn(
                 // 상태 배지가 없어져 잠금 아이콘이 유일한 단서라 TalkBack 이 미공개 주차임을 읽도록 한다
                 contentDescription = AppStrings.STUDY_LOCKED_WEEK_DESCRIPTION,
                 modifier = Modifier.size(24.dp),
-                tint = grey300()
+                tint = grey400()
             )
         } else {
             // 주차 번호 원형
@@ -46,13 +46,13 @@ fun StudyTimelineColumn(
                 modifier = Modifier
                     .size(20.dp)
                     .clip(CircleShape)
-                    .background(indigo500()),
+                    .background(main500()),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
                     text = week.toString(),
                     style = UmcTypographyTokens.Caption1Bold,
-                    color = grey000(),
+                    color = grey50(),
                     textAlign = TextAlign.Center
                 )
             }

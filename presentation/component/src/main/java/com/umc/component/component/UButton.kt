@@ -30,9 +30,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
+import com.umc.component.theme.grey300
+import com.umc.component.theme.grey800
 
 /**
  * UMC 공용 버튼 컴포넌트입니다.
@@ -71,7 +75,7 @@ fun UButton(
     enabled: Boolean = true,
     backgroundColor: Color = black(),
     pressedColor: Color = backgroundColor,
-    textColor: Color = grey000(),
+    textColor: Color = grey50(),
     textStyle: TextStyle = UmcTypographyTokens.SubheadlineBold,
     cornerRadius: Dp = 8.dp,
     borderWidth: Dp = 0.dp,
@@ -151,6 +155,56 @@ fun UButton(
                     )
                 }
             }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UButtonDefaultPreview() {
+    UmcTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            UButton(
+                text = "확인",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = 14.dp),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UButtonOutlinedPreview() {
+    UmcTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            UButton(
+                text = "취소",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = grey50(),
+                textColor = grey800(),
+                borderWidth = 1.dp,
+                borderColor = grey300(),
+                contentPadding = PaddingValues(vertical = 14.dp),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UButtonDisabledPreview() {
+    UmcTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            UButton(
+                text = "비활성화",
+                onClick = {},
+                enabled = false,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = 14.dp),
+            )
         }
     }
 }

@@ -26,12 +26,12 @@ import androidx.compose.ui.window.PopupProperties
 import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.presentation.community.model.CommunityCategory
 
 /**
@@ -79,7 +79,7 @@ fun CommunityFilterMenu(
                     clip = false,
                 )
                 .background(
-                    color = grey000(),
+                    color = grey50(),
                     shape = RoundedCornerShape(12.dp),
                 )
                 .border(
@@ -125,7 +125,7 @@ fun CommunityFilterMenu(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 파트공지 카테고리
+            // 프로젝트 카테고리
             CommunityFilterMenuItem(
                 text = CommunityCategory.PROJECT.label,
                 isSelected = selectedCategory == CommunityCategory.PROJECT,
@@ -196,10 +196,10 @@ private fun CommunityFilterMenuItem(
         if (isSelected) {
             Icon(
                 painter = painterResource(
-                    id = R.drawable.ic_indigo_check,
+                    id = R.drawable.ic_main_check,
                 ),
                 contentDescription = "선택됨",
-                tint = indigo500(),
+                tint = main500(),
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .size(18.dp),

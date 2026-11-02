@@ -80,7 +80,7 @@ data class CommunityState(
 
     /** 스레드 목록 조회 에러 여부 */
     val isError: Boolean
-        get() = errorMessage != null
+        get() = errorMessage != null && threads.isEmpty()
 
     /** 현재 표시할 스레드가 없는 상태인지 여부 */
     val isEmpty: Boolean
@@ -91,12 +91,5 @@ data class CommunityState(
 
     /** 선택된 카테고리에 따라 목록에 표시할 섹션 제목 */
     val selectedSectionTitle: String
-        get() = when (selectedCategory) {
-            CommunityCategory.ALL -> "전체"
-            CommunityCategory.UNREAD -> "안읽음"
-            CommunityCategory.PROJECT -> "파트공지"
-            CommunityCategory.STUDY -> "스터디"
-            CommunityCategory.QNA -> "질문"
-            CommunityCategory.FREE -> "자유"
-        }
+        get() = selectedCategory.label
 }

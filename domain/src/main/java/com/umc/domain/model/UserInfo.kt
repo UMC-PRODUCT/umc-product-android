@@ -21,7 +21,9 @@ data class UserInfo(
 
     val hasLocalCredential: Boolean = false,
     val totalActivityDays: Long = 0L,
-    val currentGisuMemberInfo: CurrentGisuMemberInfo? = null
+    val currentGisuMemberInfo: CurrentGisuMemberInfo? = null,
+    // 시스템 역할 SUPER_ADMIN 보유 여부. 챌린저 검색 범위를 정할 때 중앙운영사무국과 같이 본다
+    val isSuperAdmin: Boolean = false
 )
 
 
@@ -121,6 +123,8 @@ fun UserInfo.toUserCard(): UserCard {
         email = email,
         github = profile.github,
         blog = profile.blog,
+        linkedIn = profile.linkedIn,
+        memberNo = id.takeIf { it > 0 }?.toString(),
         qrPayload = ""
     )
 }

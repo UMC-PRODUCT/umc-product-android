@@ -34,12 +34,12 @@ fun AdminStudyGroupCreateCard(
                 bottom = 16.dp
             )
             .background(
-                grey000(),
+                grey50(),
                 RoundedCornerShape(8.dp)
             )
             .border(
                 1.dp,
-                grey000(),
+                grey50(),
                 RoundedCornerShape(8.dp)
             )
             .clickable {
@@ -57,7 +57,7 @@ fun AdminStudyGroupCreateCard(
                 R.drawable.ic_book_filled
             ),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(24.dp)
         )
 

@@ -19,7 +19,14 @@ data class CommunityThreadUiModel(
     val isPinned: Boolean = false,
     val isNotificationEnabled: Boolean = true,
     val isMine: Boolean = false,
+    val canEdit: Boolean = false,
     val isJoined: Boolean,
+    /**
+     * 내가 강퇴된 스레드인지 여부
+     *
+     * 목록 응답의 membershipState 가 KICKED(강퇴 확인 전)일 때 true
+     */
+    val isKicked: Boolean = false,
 ) {
     val isRead: Boolean
         get() = unreadCount == 0

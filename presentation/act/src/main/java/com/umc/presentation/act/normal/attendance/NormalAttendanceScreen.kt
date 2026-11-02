@@ -86,8 +86,7 @@ import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
 import com.umc.component.theme.red500
 import com.umc.component.theme.red100
-import com.umc.component.theme.indigo600
-import com.umc.component.theme.grey000
+import com.umc.component.theme.main600
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
@@ -96,8 +95,8 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.yellow100
@@ -229,7 +228,7 @@ fun NormalAttendanceRoute(
             negativeText = AppStrings.COMMON_CANCEL,
             positiveText = AppStrings.ATTENDANCE_LOCATION_PERMISSION_SETTINGS,
             positiveBackgroundColor = grey800(),
-            positiveTextColor = grey000(),
+            positiveTextColor = grey50(),
             onNegative = { showLocationSettingsDialog = false },
             onPositive = {
                 showLocationSettingsDialog = false
@@ -363,7 +362,7 @@ private fun MyAttendance(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(grey000(), RoundedCornerShape(12.dp))
+                    .background(grey50(), RoundedCornerShape(12.dp))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Column {
@@ -396,7 +395,7 @@ private fun AvailableSessionCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(grey000(), RoundedCornerShape(12.dp))
+            .background(grey50(), RoundedCornerShape(12.dp))
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -497,7 +496,7 @@ private fun AvailableSessionExpandedContent(
                         clip = false
                     )
                     .clip(RoundedCornerShape(4.dp))
-                    .background(grey000())
+                    .background(grey50())
             ) {
                 if (session.isOnline) {
                     OnlineSessionLocation()
@@ -519,16 +518,16 @@ private fun AvailableSessionExpandedContent(
                     enabled = canRequestAttendance,
                     cornerRadius = 8.dp,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                    backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
+                    backgroundColor = if(canRequestAttendance) main500() else grey100(),
                     text = if (isRequesting) {
                         AppStrings.ATTENDANCE_REQUESTING
                     } else {
                         AppStrings.ATTENDANCE_REQUEST_BUTTON
                     },
                     textStyle = CalloutBold,
-                    textColor = if(canRequestAttendance) grey000() else grey300(),
+                    textColor = if(canRequestAttendance) grey50() else grey300(),
                     prevIcon = painterResource(R.drawable.ic_location_white),
-                    prevIconTint = if(canRequestAttendance) grey000() else grey300(),
+                    prevIconTint = if(canRequestAttendance) grey50() else grey300(),
                     prevIconSize = DpSize(20.dp, 20.dp),
                     onClick = onAttendanceClick
                 )
@@ -547,7 +546,7 @@ private fun AvailableSessionExpandedContent(
                     Spacer(modifier = Modifier.width(3.dp))
                     UText(
                         text = AppStrings.ATTENDANCE_FAIL_REASON_ACTION,
-                        color = indigo600(),
+                        color = main600(),
                         style = Footnote,
                         modifier = Modifier.clickable(
                             onClick = onReasonClick
@@ -664,16 +663,16 @@ private fun AvailableSessionExpandedContent(
                         enabled = canRequestAttendance,
                         cornerRadius = 8.dp,
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                        backgroundColor = if(canRequestAttendance) indigo500() else grey100(),
+                        backgroundColor = if(canRequestAttendance) main500() else grey100(),
                         text = if (isRequesting) {
                             AppStrings.ATTENDANCE_REQUESTING
                         } else {
                             AppStrings.ATTENDANCE_REQUEST_AGAIN_BUTTON
                         },
                         textStyle = CalloutBold,
-                        textColor = if(canRequestAttendance) grey000() else grey300(),
+                        textColor = if(canRequestAttendance) grey50() else grey300(),
                         prevIcon = painterResource(R.drawable.ic_location_white),
-                        prevIconTint = if(canRequestAttendance) grey000() else grey300(),
+                        prevIconTint = if(canRequestAttendance) grey50() else grey300(),
                         prevIconSize = DpSize(20.dp, 20.dp),
                         onClick = onAttendanceClick
                     )
@@ -757,9 +756,9 @@ private fun AttendanceLocationMap(
                 CircleOverlay(
                     center = attendancePosition,
                     radius = ATTENDANCE_RADIUS_METERS,
-                    color = indigo500().copy(alpha = 0.15f),
+                    color = main500().copy(alpha = 0.15f),
                     outlineWidth = 1.dp,
-                    outlineColor = indigo500(),
+                    outlineColor = main500(),
                 )
             }
 
@@ -792,14 +791,14 @@ private fun OnlineSessionLocation() {
         Icon(
             painter = painterResource(id = R.drawable.ic_location),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(15.dp),
         )
         Spacer(modifier = Modifier.width(8.dp))
         UText(
             text = AppStrings.ATTENDANCE_ONLINE_SESSION,
             style = Caption1Bold,
-            color = indigo500(),
+            color = main500(),
         )
     }
 }
@@ -915,13 +914,13 @@ private fun SessionIcon() {
     Box(
         modifier = Modifier
             .size(40.dp)
-            .background(indigo100(), RoundedCornerShape(8.dp)),
+            .background(main100(), RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_people_color),
             contentDescription = null,
-            tint = indigo500(),
+            tint = main500(),
             modifier = Modifier.size(22.dp)
         )
     }
@@ -977,7 +976,7 @@ fun EmptyComponent(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(color = grey000())
+            .background(color = grey50())
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {

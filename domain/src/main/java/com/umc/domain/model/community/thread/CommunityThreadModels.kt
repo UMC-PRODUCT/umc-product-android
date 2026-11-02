@@ -146,6 +146,7 @@ data class CommunityMessageReportReceipt(
     val messageId: String = "",
     val reason: CommunityMessageReportReason = CommunityMessageReportReason.ETC,
     val createdAt: String = "",
+    val reasons: List<CommunityMessageReportReason> = emptyList(),
 )
 
 data class CreateCommunityThread(
@@ -166,5 +167,10 @@ data class UpdateCommunityThread(
 enum class CommunityThreadCategory { STUDY, QNA, PROJECT, FREE, UNKNOWN }
 enum class CommunityThreadRole { OWNER, ADMIN, MEMBER, UNKNOWN }
 enum class CommunityThreadMemberState { ACTIVE, LEFT, KICKED, UNKNOWN }
-enum class CommunityMessageType { TEXT, IMAGE, SYSTEM }
+enum class CommunityMessageType {
+    TEXT, IMAGE, SYSTEM, MEMBER_LEFT, MEMBER_KICKED;
+
+    val isSystemNotice: Boolean
+        get() = this == SYSTEM || this == MEMBER_LEFT || this == MEMBER_KICKED
+}
 enum class CommunityMessageReportReason { SPAM, ABUSE, INAPPROPRIATE, PRIVACY, ETC }

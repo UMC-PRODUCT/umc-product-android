@@ -9,6 +9,6 @@ class SaveTokenUseCase @Inject constructor(
     private val appDataStoreRepository: AppDataStoreRepository
 ) {
     suspend operator fun invoke(request: JwtToken): ApiState<Unit> {
-        return appDataStoreRepository.saveTokens(request.accessToken, request.refreshToken)
+        return appDataStoreRepository.saveTokens(request.accessToken, request.refreshToken, newSession = true)
     }
 }

@@ -33,11 +33,11 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.domain.model.home.CategoryItem
 import com.umc.presentation.home.schedule.add.ScheduleAddViewModel
 
@@ -57,7 +57,7 @@ fun ScheduleCategoryBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(color = grey600())
         },
@@ -98,8 +98,8 @@ fun ScheduleCategoryBottomSheet(
                 //확인 버튼
                 UButton(
                     text = AppStrings.CONFIRM,
-                    backgroundColor = indigo500(),
-                    textColor = grey000(),
+                    backgroundColor = main500(),
+                    textColor = grey50(),
                     onClick = onConfirm,
                     modifier = Modifier
                         .padding(start = 8.dp),
@@ -171,9 +171,9 @@ fun CategoryItemRow(
             checked = item.isChecked,
             onCheckedChange = { onToggle(item) },
             colors = CheckboxDefaults.colors(
-                checkedColor = indigo500(),
+                checkedColor = main500(),
                 uncheckedColor = grey300(),
-                checkmarkColor = grey000()
+                checkmarkColor = grey50()
             )
         )
     }

@@ -4,10 +4,16 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastState
+import com.umc.component.theme.AppStrings
 
 /**
  * 스레드 생성 화면의 Route
@@ -28,6 +34,9 @@ fun CommunityCreateRoute(
     // 스레드 생성 화면의 UI 상태 구독
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // 화면 하단에 띄울 UToast (null 이면 숨김)
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
+
     // ViewModel에서 발생한 일회성 이벤트 처리
     CollectUiEvents(viewModel.event) { event ->
         when (event) {
@@ -44,6 +53,14 @@ fun CommunityCreateRoute(
                 ).show()
 
                 onCreateSuccess(event.threadId)
+            }
+
+            // 스레드 생성 실패 시 에러 UToast 표시
+            CommunityCreateEvent.CreateFailed -> {
+                toastData = UToastData(
+                    message = AppStrings.COMMUNITY_CREATE_FAILED,
+                    state = UToastState.ERROR,
+                )
             }
 
             // 아이콘 선택 화면으로 이동
@@ -66,5 +83,7 @@ fun CommunityCreateRoute(
     CommunityCreateScreen(
         state = state,
         onAction = viewModel::onAction,
+        toastData = toastData,
+        onToastDismiss = { toastData = null },
     )
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadMember
+import com.umc.domain.model.community.canEditThread
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.ai.CommunityCategoryRules
@@ -20,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +40,7 @@ import kotlinx.coroutines.launch
  * - 현재 참여 중인 챌린저 조회
  * - 제목 및 스레드 특징 수정
  * - AI 카테고리 재분류
- * - 챌린저 추가/삭제 후 목록 갱신
+ * - 챌린저 초대 후 목록 갱신
  * - 스레드 수정 및 삭제
  * - 화면 이동 및 Toast 이벤트 전달
  */
@@ -56,6 +58,7 @@ class CommunityEditViewModel @Inject constructor(
     DeleteCommunityThreadUseCase,
 ) : ViewModel() {
 
+    private var classificationJob: Job? = null
     private val _state = MutableStateFlow(
         CommunityEditState()
     )
@@ -100,13 +103,7 @@ class CommunityEditViewModel @Inject constructor(
             }
 
             CommunityEditAction.OnMemberInviteSuccess -> {
-                _state.update {
-                    it.copy(
-                        showChallengerBottomSheet = false,
-                    )
-                }
-
-                // 추가/삭제 후 수정 화면의 챌린저 목록도 다시 조회
+                // 초대 후 수정 화면의 챌린저 목록도 다시 조회
                 loadCurrentMembers(
                     threadId = _state.value.threadId,
                 )
@@ -118,6 +115,12 @@ class CommunityEditViewModel @Inject constructor(
 
             CommunityEditAction.OnRetryClassificationClick -> {
                 requestClassification()
+            }
+
+            is CommunityEditAction.OnCategorySelected -> {
+                selectCategory(
+                    category = action.category,
+                )
             }
 
             CommunityEditAction.OnChangeEmojiClick -> {
@@ -174,16 +177,24 @@ class CommunityEditViewModel @Inject constructor(
             getCommunityThreadDetailUseCase(
                 threadId = threadId,
             ).onSuccess { thread ->
-
+                if (!thread.myRole.canEditThread() || thread.deletedAt != null) {
+                    _state.update { it.copy(isLoading = false, canEdit = false, errorMessage = "스레드를 수정할 권한이 없어요.") }
+                    sendEvent(CommunityEditEvent.ShowToast("스레드를 수정할 권한이 없어요."))
+                    return@onSuccess
+                }
                 _state.update {
                     it.copy(
                         threadId = thread.threadId,
+                        canEdit = true,
                         title = thread.title,
                         description = thread.description,
                         currentChallengerCount = thread.memberCount,
+                        totalMemberCount = thread.memberCount,
                         maxChallengerCount = thread.maxMembers,
                         aiState = CommunityAiState.SUCCESS,
-                        classifiedCategory =
+                        aiCategory =
+                            thread.category.toUiCategory(),
+                        selectedCategory =
                             thread.category.toUiCategory(),
                         selectedIcon = thread.icon,
                         isLoading = false,
@@ -260,6 +271,7 @@ class CommunityEditViewModel @Inject constructor(
                 it.copy(
                     selectedChallengers = members.toImmutableList(),
                     currentChallengerCount = members.size,
+                    totalMemberCount = memberPage.total,
                 )
             }
         }
@@ -307,8 +319,10 @@ class CommunityEditViewModel @Inject constructor(
     private fun updateTitle(
         title: String,
     ) {
+        classificationJob?.cancel()
         _state.update {
             it.copy(
+                aiState = if (it.aiState == CommunityAiState.LOADING) CommunityAiState.NEEDS_RECLASSIFICATION else it.aiState,
                 title = title,
             )
         }
@@ -320,6 +334,7 @@ class CommunityEditViewModel @Inject constructor(
     private fun updateDescription(
         description: String,
     ) {
+        classificationJob?.cancel()
         _state.update {
             it.copy(
                 description = description,
@@ -328,13 +343,36 @@ class CommunityEditViewModel @Inject constructor(
                         CommunityAiState.GUIDE
                     }
 
-                    it.classifiedCategory != null -> {
+                    it.aiCategory != null -> {
                         CommunityAiState.NEEDS_RECLASSIFICATION
                     }
 
                     else -> {
                         CommunityAiState.GUIDE
                     }
+                },
+            )
+        }
+    }
+
+    /**
+     * 사용자가 아이콘 선택 영역에서 카테고리를 직접 선택합니다.
+     *
+     * 진행 중인 AI 재분류가 선택값을 덮어쓰지 않도록 취소하고,
+     * 분류 중이었다면 재분류 필요 상태로 되돌립니다.
+     */
+    private fun selectCategory(
+        category: CommunityCategory,
+    ) {
+        classificationJob?.cancel()
+
+        _state.update {
+            it.copy(
+                selectedCategory = category,
+                aiState = if (it.aiState == CommunityAiState.LOADING) {
+                    CommunityAiState.NEEDS_RECLASSIFICATION
+                } else {
+                    it.aiState
                 },
             )
         }
@@ -368,7 +406,8 @@ class CommunityEditViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        classificationJob?.cancel()
+        classificationJob = viewModelScope.launch {
             _state.update {
                 it.copy(
                     aiState = CommunityAiState.LOADING,
@@ -378,6 +417,7 @@ class CommunityEditViewModel @Inject constructor(
             delay(CLASSIFICATION_DELAY)
 
             val latestState = _state.value
+            if (!latestState.canEdit) return@launch
 
             val result = classifyCategory(
                 title = latestState.title,
@@ -387,7 +427,9 @@ class CommunityEditViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     aiState = result.aiState,
-                    classifiedCategory = result.category,
+                    // AI가 분류하면 실제 선택값도 함께 갱신
+                    aiCategory = result.category,
+                    selectedCategory = result.category,
                 )
             }
         }
@@ -455,14 +497,14 @@ class CommunityEditViewModel @Inject constructor(
         if (!currentState.isSaveEnabled) {
             sendEvent(
                 CommunityEditEvent.ShowToast(
-                    message = "제목과 스레드 특징을 모두 입력해주세요.",
+                    message = "제목 1~80자·특징 500자 이하와 수정 권한을 확인해주세요.",
                 )
             )
             return
         }
 
         val category =
-            currentState.classifiedCategory ?: run {
+            currentState.selectedCategory ?: run {
                 sendEvent(
                     CommunityEditEvent.ShowToast(
                         message = "카테고리를 선택해주세요.",
@@ -480,8 +522,8 @@ class CommunityEditViewModel @Inject constructor(
 
             updateCommunityThreadUseCase(
                 threadId = currentState.threadId,
-                title = currentState.title,
-                description = currentState.description,
+                title = currentState.title.trim(),
+                description = currentState.description.trim(),
                 category = category.name,
                 icon = currentState.selectedIcon,
             ).onSuccess {
@@ -509,6 +551,7 @@ class CommunityEditViewModel @Inject constructor(
     }
 
     private fun openDeleteDialog() {
+        if (!_state.value.canEdit) return
         _state.update {
             it.copy(
                 showDeleteDialog = true,
@@ -536,7 +579,7 @@ class CommunityEditViewModel @Inject constructor(
             return
         }
 
-        if (currentState.isDeleting) {
+        if (!currentState.canEdit || currentState.isDeleting) {
             return
         }
 

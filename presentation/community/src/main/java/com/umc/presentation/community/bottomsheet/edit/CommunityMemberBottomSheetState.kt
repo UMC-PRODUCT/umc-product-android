@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * 커뮤니티 스레드 멤버 관리 BottomSheet의 UI 상태입니다.
@@ -17,11 +18,12 @@ import kotlinx.collections.immutable.persistentSetOf
  * - 챌린저 검색 결과
  * - 검색 화면에서 선택된 최종 멤버
  * - 페이지네이션 상태
- * - 멤버 추가/삭제 진행 상태
+ * - 멤버 초대 진행 상태
  */
 data class CommunityMemberBottomSheetState(
 
     /** 현재 관리 중인 스레드 ID */
+    val canManage: Boolean = false,
     val threadId: String = "",
 
     /** 현재 입력된 챌린저 검색어 */
@@ -36,19 +38,19 @@ data class CommunityMemberBottomSheetState(
     /** 검색 결과 다음 페이지 로딩 여부 */
     val isLoadingMore: Boolean = false,
 
-    /** 멤버 추가/삭제 변경사항을 서버에 반영 중인지 여부 */
+    /** 멤버 초대를 서버에 반영 중인지 여부 */
     val isUpdatingMembers: Boolean = false,
 
     /**
      * 서버 기준으로 현재 스레드에 실제 참여 중인 멤버 목록
      *
      * 검색 화면에서 기존 멤버의 체크 상태를 결정하거나,
-     * 최종 선택 목록과 비교해 추가/삭제 대상을 계산할 때 사용합니다.
+     * 최종 선택 목록과 비교해 초대 대상을 계산할 때 사용합니다.
      */
     val currentMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
 
     /**
-     * 초대 및 삭제 대상에서 제외할 스레드 OWNER의 memberId 목록
+     * 초대 대상에서 제외할 스레드 OWNER의 memberId 목록
      *
      * OWNER는 일반 멤버 관리 대상이 아니므로
      * 챌린저 검색 결과에서도 제외합니다.
@@ -70,17 +72,9 @@ data class CommunityMemberBottomSheetState(
      * 검색 화면에서 최종적으로 체크된 멤버 목록
      *
      * 현재 멤버와 비교하여
-     * 새로 추가된 멤버와 삭제된 멤버를 계산합니다.
+     * 새로 추가된 멤버를 계산합니다.
      */
     val selectedMembers: ImmutableList<CommunityChallengerUiModel> = persistentListOf(),
-
-    /**
-     * 현재 삭제 API가 진행 중인 멤버의 memberId
-     *
-     * null이면 삭제 중인 멤버가 없으며,
-     * 해당 ID를 이용해 특정 멤버의 삭제 버튼 상태를 표시합니다.
-     */
-    val deletingMemberId: Long? = null,
 
     /** 챌린저 검색 다음 페이지 조회에 사용할 cursor */
     val nextCursor: Long? = null,
@@ -106,7 +100,9 @@ data class CommunityMemberBottomSheetState(
      */
     val displayedMembers: ImmutableList<CommunityChallengerUiModel>
         get() = if (isSearching) {
-            searchResults
+            val currentIds = currentMembers.map { it.memberId }.toSet()
+            searchResults.filterNot { it.memberId in currentIds || it.memberId in ownerMemberIds }
+                .toImmutableList()
         } else {
             currentMembers
         }
@@ -119,28 +115,9 @@ data class CommunityMemberBottomSheetState(
     val isEmpty: Boolean
         get() = !isLoading && displayedMembers.isEmpty()
 
-    /**
-     * 현재 서버 멤버 목록과 최종 선택 목록에
-     * 변경사항이 있는지 확인합니다.
-     *
-     * 순서와 관계없이 memberId 집합을 비교합니다.
-     */
+    /** 새롭게 초대할 멤버가 있는지 확인합니다. 기존 멤버 누락은 삭제로 처리하지 않습니다. */
     val hasMemberChanges: Boolean
-        get() {
-            val currentIds = currentMembers
-                .map { member ->
-                    member.memberId
-                }
-                .toSet()
-
-            val selectedIds = selectedMembers
-                .map { member ->
-                    member.memberId
-                }
-                .toSet()
-
-            return currentIds != selectedIds
-        }
+        get() = addedMembers.isNotEmpty()
 
     /**
      * 새롭게 추가할 멤버 목록
@@ -164,27 +141,6 @@ data class CommunityMemberBottomSheetState(
         }
 
     /**
-     * 기존 스레드에서 삭제할 멤버 목록
-     *
-     * currentMembers에는 존재하지만
-     * selectedMembers에는 존재하지 않는 멤버를 반환합니다.
-     *
-     * 해당 목록은 멤버 삭제 API 호출에 사용합니다.
-     */
-    val removedMembers: List<CommunityChallengerUiModel>
-        get() {
-            val selectedIds = selectedMembers
-                .map { member ->
-                    member.memberId
-                }
-                .toSet()
-
-            return currentMembers.filter { member ->
-                member.memberId !in selectedIds
-            }
-        }
-
-    /**
      * 검색 화면의 확인 버튼 활성화 여부
      *
      * 아래 조건을 모두 만족해야 활성화됩니다.
@@ -193,7 +149,7 @@ data class CommunityMemberBottomSheetState(
      * - 멤버 변경 API가 진행 중이지 않음
      */
     val isConfirmEnabled: Boolean
-        get() = isSearching &&
+        get() = canManage && isSearching &&
                 hasMemberChanges &&
                 !isUpdatingMembers
 
@@ -208,23 +164,9 @@ data class CommunityMemberBottomSheetState(
  */
 sealed interface CommunityMemberBottomSheetEvent : UiEvent {
 
-    /**
-     * 멤버 추가/삭제 변경사항이 모두 정상 반영된 경우 발생합니다.
-     *
-     * 추가된 인원과 삭제된 인원 수를 전달하여
-     * UI에서 완료 Toast 메시지를 구성할 때 사용합니다.
-     */
+    /** 멤버 초대가 정상 반영된 경우 발생합니다. */
     data class MemberUpdateSuccess(
         val addedMemberCount: Int,
-        val removedMemberCount: Int,
-    ) : CommunityMemberBottomSheetEvent
-
-    /**
-     * 현재 멤버 목록에서 특정 멤버를
-     * 즉시 삭제하는 API가 성공한 경우 발생합니다.
-     */
-    data class MemberKickSuccess(
-        val memberId: Long,
     ) : CommunityMemberBottomSheetEvent
 
     /**

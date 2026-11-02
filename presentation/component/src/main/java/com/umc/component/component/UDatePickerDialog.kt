@@ -47,7 +47,7 @@ fun UDatePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = grey000(),
+        containerColor = grey50(),
         shape = RoundedCornerShape(12.dp),
         text = {
             Column(
@@ -99,7 +99,7 @@ fun UDatePickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = indigo500(),
+                        focusedBorderColor = main500(),
                         unfocusedBorderColor = grey200()
                     ),
                     visualTransformation = DateVisualTransformation()
@@ -150,12 +150,12 @@ fun UDatePickerDialog(
                     },
                     enabled = isConfirmEnabled,
                     backgroundColor = if (isConfirmEnabled) {
-                        indigo500()
+                        main500()
                     } else {
                         grey200()
                     },
                     textColor = if (isConfirmEnabled) {
-                        grey000()
+                        grey50()
                     } else {
                         grey400()
                     },

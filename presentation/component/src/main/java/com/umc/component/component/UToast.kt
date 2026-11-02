@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey800
 import kotlinx.coroutines.delay
 
@@ -44,18 +44,22 @@ data class UToastData(
  * @param message 표시할 텍스트
  * @param state 아이콘 종류. CHECK=체크, ERROR=에러, NONE=아이콘 없음
  * @param modifier 외부 레이아웃 지정
+ * @param backgroundColor 토스트 배경색. 기본값 grey800
+ * @param textColor 메시지 글자색. 기본값 grey50
  */
 @Composable
 fun UToast(
     message: String,
     state: UToastState,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = grey800(),
+    textColor: Color = grey50(),
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp)
-            .background(grey800(), RoundedCornerShape(8.dp))
+            .background(backgroundColor, RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -74,14 +78,14 @@ fun UToast(
             UText(
                 text = message,
                 style = UmcTypographyTokens.Callout,
-                color = grey000(),
+                color = textColor,
                 modifier = Modifier.padding(start = 16.dp),
             )
         } else {
             UText(
                 text = message,
                 style = UmcTypographyTokens.Callout,
-                color = grey000(),
+                color = textColor,
             )
         }
     }
@@ -96,6 +100,8 @@ fun UToast(
  * @param onDismiss 자동 소멸 또는 외부에서 닫을 때 호출
  * @param modifier 위치/여백 지정
  * @param durationMillis 토스트 표시 유지 시간 (밀리초). 기본값 2000ms
+ * @param backgroundColor 토스트 배경색. 기본값 grey800
+ * @param textColor 메시지 글자색. 기본값 grey50
  */
 @Composable
 fun UToastHost(
@@ -103,6 +109,8 @@ fun UToastHost(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     durationMillis: Long = 2000L,
+    backgroundColor: Color = grey800(),
+    textColor: Color = grey50(),
 ) {
     LaunchedEffect(data) {
         if (data != null) {
@@ -118,7 +126,12 @@ fun UToastHost(
         modifier = modifier,
     ) {
         data?.let {
-            UToast(message = it.message, state = it.state)
+            UToast(
+                message = it.message,
+                state = it.state,
+                backgroundColor = backgroundColor,
+                textColor = textColor,
+            )
         }
     }
 }

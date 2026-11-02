@@ -29,7 +29,7 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -39,8 +39,8 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo400
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main400
+import com.umc.component.theme.main500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow300
 import com.umc.component.theme.yellow500
@@ -83,7 +83,7 @@ fun NoticeDetailVoteSection(
             Icon(
                 painter = painterResource(id = R.drawable.ic_vote),
                 contentDescription = null,
-                tint = indigo500(),
+                tint = main500(),
                 modifier = Modifier.size(24.dp),
             )
 
@@ -135,7 +135,7 @@ fun NoticeDetailVoteSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(if (enabled) indigo500() else grey200())
+                    .background(if (enabled) main500() else grey200())
                     .clickable { if (enabled) onClickButton() }
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center,
@@ -143,7 +143,7 @@ fun NoticeDetailVoteSection(
                 UText(
                     text = if (hasVoted) AppStrings.NOTICE_DETAIL_REVOTE else AppStrings.NOTICE_DETAIL_VOTE,
                     style = UmcTypographyTokens.HeadlineBold,
-                    color = if (enabled) grey000() else grey400(),
+                    color = if (enabled) grey50() else grey400(),
                 )
             }
         }
@@ -187,11 +187,11 @@ private fun VoteStatusBadge(status: NoticeVoteStatus) {
         )
 
         NoticeVoteStatus.CLOSED -> VoteBadgeStyle(
-            AppStrings.NOTICE_DETAIL_VOTE_BADGE_CLOSED, grey000(), grey200(), grey600(),
+            AppStrings.NOTICE_DETAIL_VOTE_BADGE_CLOSED, grey50(), grey200(), grey600(),
         )
 
         NoticeVoteStatus.NOT_STARTED -> VoteBadgeStyle(
-            AppStrings.NOTICE_DETAIL_VOTE_BADGE_NOT_STARTED, grey000(), grey200(), grey600(),
+            AppStrings.NOTICE_DETAIL_VOTE_BADGE_NOT_STARTED, grey50(), grey200(), grey600(),
         )
     }
 
@@ -253,10 +253,10 @@ private fun VoteOptionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(grey000())
+            .background(grey50())
             .border(
                 width = 1.dp,
-                color = if (highlight) indigo400() else grey300(),
+                color = if (highlight) main400() else grey300(),
                 shape = RoundedCornerShape(8.dp),
             )
             .clickable(enabled = showCheckbox) { onClick() }
@@ -269,7 +269,7 @@ private fun VoteOptionCard(
                         id = if (isSelected) R.drawable.ic_check_box else R.drawable.ic_check_box_empty
                     ),
                     contentDescription = null,
-                    tint = if (isSelected) indigo400() else grey400(),
+                    tint = if (isSelected) main400() else grey400(),
                     modifier = Modifier.size(24.dp),
                 )
             } else if (showResult && isMine) {
@@ -277,7 +277,7 @@ private fun VoteOptionCard(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_toast_check),
                     contentDescription = null,
-                    tint = indigo500(),
+                    tint = main500(),
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -295,7 +295,7 @@ private fun VoteOptionCard(
                 UText(
                     text = AppStrings.NOTICE_VOTE_PEOPLE_COUNT.format(option.voteCount),
                     style = if (isMine) UmcTypographyTokens.SubheadlineBold else UmcTypographyTokens.Footnote,
-                    color = if (isMine) indigo500() else grey600(),
+                    color = if (isMine) main500() else grey600(),
                 )
             }
         }
@@ -317,7 +317,7 @@ private fun VoteOptionCard(
                         .fillMaxHeight()
                         .fillMaxWidth(rate)
                         .clip(CircleShape)
-                        .background(if (isMine) indigo500() else grey700()),
+                        .background(if (isMine) main500() else grey700()),
                 )
             }
         }

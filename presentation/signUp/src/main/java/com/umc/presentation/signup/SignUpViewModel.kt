@@ -1,7 +1,6 @@
 package com.umc.presentation.signup
 
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -16,13 +15,12 @@ import com.umc.domain.model.school.SchoolInfo
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.domain.usecase.member.RegisterEmailUseCase
 import com.umc.domain.usecase.member.RegisterUseCase
-import com.umc.domain.usecase.notification.RegisterFcmTokenUseCase
+import com.umc.component.fcm.FcmTokenSynchronizer
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,7 +30,7 @@ class SignUpViewModel @Inject constructor(
     private val registerEmailUseCase: RegisterEmailUseCase,
     private val saveTokenUseCase: SaveTokenUseCase,
     private val getTermsByTypeUseCase: GetTermsByTypeUseCase,
-    private val registerFcmTokenUseCase: RegisterFcmTokenUseCase,
+    private val tokenSynchronizer: FcmTokenSynchronizer,
 ) : BaseViewModel<SignUpState, SignUpEvent>(
     SignUpState(),
 ) {
@@ -212,18 +210,9 @@ class SignUpViewModel @Inject constructor(
      * FCM 토큰 등록. 실패하거나 토큰 획득 자체에서 예외가 발생해도 권한 요청 화면으로 이동.
      * 푸시 알림 기능은 FCM 등록 실패 시 일부 동작하지 않을 수 있음
      */
-    private fun registerFcmToken() = viewModelScope.launch {
-        try {
-            val fcmToken = FirebaseMessaging.getInstance().token.await()
-            resultResponse(
-                response = registerFcmTokenUseCase(fcmToken),
-                successCallback = { emitEvent(SignUpEvent.MoveToPermissionEvent) },
-                errorCallback = { emitEvent(SignUpEvent.MoveToPermissionEvent) }
-            )
-        } catch (e: Exception) {
-            ULog.d("FCM 토큰 획득 실패: ${e.message}")
-            emitEvent(SignUpEvent.MoveToPermissionEvent)
-        }
+    private fun registerFcmToken() {
+        tokenSynchronizer.refresh()
+        emitEvent(SignUpEvent.MoveToPermissionEvent)
     }
 }
 

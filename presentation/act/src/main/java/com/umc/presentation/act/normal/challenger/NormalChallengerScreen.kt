@@ -58,7 +58,7 @@ import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -66,9 +66,9 @@ import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo300
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
+import com.umc.component.theme.tagColors
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.persistentListOf
 
@@ -148,7 +148,7 @@ private fun ChallengerLoading() {
             .padding(top = 64.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = indigo500())
+        CircularProgressIndicator(color = main500())
     }
 }
 
@@ -192,7 +192,7 @@ private fun ChallengerLoadError(
                 .fillMaxWidth()
                 .height(52.dp)
                 .padding(horizontal = 24.dp),
-            backgroundColor = indigo500()
+            backgroundColor = main500()
         )
     }
 }
@@ -257,7 +257,7 @@ private fun SearchBar(
 ) {
     Column(
         modifier = Modifier
-            .background(grey000())
+            .background(grey50())
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .fillMaxWidth()
             .wrapContentHeight()
@@ -290,13 +290,13 @@ private fun SearchBar(
             UText(
                 text = selectedPart?.label ?: "파트",
                 style = Footnote,
-                color = if (selectedPart == null) grey600() else grey000(),
+                color = if (selectedPart == null) grey600() else grey50(),
             )
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 painter = painterResource(R.drawable.ic_dropdown_down),
                 contentDescription = "파트 선택",
-                tint = if (selectedPart == null) grey600() else grey000(),
+                tint = if (selectedPart == null) grey600() else grey50(),
                 modifier = Modifier.size(12.dp),
             )
         }
@@ -313,7 +313,7 @@ private fun NormalChallengerPartBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = grey000(),
+        containerColor = grey50(),
         dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
@@ -338,7 +338,7 @@ private fun NormalChallengerPartBottomSheet(
                     UText(
                         text = part.label,
                         style = Body,
-                        color = if (selectedPart == part) indigo500() else grey800(),
+                        color = if (selectedPart == part) main500() else grey800(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onPartSelected(part) }
@@ -403,7 +403,7 @@ private fun ChallengerMemberRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(grey000())
+            .background(grey50())
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -414,7 +414,7 @@ private fun ChallengerMemberRow(
                 .border(1.dp, grey200(), CircleShape)
                 .padding(1.dp)
                 .clip(CircleShape)
-                .background(grey000()),
+                .background(grey50()),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -449,21 +449,22 @@ private fun ChallengerMemberRow(
         }
 
         member.roleBadge?.let { role ->
+            // 역할 태그 체계(100 배경 · 600 글자, 테두리 없음)
+            val roleColors = role.tagColors()
             Spacer(Modifier.width(8.dp))
             Box(
                 modifier = Modifier
                     .widthIn(min = 39.dp)
                     .height(24.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(indigo100())
-                    .border(1.dp, indigo300(), RoundedCornerShape(4.dp))
+                    .background(roleColors.base)
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 UText(
-                    text = role,
+                    text = role.tagLabel.orEmpty(),
                     style = Caption1Bold,
-                    color = indigo500()
+                    color = roleColors.strong
                 )
             }
             Spacer(Modifier.width(10.dp))
@@ -507,7 +508,7 @@ fun previewMainUnfocused() {
                                 id = 1L,
                                 nicknameWithName = "홍길동(길동)",
                                 generation = "11기",
-                                roleBadge = "회장"
+                                roleBadge = UserChallengerRole.SCHOOL_PRESIDENT
                             )
                         )
                     ),
@@ -518,7 +519,7 @@ fun previewMainUnfocused() {
                                 id = 2L,
                                 nicknameWithName = "김미정(미정)",
                                 generation = "11기",
-                                roleBadge = "부회장"
+                                roleBadge = UserChallengerRole.SCHOOL_VICE_PRESIDENT
                             )
                         )
                     )

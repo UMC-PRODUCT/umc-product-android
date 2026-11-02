@@ -115,8 +115,13 @@ sealed interface MainDestination {
     @Serializable
     data class Mycard(
         val memberId: String? = null,
-        val openExchangeDialog: Boolean = false
+        val openExchangeDialog: Boolean = false,
+        val viewProfileOnly: Boolean = false,
     ) : MainDestination
+
+    //타인 프로필 조회 (스레드 > 프로필 정보 보기)
+    @Serializable
+    data class MemberProfile(val memberId: String) : MainDestination
 
     //(구 마이페이지) -> (신 설정)
     @Serializable
@@ -129,6 +134,10 @@ sealed interface MainDestination {
     //프로필 페이지
     @Serializable
     data object MyProfile : MainDestination
+
+    //활동 이력 페이지
+    @Serializable
+    data object ActivityHistory : MainDestination
 
     /**내 qr코드 페이지**/
     @Serializable
@@ -158,5 +167,7 @@ sealed interface MainDestination {
     @Serializable
     data class CommunityChatting(
         val threadId: String,
+        // 목록의 강퇴 카드에서 진입하면 true (채팅 대신 참여 종료 화면 표시)
+        val isKicked: Boolean = false,
     ) : MainDestination
 }

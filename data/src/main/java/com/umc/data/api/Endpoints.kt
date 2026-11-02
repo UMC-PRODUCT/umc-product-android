@@ -57,10 +57,16 @@ object Endpoints {
         const val MYPROFILE = "$MEMBER/me"
 
         const val MYPROFILE_V2 = "$MEMBER_V2/me"
+        const val MEMBER_REPORT = "api/v1/reports/members/{memberId}"
         const val MEMBER_PROFILE = "$MEMBER/profile/{memberId}"
         const val MEMBER_REGISTER_OAUTH = "$MEMBER/register/oauth"
         const val MEMBER_REGISTER_EMAIL = "$MEMBER/register/email"
         const val MEMBER_PROFILE_LINK = "$MEMBER/profile/links"
+        const val MEMBER_SEARCH = "$MEMBER/search"
+        const val MEMBER_BLOCKS = "$MEMBER/blocks"
+        const val MEMBER_BLOCK = "$MEMBER_BLOCKS/{memberId}"
+        const val MY_BUSINESS_CARD = "$MYPROFILE/business-card"
+        const val MY_BUSINESS_CARD_EDIT = "$MY_BUSINESS_CARD/edit"
     }
 
     object Kakao {
@@ -129,6 +135,9 @@ object Endpoints {
             "$THREAD_DETAIL/invite"
 
         const val THREAD_LEAVE = "$THREAD_DETAIL/leave"
+
+        // 강퇴 안내 확인 (확인 후 목록 조회에서 제외됨)
+        const val THREAD_KICK_ACKNOWLEDGE = "$THREAD_DETAIL/kick/acknowledge"
         const val THREAD_MUTE = "$THREAD_DETAIL/mute"
         const val THREAD_PIN = "$THREAD_DETAIL/pin"
 
@@ -295,7 +304,7 @@ object Endpoints {
     }
 
     object Notification {
-        const val NOTIFICATION = "api/v1/notification"
-        const val FCM_TOKEN = "$NOTIFICATION/fcm/token"
+        const val NOTIFICATION = "api/v1/notifications"
+        const val FCM_TOKEN = "$NOTIFICATION/fcm/installations"
     }
 }

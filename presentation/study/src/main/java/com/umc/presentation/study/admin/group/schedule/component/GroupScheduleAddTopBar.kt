@@ -67,7 +67,7 @@ fun GroupScheduleAddTopBar(
         UText(
             text = "등록",
             style = HeadlineBold,
-            color = if (canRegister) indigo500() else grey300(),
+            color = if (canRegister) main500() else grey300(),
             modifier = Modifier.clickable(
                 enabled = canRegister
             ) {

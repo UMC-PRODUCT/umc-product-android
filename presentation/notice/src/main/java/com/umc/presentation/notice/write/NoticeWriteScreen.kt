@@ -84,7 +84,7 @@ import com.umc.component.component.UTextActionItem
 import com.umc.component.component.uTextActionMenu
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
@@ -94,8 +94,8 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.BoardChipType
 import com.umc.domain.model.enums.NoticeWriterRole
 import com.umc.domain.model.enums.UserPart
@@ -218,7 +218,7 @@ fun NoticeWriteRoute(
         ModalBottomSheet(
             onDismissRequest = { sheetType = null },
             sheetState = sheetState,
-            containerColor = grey000(),
+            containerColor = grey50(),
         ) {
             when (type) {
                 WriteSheetType.CATEGORY -> WriteSelectSheetContent(
@@ -312,7 +312,7 @@ fun NoticeWriteScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000())
+            .background(grey50())
             .imePadding(),
     ) {
         Row(
@@ -355,7 +355,7 @@ fun NoticeWriteScreen(
             UText(
                 text = AppStrings.REGISTER,
                 style = UmcTypographyTokens.HeadlineBold,
-                color = if (uiState.enableRegister) indigo500() else grey400(),
+                color = if (uiState.enableRegister) main500() else grey400(),
                 modifier = Modifier.clickable(enabled = uiState.enableRegister) { onClickRegister() },
             )
         }
@@ -502,7 +502,7 @@ fun NoticeWriteScreen(
 
             // 내용 입력. 마크다운 원문을 그대로 편집하고 스타일만 입혀서 보여줌
             val markerColor = grey400()
-            val linkColor = indigo500()
+            val linkColor = main500()
             val quoteBarColor = grey300()
             // 편집기와 인용구 세로선이 같은 파싱 결과를 공유하도록 렌더러를 하나만 둔다
             val markdownRenderer = remember(markerColor, linkColor) {
@@ -857,7 +857,7 @@ private fun MarkdownMenu(
     ) {
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = grey000(),
+            color = grey50(),
             shadowElevation = 8.dp,
         ) {
             // Popup 안에서는 최대 폭이 화면 전체라 항목의 fillMaxWidth가 화면을 다 채운다.
@@ -903,7 +903,7 @@ private fun MarkdownMenuItem(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_check),
                         contentDescription = null,
-                        tint = grey000(),
+                        tint = grey50(),
                         modifier = Modifier.size(11.dp),
                     )
                 }
@@ -950,7 +950,7 @@ private fun MarkdownToolbarIcon(
     Icon(
         painter = painterResource(id = iconRes),
         contentDescription = null,
-        tint = if (isActive) indigo500() else grey600(),
+        tint = if (isActive) main500() else grey600(),
         modifier = Modifier
             .size(24.dp)
             .clickable { onClick() },
@@ -994,7 +994,7 @@ private fun AttachedImageThumbnail(
             Icon(
                 painter = painterResource(id = R.drawable.ic_close_big),
                 contentDescription = null,
-                tint = grey000(),
+                tint = grey50(),
                 modifier = Modifier.size(10.dp),
             )
         }
@@ -1022,7 +1022,7 @@ private fun NoticeLinkPanel(
             Icon(
                 painter = painterResource(id = R.drawable.ic_blog_link),
                 contentDescription = null,
-                tint = indigo500(),
+                tint = main500(),
                 modifier = Modifier.size(24.dp),
             )
 
@@ -1051,7 +1051,7 @@ private fun NoticeLinkPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(grey000())
+                .background(grey50())
                 .border(1.dp, grey200(), RoundedCornerShape(10.dp))
                 .padding(horizontal = 16.dp, vertical = 15.dp),
         ) {
@@ -1087,7 +1087,7 @@ private fun VoteMaxDialog(
 ) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = grey000(),
+        containerColor = grey50(),
         shape = RoundedCornerShape(20.dp),
         text = {
             UText(
@@ -1116,13 +1116,13 @@ private fun ProcessingDialog(message: String) {
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .background(grey000())
+                .background(grey50())
                 .padding(horizontal = 48.dp, vertical = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CircularProgressIndicator(
-                color = indigo500(),
-                trackColor = indigo100(),
+                color = main500(),
+                trackColor = main100(),
                 strokeWidth = 5.dp,
                 modifier = Modifier.size(48.dp),
             )
@@ -1157,7 +1157,7 @@ private fun WriteBoardChip(
         UText(
             text = text,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = if (isSelected) grey000() else grey500(),
+            color = if (isSelected) grey50() else grey500(),
         )
 
         if (hasDropdownIcon) {
@@ -1167,7 +1167,7 @@ private fun WriteBoardChip(
             Icon(
                 painter = painterResource(id = R.drawable.ic_dropdown_down),
                 contentDescription = null,
-                tint = if (isSelected) grey000() else grey500(),
+                tint = if (isSelected) grey50() else grey500(),
                 modifier = Modifier.size(16.dp),
             )
         }

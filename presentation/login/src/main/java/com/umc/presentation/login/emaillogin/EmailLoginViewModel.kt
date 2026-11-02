@@ -1,28 +1,25 @@
 package com.umc.presentation.login.emaillogin
 
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.messaging.FirebaseMessaging
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.component.util.ULog
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.isNetworkError
 import com.umc.domain.usecase.PostEmailLoginUseCase
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
-import com.umc.domain.usecase.notification.RegisterFcmTokenUseCase
+import com.umc.component.fcm.FcmTokenSynchronizer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class EmailLoginViewModel @Inject constructor(
     private val postEmailLoginUseCase: PostEmailLoginUseCase,
     private val saveTokenUseCase: SaveTokenUseCase,
-    private val registerFcmTokenUseCase: RegisterFcmTokenUseCase,
+    private val tokenSynchronizer: FcmTokenSynchronizer,
     private val getMyProfileUseCase: GetMyProfileUseCase,
 ) : BaseViewModel<EmailLoginState, EmailLoginEvent>(
     EmailLoginState(),
@@ -103,23 +100,9 @@ class EmailLoginViewModel @Inject constructor(
     }
 
     // FCM 토큰 등록
-    private fun registerFcmToken() = viewModelScope.launch {
-        try {
-            val fcmToken = FirebaseMessaging.getInstance().token.await()
-            resultResponse(
-                response = registerFcmTokenUseCase(fcmToken),
-                successCallback = {
-                    emitEvent(EmailLoginEvent.MoveToMainEvent)
-                },
-                errorCallback = {
-                    emitEvent(EmailLoginEvent.MoveToMainEvent)
-                }
-            )
-        } catch (e: Exception) {
-            // FCM 등록 실패가 메인 진입을 막지는 않지만, 원인 파악을 위해 로그는 남김
-            ULog.d("FCM 토큰 획득 또는 등록 실패: ${e.message}")
-            emitEvent(EmailLoginEvent.MoveToMainEvent)
-        }
+    private fun registerFcmToken() {
+        tokenSynchronizer.refresh()
+        emitEvent(EmailLoginEvent.MoveToMainEvent)
     }
 }
 

@@ -45,15 +45,15 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo500
-import com.umc.component.theme.indigo600
-import com.umc.component.theme.indigo700
+import com.umc.component.theme.main500
+import com.umc.component.theme.main600
+import com.umc.component.theme.main700
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.organization.GisuItem
@@ -118,7 +118,7 @@ fun NoticeRoute(
             ModalBottomSheet(
                 onDismissRequest = { showPartBottomSheet = false },
                 sheetState = sheetState,
-                containerColor = grey000(),
+                containerColor = grey50(),
             ) {
                 PartSelectBottomSheetContent(
                     parts = uiState.partFilters.toImmutableList(),
@@ -149,7 +149,7 @@ fun NoticeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(grey000()),
+            .background(grey50()),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             NoticeHeader(
@@ -174,7 +174,7 @@ fun NoticeScreen(
                     NoticeFilterChip(
                         text = chip.text,
                         isSelected = chip.isClicked,
-                        selectedColor = indigo500(),
+                        selectedColor = main500(),
                         hasDropdownIcon = chip.hanBottomSheet,
                         onClick = { onClickChip(chip) },
                     )
@@ -230,13 +230,13 @@ fun NoticeScreen(
             UButton(
                 text = AppStrings.NOTICE_WRITE,
                 onClick = onClickWriteNotice,
-                backgroundColor = indigo500(),
-                pressedColor = indigo700(),
-                textColor = grey000(),
+                backgroundColor = main500(),
+                pressedColor = main700(),
+                textColor = grey50(),
                 textStyle = UmcTypographyTokens.HeadlineBold,
                 cornerRadius = 28.dp,
                 prevIcon = painterResource(id = R.drawable.ic_plus_circle),
-                prevIconTint = grey000(),
+                prevIconTint = grey50(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -289,7 +289,7 @@ private fun NoticeHeader(
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (uiState.isShowDropDown) grey100() else grey000())
+                    .background(if (uiState.isShowDropDown) grey100() else grey50())
                     .clickable { onClickShowDropDown() }
                     .padding(horizontal = 4.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -312,7 +312,7 @@ private fun NoticeHeader(
             DropdownMenu(
                 expanded = uiState.isShowDropDown,
                 onDismissRequest = onClickShowDropDown,
-                modifier = Modifier.background(grey000()),
+                modifier = Modifier.background(grey50()),
             ) {
                 uiState.dropdownList.forEach { gisu ->
                     val isSelected = gisu.gisuId.toLong() == uiState.selectedGisu
@@ -326,7 +326,7 @@ private fun NoticeHeader(
                         UText(
                             text = gisu.displayText,
                             style = if (isSelected) UmcTypographyTokens.HeadlineBold else UmcTypographyTokens.Headline,
-                            color = if (isSelected) indigo600() else grey800(),
+                            color = if (isSelected) main600() else grey800(),
                         )
 
                         if (isSelected) {
@@ -335,7 +335,7 @@ private fun NoticeHeader(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_check_white),
                                 contentDescription = null,
-                                tint = indigo500(),
+                                tint = main500(),
                             )
                         }
                     }
@@ -363,7 +363,7 @@ private fun NoticeHeader(
     }
 }
 
-/** 필터 칩. 1차(indigo)/2차(black)는 selectedColor로 구분 */
+/** 필터 칩. 1차(main)/2차(black)는 selectedColor로 구분 */
 @Composable
 private fun NoticeFilterChip(
     text: String,
@@ -383,7 +383,7 @@ private fun NoticeFilterChip(
         UText(
             text = text,
             style = UmcTypographyTokens.SubheadlineBold,
-            color = if (isSelected) grey000() else grey500(),
+            color = if (isSelected) grey50() else grey500(),
         )
 
         if (hasDropdownIcon) {
@@ -393,7 +393,7 @@ private fun NoticeFilterChip(
             Icon(
                 painter = painterResource(id = R.drawable.ic_dropdown_down),
                 contentDescription = null,
-                tint = if (isSelected) grey000() else grey500(),
+                tint = if (isSelected) grey50() else grey500(),
                 modifier = Modifier.size(16.dp),
             )
         }

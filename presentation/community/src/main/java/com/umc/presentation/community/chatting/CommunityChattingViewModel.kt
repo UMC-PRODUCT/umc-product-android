@@ -24,6 +24,13 @@ import com.umc.domain.usecase.storage.UploadFileUseCase
 import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.SummarizeUnreadChatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.umc.domain.model.community.thread.CommunityMessageRecovery
+import com.umc.domain.model.community.thread.CommunityMessageMerge
+import com.umc.domain.model.community.thread.CommunityThreadMemberState
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import com.umc.domain.model.member.MemberBlockChanges
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -54,19 +61,46 @@ class CommunityChattingViewModel @Inject constructor(
     val event = uiEvent
 
     private val processedEventIds = LinkedHashSet<String>()
-    private var lastReadMessageIdSent: String? = null
+    private val readReceipt = CommunityReadReceipt()
+    private val commandRecovery = CommunityCommandRecovery()
+    private var commandRecoveryJob: Job? = null
+    private var networkRecoveryJob: Job? = null
+    private var readRetryJob: Job? = null
     private var reconnectJob: Job? = null
     private var realtimeObserverJob: Job? = null
     private var manualReconnectInProgress = false
     private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
+    private var blockedQueryGeneration = 0L
+    private var summaryGeneration = 0L
+    private val recoveryMutex = Mutex()
+    private var bufferingRecoveryEvents = false
+    private val recoveryEvents = mutableListOf<CommunityChatEvent>()
+    private val retryingMessageIds = hashSetOf<String>()
+    private val reportingMessageIds = hashSetOf<String>()
+    private var accessGeneration = 0
+    private var memberLoadGeneration = 0
+    private var detailLoadGeneration = 0
+    private var foreground = false
+    private var membershipMutationInProgress = false
     private var isLeaving = false
     private var hasEmittedThreadLeft = false
 
     init {
         observeCurrentMember()
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            MemberBlockChanges.events.collect { change ->
+                if (change.ownerId.toString() == state.value.myMemberId) {
+                    blockedQueryGeneration++
+                    blockedMembersJob?.cancel()
+                    summaryGeneration++
+                    updateState { withMemberBlockChange(change.memberId.toString(), change.blocked) }
+                }
+            }
+        }
         checkAiAvailability()
-        if (state.value.threadId.isNotBlank()) {
+        // 강퇴된 스레드는 상세·메시지를 불러올 수 없으므로 바로 참여 종료 화면을 보여준다
+        if (state.value.threadId.isNotBlank() && !state.value.isKicked) {
             bootstrap()
         } else {
             stopRealtime()
@@ -75,15 +109,53 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun onAction(action: CommunityChattingAction) {
         when (action) {
+            CommunityChattingAction.OnRetryBlockedMembers -> refreshBlockedMembers()
+            is CommunityChattingAction.OnToggleBlockedMessage -> updateState { toggleBlockedMessage(action.messageId) }
+            is CommunityChattingAction.OnStartEdit -> {
+                val message = state.value.messages.find { it.messageId == action.messageId }
+                if (message != null && state.value.editCommandId == null) updateState {
+                    copy(editingMessageId = message.messageId, editDraft = message.content.orEmpty(), editError = null)
+                }
+            }
+            is CommunityChattingAction.OnEditDraftChanged -> if (state.value.editCommandId == null) {
+                updateState { copy(editDraft = action.value, editError = null) }
+            }
+            CommunityChattingAction.OnDismissEdit -> if (state.value.editCommandId == null) {
+                updateState { copy(editingMessageId = null, editDraft = "", editError = null) }
+            }
+            CommunityChattingAction.OnSaveEdit -> state.value.editingMessageId?.let { editMessage(it, state.value.editDraft) }
+            is CommunityChattingAction.OnMentionSelected -> {
+                val member = state.value.members[action.memberId]
+                if (member?.state == CommunityThreadMemberState.ACTIVE) updateState {
+                    val label = member.name.ifBlank { "참여자" }
+                    val query = communityMentionQuery(draft, action.end)
+                    if (query == null || query.start != action.start) return@updateState this
+                    val updated = withMentionDraft(
+                        draft.replaceRange(action.start, action.end, "@$label "), action.start, action.end,
+                    )
+                    val mentions = updated.draftMentions + CommunityDraftMention(
+                        member.memberId, label, action.start, action.start + label.length + 1,
+                    )
+                    updated.copy(draftMentions = mentions, mentionedMembers = mentions.associate { it.memberId to it.label })
+                }
+            }
+            is CommunityChattingAction.OnMentionRemoved -> updateState {
+                copy(
+                    mentionedMembers = mentionedMembers - action.memberId,
+                    draftMentions = draftMentions.filterNot { it.memberId == action.memberId },
+                )
+            }
+            is CommunityChattingAction.OnVisibleMessage -> markRead(action.messageId)
             CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
             CommunityChattingAction.OnMoreClick -> emitEvent(CommunityChattingEvent.OpenMore)
             CommunityChattingAction.OnUnreadSummaryClick ->
                 summarizeUnreadMessages()
             CommunityChattingAction.OnRetryUnreadSummary -> {
                 updateState { copy(aiFeatureStatus = null) }
-                summarizeUnreadMessages(requestedMessages = lastSummaryMessages)
+                summarizeUnreadMessages(requestedMessages = lastSummaryMessages.takeIf { it.isNotEmpty() })
             }
-            CommunityChattingAction.OnDismissUnreadSummary ->
+            CommunityChattingAction.OnDismissUnreadSummary -> {
+                summaryGeneration++
                 updateState {
                     copy(
                         unreadSummary = null,
@@ -92,19 +164,30 @@ class CommunityChattingViewModel @Inject constructor(
                         aiDownloadPercent = null,
                     )
                 }
+            }
             CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
             is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
-            is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value)
+            CommunityChattingAction.OnImageSizeExceeded -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지는 한 장당 최대 10MiB까지 전송할 수 있어요.")
+            )
+            CommunityChattingAction.OnImageTotalSizeExceeded -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지는 총합 40MiB까지 전송할 수 있어요.")
+            )
+            CommunityChattingAction.OnImageSizeUnreadable -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지 용량을 확인할 수 없어요. 다시 선택해주세요.")
+            )
+            is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value, action.changeStart, action.changeEnd)
             is CommunityChattingAction.OnSendClick -> sendText(
                 content = state.value.draft,
                 replyToId = action.replyToId,
+                mentionedMemberIds = state.value.mentionedMembers.keys.mapNotNull(String::toLongOrNull),
             )
             CommunityChattingAction.OnLoadPrevious -> loadPreviousMessages()
             is CommunityChattingAction.OnDeleteMessage -> deleteMessage(action.messageId)
             is CommunityChattingAction.OnReact -> toggleReaction(action.message, action.emoji)
             is CommunityChattingAction.OnReportMessage -> reportMessage(
                 messageId = action.messageId,
-                reason = action.reason,
+                reasons = action.reasons,
             )
             CommunityChattingAction.OnToggleMuted -> toggleMuted()
             CommunityChattingAction.OnTogglePinned -> togglePinned()
@@ -114,6 +197,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnRetryPending -> retryPendingMessage(action.clientMessageId)
             is CommunityChattingAction.OnDismissPending -> dismissPendingMessage(action.clientMessageId)
             CommunityChattingAction.OnRetryLoad -> bootstrap()
+            CommunityChattingAction.OnAcknowledgeKick -> acknowledgeKick()
             CommunityChattingAction.OnInviteParticipants -> emitEvent(
                 CommunityChattingEvent.OpenInviteParticipants
             )
@@ -123,10 +207,17 @@ class CommunityChattingViewModel @Inject constructor(
             CommunityChattingAction.OnConfirmDeleteThread -> deleteThread()
             is CommunityChattingAction.OnKickMember -> kickMember(action.memberId)
             is CommunityChattingAction.OnTransferOwnership -> transferOwnership(action.memberId)
+            is CommunityChattingAction.OnToggleMemberAdmin -> toggleMemberAdmin(action.memberId)
+            is CommunityChattingAction.OnViewMemberProfile -> viewModelScope.launch {
+                emitEvent(CommunityChattingEvent.OpenMemberProfile(action.memberId))
+            }
+            is CommunityChattingAction.OnManageParticipants -> manageParticipants(action.memberIds, action.action)
         }
     }
 
     fun bootstrap() = viewModelScope.launch {
+        if (uiState.value.isLoading) return@launch
+        val generation = accessGeneration
         updateState {
             copy(
                 isLoading = true,
@@ -146,6 +237,11 @@ class CommunityChattingViewModel @Inject constructor(
             val messagesDeferred = async { threadRepository.getMessages(threadId) }
             detailDeferred.await() to messagesDeferred.await()
         }
+        if (generation != accessGeneration) return@launch
+        if (detail is ApiState.Success && detail.data.deletedAt != null) {
+            showAccessDenied()
+            return@launch
+        }
         if (detail is ApiState.Success && messages is ApiState.Success) {
             val loadedMessages = messages.data.messages
                 .distinctBy(CommunityThreadMessage::messageId)
@@ -156,13 +252,16 @@ class CommunityChattingViewModel @Inject constructor(
             } else {
                 detail.data.unreadCount.toIntOrNull()?.coerceAtLeast(0) ?: 0
             }
-            val entryUnreadMessages = loadedMessages
-                .take(unreadCount.coerceAtMost(MAX_SUMMARY_MESSAGE_COUNT))
+            val entryDeletedMessageIds = communityDeletedMessageIds(loadedMessages, uiState.value.knownDeletedMessageIds)
+            val entryUnreadMessages = communityEntryUnreadMessages(
+                loadedMessages, entryDeletedMessageIds, unreadCount,
+            ).take(MAX_SUMMARY_MESSAGE_COUNT)
             val isInitialSummaryCandidateCapture = !hasCapturedEntryUnreadMessages
             updateState {
                 copy(
                     thread = detail.data,
                     messages = loadedMessages,
+                    knownDeletedMessageIds = entryDeletedMessageIds,
                     unreadMessagesAtEntry = if (hasCapturedEntryUnreadMessages) {
                         unreadMessagesAtEntry
                     } else {
@@ -200,14 +299,7 @@ class CommunityChattingViewModel @Inject constructor(
         } else {
             val detailFailure = (detail as? ApiState.Fail)?.failState
             if (detailFailure != null && detailFailure.hasThreadUnavailableCode()) {
-                stopRealtime()
-                updateState {
-                    copy(
-                        isLoading = false,
-                        errorMessage = null,
-                        isThreadUnavailable = true,
-                    )
-                }
+                showAccessDenied()
                 return@launch
             }
             val messagesFailure = (messages as? ApiState.Fail)?.failState
@@ -236,14 +328,18 @@ class CommunityChattingViewModel @Inject constructor(
         viewModelScope.launch {
             val current = uiState.value
             if (current.isSummarizingUnread) return@launch
+            val generation = ++summaryGeneration
 
             val boundedMessages = when {
                 requestedMessages != null -> requestedMessages
                 else -> current.summaryCandidateMessages
             }
-            val targetMessages = boundedMessages
-                .take(MAX_SUMMARY_MESSAGE_COUNT)
-                .asReversed()
+            if (current.blockedMembersStatus != BlockedMembersStatus.LOADED) {
+                updateState { copy(unreadSummaryError = AppStrings.CHAT_BLOCK_STATUS_REQUIRED) }
+                return@launch
+            }
+            val input = SummarizeUnreadChatUseCase.prepareInput(current.summaryInputMessages(boundedMessages).asReversed())
+            val targetMessages = input.messages
 
             if (targetMessages.isEmpty()) {
                 updateState {
@@ -266,6 +362,10 @@ class CommunityChattingViewModel @Inject constructor(
                     unreadSummary = null,
                     unreadSummaryError = null,
                     summarizedMessageCount = targetMessages.size,
+                    summaryMessageIds = targetMessages.map { it.messageId },
+                    summaryStart = targetMessages.firstOrNull()?.createdAt.orEmpty(),
+                    summaryEnd = targetMessages.lastOrNull()?.createdAt.orEmpty(),
+                    summaryTruncated = input.truncated,
                 )
             }
 
@@ -273,6 +373,7 @@ class CommunityChattingViewModel @Inject constructor(
             val aiStatus = uiState.value.aiFeatureStatus ?: checkAiFeatureStatusUseCase().also { status ->
                 updateState { copy(aiFeatureStatus = status) }
             }
+            if (generation != summaryGeneration) return@launch
             if (!aiStatus.isUsable) {
                 updateState {
                     copy(
@@ -286,10 +387,10 @@ class CommunityChattingViewModel @Inject constructor(
 
             when (
                 val result = summarizeUnreadChatUseCase(targetMessages) { percent ->
-                    updateState { copy(aiDownloadPercent = percent) }
+                    if (generation == summaryGeneration) updateState { copy(aiDownloadPercent = percent) }
                 }
             ) {
-                is ApiState.Success -> updateState {
+                is ApiState.Success -> if (generation == summaryGeneration) updateState {
                     copy(
                         isSummarizingUnread = false,
                         aiDownloadPercent = null,
@@ -299,6 +400,7 @@ class CommunityChattingViewModel @Inject constructor(
                 }
 
                 is ApiState.Fail -> {
+                    if (generation != summaryGeneration) return@launch
                     updateState {
                         copy(
                             isSummarizingUnread = false,
@@ -311,26 +413,32 @@ class CommunityChattingViewModel @Inject constructor(
         }
 
     fun loadPreviousMessages() = viewModelScope.launch {
-        val state = uiState.value
-        if (!state.hasMore || state.isLoadingMore) return@launch
-        updateState { copy(isLoadingMore = true) }
-        when (val response = threadRepository.getMessages(state.threadId, state.nextBefore)) {
-            is ApiState.Success -> updateState {
-                copy(
-                    messages = (messages + response.data.messages)
-                        .distinctBy(CommunityThreadMessage::messageId),
-                    hasMore = response.data.hasMore,
-                    nextBefore = response.data.nextBefore,
-                    isLoadingMore = false,
-                )
-            }
-            is ApiState.Fail -> {
-                if (response.failState.hasThreadAccessDeniedCode()) {
-                    showAccessDenied()
-                    return@launch
+        recoveryMutex.withLock {
+            val state = uiState.value
+            val generation = accessGeneration
+            if (!state.hasMore || state.isLoadingMore || state.isRecovering || state.recoveryIncomplete) return@withLock
+            updateState { copy(isLoadingMore = true) }
+            val response = threadRepository.getMessages(state.threadId, state.nextBefore)
+            if (generation != accessGeneration) return@withLock
+            when (response) {
+                is ApiState.Success -> updateState {
+                    copy(
+                        messages = (messages + response.data.messages)
+                            .distinctBy(CommunityThreadMessage::messageId),
+                        knownDeletedMessageIds = communityDeletedMessageIds(response.data.messages, knownDeletedMessageIds),
+                        hasMore = response.data.hasMore,
+                        nextBefore = response.data.nextBefore,
+                        isLoadingMore = false,
+                    )
                 }
-                updateState { copy(isLoadingMore = false) }
-                emitEvent(CommunityChattingEvent.ShowError(response.failState.message))
+                is ApiState.Fail -> {
+                    if (response.failState.hasThreadAccessDeniedCode()) {
+                        showAccessDenied()
+                        return@withLock
+                    }
+                    updateState { copy(isLoadingMore = false) }
+                    emitEvent(CommunityChattingEvent.ShowError(response.failState.message))
+                }
             }
         }
     }
@@ -343,7 +451,13 @@ class CommunityChattingViewModel @Inject constructor(
         clearDraft: Boolean = true,
     ) {
         val trimmed = content.trim()
+        if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
         if (trimmed.isEmpty()) return
+        if (mentionedMemberIds.any { uiState.value.members[it.toString()]?.state != CommunityThreadMemberState.ACTIVE }) {
+            emitEvent(CommunityChattingEvent.ShowError("태그 대상이 더 이상 참여 중이 아니에요. 참여자를 다시 선택해주세요."))
+            loadMembers()
+            return
+        }
         if (isCommunityChatMessageTooLong(trimmed)) {
             emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_MESSAGE_TOO_LONG))
             return
@@ -353,6 +467,8 @@ class CommunityChattingViewModel @Inject constructor(
             updateState {
                 copy(
                     draft = if (clearDraft) "" else draft,
+                    mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
+                    draftMentions = if (clearDraft) emptyList() else draftMentions,
                     pendingMessages = pendingMessages + (
                         clientMessageId to PendingCommunityMessage(
                             clientMessageId = clientMessageId,
@@ -377,9 +493,12 @@ class CommunityChattingViewModel @Inject constructor(
         )
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
+                commandRecovery.expect(commandId, "created:$clientMessageId")
                 updateState {
                     copy(
                         draft = if (clearDraft) "" else draft,
+                        mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
+                        draftMentions = if (clearDraft) emptyList() else draftMentions,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -398,6 +517,8 @@ class CommunityChattingViewModel @Inject constructor(
                 updateState {
                     copy(
                         draft = if (clearDraft) "" else draft,
+                        mentionedMembers = if (clearDraft) emptyMap() else mentionedMembers,
+                        draftMentions = if (clearDraft) emptyList() else draftMentions,
                         pendingMessages = pendingMessages + (
                             clientMessageId to PendingCommunityMessage(
                                 clientMessageId = clientMessageId,
@@ -414,19 +535,56 @@ class CommunityChattingViewModel @Inject constructor(
             }
     }
 
-    fun editMessage(messageId: String, content: String) =
-        runCommand { chatRepository.editMessage(uiState.value.threadId, messageId, content.trim()) }
+    fun editMessage(messageId: String, content: String) {
+        val current = uiState.value
+        if (current.editCommandId != null || current.isAccessDenied || current.thread == null ||
+            current.thread.myRole == CommunityThreadRole.UNKNOWN) return
+        val message = current.messages.find { it.messageId == messageId }
+        if (message == null || message.senderId != current.myMemberId || message.deletedAt != null ||
+            message.status == "DELETED" || message.type != CommunityMessageType.TEXT) {
+            updateState { copy(editError = "더 이상 편집할 수 없는 메시지예요.") }
+            return
+        }
+        if (content.isBlank() || isCommunityChatMessageTooLong(content)) return
+        runCatching { chatRepository.editMessage(current.threadId, messageId, content.trim()) }
+            .onSuccess { commandId ->
+                commandRecovery.expect(commandId, "updated:$messageId")
+                updateState { copy(editCommandId = commandId, editError = null) }
+                viewModelScope.launch {
+                    delay(PENDING_ACK_TIMEOUT_MILLIS)
+                    failEdit(commandId, "저장 확인이 지연되고 있어요. 내용을 유지했으니 다시 시도해주세요.")
+                }
+            }.onFailure {
+                updateState { copy(editError = "저장하지 못했어요. 다시 시도해주세요.") }
+            }
+    }
 
-    fun deleteMessage(messageId: String) =
-        runCommand { chatRepository.deleteMessage(uiState.value.threadId, messageId) }
+    private fun failEdit(commandId: String?, message: String) {
+        updateState { rejectEdit(commandId, message) }
+    }
 
-    fun sendImages(uriStrings: List<String>) = viewModelScope.launch {
+    fun deleteMessage(messageId: String) {
+        val current = uiState.value
+        val message = current.messages.find { it.messageId == messageId } ?: return
+        if (message.deletedAt != null || message.status == "DELETED") return
+        if (message.senderId != current.myMemberId && current.thread?.myRole !in
+            setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN)) return
+        runCommand("deleted:$messageId") { chatRepository.deleteMessage(current.threadId, messageId) }
+    }
+
+    fun sendImages(uriStrings: List<String>, clientMessageId: String = UUID.randomUUID().toString()) = viewModelScope.launch {
+        if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return@launch
+        val generation = accessGeneration
+        if (uriStrings.size > COMMUNITY_CHAT_MAX_IMAGE_COUNT) {
+            emitEvent(CommunityChattingEvent.ShowError("사진은 최대 4장까지 전송할 수 있어요."))
+            return@launch
+        }
         val uploadUris = uriStrings
             .filter(String::isNotBlank)
             .distinct()
             .take(COMMUNITY_CHAT_MAX_IMAGE_COUNT)
         if (uploadUris.isEmpty()) return@launch
-        val clientMessageId = UUID.randomUUID().toString()
+        val confirmedFiles = uiState.value.pendingMessages[clientMessageId]?.confirmedFilesByUri.orEmpty()
         updateState {
             copy(
                 pendingMessages = pendingMessages + (
@@ -436,14 +594,24 @@ class CommunityChattingViewModel @Inject constructor(
                         content = "",
                         type = CommunityMessageType.IMAGE,
                         localUris = uploadUris,
+                        confirmedFilesByUri = confirmedFiles,
                     )
                 )
             )
         }
 
         val uploads = coroutineScope {
-            uploadUris.map { uri ->
-                async { uploadFileUseCase(uri, UploadFileCategory.ETC) }
+            uploadUris.filterNot { it in confirmedFiles }.map { uri ->
+                async {
+                    val result = uploadFileUseCase(uri, UploadFileCategory.ETC)
+                    if (result is ApiState.Success) updateState {
+                        val pending = pendingMessages[clientMessageId] ?: return@updateState this
+                        copy(pendingMessages = pendingMessages + (clientMessageId to pending.copy(
+                            confirmedFilesByUri = pending.confirmedFilesByUri + (uri to result.data.fileId),
+                        )))
+                    }
+                    result
+                }
             }.awaitAll()
         }
         val uploadFailure = uploads.filterIsInstance<ApiState.Fail>().firstOrNull()
@@ -452,7 +620,13 @@ class CommunityChattingViewModel @Inject constructor(
             return@launch
         }
 
-        val fileIds = uploads.map { (it as ApiState.Success).data.fileId }
+        if (generation != accessGeneration) return@launch
+        val savedFiles = uiState.value.pendingMessages[clientMessageId]?.confirmedFilesByUri ?: return@launch
+        val fileIds = uploadUris.map { savedFiles.getValue(it) }
+        updateState {
+            val pending = pendingMessages[clientMessageId] ?: return@updateState this
+            copy(pendingMessages = pendingMessages + (clientMessageId to pending.copy(fileMetadataIds = fileIds)))
+        }
         val command = CreateCommunityMessageCommand(
             clientMessageId = clientMessageId,
             type = CommunityMessageType.IMAGE.name,
@@ -464,8 +638,10 @@ class CommunityChattingViewModel @Inject constructor(
             emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
             return@launch
         }
+        if (generation != accessGeneration || clientMessageId !in uiState.value.pendingMessages) return@launch
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
+                commandRecovery.expect(commandId, "created:$clientMessageId")
                 updateState {
                     val pending = pendingMessages[clientMessageId]
                         ?: return@updateState this
@@ -495,7 +671,7 @@ class CommunityChattingViewModel @Inject constructor(
         )
     }
 
-    fun toggleReaction(message: CommunityThreadMessage, emoji: String) = runCommand {
+    fun toggleReaction(message: CommunityThreadMessage, emoji: String) = runCommand("reaction:${message.messageId}") {
         if (message.reactions.any { it.emoji == emoji && it.reactedByMe }) {
             chatRepository.removeReaction(uiState.value.threadId, message.messageId, emoji)
         } else {
@@ -504,87 +680,121 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     fun markRead(messageId: String) {
-        if (messageId.isBlank() || lastReadMessageIdSent == messageId) return
-        lastReadMessageIdSent = messageId
-        updateState { copy(thread = thread?.copy(unreadCount = "0")) }
-        runCatching { chatRepository.updateRead(uiState.value.threadId, messageId) }
-            .onFailure { lastReadMessageIdSent = null }
+        if (!foreground) return
+        readReceipt.observed = messageId
+        sendObservedRead()
     }
 
-    fun reportMessage(messageId: String, reason: CommunityMessageReportReason) = viewModelScope.launch {
-        resultResponse(
-            threadRepository.reportMessage(messageId, reason),
-            successCallback = { emitEvent(CommunityChattingEvent.MessageReported) },
-            errorCallback = { emitEvent(CommunityChattingEvent.ShowError(it.message)) },
-        )
+    private fun sendObservedRead() {
+        val current = uiState.value
+        if (!foreground || current.recoveryIncomplete || current.isAccessDenied || current.thread == null ||
+            current.thread.myRole == CommunityThreadRole.UNKNOWN ||
+            chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) return
+        val messageId = readReceipt.candidate(current.messages.map { it.messageId }) ?: return
+        runCatching { chatRepository.updateRead(current.threadId, messageId) }
+            .onSuccess { commandId ->
+                readReceipt.queued(commandId, messageId)
+                readRetryJob?.cancel()
+                readRetryJob = viewModelScope.launch {
+                    delay(PENDING_ACK_TIMEOUT_MILLIS)
+                    if (readReceipt.failed(commandId)) sendObservedRead()
+                }
+            }.onFailure { scheduleReadRetry() }
+    }
+
+    private fun scheduleReadRetry() {
+        readRetryJob?.cancel()
+        readRetryJob = viewModelScope.launch {
+            delay(PENDING_ACK_TIMEOUT_MILLIS)
+            sendObservedRead()
+        }
+    }
+
+    fun reportMessage(messageId: String, reasons: Set<CommunityMessageReportReason>) = viewModelScope.launch {
+        if (reasons.isEmpty()) return@launch
+        val current = uiState.value
+        val message = current.messages.find { it.messageId == messageId } ?: return@launch
+        if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
+        if (!reportingMessageIds.add(messageId)) return@launch
+        try {
+            when (val result = threadRepository.reportMessage(messageId, reasons)) {
+                is ApiState.Success -> emitEvent(CommunityChattingEvent.MessageReported)
+                is ApiState.Fail -> {
+                    val failure = result.failState
+                    val detail = if (failure.code == "COMMUNITY-0016" || failure.code.contains("409") ||
+                        failure.code.contains("REPORT_ALREADY_EXISTS")) AppStrings.CHAT_REPORT_ALREADY_EXISTS else failure.message
+                    emitEvent(CommunityChattingEvent.ShowError(detail))
+                }
+            }
+        } finally {
+            reportingMessageIds.remove(messageId)
+        }
     }
 
     fun retryPendingMessage(clientMessageId: String) = viewModelScope.launch {
         val pending = uiState.value.pendingMessages[clientMessageId] ?: return@launch
-
-        if (!ensureConnected()) {
-            updateState {
-                copy(
-                    pendingMessages = pendingMessages + (
-                        clientMessageId to pending.copy(
-                            error = AppStrings.CHAT_RETRY_DISCONNECTED,
+        if (!retryingMessageIds.add(clientMessageId)) return@launch
+        val generation = accessGeneration
+        try {
+            val connected = ensureConnected()
+            if (generation != accessGeneration) return@launch
+            if (!connected) {
+                updateState {
+                    copy(
+                        pendingMessages = pendingMessages + (
+                            clientMessageId to pending.copy(
+                                error = AppStrings.CHAT_RETRY_DISCONNECTED,
+                            )
                         )
                     )
-                )
-            }
-            emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
-            return@launch
-        }
-
-        updateState { copy(pendingMessages = pendingMessages - clientMessageId) }
-        if (pending.type == CommunityMessageType.IMAGE) {
-            if (pending.fileMetadataIds.isEmpty()) {
-                sendImages(pending.localUris)
-            } else {
-                // 소켓에 한 번 실린 메시지는 같은 clientMessageId 로 다시 보내 서버 중복 제거가 동작하게 한다.
-                val newClientMessageId = if (pending.commandId.isNotBlank()) {
-                    clientMessageId
-                } else {
-                    UUID.randomUUID().toString()
                 }
-                val command = CreateCommunityMessageCommand(
-                    clientMessageId = newClientMessageId,
-                    type = CommunityMessageType.IMAGE.name,
-                    content = null,
-                    fileMetadataIds = pending.fileMetadataIds,
-                )
-                runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
-                    .onSuccess { commandId ->
-                        updateState {
-                            copy(
-                                pendingMessages = pendingMessages + (
-                                    newClientMessageId to pending.copy(
-                                        clientMessageId = newClientMessageId,
-                                        commandId = commandId,
-                                        error = null,
+                emitEvent(CommunityChattingEvent.ShowError(AppStrings.CHAT_RETRY_DISCONNECTED))
+                return@launch
+            }
+
+            if (clientMessageId !in uiState.value.pendingMessages) return@launch
+            if (pending.type == CommunityMessageType.IMAGE) {
+                if (pending.fileMetadataIds.isEmpty()) {
+                    sendImages(pending.localUris, clientMessageId).join()
+                } else {
+                    // 소켓에 한 번 실린 메시지는 같은 clientMessageId 로 다시 보내 서버 중복 제거가 동작하게 한다.
+                    val newClientMessageId = clientMessageId
+                    val command = CreateCommunityMessageCommand(
+                        clientMessageId = newClientMessageId,
+                        type = CommunityMessageType.IMAGE.name,
+                        content = null,
+                        fileMetadataIds = pending.fileMetadataIds,
+                    )
+                    runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
+                        .onSuccess { commandId ->
+                            commandRecovery.expect(commandId, "created:$newClientMessageId")
+                            updateState {
+                                copy(
+                                    pendingMessages = pendingMessages + (
+                                        newClientMessageId to pending.copy(
+                                            clientMessageId = newClientMessageId,
+                                            commandId = commandId,
+                                            error = null,
+                                        )
                                     )
                                 )
-                            )
+                            }
+                            scheduleAckTimeout(newClientMessageId)
                         }
-                        scheduleAckTimeout(newClientMessageId)
-                    }
-                    .onFailure {
-                        updateState { copy(pendingMessages = pendingMessages + (clientMessageId to pending)) }
-                    }
+                        .onFailure {
+                            updateState { copy(pendingMessages = pendingMessages + (clientMessageId to pending)) }
+                        }
+                }
+            } else {
+                sendText(
+                    content = pending.content,
+                    mentionedMemberIds = pending.mentionedMemberIds,
+                    replyToId = pending.replyToId,
+                    clientMessageId = clientMessageId,
+                    clearDraft = false,
+                )
             }
-        } else {
-            sendText(
-                content = pending.content,
-                mentionedMemberIds = pending.mentionedMemberIds,
-                replyToId = pending.replyToId,
-                clientMessageId = if (pending.commandId.isNotBlank()) {
-                    clientMessageId
-                } else {
-                    UUID.randomUUID().toString()
-                },
-                clearDraft = false,
-            )
-        }
+        } finally { retryingMessageIds.remove(clientMessageId) }
     }
 
     /** 연결돼 있으면 true, 아니면 재연결을 시도해 최대 7초 기다린다. 끝내 실패하면 자동 재연결 루프를 시작하고 false. */
@@ -615,7 +825,6 @@ class CommunityChattingViewModel @Inject constructor(
                 if (
                     (clientMessageId == null || id == clientMessageId) &&
                     pending.commandId.isNotBlank() &&
-                    !pending.acknowledged &&
                     pending.error == null
                 ) {
                     pending.copy(
@@ -633,9 +842,10 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun scheduleAckTimeout(clientMessageId: String) {
+        val commandId = uiState.value.pendingMessages[clientMessageId]?.commandId
         viewModelScope.launch {
             delay(PENDING_ACK_TIMEOUT_MILLIS)
-            failUnacknowledgedPending(clientMessageId)
+            if (uiState.value.pendingMessages[clientMessageId]?.commandId == commandId) failUnacknowledgedPending(clientMessageId)
         }
     }
 
@@ -645,7 +855,10 @@ class CommunityChattingViewModel @Inject constructor(
     fun toggleMuted() = viewModelScope.launch {
         val state = uiState.value
         when (val result = threadRepository.setMuted(state.threadId, !(state.thread?.isMuted ?: false))) {
-            is ApiState.Success -> updateState { copy(thread = result.data) }
+            is ApiState.Success -> {
+                if (result.data.deletedAt != null) showAccessDenied()
+                else updateState { copy(thread = result.data) }
+            }
             is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
         }
     }
@@ -653,7 +866,10 @@ class CommunityChattingViewModel @Inject constructor(
     fun togglePinned() = viewModelScope.launch {
         val state = uiState.value
         when (val result = threadRepository.setPinned(state.threadId, !(state.thread?.isPinned ?: false))) {
-            is ApiState.Success -> updateState { copy(thread = result.data) }
+            is ApiState.Success -> {
+                if (result.data.deletedAt != null) showAccessDenied()
+                else updateState { copy(thread = result.data) }
+            }
             is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
         }
     }
@@ -662,6 +878,13 @@ class CommunityChattingViewModel @Inject constructor(
     private fun emitThreadLeftOnce() {
         if (hasEmittedThreadLeft) return
         hasEmittedThreadLeft = true
+        summaryGeneration++
+        accessGeneration++
+        recoveryEvents.clear()
+        stopRealtime()
+        updateState {
+            copy(isLoading = false, isLoadingMore = false, isDeleting = false, isAccessDenied = false)
+        }
         emitEvent(CommunityChattingEvent.ThreadDeleted)
     }
 
@@ -711,48 +934,143 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun kickMember(memberId: String) = viewModelScope.launch {
         val state = uiState.value
-        if (state.thread?.myRole != CommunityThreadRole.OWNER || memberId == state.myMemberId) return@launch
-
-        when (val result = threadRepository.kickMember(state.threadId, memberId)) {
-            is ApiState.Success -> updateState {
-                copy(
-                    members = members - memberId,
-                    thread = thread?.copy(memberCount = result.data.memberCount),
-                )
+        if (membershipMutationInProgress || state.thread?.myRole !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN) || memberId == state.myMemberId || state.members[memberId]?.role == CommunityThreadRole.OWNER) return@launch
+        membershipMutationInProgress = true
+        try {
+            when (val result = threadRepository.kickMember(state.threadId, memberId)) {
+                is ApiState.Success -> updateState {
+                    copy(
+                        members = members - memberId,
+                        thread = thread?.copy(memberCount = result.data.memberCount),
+                    )
+                }
+                is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
             }
-            is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+        } finally {
+            membershipMutationInProgress = false
+            refreshThread()
         }
     }
 
     fun transferOwnership(memberId: String) = viewModelScope.launch {
         val state = uiState.value
-        if (state.thread?.myRole != CommunityThreadRole.OWNER || memberId == state.myMemberId) return@launch
-
-        when (
-            val result = threadRepository.changeMemberRole(
-                threadId = state.threadId,
-                memberId = memberId,
-                role = CommunityThreadRole.OWNER,
-            )
-        ) {
-            is ApiState.Success -> updateState {
-                copy(
-                    members = members.mapValues { (id, member) ->
-                        when (id) {
-                            memberId -> member.copy(role = CommunityThreadRole.OWNER)
-                            myMemberId -> member.copy(role = CommunityThreadRole.MEMBER)
-                            else -> member
-                        }
-                    },
-                    thread = thread?.copy(myRole = CommunityThreadRole.MEMBER),
+        if (membershipMutationInProgress || state.thread?.myRole != CommunityThreadRole.OWNER || memberId == state.myMemberId || state.members[memberId]?.state != CommunityThreadMemberState.ACTIVE) return@launch
+        membershipMutationInProgress = true
+        try {
+            when (
+                val result = threadRepository.changeMemberRole(
+                    threadId = state.threadId,
+                    memberId = memberId,
+                    role = CommunityThreadRole.OWNER,
                 )
+            ) {
+                is ApiState.Success -> updateState {
+                    copy(
+                        members = members.mapValues { (id, member) ->
+                            when (id) {
+                                memberId -> member.copy(role = CommunityThreadRole.OWNER)
+                                myMemberId -> member.copy(role = CommunityThreadRole.ADMIN)
+                                else -> member
+                            }
+                        },
+                        thread = thread?.copy(myRole = CommunityThreadRole.ADMIN),
+                    )
+                }.also { emitEvent(CommunityChattingEvent.OwnershipTransferred) }
+                is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
             }
-            is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+        } finally {
+            membershipMutationInProgress = false
+            refreshThread()
+        }
+    }
+
+    private fun toggleMemberAdmin(memberId: String) = viewModelScope.launch {
+        val current = uiState.value
+        val target = current.members[memberId] ?: return@launch
+        if (membershipMutationInProgress || current.isAccessDenied || target.state != CommunityThreadMemberState.ACTIVE ||
+            !communityParticipantMenuPermissions(current.thread?.myRole ?: CommunityThreadRole.UNKNOWN,
+                target.role, memberId == current.myMemberId).canChangeAdmin) return@launch
+        membershipMutationInProgress = true
+        val generation = accessGeneration
+        try {
+            val role = if (target.role == CommunityThreadRole.ADMIN) CommunityThreadRole.MEMBER else CommunityThreadRole.ADMIN
+            when (val result = threadRepository.changeMemberRole(current.threadId, memberId, role)) {
+                is ApiState.Success -> if (generation == accessGeneration) {
+                    updateState { copy(members = members.mapValues { (id, member) ->
+                        if (id == memberId) member.copy(role = result.data.role) else member
+                    }) }
+                    emitEvent(CommunityChattingEvent.MemberAdminChanged(role == CommunityThreadRole.ADMIN))
+                }
+                is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+            }
+        } finally { membershipMutationInProgress = false; refreshThread() }
+    }
+
+    private fun manageParticipants(memberIds: Set<String>, action: CommunityParticipantBatchAction) = viewModelScope.launch {
+        val initial = uiState.value
+        val role = initial.thread?.myRole ?: return@launch
+        if (memberIds.isEmpty() || membershipMutationInProgress || initial.isAccessDenied ||
+            role !in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN) ||
+            (action != CommunityParticipantBatchAction.KICK && role != CommunityThreadRole.OWNER)) return@launch
+        membershipMutationInProgress = true
+        val generation = accessGeneration
+        updateState { copy(isManagingParticipants = true) }
+        try {
+            var failureMessage: String? = null
+            val result = applyCommunityParticipantBatch(memberIds) { memberId ->
+                val current = uiState.value
+                val target = current.members[memberId]
+                val currentRole = current.thread?.myRole ?: CommunityThreadRole.UNKNOWN
+                if (generation != accessGeneration || current.isAccessDenied || target == null ||
+                    communityManageableParticipants(listOf(target), currentRole, current.myMemberId).isEmpty() ||
+                    (action != CommunityParticipantBatchAction.KICK && currentRole != CommunityThreadRole.OWNER)) {
+                    false
+                } else {
+                    val requestedRole = when (action) {
+                        CommunityParticipantBatchAction.ASSIGN_ADMIN -> CommunityThreadRole.ADMIN
+                        CommunityParticipantBatchAction.REMOVE_ADMIN -> CommunityThreadRole.MEMBER
+                        CommunityParticipantBatchAction.KICK -> null
+                    }
+                    if (requestedRole != null && target.role == requestedRole) return@applyCommunityParticipantBatch true
+                    val response = if (requestedRole != null) threadRepository.changeMemberRole(current.threadId, memberId, requestedRole)
+                        else threadRepository.kickMember(current.threadId, memberId)
+                    when (response) {
+                        is ApiState.Success -> {
+                            if (generation != accessGeneration) return@applyCommunityParticipantBatch false
+                            updateState {
+                                if (action == CommunityParticipantBatchAction.KICK) copy(
+                                    members = members - memberId,
+                                    thread = thread?.copy(memberCount = response.data.memberCount),
+                                ) else copy(members = members.mapValues { (id, member) ->
+                                    if (id == memberId) member.copy(role = response.data.role) else member
+                                })
+                            }
+                            true
+                        }
+                        is ApiState.Fail -> { failureMessage = response.failState.message; false }
+                    }
+                }
+            }
+            if (generation != accessGeneration) return@launch
+            updateState { copy(managedParticipantIds = result.successfulIds,
+                participantManagementRevision = participantManagementRevision + 1) }
+            val message = when {
+                result.failedIds.isNotEmpty() -> "${result.successfulIds.size}명 완료, ${result.failedIds.size}명 미완료. " +
+                    (failureMessage ?: "실패한 참여자를 다시 확인해주세요.")
+                action == CommunityParticipantBatchAction.ASSIGN_ADMIN -> AppStrings.CHAT_PARTICIPANTS_ASSIGNED_ADMIN
+                action == CommunityParticipantBatchAction.REMOVE_ADMIN -> AppStrings.CHAT_ADMIN_REMOVED
+                else -> AppStrings.CHAT_PARTICIPANTS_REMOVED
+            }
+            emitEvent(CommunityChattingEvent.ParticipantsManaged(message, result.failedIds.isNotEmpty()))
+        } finally {
+            membershipMutationInProgress = false
+            updateState { copy(isManagingParticipants = false) }
+            refreshThread()
         }
     }
 
     private fun openDeleteThreadDialog() {
-        if (uiState.value.thread?.myRole != CommunityThreadRole.OWNER) return
+        if (!uiState.value.thread?.myRole.canManageCommunityThread()) return
         updateState { copy(showDeleteDialog = true) }
     }
 
@@ -761,24 +1079,48 @@ class CommunityChattingViewModel @Inject constructor(
         updateState { copy(showDeleteDialog = false) }
     }
 
+    /**
+     * 강퇴 안내를 확인했음을 서버에 저장한다.
+     *
+     * 확인된 스레드는 목록 조회에서 제외되므로 성공하면 목록을 갱신하며 돌아가고,
+     * 실패하면 안내 화면에 남아 다시 시도할 수 있게 한다.
+     */
+    private fun acknowledgeKick() = viewModelScope.launch {
+        val state = uiState.value
+        if (!state.isKicked || state.isAcknowledgingKick) return@launch
+
+        updateState { copy(isAcknowledgingKick = true) }
+        when (val result = threadRepository.acknowledgeKick(state.threadId)) {
+            is ApiState.Success -> emitEvent(CommunityChattingEvent.KickAcknowledged)
+            is ApiState.Fail -> {
+                updateState { copy(isAcknowledgingKick = false) }
+                emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+            }
+        }
+    }
+
     private fun deleteThread() = viewModelScope.launch {
         val state = uiState.value
-        if (state.thread?.myRole != CommunityThreadRole.OWNER || state.isDeleting) return@launch
+        if (!state.thread?.myRole.canManageCommunityThread() || state.isDeleting) return@launch
 
         updateState { copy(showDeleteDialog = false, isDeleting = true) }
         when (val result = threadRepository.deleteThread(state.threadId)) {
-            is ApiState.Success -> emitEvent(CommunityChattingEvent.ThreadUnavailable)
+            is ApiState.Success -> emitThreadLeftOnce()
             is ApiState.Fail -> {
+                if (hasEmittedThreadLeft) return@launch
                 updateState { copy(isDeleting = false) }
                 emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
             }
         }
     }
 
-    fun updateDraft(value: String) = updateState { copy(draft = value) }
+    fun updateDraft(value: String, changeStart: Int, changeEnd: Int) = updateState {
+        withMentionDraft(value, changeStart, changeEnd)
+    }
 
-    private fun runCommand(block: () -> String) {
-        runCatching(block).onFailure {
+    private fun runCommand(change: String, block: () -> String) {
+        if (uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN || uiState.value.isAccessDenied) return
+        runCatching(block).onSuccess { commandRecovery.expect(it, change) }.onFailure {
             // 예외 원문(영문)을 노출하지 않고 고정 문구를 쓴다.
             val message = if (chatRepository.connectionState.value != CommunityChatConnectionState.CONNECTED) {
                 AppStrings.CHAT_ACTION_DISCONNECTED
@@ -799,11 +1141,12 @@ class CommunityChattingViewModel @Inject constructor(
                         if (connection == CommunityChatConnectionState.CONNECTED) {
                             reconnectJob?.cancel()
                             reconnectJob = null
-                            reconcileLatestMessages()
-                            markLatestMessageRead()
+                            requestNetworkRecovery()
                         } else if (connection == CommunityChatConnectionState.DISCONNECTED) {
                             // 끊기기 전에 보낸 미확인 메시지는 더 이상 확인이 오지 않으므로 실패 처리한다.
                             failUnacknowledgedPending()
+                            readReceipt.pending?.first?.let { readReceipt.failed(it) }
+                            failEdit(uiState.value.editCommandId, "연결이 끊겼어요. 내용을 유지했으니 다시 시도해주세요.")
                             if (!manualReconnectInProgress) ensureReconnectLoop()
                         }
                     }
@@ -811,13 +1154,30 @@ class CommunityChattingViewModel @Inject constructor(
                 launch {
                     chatRepository.events.collect { event ->
                         if (event.threadId != uiState.value.threadId || !rememberEvent(event.eventId)) return@collect
-                        reduce(event)
+                        when (event) {
+                            is CommunityChatEvent.MessageChanged -> {
+                                val target = if (event.type == CommunityChatEvent.MessageChanged.Type.CREATED)
+                                    event.clientMessageId ?: event.message.clientMessageId else event.message.messageId
+                                commandRecovery.observed("${event.type.name.lowercase()}:$target")
+                            }
+                            is CommunityChatEvent.ReactionChanged -> commandRecovery.observed("reaction:${event.messageId}")
+                            else -> Unit
+                        }
+                        if (bufferingRecoveryEvents && event !is CommunityChatEvent.ThreadStateChanged) {
+                            recoveryEvents += event
+                        } else reduce(event)
                     }
                 }
                 launch {
                     chatRepository.errors.collect { error ->
+                        error.commandId?.let(commandRecovery::forget)
+                        if (error.status == 403 || error.status == 409) refreshThread()
+                        failEdit(error.commandId, error.message)
+                        error.commandId?.let { if (readReceipt.failed(it)) scheduleReadRetry() }
                         val clientId = error.clientMessageId
-                        if (clientId != null) {
+                        if (clientId != null && uiState.value.pendingMessages[clientId]?.let {
+                                error.commandId.isNullOrBlank() || it.commandId == error.commandId
+                            } == true) {
                             updateState {
                                 copy(
                                     pendingMessages = pendingMessages + (
@@ -845,6 +1205,11 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun stopRealtime() {
+        networkRecoveryJob?.cancel()
+        networkRecoveryJob = null
+        commandRecoveryJob?.cancel()
+        commandRecoveryJob = null
+        commandRecovery.clear()
         reconnectJob?.cancel()
         reconnectJob = null
         realtimeObserverJob?.cancel()
@@ -855,6 +1220,10 @@ class CommunityChattingViewModel @Inject constructor(
 
     // 내보내진 계정 등 접근 권한이 없으면 남은 내용을 지우고 전용 화면만 보여준다.
     private fun showAccessDenied() {
+        if (hasEmittedThreadLeft) return
+        summaryGeneration++
+        accessGeneration++
+        recoveryEvents.clear()
         stopRealtime()
         updateState {
             copy(
@@ -865,11 +1234,23 @@ class CommunityChattingViewModel @Inject constructor(
                 thread = null,
                 messages = emptyList(),
                 members = emptyMap(),
+                memberProfiles = emptyMap(),
+                localImageUrisByMessageId = emptyMap(),
+                readWatermarks = emptyMap(),
+                unreadSummary = null,
+                showDeleteDialog = false,
+                showOwnershipTransferRequiredDialog = false,
                 pendingMessages = emptyMap(),
                 unreadMessagesAtEntry = emptyList(),
                 unreadCountAtEntry = 0,
                 summaryCandidateMessages = emptyList(),
                 draft = "",
+                mentionedMembers = emptyMap(),
+                draftMentions = emptyList(),
+                editingMessageId = null,
+                editDraft = "",
+                editCommandId = null,
+                editError = null,
             )
         }
     }
@@ -883,28 +1264,52 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun loadMembers() = viewModelScope.launch {
-        when (val result = threadRepository.getMembers(uiState.value.threadId, limit = 100)) {
+        val loadGeneration = ++memberLoadGeneration
+        val generation = accessGeneration
+        val result = threadRepository.getMembers(uiState.value.threadId, limit = 100)
+        if (generation != accessGeneration || loadGeneration != memberLoadGeneration) return@launch
+        when (result) {
             is ApiState.Success -> {
                 val members = result.data.items
-                updateState { copy(members = members.associateBy(CommunityThreadMember::memberId)) }
+                val me = members.firstOrNull { it.memberId == uiState.value.myMemberId }
+                if (me?.state == CommunityThreadMemberState.KICKED) {
+                    showAccessDenied()
+                    return@launch
+                }
+                if (me != null) updateState {
+                    copy(thread = thread?.copy(myRole = if (me.state == CommunityThreadMemberState.ACTIVE) me.role else CommunityThreadRole.UNKNOWN))
+                }
+                updateState { copy(members = members.filter { it.state == CommunityThreadMemberState.ACTIVE }.associateBy(CommunityThreadMember::memberId)) }
                 val membersWithProfiles = coroutineScope {
                     members.map { member ->
                         async {
-                            val memberId = member.memberId.toLongOrNull() ?: return@async member
+                            val memberId = member.memberId.toLongOrNull() ?: return@async (member to null)
                             when (val profile = memberRepository.getMemberProfile(memberId)) {
                                 is ApiState.Success -> member.copy(
                                     profileImageUrl = profile.data.profileImageLink,
+                                ) to CommunityParticipantProfile(
+                                    nickname = profile.data.nickname,
+                                    roleLabel = profile.data.currentGisuMemberInfo?.roleTypes.orEmpty()
+                                        .map { com.umc.domain.model.enums.UserChallengerRole.from(it) }
+                                        .firstOrNull { it.isVisible }?.displayName.orEmpty(),
                                 )
-                                is ApiState.Fail -> member
+                                is ApiState.Fail -> member to null
                             }
                         }
                     }.awaitAll()
                 }
+                if (generation != accessGeneration || loadGeneration != memberLoadGeneration) return@launch
                 updateState {
-                    copy(members = membersWithProfiles.associateBy(CommunityThreadMember::memberId))
+                    val activeMembers = membersWithProfiles.filter { it.first.state == CommunityThreadMemberState.ACTIVE }
+                    copy(
+                        members = activeMembers.associate { it.first.memberId to it.first },
+                        memberProfiles = activeMembers.mapNotNull { (member, profile) ->
+                            (profile ?: memberProfiles[member.memberId])?.let { member.memberId to it }
+                        }.toMap(),
+                    )
                 }
             }
-            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
+            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) showAccessDenied()
         }
     }
 
@@ -915,6 +1320,7 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun ensureReconnectLoop() {
+        if (uiState.value.isAccessDenied || uiState.value.isThreadUnavailable || uiState.value.thread == null || uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN) return
         if (reconnectJob?.isActive == true) return
         reconnectJob = viewModelScope.launch {
             var retryDelayMillis = 1_000L
@@ -943,6 +1349,19 @@ class CommunityChattingViewModel @Inject constructor(
     private fun reduce(event: CommunityChatEvent) {
         when (event) {
             is CommunityChatEvent.CommandAcknowledged -> {
+                if (readReceipt.acknowledged(event.commandId, uiState.value.messages.map { it.messageId })) {
+                    sendObservedRead()
+                    return
+                }
+                updateState { acknowledgeEdit(event.commandId) }
+                if (commandRecovery.acknowledge(event.commandId) && commandRecoveryJob?.isActive != true) {
+                    commandRecoveryJob = viewModelScope.launch {
+                        do {
+                            delay(2_000)
+                            if (commandRecovery.takeMissing()) requestNetworkRecovery()
+                        } while (commandRecovery.hasAcknowledged)
+                    }
+                }
                 event.clientMessageId?.let { clientId ->
                     updateState {
                         copy(pendingMessages = pendingMessages.mapValues { (id, pending) ->
@@ -953,7 +1372,7 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is CommunityChatEvent.MessageChanged -> updateState {
                 val pending = event.clientMessageId?.let(pendingMessages::get)
-                val receivedMessage = if (
+                val rawMessage = if (
                     event.message.type == CommunityMessageType.IMAGE &&
                     event.message.content.isNullOrBlank() &&
                     pending?.localUris?.isNotEmpty() == true
@@ -962,6 +1381,12 @@ class CommunityChattingViewModel @Inject constructor(
                 } else {
                     event.message
                 }
+                val receivedMessage = CommunityMessageMerge.merge(
+                    messages.find { it.messageId == rawMessage.messageId },
+                    if (event.type == CommunityChatEvent.MessageChanged.Type.DELETED)
+                        rawMessage.copy(status = "DELETED", content = null, files = emptyList(), reactions = emptyList())
+                    else rawMessage,
+                )
                 // 수정·삭제 이벤트는 제자리에서 갱신하고, 새 메시지(CREATED)만 맨 앞(최신)에 넣는다.
                 val updatedMessages = when {
                     messages.any { it.messageId == receivedMessage.messageId } ->
@@ -973,7 +1398,7 @@ class CommunityChattingViewModel @Inject constructor(
                 val isOwnMessage = receivedMessage.senderId == myMemberId || pending != null
                 val updatedSummaryCandidates = when (event.type) {
                     CommunityChatEvent.MessageChanged.Type.CREATED -> {
-                        if (isOwnMessage) {
+                        if (isOwnMessage || receivedMessage.type.isSystemNotice) {
                             summaryCandidateMessages
                         } else {
                             (listOf(receivedMessage) + summaryCandidateMessages)
@@ -994,6 +1419,7 @@ class CommunityChattingViewModel @Inject constructor(
                 }
                 copy(
                     messages = updatedMessages,
+                    knownDeletedMessageIds = communityDeletedMessageIds(listOf(receivedMessage), knownDeletedMessageIds),
                     summaryCandidateMessages = updatedSummaryCandidates,
                     localImageUrisByMessageId = if (pending?.localUris?.isNotEmpty() == true) {
                         localImageUrisByMessageId + (receivedMessage.messageId to pending.localUris)
@@ -1007,7 +1433,6 @@ class CommunityChattingViewModel @Inject constructor(
                     reason = "MESSAGE_${event.type.name}",
                     messages = uiState.value.summaryCandidateMessages,
                 )
-                markRead(event.message.messageId)
             }
             is CommunityChatEvent.ReactionChanged -> updateState {
                 copy(messages = messages.map {
@@ -1017,20 +1442,28 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChatEvent.ReadUpdated -> updateState {
                 copy(
                     readWatermarks = readWatermarks + (event.memberId to event.lastReadMessageId),
-                    thread = if (event.memberId == myMemberId) thread?.copy(unreadCount = "0") else thread,
+                    thread = if (event.memberId == myMemberId && event.lastReadMessageId == messages.firstOrNull()?.messageId) thread?.copy(unreadCount = "0") else thread,
                 )
+            }.also {
+                if (event.memberId == uiState.value.myMemberId) {
+                    readReceipt.confirm(event.lastReadMessageId, uiState.value.messages.map { it.messageId })
+                    sendObservedRead()
+                    refreshDetail()
+                }
             }
             is CommunityChatEvent.ThreadStateChanged -> when (event.type) {
-                CommunityChatEvent.ThreadStateChanged.Type.DELETED ->
-                    emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                CommunityChatEvent.ThreadStateChanged.Type.DELETED -> {
+                    if (uiState.value.isDeleting || isLeaving) emitThreadLeftOnce()
+                    else showAccessDenied()
+                }
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_KICKED,
                 CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT -> {
                     if (event.memberId == uiState.value.myMemberId) {
                         // 내가 요청한 나가기의 member.left 가 HTTP 응답보다 먼저 와도 나가기 완료로 처리한다(토스트 누락 방지).
-                        if (isLeaving && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
+                        if ((isLeaving || uiState.value.isDeleting) && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
                             emitThreadLeftOnce()
                         } else {
-                            emitEvent(CommunityChattingEvent.ThreadUnavailable)
+                            showAccessDenied()
                         }
                     } else {
                         event.memberId?.let { memberId ->
@@ -1054,56 +1487,135 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun refreshDetail() = viewModelScope.launch {
-        when (val result = threadRepository.getThread(uiState.value.threadId)) {
-            is ApiState.Success -> updateState { copy(thread = result.data) }
-            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
+        val loadGeneration = ++detailLoadGeneration
+        val generation = accessGeneration
+        val result = threadRepository.getThread(uiState.value.threadId)
+        if (generation != accessGeneration || loadGeneration != detailLoadGeneration) return@launch
+        when (result) {
+            is ApiState.Success -> {
+                if (result.data.deletedAt != null) showAccessDenied()
+                else updateState { copy(thread = result.data) }
+            }
+            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) showAccessDenied()
         }
     }
 
     fun refreshThread() {
+        if (uiState.value.isAccessDenied) return
         refreshDetail()
         loadMembers()
     }
 
-    private suspend fun reconcileLatestMessages() {
-        when (val result = threadRepository.getMessages(uiState.value.threadId)) {
-            is ApiState.Success -> {
-                updateState {
-                    val existingMessageIds = messages.mapTo(hashSetOf()) { it.messageId }
-                    val latestMessageIds = result.data.messages.mapTo(hashSetOf()) { it.messageId }
-                    // 현재 목록의 가장 오래된 메시지가 최신 페이지 밖이면 이미 이전 페이지를 불러온 상태라 커서를 유지한다.
-                    val hasLoadedOlderPages = messages.lastOrNull()
-                        ?.let { it.messageId !in latestMessageIds } == true
-                    val newlyReceivedMessages = result.data.messages.filter { message ->
-                        message.messageId !in existingMessageIds && message.senderId != myMemberId
-                    }
-                    // 서버에 이미 도착한 내 메시지는 '전송 실패/전송 중' 말풍선이 중복으로 남지 않게 pending 에서 뺀다.
-                    val deliveredClientIds = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
-                    copy(
-                        pendingMessages = pendingMessages.filterKeys { it !in deliveredClientIds },
-                        messages = (result.data.messages + messages)
-                            .distinctBy(CommunityThreadMessage::messageId),
-                        summaryCandidateMessages = (
-                            newlyReceivedMessages + summaryCandidateMessages
+    private suspend fun reconcileLatestMessages(): Boolean = recoveryMutex.withLock {
+        if (uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return@withLock true
+        val generation = accessGeneration
+        val oldestId = uiState.value.messages.lastOrNull()?.messageId
+        bufferingRecoveryEvents = true
+        updateState { copy(isRecovering = true, recoveryIncomplete = true) }
+        try {
+            when (val result = CommunityMessageRecovery.recover(oldestId) { before ->
+                threadRepository.getMessages(uiState.value.threadId, before = before)
+            }) {
+                is ApiState.Success -> {
+                    if (generation != accessGeneration) return@withLock true
+                    updateState {
+                        val delivered = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
+                        copy(
+                            messages = result.data.messages.map { incoming ->
+                                CommunityMessageMerge.merge(messages.find { it.messageId == incoming.messageId }, incoming)
+                            },
+                            knownDeletedMessageIds = communityDeletedMessageIds(messages + result.data.messages, knownDeletedMessageIds),
+                            pendingMessages = pendingMessages.filterKeys { it !in delivered },
+                            hasMore = result.data.hasMore,
+                            nextBefore = result.data.nextBefore,
+                            recoveryIncomplete = false,
+                            recoveryRevision = recoveryRevision + 1,
                         )
-                            .distinctBy(CommunityThreadMessage::messageId)
-                            .take(MAX_SUMMARY_MESSAGE_COUNT),
-                        hasMore = if (hasLoadedOlderPages) hasMore else result.data.hasMore,
-                        nextBefore = if (hasLoadedOlderPages) nextBefore else result.data.nextBefore,
-                    )
+                    }
+                    true
                 }
-                logSummaryCandidates(
-                    reason = "RECONNECT_RECONCILED",
-                    messages = uiState.value.summaryCandidateMessages,
-                )
-                markLatestMessageRead()
+                is ApiState.Fail -> {
+                    if (generation != accessGeneration) return@withLock true
+                    if (result.failState.hasThreadAccessDeniedCode() || result.failState.hasThreadUnavailableCode()) {
+                        showAccessDenied()
+                        true
+                    } else {
+                        emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+                        false
+                    }
+                }
             }
-            is ApiState.Fail -> if (result.failState.hasThreadAccessDeniedCode()) showAccessDenied()
+        } finally {
+            bufferingRecoveryEvents = false
+            val buffered = recoveryEvents.toList()
+            recoveryEvents.clear()
+            if (generation == accessGeneration) buffered.forEach(::reduce)
+            updateState { copy(isRecovering = false) }
+            sendObservedRead()
         }
     }
 
-    private fun markLatestMessageRead() {
-        uiState.value.messages.firstOrNull()?.messageId?.let(::markRead)
+    private var blockedMembersJob: Job? = null
+
+    private fun refreshBlockedMembers() {
+        blockedMembersJob?.cancel()
+        // 조회 중에도 프로필에서 새로 차단한 메시지가 이전 요약에 노출되지 않게 한다.
+        summaryGeneration++
+        val generation = ++blockedQueryGeneration
+        updateState {
+            withoutUnreadSummary().copy(
+                blockedMembersStatus = BlockedMembersStatus.LOADING,
+                verifiedUnblockedMemberIds = if (blockedMembersStatus == BlockedMembersStatus.LOADED)
+                    confirmedUnblockedSenders() else verifiedUnblockedMemberIds,
+            )
+        }
+        blockedMembersJob = viewModelScope.launch {
+            val result = memberRepository.getBlockedMemberIds()
+            if (generation != blockedQueryGeneration) return@launch
+            when (result) {
+                is ApiState.Success -> {
+                    val ids = result.data.map { it.toString() }.toSet()
+                    if (ids != state.value.blockedMemberIds) summaryGeneration++
+                    updateState {
+                        withoutUnreadSummary().copy(
+                            blockedMembersStatus = BlockedMembersStatus.LOADED,
+                            blockedMemberIds = ids,
+                            verifiedUnblockedMemberIds = (verifiedUnblockedMemberIds + messages.mapNotNull { it.senderId } + members.keys) - ids,
+                            revealedBlockedMessageIds = emptySet(),
+                        )
+                    }
+                }
+                is ApiState.Fail -> updateState { copy(blockedMembersStatus = BlockedMembersStatus.FAILED) }
+            }
+        }
+    }
+
+    fun onForegroundChanged(active: Boolean) {
+        if (foreground == active) return
+        foreground = active
+        if (active) {
+            refreshBlockedMembers()
+            onNetworkAvailable()
+        }
+    }
+
+    fun onNetworkAvailable() {
+        // Connectivity callbacks may run off the main thread; serialize state and job checks.
+        viewModelScope.launch {
+            if (!foreground || uiState.value.isLoading || uiState.value.thread == null || uiState.value.isAccessDenied || uiState.value.isThreadUnavailable) return@launch
+            if (uiState.value.thread?.myRole == CommunityThreadRole.UNKNOWN) return@launch
+            observeRealtime()
+            if (chatRepository.connectionState.value == CommunityChatConnectionState.CONNECTED) requestNetworkRecovery()
+            else ensureReconnectLoop()
+        }
+    }
+
+    private fun requestNetworkRecovery() {
+        if (networkRecoveryJob?.isActive == true) return
+        networkRecoveryJob = viewModelScope.launch {
+            refreshThread()
+            recoverMessagesWithRetry { reconcileLatestMessages() }
+        }
     }
 
     private fun logSummaryCandidates(
@@ -1141,12 +1653,13 @@ private fun com.umc.domain.model.base.FailState.hasThreadUnavailableCode(): Bool
         code == THREAD_NOT_FOUND_CODE || code == THREAD_DELETED_CODE
 
 private fun com.umc.domain.model.base.FailState.hasThreadAccessDeniedCode(): Boolean =
-    code == THREAD_ACCESS_DENIED_CODE
+    code == "403" || code.endsWith("-403") || code == THREAD_ACCESS_DENIED_CODE
 
 private fun createInitialChattingState(savedStateHandle: SavedStateHandle): CommunityChattingState {
     val threadId = savedStateHandle.get<String>("threadId").orEmpty()
     return CommunityChattingState(
         threadId = threadId,
         isThreadUnavailable = threadId.isBlank(),
+        isKicked = savedStateHandle.get<Boolean>("isKicked") ?: false,
     )
 }

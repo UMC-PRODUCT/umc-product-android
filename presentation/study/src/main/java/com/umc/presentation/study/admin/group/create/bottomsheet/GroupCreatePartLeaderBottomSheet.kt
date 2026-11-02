@@ -31,12 +31,12 @@ import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey900
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main500
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 
 /**
@@ -89,7 +89,7 @@ fun GroupCreatePartLeaderBottomSheet(
     ModalBottomSheet(
         onDismissRequest = ::dismissWithApply,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = grey50(),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = grey600()
@@ -134,7 +134,7 @@ fun GroupCreatePartLeaderBottomSheet(
                 prevIconTint = grey500(),
                 prevIconSize = 24.dp,
                 backgroundColor = grey100(),
-                focusBackgroundColor = grey000(),
+                focusBackgroundColor = grey50(),
                 strokeColor = grey100(),
                 focusStrokeColor = grey900(),
                 cornerRadius = 8.dp
@@ -222,7 +222,7 @@ fun GroupCreatePartLeaderBottomSheet(
                         modifier = Modifier.align(
                             Alignment.Center
                         ),
-                        color = indigo500()
+                        color = main500()
                     )
                 }
             }

@@ -18,16 +18,19 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.umc.component.component.UText
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey800
+import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.grey950
+import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityThreadUiModel
 
 /**
  * 스레드 롱클릭 시 표시되는 관리 메뉴 다이얼로그
  *
  * 스레드 고정, 알림 설정, 편집, 나가기 기능을 제공합니다.
- * 편집 메뉴는 사용자가 작성한 스레드인 경우에만 표시됩니다.
+ * 편집 메뉴는 방장(OWNER) 또는 관리자(ADMIN)인 경우에만 표시됩니다.
  */
 @Composable
 fun CommunityThreadMenuDialog(
@@ -46,77 +49,101 @@ fun CommunityThreadMenuDialog(
             dismissOnClickOutside = true,
         ),
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .widthIn(max = 370.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = grey000(),
-            shadowElevation = 12.dp,
+        CommunityThreadMenuContent(
+            thread = thread,
+            onDismissRequest = onDismissRequest,
+            onTogglePinClick = onTogglePinClick,
+            onToggleNotificationClick = onToggleNotificationClick,
+            onEditClick = onEditClick,
+            onLeaveClick = onLeaveClick,
+        )
+    }
+}
+
+/**
+ * 스레드 관리 메뉴 다이얼로그의 내용
+ *
+ * Dialog는 별도 창에 그려져 정적 프리뷰에 나타나지 않으므로 내용을 분리해 둡니다.
+ */
+@Composable
+private fun CommunityThreadMenuContent(
+    thread: CommunityThreadUiModel,
+    onDismissRequest: () -> Unit,
+    onTogglePinClick: () -> Unit,
+    onToggleNotificationClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onLeaveClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .widthIn(max = 370.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = grey50(),
+        shadowElevation = 12.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 30.dp,
+                bottom = 16.dp,
+            ),
         ) {
-            Column(
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 30.dp,
-                    bottom = 16.dp,
-                ),
-            ) {
-                // 선택한 스레드 제목
-                UText(
-                    text = thread.title,
-                    style = UmcTypographyTokens.Title3Bold,
-                    color = grey950(),
-                    maxLines = 1,
-                )
+            // 선택한 스레드 제목
+            UText(
+                text = thread.title,
+                style = UmcTypographyTokens.Title3Bold,
+                color = grey950(),
+                maxLines = 1,
+            )
 
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                // 스레드 고정 또는 고정 해제
+            // 스레드 고정 또는 고정 해제
+            CommunityThreadMenuItem(
+                text = if (thread.isPinned) {
+                    "고정 해제"
+                } else {
+                    "고정"
+                },
+                onClick = {
+                    onTogglePinClick()
+                    onDismissRequest()
+                },
+            )
+
+            // 스레드 알림 켜기 또는 끄기
+            CommunityThreadMenuItem(
+                text = if (thread.isNotificationEnabled) {
+                    "알림 끄기"
+                } else {
+                    "알림 켜기"
+                },
+                onClick = {
+                    onToggleNotificationClick()
+                    onDismissRequest()
+                },
+            )
+
+            // 방장 또는 관리자일 때만 편집 메뉴 표시
+            if (thread.canEdit) {
                 CommunityThreadMenuItem(
-                    text = if (thread.isPinned) {
-                        "고정 해제"
-                    } else {
-                        "고정"
-                    },
+                    text = "편집",
                     onClick = {
-                        onTogglePinClick()
+                        onEditClick()
                         onDismissRequest()
                     },
-                )
-
-                // 스레드 알림 켜기 또는 끄기
-                CommunityThreadMenuItem(
-                    text = if (thread.isNotificationEnabled) {
-                        "알림 끄기"
-                    } else {
-                        "알림 켜기"
-                    },
-                    onClick = {
-                        onToggleNotificationClick()
-                        onDismissRequest()
-                    },
-                )
-
-                // 내가 작성한 스레드일 때만 편집 메뉴 표시
-                if (thread.isMine) {
-                    CommunityThreadMenuItem(
-                        text = "편집",
-                        onClick = {
-                            onEditClick()
-                            onDismissRequest()
-                        },
-                    )
-                }
-
-                // 현재 스레드에서 나가기
-                CommunityThreadMenuItem(
-                    text = "나가기",
-                    textColor = grey950(),
-                    onClick = onLeaveClick,
                 )
             }
+
+            // 현재 스레드에서 나가기
+            CommunityThreadMenuItem(
+                text = "나가기",
+                textColor = grey950(),
+                onClick = onLeaveClick,
+            )
         }
     }
 }
@@ -142,4 +169,41 @@ private fun CommunityThreadMenuItem(
                 vertical = 15.5.dp,
             ),
     )
+}
+
+@Preview(name = "방장·관리자 (편집 메뉴 있음)", showBackground = true)
+@Composable
+private fun CommunityThreadMenuDialogEditablePreview() {
+    CommunityThreadMenuContentPreview(canEdit = true)
+}
+
+@Preview(name = "일반 멤버 (편집 메뉴 없음)", showBackground = true)
+@Composable
+private fun CommunityThreadMenuDialogMemberPreview() {
+    CommunityThreadMenuContentPreview(canEdit = false)
+}
+
+@Composable
+private fun CommunityThreadMenuContentPreview(canEdit: Boolean) {
+    UmcTheme {
+        CommunityThreadMenuContent(
+            thread = CommunityThreadUiModel(
+                id = "1",
+                title = "iOS 3주차 과제 인증방",
+                contentPreview = "다들 과제 인증 완료했나요?",
+                category = CommunityCategory.STUDY,
+                dayText = "오늘",
+                isPinned = false,
+                isNotificationEnabled = true,
+                isMine = canEdit,
+                canEdit = canEdit,
+                isJoined = true,
+            ),
+            onDismissRequest = {},
+            onTogglePinClick = {},
+            onToggleNotificationClick = {},
+            onEditClick = {},
+            onLeaveClick = {},
+        )
+    }
 }

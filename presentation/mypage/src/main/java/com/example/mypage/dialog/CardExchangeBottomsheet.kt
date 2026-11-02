@@ -36,16 +36,16 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
+import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.grey000
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo500
+import com.umc.component.theme.main100
+import com.umc.component.theme.main500
 import com.umc.component.theme.white
 import com.umc.domain.model.mypage.NearbyUserInfo
 import kotlinx.collections.immutable.ImmutableList
@@ -90,7 +90,7 @@ fun CardExchangeBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = grey000(),
+        containerColor = grey50(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
@@ -150,7 +150,7 @@ fun CardExchangeBottomSheet(
                             .fillMaxWidth()
                             .height(52.dp),
                         backgroundColor = grey800(),
-                        textColor = grey000(),
+                        textColor = grey50(),
                         textStyle = UmcTypographyTokens.HeadlineBold,
                         cornerRadius = 12.dp,
                         onClick = onDismissRequest
@@ -238,7 +238,7 @@ fun CardExchangeBottomSheet(
 @Composable
 private fun ExchangeOptionCard(
     iconRes: Int,
-    iconColor: Color = indigo500(),
+    iconColor: Color = main500(),
     title: String,
     subtitle: String,
     onClick: () -> Unit
@@ -259,7 +259,7 @@ private fun ExchangeOptionCard(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(indigo100()),
+                    .background(main100()),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

@@ -1,10 +1,19 @@
 package com.umc.presentation.community.chatting
 
 import android.widget.Toast
+import android.net.ConnectivityManager
+import android.net.Network
+import androidx.core.content.getSystemService
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.umc.component.fcm.ActiveCommunityThread
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -20,10 +29,13 @@ import com.umc.component.base.CollectUiEvents
 fun CommunityChattingRoute(
     onBack: () -> Unit,
     onThreadDeleted: () -> Unit = onBack,
+    // 강퇴 확인 후 목록에서 빠지므로 삭제와 같이 목록을 갱신하며 돌아간다
+    onKickAcknowledged: () -> Unit = onThreadDeleted,
     onMore: () -> Unit = {},
     onUnreadSummary: () -> Unit = {},
     onCamera: () -> Unit = {},
     onEditThread: () -> Unit = {},
+    onViewMemberProfile: (String) -> Unit = {},
     shouldRefresh: Boolean = false,
     onRefreshHandled: () -> Unit = {},
     viewModel: CommunityChattingViewModel = hiltViewModel(),
@@ -31,7 +43,38 @@ fun CommunityChattingRoute(
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var toastData by remember { mutableStateOf<UToastData?>(null) }
+    var toastGeneration by remember { mutableIntStateOf(0) }
+    fun showToast(data: UToastData) { toastGeneration++; toastData = data }
     var showInviteMemberSheet by remember { mutableStateOf(false) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, state.threadId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                ActiveCommunityThread.threadId = state.threadId
+                viewModel.onForegroundChanged(true)
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                ActiveCommunityThread.threadId = null
+                viewModel.onForegroundChanged(false)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            ActiveCommunityThread.threadId = state.threadId
+            viewModel.onForegroundChanged(true)
+        }
+        val connectivity = context.getSystemService<ConnectivityManager>()
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) { viewModel.onNetworkAvailable() }
+        }
+        connectivity?.registerDefaultNetworkCallback(callback)
+        onDispose {
+            connectivity?.unregisterNetworkCallback(callback)
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            ActiveCommunityThread.threadId = null
+            viewModel.onForegroundChanged(false)
+        }
+    }
 
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) {
@@ -50,6 +93,7 @@ fun CommunityChattingRoute(
                 Toast.makeText(context, AppStrings.CHAT_LEAVE_SUCCESS, Toast.LENGTH_SHORT).show()
                 onThreadDeleted()
             }
+            CommunityChattingEvent.KickAcknowledged -> onKickAcknowledged()
             CommunityChattingEvent.OpenMore -> onMore()
             CommunityChattingEvent.OpenUnreadSummary -> onUnreadSummary()
             CommunityChattingEvent.OpenCamera -> onCamera()
@@ -57,21 +101,29 @@ fun CommunityChattingRoute(
                 showInviteMemberSheet = true
             }
             CommunityChattingEvent.OpenEditThread -> onEditThread()
-            CommunityChattingEvent.MessageReported -> toastData = UToastData(
+            is CommunityChattingEvent.OpenMemberProfile -> onViewMemberProfile(event.memberId)
+            CommunityChattingEvent.OwnershipTransferred -> showToast(UToastData(AppStrings.CHAT_OWNERSHIP_TRANSFERRED, UToastState.CHECK))
+            is CommunityChattingEvent.MemberAdminChanged -> showToast(UToastData(
+                if (event.isAdmin) AppStrings.CHAT_PARTICIPANTS_ASSIGNED_ADMIN else AppStrings.CHAT_ADMIN_REMOVED, UToastState.CHECK))
+            is CommunityChattingEvent.ParticipantsManaged -> showToast(UToastData(
+                event.message, if (event.hasFailures) UToastState.ERROR else UToastState.CHECK))
+            CommunityChattingEvent.MessageReported -> showToast(UToastData(
                 message = AppStrings.CHAT_REPORT_SUCCESS,
                 state = UToastState.CHECK,
-            )
-            is CommunityChattingEvent.ShowError -> toastData = UToastData(
+            ))
+            is CommunityChattingEvent.ShowError -> showToast(UToastData(
                 message = event.message,
                 state = UToastState.ERROR,
-            )
+            ))
         }
     }
 
+    val visibleToastGeneration = toastGeneration
     CommunityChattingScreen(
         state = state,
         toastData = toastData,
-        onToastDismiss = { toastData = null },
+        toastGeneration = toastGeneration,
+        onToastDismiss = { if (toastGeneration == visibleToastGeneration) toastData = null },
         onAction = viewModel::onAction,
     )
 
@@ -81,7 +133,6 @@ fun CommunityChattingRoute(
             threadId = state.threadId,
             onDismissRequest = { showInviteMemberSheet = false },
             onInviteSuccess = {
-                showInviteMemberSheet = false
                 viewModel.refreshThread()
             },
         )

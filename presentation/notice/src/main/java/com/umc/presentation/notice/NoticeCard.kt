@@ -1,5 +1,6 @@
 package com.umc.presentation.notice
 
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,19 +30,14 @@ import com.umc.component.R
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.green100
-import com.umc.component.theme.green600
-import com.umc.component.theme.grey000
+import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
-import com.umc.component.theme.indigo100
-import com.umc.component.theme.indigo600
 import com.umc.component.theme.red500
-import com.umc.component.theme.yellow100
-import com.umc.component.theme.yellow600
+import com.umc.component.theme.tagColors
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.notice.NoticeTarget
 
@@ -56,7 +52,7 @@ fun NoticeCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(grey000())
+            .background(grey50())
             .border(1.dp, grey200(), RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(16.dp),
@@ -126,7 +122,12 @@ fun NoticeCard(
     }
 }
 
-/** 공지 대상 정보에 따라 중앙/지부/학교/파트 태그 노출. 목록 카드·상세 화면 공용 */
+/**
+ * 공지 대상 정보에 따라 중앙/지부/학교/파트 태그 노출. 목록 카드·상세 화면 공용
+ *
+ * 색은 역할 태그 체계를 따른다 (중앙 = 총괄·중앙 운영진 purple, 지부 = 지부장 brown, 학교 = 교내 역할 blue).
+ * 파트 태그는 대상 파트가 하나면 그 파트 색, 여러 파트이거나 지난 기수 파트면 회색을 쓴다
+ */
 @Composable
 fun NoticeTags(target: NoticeTarget) {
     // 중앙 여부는 오직 schoolId로 갈린다 (서버 스펙: schoolId 미입력이면 중앙, 입력이면 교내).
@@ -135,22 +136,30 @@ fun NoticeTags(target: NoticeTarget) {
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (isCentral) {
-            NoticeTag(text = AppStrings.CENTRAL, backgroundColor = yellow100(), textColor = yellow600())
+            val colors = UserChallengerRole.CENTRAL_PRESIDENT.tagColors()
+            NoticeTag(text = AppStrings.CENTRAL, backgroundColor = colors.base, textColor = colors.strong)
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetChapterId != null) {
-            NoticeTag(text = AppStrings.BRANCH, backgroundColor = grey100(), textColor = grey600())
+            val colors = UserChallengerRole.CHAPTER_PRESIDENT.tagColors()
+            NoticeTag(text = AppStrings.BRANCH, backgroundColor = colors.base, textColor = colors.strong)
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetSchoolId != null) {
-            NoticeTag(text = AppStrings.SCHOOL, backgroundColor = indigo100(), textColor = indigo600())
+            val colors = UserChallengerRole.SCHOOL_PRESIDENT.tagColors()
+            NoticeTag(text = AppStrings.SCHOOL, backgroundColor = colors.base, textColor = colors.strong)
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetParts.isNotEmpty()) {
-            NoticeTag(text = AppStrings.PART, backgroundColor = green100(), textColor = green600())
+            val partColors = target.targetParts.map { UserPart.from(it) }.distinct().singleOrNull()?.tagColors()
+            NoticeTag(
+                text = AppStrings.PART,
+                backgroundColor = partColors?.base ?: grey100(),
+                textColor = partColors?.strong ?: grey600(),
+            )
         }
     }
 }

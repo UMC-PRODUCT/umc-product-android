@@ -42,9 +42,11 @@ class TokenAuthenticator @Inject constructor(
 
         // 실패한 요청이 실제로 들고 갔던 토큰. 저장소의 현재 값과 비교해
         // 다른 요청이 이미 갱신해 둔 상황인지 판별한다.
+        // 토큰이 비면 인터셉터가 "Bearer "를 붙이는데, OkHttp가 헤더 값의 끝 공백을 잘라 "Bearer"만 남는다.
+        // 그래서 접두사를 공백 없이 떼고 다듬는다 (토큰이 있으면 결과는 같다)
         val usedToken = response.request
             .header("Authorization")
-            ?.removePrefix("Bearer ")
+            ?.removePrefix("Bearer")
             ?.trim()
             .orEmpty()
 
@@ -52,8 +54,18 @@ class TokenAuthenticator @Inject constructor(
             mutex.withLock {
                 val currentToken = appDataStoreRepository.getAccessToken()
 
+                // 토큰 없이 보낸 요청(로그아웃 상태, 로그인 실패 등)의 401은 세션 만료가 아니므로 그대로 실패시킨다.
+                // - 만료 신호를 보내면 로그인·회원가입 화면에 있는 사용자를 로그인 첫 화면으로 되돌린다.
+                // - clearTokens()는 호출마다 저장소를 갱신하므로, 저장소를 구독해 재조회하는 화면이 있으면
+                //   401 -> clearTokens -> 재조회 -> 401 루프가 된다.
+                // - 그사이 다른 계정으로 로그인했더라도 그 토큰으로 재시도하지 않는다.
+                if (usedToken.isEmpty()) {
+                    Log.d(TAG, "TokenAuthenticator - 토큰 없이 보낸 요청. 세션 만료로 처리하지 않는다")
+                    return@withLock null
+                }
+
                 // 대기하는 사이 다른 요청이 갱신을 끝냈다면 그 토큰으로 바로 재시도한다.
-                if (usedToken.isNotEmpty() && usedToken != currentToken && currentToken.isNotEmpty()) {
+                if (usedToken != currentToken && currentToken.isNotEmpty()) {
                     Log.d(TAG, "TokenAuthenticator - 다른 요청이 이미 갱신함. 새 토큰으로 재요청")
                     return@withLock response.retryWith(currentToken)
                 }

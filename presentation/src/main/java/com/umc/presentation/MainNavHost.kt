@@ -12,14 +12,18 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.umc.domain.session.SessionExpiryBus
 import androidx.navigation.navDeepLink
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.umc.component.fcm.CommunityNotification
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.mypage.memberprofile.MemberProfileRoute
 import com.example.mypage.mycard.MycardRoute
 import com.umc.presentation.act.ActManageRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerDetailRoute
 import com.example.mypage.mycontent.MyContentRoute
 import com.example.mypage.mypage.MypageRoute
+import com.example.mypage.activityhistory.ActivityHistoryRoute
 import com.example.mypage.profile.ProfileRoute
 import com.example.mypage.qrcode.QrCodeRoute
 import com.example.mypage.receivedcard.ReceivedCardRoute
@@ -53,7 +57,12 @@ import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRo
 import com.umc.component.base.CollectUiEvents
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
+// 강퇴 확인을 마친 스레드 ID (검색 결과에서 제거하는 데 사용)
+private const val COMMUNITY_KICK_ACKNOWLEDGED_KEY = "community_kick_acknowledged"
 private const val NOTICE_REFRESH_KEY = "notice_refresh"
+
+// 마이페이지 '나의 스터디'에서 활동 탭으로 갈 때 스터디 탭을 열어 달라는 일회성 신호
+private const val ACT_OPEN_STUDY_TAB_KEY = "act_open_study_tab"
 private const val COMMUNITY_THREAD_DEEP_LINK_BASE =
     "https://api.university.neordinary.com/community/threads"
 
@@ -67,6 +76,26 @@ private fun NavHostController.notifyNoticeListRefresh() {
         .getOrNull()
         ?.savedStateHandle
         ?.set(NOTICE_REFRESH_KEY, true)
+}
+
+/**
+ * 로그아웃·세션 만료·가입 실패로 인증 흐름(스플래시·로그인)으로 돌아간다.
+ *
+ * 하단 탭은 popUpTo(Home) { saveState = true }로 화면을 ViewModel째 보관하는데, popUpTo(0)은 현재 스택만
+ * 비우고 이 보관분은 남긴다. 남겨 두면 이전 계정의 ViewModel(예: 공지 목록)이 토큰 없이 요청을 반복해
+ * 로그인 화면이 계속 처음으로 되돌아가고, 다음 계정이 그 탭을 열면 이전 계정의 화면이 복원된다.
+ * 그래서 이동 전에 보관된 스택을 모두 지운다. 남은 항목이 있어도 뒤이은 popUpTo(0)이 함께 걷어낸다
+ */
+private fun NavHostController.navigateToAuth(destination: MainDestination) {
+    val (home, others) = graph.partition { it.hasRoute<MainDestination.Home>() }
+    others.forEach { clearBackStack(it.id) }
+    // Home은 popUpTo 대상이라, 첫 항목이 이미 다른 스택에 묶여 있으면 보관 스택이 Home에만 매핑된다.
+    // Home을 지우면 현재 스택의 Home까지 함께 꺼내므로 반드시 마지막에, navigate 전에 지운다
+    home.forEach { clearBackStack(it.id) }
+    navigate(destination) {
+        popUpTo(0) { inclusive = true }
+        launchSingleTop = true
+    }
 }
 
 @Composable
@@ -84,10 +113,24 @@ fun MainNavHost(
         if (navHostController.currentDestination?.hasRoute<MainDestination.Login>() == true) {
             return@CollectUiEvents
         }
-        navHostController.navigate(MainDestination.Login) {
-            popUpTo(0) { inclusive = true }
-            launchSingleTop = true
-        }
+        navHostController.navigateToAuth(MainDestination.Login)
+    }
+
+    val pendingLink by PendingDeepLink.updates.collectAsStateWithLifecycle()
+    val currentEntry by navHostController.currentBackStackEntryAsState()
+    LaunchedEffect(pendingLink, currentEntry) {
+        val link = pendingLink ?: return@LaunchedEffect
+        // Home은 인증 완료 후에만 스택에 들어온다. 로그인·가입 중에는 목적지를 보관한다.
+        val authenticated = runCatching { navHostController.getBackStackEntry(MainDestination.Home) }.isSuccess
+        if (!authenticated) return@LaunchedEffect
+        val target = CommunityNotification.parse(mapOf("deepLink" to link.toString()))
+        val currentThreadId = currentEntry
+            ?.takeIf { it.destination.hasRoute<MainDestination.CommunityChatting>() }
+            ?.toRoute<MainDestination.CommunityChatting>()?.threadId
+        PendingDeepLink.consume()
+        if (target != null && target.threadId == currentThreadId) return@LaunchedEffect
+        runCatching { navHostController.navigate(link) }
+            .onFailure { android.util.Log.w("DeepLink", "Unable to navigate to pending link", it) }
     }
 
     NavHost(
@@ -244,9 +287,7 @@ fun MainNavHost(
             SignUpFailRoute(
                 navigateToCode = { navHostController.navigate(MainDestination.SignUpFailCode) },
                 navigateToLogin = {
-                    navHostController.navigate(MainDestination.Login) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navHostController.navigateToAuth(MainDestination.Login)
                 },
             )
         }
@@ -260,9 +301,7 @@ fun MainNavHost(
                     }
                 },
                 navigateToLogin = {
-                    navHostController.navigate(MainDestination.Login) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navHostController.navigateToAuth(MainDestination.Login)
                 },
             )
         }
@@ -365,8 +404,17 @@ fun MainNavHost(
         }
 
         /**활동 화면**/
-        composable<MainDestination.Act> {
+        composable<MainDestination.Act> { backStackEntry ->
+            val openStudyTab by backStackEntry
+                .savedStateHandle
+                .getStateFlow(ACT_OPEN_STUDY_TAB_KEY, false)
+                .collectAsStateWithLifecycle()
+
             ActManageRoute(
+                openStudyTab = openStudyTab,
+                onStudyTabOpened = {
+                    backStackEntry.savedStateHandle[ACT_OPEN_STUDY_TAB_KEY] = false
+                },
                 onNavigateToChallengerDetail = { challengerId ->
                     navHostController.navigate(
                         MainDestination.AdminChallengerDetail(challengerId)
@@ -427,14 +475,6 @@ fun MainNavHost(
 
         //홈 화면
         composable<MainDestination.Home> {
-            // 외부 링크로 열렸다면 인증 판정을 거쳐 홈에 도착한 지금 원래 목적지로 이동한다.
-            // 매칭되는 destination 이 없는 링크는 무시한다.
-            LaunchedEffect(Unit) {
-                PendingDeepLink.consume()?.let { uri ->
-                    runCatching { navHostController.navigate(uri) }
-                }
-            }
-
             HomeRoute(
                 onNavigateToNotice = {
                     navHostController.navigate(MainDestination.Notice)
@@ -528,6 +568,8 @@ fun MainNavHost(
             MycardRoute(
                 targetMemberId = targetMemberId,
                 openExchangeDialog = openExchangeDialog,
+                viewProfileOnly = mycardDestination.viewProfileOnly,
+                onNavigateBack = { navHostController.popBackStack() },
                 onNavigateToMypage = {
                     navHostController.navigate(MainDestination.Mypage)
                 },
@@ -539,7 +581,33 @@ fun MainNavHost(
                 },
                 onNavigateToReceivedCard = {
                     navHostController.navigate(MainDestination.ReceivedCard)
+                },
+                onNavigateToMyStudy = {
+                    // 하단 탭에서 활동을 누른 것과 같은 스택을 만든 뒤, 스터디 탭을 열어 달라는 신호를 남긴다
+                    navHostController.navigate(MainDestination.Act) {
+                        popUpTo(MainDestination.Home) {
+                            // 딥링크로 연 타인 명함까지 저장하면 MY 탭을 누를 때 그 명함이 복원되므로 내 명함일 때만 저장한다
+                            saveState = targetMemberId == null
+                            inclusive = false
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    runCatching { navHostController.getBackStackEntry(MainDestination.Act) }
+                        .getOrNull()
+                        ?.savedStateHandle
+                        ?.set(ACT_OPEN_STUDY_TAB_KEY, true)
+                },
+                onNavigateToActivityHistory = {
+                    navHostController.navigate(MainDestination.ActivityHistory)
                 }
+            )
+        }
+
+        //타인 프로필 조회 (스레드 > 프로필 정보 보기)
+        composable<MainDestination.MemberProfile> {
+            MemberProfileRoute(
+                onNavigateBack = { navHostController.popBackStack() }
             )
         }
 
@@ -553,9 +621,8 @@ fun MainNavHost(
                     navHostController.navigate(MainDestination.MyContent(showType = type))
                 },
                 onNavigateToLogin = {
-                    navHostController.navigate(MainDestination.Splash) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    // 로그아웃·회원탈퇴 모두 이 경로로 온다
+                    navHostController.navigateToAuth(MainDestination.Splash)
                 },
                 onNavigateToQrCode = {
                     navHostController.navigate(MainDestination.Qrcode)
@@ -579,6 +646,15 @@ fun MainNavHost(
         //내 프로필
         composable<MainDestination.MyProfile> {
             ProfileRoute(
+                onNavigateToBack = {
+                    navHostController.popBackStack()
+                }
+            )
+        }
+
+        //활동 이력
+        composable<MainDestination.ActivityHistory> {
+            ActivityHistoryRoute(
                 onNavigateToBack = {
                     navHostController.popBackStack()
                 }
@@ -610,10 +686,11 @@ fun MainNavHost(
         /** 커뮤니티 화면 **/
         composable<MainDestination.Community> {
             CommunityRoute(
-                onNavigateToThreadDetail = { threadId ->
+                onNavigateToThreadDetail = { threadId, isKicked ->
                     navHostController.navigate(
                         MainDestination.CommunityChatting(
                             threadId = threadId,
+                            isKicked = isKicked,
                         )
                     )
                 },
@@ -689,21 +766,34 @@ fun MainNavHost(
                         if (!navHostController.popBackStack<MainDestination.CommunityChatting>(inclusive = true)) {
                             navHostController.popBackStack()
                         }
+                        navHostController.navigate(MainDestination.Community) {
+                            launchSingleTop = true
+                        }
                     }
                 },
             )
         }
 
         /** 커뮤니티 검색 화면 **/
-        composable<MainDestination.CommunitySearch> {
+        composable<MainDestination.CommunitySearch> { backStackEntry ->
+            val acknowledgedKickThreadId by backStackEntry
+                .savedStateHandle
+                .getStateFlow<String?>(COMMUNITY_KICK_ACKNOWLEDGED_KEY, null)
+                .collectAsStateWithLifecycle()
+
             CommunitySearchRoute(
+                acknowledgedKickThreadId = acknowledgedKickThreadId,
+                onKickAcknowledgedHandled = {
+                    backStackEntry.savedStateHandle[COMMUNITY_KICK_ACKNOWLEDGED_KEY] = null
+                },
                 onNavigateBack = {
                     navHostController.popBackStack()
                 },
-                onNavigateToThreadDetail = { threadId ->
+                onNavigateToThreadDetail = { threadId, isKicked ->
                     navHostController.navigate(
                         MainDestination.CommunityChatting(
                             threadId = threadId,
+                            isKicked = isKicked,
                         )
                     )
                 },
@@ -714,6 +804,12 @@ fun MainNavHost(
             deepLinks = listOf(
                 navDeepLink {
                     uriPattern = "$COMMUNITY_THREAD_DEEP_LINK_BASE?threadId={threadId}"
+                },
+                navDeepLink {
+                    uriPattern = "umc://thread?threadId={threadId}"
+                },
+                navDeepLink {
+                    uriPattern = "umc://thread/{threadId}"
                 }
             ),
         ) { backStackEntry ->
@@ -724,6 +820,7 @@ fun MainNavHost(
                 .collectAsStateWithLifecycle()
 
             CommunityChattingRoute(
+                onViewMemberProfile = { memberId -> navHostController.navigate(MainDestination.MemberProfile(memberId = memberId)) },
                 onBack = {
                     navHostController.popBackStack()
                 },
@@ -740,9 +837,21 @@ fun MainNavHost(
                         ?.set(COMMUNITY_REFRESH_KEY, true)
                 },
                 onThreadDeleted = {
-                    navHostController.previousBackStackEntry
+                    if (!navHostController.popBackStack<MainDestination.Community>(inclusive = false)) {
+                        navHostController.navigate(MainDestination.Community) {
+                            popUpTo<MainDestination.CommunityChatting> { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                    navHostController.currentBackStackEntry
                         ?.savedStateHandle
                         ?.set(COMMUNITY_REFRESH_KEY, true)
+                },
+                onKickAcknowledged = {
+                    // 목록은 복귀 시 폴링으로 다시 받아오고, 검색 결과는 갱신되지 않으므로 직접 제거하게 알린다
+                    navHostController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(COMMUNITY_KICK_ACKNOWLEDGED_KEY, destination.threadId)
                     navHostController.popBackStack()
                 },
             )
