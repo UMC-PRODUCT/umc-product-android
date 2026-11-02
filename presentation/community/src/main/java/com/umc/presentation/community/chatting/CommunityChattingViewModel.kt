@@ -29,6 +29,8 @@ import com.umc.domain.model.community.thread.CommunityMessageMerge
 import com.umc.domain.model.community.thread.CommunityThreadMemberState
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import com.umc.domain.model.member.MemberBlockChanges
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -69,6 +71,7 @@ class CommunityChattingViewModel @Inject constructor(
     private var manualReconnectInProgress = false
     private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
+    private var blockedQueryGeneration = 0L
     private var summaryGeneration = 0L
     private val recoveryMutex = Mutex()
     private var bufferingRecoveryEvents = false
@@ -85,6 +88,16 @@ class CommunityChattingViewModel @Inject constructor(
 
     init {
         observeCurrentMember()
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            MemberBlockChanges.events.collect { change ->
+                if (change.ownerId.toString() == state.value.myMemberId) {
+                    blockedQueryGeneration++
+                    blockedMembersJob?.cancel()
+                    summaryGeneration++
+                    updateState { withMemberBlockChange(change.memberId.toString(), change.blocked) }
+                }
+            }
+        }
         checkAiAvailability()
         // 강퇴된 스레드는 상세·메시지를 불러올 수 없으므로 바로 참여 종료 화면을 보여준다
         if (state.value.threadId.isNotBlank() && !state.value.isKicked) {
@@ -1548,16 +1561,27 @@ class CommunityChattingViewModel @Inject constructor(
         blockedMembersJob?.cancel()
         // 조회 중에도 프로필에서 새로 차단한 메시지가 이전 요약에 노출되지 않게 한다.
         summaryGeneration++
-        updateState { withoutUnreadSummary().copy(blockedMembersStatus = BlockedMembersStatus.LOADING) }
+        val generation = ++blockedQueryGeneration
+        updateState {
+            withoutUnreadSummary().copy(
+                blockedMembersStatus = BlockedMembersStatus.LOADING,
+                verifiedUnblockedMemberIds = if (blockedMembersStatus == BlockedMembersStatus.LOADED)
+                    confirmedUnblockedSenders() else verifiedUnblockedMemberIds,
+            )
+        }
         blockedMembersJob = viewModelScope.launch {
-            when (val result = memberRepository.getBlockedMemberIds()) {
+            val result = memberRepository.getBlockedMemberIds()
+            if (generation != blockedQueryGeneration) return@launch
+            when (result) {
                 is ApiState.Success -> {
                     val ids = result.data.map { it.toString() }.toSet()
                     if (ids != state.value.blockedMemberIds) summaryGeneration++
                     updateState {
                         withoutUnreadSummary().copy(
                             blockedMembersStatus = BlockedMembersStatus.LOADED,
-                            blockedMemberIds = ids, revealedBlockedMessageIds = emptySet(),
+                            blockedMemberIds = ids,
+                            verifiedUnblockedMemberIds = (verifiedUnblockedMemberIds + messages.mapNotNull { it.senderId } + members.keys) - ids,
+                            revealedBlockedMessageIds = emptySet(),
                         )
                     }
                 }

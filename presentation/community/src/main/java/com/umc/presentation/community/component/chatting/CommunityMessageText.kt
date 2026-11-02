@@ -38,6 +38,7 @@ internal fun communityTextLinks(text: String): List<CommunityTextLink> =
         val url = if (value.startsWith("www.", ignoreCase = true)) "https://$value" else value
         val uri = runCatching { URI(url) }.getOrNull() ?: return@mapNotNull null
         if (uri.scheme.lowercase() !in setOf("http", "https", "umc") || uri.rawAuthority.isNullOrBlank()) return@mapNotNull null
+        if (uri.scheme.equals("umc", ignoreCase = true) && uri.rawAuthority != "thread") return@mapNotNull null
         CommunityTextLink(match.range.first, match.range.first + value.length, url)
     }.toList()
 

@@ -753,7 +753,7 @@ fun CommunityChattingScreen(
                         member = message.senderId?.let(state.members::get),
                         isMine = isMine,
                         isBlocked = !isMine && message.senderId in state.blockedMemberIds,
-                        isVisibilityPending = !isMine && state.blockedMembersStatus != BlockedMembersStatus.LOADED,
+                        isVisibilityPending = state.isSenderVisibilityPending(message.senderId),
                         showReplySnippet = state.canShowReplySnippet(replySources[message.replyTo?.messageId]),
                         isBlockedMessageRevealed = message.messageId in state.revealedBlockedMessageIds,
                         onToggleBlockedMessage = { onAction(CommunityChattingAction.OnToggleBlockedMessage(message.messageId)) },
