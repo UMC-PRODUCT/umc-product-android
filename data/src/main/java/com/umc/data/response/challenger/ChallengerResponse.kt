@@ -6,11 +6,14 @@ import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.act.challenger.ChallengerPoint
 import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
+import java.time.OffsetDateTime
+import java.time.ZoneId
 
 data class ChallengerResponse(
     @SerializedName("challengerId") val challengerId: Long? = null,
     @SerializedName("memberId") val memberId: Long? = null,
     @SerializedName("gisu") val gisu: Int? = null,
+    @SerializedName("gisuId") val gisuId: Long? = null,
     @SerializedName("part") val part: String? = null,
     // 인프라를 겸하는 챌린저 여부. 파트와 별개로 내려온다.
     @SerializedName("infra") val infra: Boolean? = null,
@@ -20,7 +23,7 @@ data class ChallengerResponse(
     @SerializedName("name") val name: String? = null,
     @SerializedName("nickname") val nickname: String? = null,
     @SerializedName("email") val email: String? = null,
-    @SerializedName("schoolId") val schoolId: Int? = null,
+    @SerializedName("schoolId") val schoolId: Long? = null,
     @SerializedName("schoolName") val schoolName: String? = null,
     @SerializedName("profileImageLink") val profileImageLink: String? = null,
     @SerializedName("status") val status: String? = null
@@ -76,16 +79,22 @@ data class ChallengerResponse(
                 part = UserPart.from(part),
                 infra = infra ?: defaultModel.infra,
                 gisu = gisu ?: defaultModel.gisu,
+                gisuId = gisuId,
+                schoolId = schoolId,
                 profileImageUrl = profileImageLink ?: defaultModel.profileImageUrl,
                 totalScore = totalPoints ?: defaultModel.totalScore,
-                rewardScore = pointList.filter { it.value > 0 }.sumOf { it.value }.toInt(),
-                penaltyScore = pointList.filter { it.value < 0 }.sumOf { -it.value }.toInt(),
+                rewardScore = pointList.filter { it.value > 0 }.sumOf { it.value },
+                penaltyScore = pointList.filter { it.value < 0 }.sumOf { -it.value },
                 history = pointList
             )
         }
     }
 }
 
-private fun String?.toDateOnly(): String = orEmpty()
-    .substringBefore('T')
-    .substringBefore(' ')
+// 서버 createdAt 은 UTC 시각(예: 2026-11-02T15:42:10Z)이라 앞 10자리만 자르면 한국 시간 0~9시 기록이 전날로 보인다.
+// 기기 시간대 날짜로 바꾸고, 시간대 표시가 없는 값은 이전처럼 날짜 부분만 쓴다.
+internal fun String?.toDateOnly(zone: ZoneId = ZoneId.systemDefault()): String {
+    val raw = orEmpty()
+    return runCatching { OffsetDateTime.parse(raw).atZoneSameInstant(zone).toLocalDate().toString() }
+        .getOrElse { raw.substringBefore('T').substringBefore(' ') }
+}

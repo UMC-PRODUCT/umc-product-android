@@ -281,12 +281,13 @@ class HomeViewModel @Inject constructor(
         Log.d("log_home", "$recentChallenge")
 
         //일단은 totalPoint로 계산
-        var sangjumtmp = 0
-        var buljumtmp = 0
+        //구형 베스트 워크북(-0.5) 기록이 있어 정수로 자르지 않고 더한다
+        var sangjumtmp = 0.0
+        var buljumtmp = 0.0
 
         //challengerPoints를 돌면서 더하기 빼기
         for (point in recentChallenge?.points ?: emptyList()){
-            val nowPoint = point.value.toInt()
+            val nowPoint = point.value
             if(nowPoint > 0){sangjumtmp += nowPoint}
             else{buljumtmp += nowPoint}
         }
@@ -481,9 +482,9 @@ data class HomeUiState(
 
     //상태에 따른 텍스트
     val activeString: String = "0기 활동 상태",
-    val sangjum: Int = 0,
-    val buljum: Int = 0,
-    val total: Int = 0,
+    val sangjum: Double = 0.0,
+    val buljum: Double = 0.0,
+    val total: Double = 0.0,
 
     //일정 관련
     val dailyPlans: ImmutableList<SchedulePlanItem> = persistentListOf(), //선택한 날들의 일정

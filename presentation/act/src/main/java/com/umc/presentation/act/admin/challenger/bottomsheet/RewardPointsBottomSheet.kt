@@ -53,6 +53,7 @@ import com.umc.component.theme.green500
 import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
 import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
+import com.umc.presentation.act.admin.challenger.POINT_DESCRIPTION_MAX_LENGTH
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -81,7 +82,8 @@ fun RewardPointsScreen(
     onSubmitClick: () -> Unit = {}
 ) {
     val selectedReward = uiState.selectedRewardType
-    val isSubmitEnabled = selectedReward != null
+    // 서버는 상점에도 사유를 요구한다(공백 불가).
+    val isSubmitEnabled = selectedReward != null && uiState.pointMemo.isNotBlank()
 
     Column(
         modifier = modifier
@@ -120,7 +122,7 @@ fun RewardPointsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         UText(
-            text = AppStrings.MEMO,
+            text = AppStrings.REWARD_ETC_REASON,
             style = CalloutBold,
             color = grey800()
         )
@@ -258,7 +260,7 @@ private fun MemoInput(
     UTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = AppStrings.MEMO_PLACEHOLDER,
+        placeholder = AppStrings.REWARD_ETC_PLACEHOLDER,
         placeholderColor = grey400(),
         textColor = grey800(),
         textStyle = Callout,
@@ -268,7 +270,8 @@ private fun MemoInput(
         focusStrokeColor = grey900(),
         modifier = Modifier
             .fillMaxWidth()
-            .height(92.dp)
+            .height(92.dp),
+        acceptInput = { it.length <= POINT_DESCRIPTION_MAX_LENGTH },
     )
 }
 
@@ -289,6 +292,16 @@ private fun defaultRewardItems(): ImmutableList<RewardPointItem> =
 private fun RewardPointsScreenPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen()
+    }
+}
+
+@Preview(showBackground = false, name = "항목만 고르고 사유 없음 (등록 비활성)")
+@Composable
+private fun RewardPointsScreenNoReasonPreview() {
+    UmcTheme(darkTheme = false) {
+        RewardPointsScreen(
+            uiState = AdminChallengerUiState(selectedRewardType = RewardType.BEST_WORKBOOK_V2)
+        )
     }
 }
 
