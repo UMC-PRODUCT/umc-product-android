@@ -1,6 +1,5 @@
 package com.umc.domain.repository
 
-import com.umc.domain.model.UserInfo
 import com.umc.domain.model.act.challenger.AdminChallengerList
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerList
@@ -55,14 +54,6 @@ interface ChallengerRepository {
         part: String?,
         keyword: String?,
     ): ApiState<ChallengerList>
-
-    // 챌린저 상벌점 추가
-    suspend fun addChallengerPoint(
-        challengerId: Long,
-        pointType: String,
-        pointValue: Int,
-        description: String
-    ): ApiState<UserInfo>
 
 
 }

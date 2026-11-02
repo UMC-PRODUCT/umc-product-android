@@ -12,8 +12,8 @@ enum class RewardType(val label: String, val score: Int,
                       val category: PunishCategory = PunishCategory.ALL) {
     //상점
     BLOG_CHALLENGE("블로그 챌린지", 3),
-    BEST_WORKBOOK("베스트 워크북 선정", 2),
-    BEST_WORKBOOK_V2("베스트 워크북 V2", 0),
+    // 서버 BEST_WORKBOOK_V2(+2). 구형 BEST_WORKBOOK(-0.5)은 10기부터 새로 부여할 수 없어 선택지에 두지 않는다
+    BEST_WORKBOOK_V2("베스트 워크북 선정", 2),
     UMC_EVENT_REVIEW("행사 리뷰어", 1),
     PEER_REVIEW_SUBMISSION("PeerReview 작성", 1),
 
