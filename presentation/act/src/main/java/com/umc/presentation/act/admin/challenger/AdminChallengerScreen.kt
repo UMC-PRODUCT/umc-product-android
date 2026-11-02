@@ -243,10 +243,17 @@ fun AdminChallengerScreen(
         contentPadding = PaddingValues(bottom = 30.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // 상벌점을 관리할 수 없는 역할이면 검색·목록 대신 권한 안내만 보인다.
-        if (uiState.manageAccess == AdminChallengerAccess.DENIED) {
-            item { ChallengerNoAccess(modifier = Modifier.padding(top = 120.dp)) }
-            return@LazyColumn
+        // 권한 확인 중에는 검색을 막고 로딩만, 상벌점을 관리할 수 없는 역할이면 권한 안내만 보인다.
+        when (uiState.manageAccess) {
+            AdminChallengerAccess.CHECKING -> {
+                item { ChallengerLoading(modifier = Modifier.padding(top = 120.dp)) }
+                return@LazyColumn
+            }
+            AdminChallengerAccess.DENIED -> {
+                item { ChallengerNoAccess(modifier = Modifier.padding(top = 120.dp)) }
+                return@LazyColumn
+            }
+            AdminChallengerAccess.ALLOWED -> Unit
         }
         item {
             SearchBar(
@@ -531,6 +538,7 @@ private fun PreviewMainUnfocused() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
+                manageAccess = AdminChallengerAccess.ALLOWED,
                 loadState = AdminChallengerLoadState.SUCCESS,
                 sections = persistentListOf(
                     AdminChallengerSectionUi(
@@ -566,7 +574,10 @@ private fun PreviewMainUnfocused() {
 private fun PreviewMainLoading() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
-            uiState = AdminChallengerUiState(loadState = AdminChallengerLoadState.LOADING)
+            uiState = AdminChallengerUiState(
+                manageAccess = AdminChallengerAccess.ALLOWED,
+                loadState = AdminChallengerLoadState.LOADING,
+            )
         )
     }
 }
@@ -576,8 +587,19 @@ private fun PreviewMainLoading() {
 private fun PreviewMainError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
-            uiState = AdminChallengerUiState(loadState = AdminChallengerLoadState.ERROR)
+            uiState = AdminChallengerUiState(
+                manageAccess = AdminChallengerAccess.ALLOWED,
+                loadState = AdminChallengerLoadState.ERROR,
+            )
         )
+    }
+}
+
+@Preview(showBackground = true, name = "권한 확인 중")
+@Composable
+private fun PreviewMainChecking() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(uiState = AdminChallengerUiState(manageAccess = AdminChallengerAccess.CHECKING))
     }
 }
 
@@ -597,6 +619,7 @@ private fun PreviewMainServerError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
+                manageAccess = AdminChallengerAccess.ALLOWED,
                 loadState = AdminChallengerLoadState.ERROR,
                 loadErrorMessage = "권한이 없어 챌린저 목록을 조회할 수 없습니다.",
             )

@@ -64,25 +64,37 @@ class AdminChallengerViewModel @Inject constructor(
     }
 
     fun refresh() {
+        // 오류 화면에서 다시 시도하면 프로필 응답을 기다리는 동안에도 바로 로딩을 보인다.
+        if (uiState.value.sections.isEmpty()) {
+            updateState { copy(loadState = AdminChallengerLoadState.LOADING) }
+        }
         viewModelScope.launch {
             // 상세 조회 권한이 생길 수 없는 역할(파트장·기타 운영진·지부장)은 목록 대신 권한 안내를 보인다.
+            // 역할이 바뀌었을 수 있어 탭에 들어올 때마다 서버 프로필로 판정한다.
             // 내 정보를 끝내 못 얻으면 지금처럼 목록을 조회하고 판단은 서버에 맡긴다.
-            val canManage = loadMyInfo()?.canManageChallengerPoints() ?: true
+            val canManage = loadMyInfo(preferServer = true)?.canManageChallengerPoints() ?: true
             if (!canManage) {
                 challengerListJob?.cancel()
                 updateState { copy(manageAccess = AdminChallengerAccess.DENIED, sections = persistentListOf()) }
                 return@launch
             }
             updateState { copy(manageAccess = AdminChallengerAccess.ALLOWED) }
+            // 프로필을 받는 사이 검색·파트 변경으로 조회가 이미 시작됐으면 그 조회가 최신 조건이라 다시 시작하지 않는다.
+            if (challengerListJob?.isActive == true) return@launch
             // 이미 목록이 있으면 탭 재진입 때 깜빡임 없이 조용히 갱신하고, 비었거나 오류였으면 로딩을 보인다.
             getChallengers(showLoading = uiState.value.sections.isEmpty())
         }
     }
 
-    //저장된 내 정보. 로그아웃하면 id 만 지워지고 역할은 남으므로 id 로 유효한지 본다.
-    private suspend fun loadMyInfo(): UserInfo? {
+    //내 정보. preferServer 면 서버 프로필을 먼저 받고(성공하면 저장 정보도 갱신된다), 실패하면 저장 정보를 쓴다.
+    //로그아웃하면 id 만 지워지고 역할은 남으므로 저장 정보는 id 로 유효한지 본다.
+    private suspend fun loadMyInfo(preferServer: Boolean = false): UserInfo? {
+        if (preferServer) {
+            (getMyProfileUseCase() as? ApiState.Success)?.data?.let { return it }
+        }
         val cached = getUserInfoUseCase().first()
         if (cached.id > 0L) return cached
+        if (preferServer) return null
         return (getMyProfileUseCase() as? ApiState.Success)?.data
     }
 
@@ -112,7 +124,8 @@ class AdminChallengerViewModel @Inject constructor(
         selectedPart: UserPart? = uiState.value.selectedPart,
         showLoading: Boolean = true,
     ) {
-        if (uiState.value.manageAccess == AdminChallengerAccess.DENIED) return
+        // 권한을 확인하기 전(CHECKING)이나 권한이 없을 때(DENIED)는 목록을 조회하지 않는다.
+        if (uiState.value.manageAccess != AdminChallengerAccess.ALLOWED) return
         challengerListJob?.cancel()
         challengerListJob = viewModelScope.launch {
             if (debounce) delay(300)
