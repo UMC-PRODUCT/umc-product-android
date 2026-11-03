@@ -66,7 +66,7 @@ fun ScheduleDateCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                UText(text = AppStrings.ALLDAY, style = UmcTypographyTokens.Callout, color = grey600())
+                UText(text = AppStrings.COMMON_ALLDAY, style = UmcTypographyTokens.Callout, color = grey600())
                 USwitch(
                     checked = uiState.isAllDay,
                     onCheckedChange = onAlldayChanged,
@@ -80,7 +80,7 @@ fun ScheduleDateCard(
 
             //시작 일시
             DateTimeRow(
-                label = AppStrings.START,
+                label = AppStrings.COMMON_START,
                 dateText = uiState.startDateText,
                 timeText = uiState.startTimeText,
                 showTime = !uiState.isAllDay,
@@ -91,7 +91,7 @@ fun ScheduleDateCard(
 
             //종료 일시
             DateTimeRow(
-                label = AppStrings.END,
+                label = AppStrings.COMMON_END,
                 dateText = uiState.endDateText,
                 timeText = uiState.endTimeText,
                 showTime = !uiState.isAllDay,

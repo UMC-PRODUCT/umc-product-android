@@ -295,12 +295,12 @@ fun CommunityChattingScreen(
             state.hasMore -> {
                 if (navigationCursors.add(state.nextBefore)) onLoadPrevious()
                 else {
-                    navigationMessage = "원문을 불러오지 못했어요. 다시 시도해주세요."
+                    navigationMessage = AppStrings.CHAT_SOURCE_LOAD_ERROR
                     navigationTarget = null
                 }
             }
             else -> {
-                navigationMessage = "원문을 찾을 수 없어요."
+                navigationMessage = AppStrings.CHAT_SOURCE_NOT_FOUND_ERROR
                 navigationTarget = null
             }
         }
@@ -583,7 +583,7 @@ fun CommunityChattingScreen(
             Column {
                 ChatTopBar(
                     title = state.thread?.title.orEmpty().ifBlank { AppStrings.CHAT_ROOM_DEFAULT },
-                    subtitle = state.thread?.let { "${it.category.chatLabel} · ${it.memberCount}명" }.orEmpty(),
+                    subtitle = state.thread?.let { AppStrings.CHAT_THREAD_SUBTITLE_FORMAT.format(it.category.chatLabel, it.memberCount) }.orEmpty(),
                     canSummarize = state.canSummarize,
                     onBack = onBack,
                     isMuted = state.thread?.isMuted == true,
@@ -1460,7 +1460,7 @@ private fun ChatTopBar(
                     containerColor = white(),
                     shadowElevation = 8.dp,
                     ) {
-                    ThreadMenuSectionTitle(if (canSummarize) AppStrings.CHAT_MENU_SUMMARY_SETTINGS else "설정")
+                    ThreadMenuSectionTitle(if (canSummarize) AppStrings.CHAT_MENU_SUMMARY_SETTINGS else AppStrings.COMMON_SETTING)
                     if (canSummarize) {
                     ThreadMenuItem(AppStrings.CHAT_MENU_SUMMARY) {
                         menuExpanded = false
@@ -1602,11 +1602,11 @@ private val MESSAGE_TIME_MIN_WIDTH = 32.dp
 
 private val CommunityThreadCategory.chatLabel: String
     get() = when (this) {
-        CommunityThreadCategory.STUDY -> "스터디"
-        CommunityThreadCategory.QNA -> "질문"
-        CommunityThreadCategory.PROJECT -> "프로젝트"
-        CommunityThreadCategory.FREE -> "자유"
-        CommunityThreadCategory.UNKNOWN -> "기타"
+        CommunityThreadCategory.STUDY -> AppStrings.COMMUNITY_CATEGORY_STUDY
+        CommunityThreadCategory.QNA -> AppStrings.COMMON_QNA
+        CommunityThreadCategory.PROJECT -> AppStrings.COMMUNITY_CATEGORY_PROJECT
+        CommunityThreadCategory.FREE -> AppStrings.COMMUNITY_CATEGORY_FREE
+        CommunityThreadCategory.UNKNOWN -> AppStrings.COMMUNITY_CATEGORY_OTHER
     }
 
 internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
@@ -2008,7 +2008,7 @@ private fun MessageBubbleContent(
     showReplySnippet: Boolean = true,
 ) {
     if (message.deletedAt != null || message.status == "DELETED") {
-        UText("삭제된 메시지예요.", modifier = modifier.padding(12.dp))
+        UText(AppStrings.CHAT_DELETED_MESSAGE, modifier = modifier.padding(12.dp))
         return
     }
     var imageViewerIndex by remember(message.messageId) { mutableStateOf<Int?>(null) }
@@ -2324,7 +2324,7 @@ private fun MessageActionPopup(
                         MessageActionItem(AppStrings.CHAT_ACTION_REPLY, R.drawable.ic_forward_circle, onClick = onReply)
                     }
                     if (!isViewOnly && canEdit) {
-                        MessageActionItem("수정", R.drawable.ic_edit, onClick = onEdit)
+                        MessageActionItem(AppStrings.CHAT_EDIT_MESSAGE_ACTION, R.drawable.ic_edit, onClick = onEdit)
                     }
                     MessageActionItem(AppStrings.CHAT_ACTION_COPY, R.drawable.ic_document, onClick = onCopy)
                     if (!isMine) MessageActionItem(AppStrings.CHAT_ACTION_REPORT, R.drawable.ic_warning, onClick = onReport)

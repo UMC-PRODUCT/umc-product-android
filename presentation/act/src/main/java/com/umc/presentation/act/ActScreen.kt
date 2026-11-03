@@ -37,6 +37,7 @@ import com.umc.presentation.act.admin.challenger.AdminChallengerRoute
 import com.umc.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.umc.presentation.act.normal.challenger.NormalChallengerRoute
 import com.umc.component.component.USwitch
+import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
 import com.umc.component.theme.UmcTheme
@@ -252,8 +253,8 @@ private fun ComingSoonScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "준비 중인 화면입니다.",
+        UText(
+            text = AppStrings.ACTIVITY_COMING_SOON_MESSAGE,
             style = Subheadline,
             color = grey600()
         )

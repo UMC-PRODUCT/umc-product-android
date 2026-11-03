@@ -19,6 +19,7 @@ import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.AppStrings
 
 /**
  * 스레드 수정 화면에서 사용하는 삭제 버튼
@@ -58,7 +59,7 @@ fun CommunityDeleteButton(
         )
 
         UText(
-            text = "스레드 삭제하기",
+            text = AppStrings.COMMUNITY_DELETE_ACTION,
             style = UmcTypographyTokens.HeadlineBold,
             color = red500(),
         )

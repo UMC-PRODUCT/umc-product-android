@@ -303,7 +303,7 @@ fun ProfileTopbar(
             )
         } else {
             UText(
-                text = AppStrings.COMPLETE,
+                text = AppStrings.COMMON_COMPLETE,
                 style = UmcTypographyTokens.CalloutBold,
                 color = main500(),
                 modifier = Modifier

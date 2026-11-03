@@ -17,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
@@ -46,13 +47,13 @@ fun CommunityRecentSearchContent(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             UText(
-                text = "최근 검색어",
+                text = AppStrings.COMMON_RECENT_SEARCH_TITLE,
                 style = UmcTypographyTokens.Title3Bold,
                 color = grey950(),
             )
 
             UText(
-                text = "전체 삭제",
+                text = AppStrings.COMMUNITY_SEARCH_DELETEALL,
                 style = UmcTypographyTokens.Callout,
                 color = grey600(),
                 modifier = Modifier.clickable(

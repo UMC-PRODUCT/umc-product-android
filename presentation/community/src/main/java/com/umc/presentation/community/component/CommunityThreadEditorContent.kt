@@ -34,6 +34,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
@@ -113,8 +114,8 @@ fun CommunityThreadEditorContent(
             .navigationBarsPadding(),
     ) {
         CommunityCreateTopBar(
-            title = if (isEditMode) "스레드 수정하기" else "스레드 만들기",
-            actionText = if (isEditMode) "저장" else "완료",
+            title = if (isEditMode) AppStrings.COMMUNITY_CREATE_EDIT_TITLE else AppStrings.COMMUNITY_CREATE_TITLE,
+            actionText = if (isEditMode) AppStrings.COMMUNITY_CREATE_SAVE else AppStrings.COMMON_COMPLETE,
             isActionEnabled = isSubmitEnabled,
             onBackClick = onBackClick,
             onActionClick = onSubmitClick,
@@ -229,7 +230,7 @@ private fun CommunityThreadEditorFields(
     ) {
         // 미리보기 영역
         UText(
-            text = "미리보기",
+            text = AppStrings.COMMUNITY_CREATE_PREVIEW_LABEL,
             style = UmcTypographyTokens.HeadlineBold,
             color = grey950(),
         )
@@ -260,7 +261,7 @@ private fun CommunityThreadEditorFields(
 
         UText(
             text = communityRequiredLabel(
-                "아이콘"
+                AppStrings.COMMUNITY_CREATE_ICON_LABEL
             ),
             style = UmcTypographyTokens.HeadlineBold,
             color = grey950(),
@@ -295,10 +296,10 @@ private fun CommunityThreadEditorFields(
         // 챌린저 영역 (생성: 초대할 챌린저 선택(필수) / 수정: 현재 참여 중인 챌린저 관리)
         UText(
             text = if (mode is CommunityThreadEditorMode.Edit) {
-                AnnotatedString("챌린저 명단")
+                AnnotatedString(AppStrings.COMMUNITY_CREATE_MEMBER_LIST_LABEL)
             } else {
                 communityRequiredLabel(
-                    "초대할 챌린저"
+                    AppStrings.COMMUNITY_CREATE_INVITE_MEMBER_LABEL
                 )
             },
             style = UmcTypographyTokens.HeadlineBold,

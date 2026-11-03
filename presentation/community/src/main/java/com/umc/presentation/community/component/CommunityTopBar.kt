@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.model.CommunityCategory
@@ -50,7 +51,7 @@ fun CommunityTopBar(
     ) {
         // 화면 제목
         UText(
-            text = "커뮤니티",
+            text = AppStrings.COMMUNITY_TITLE,
             style = UmcTypographyTokens.Title2Bold.copy(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.35.sp,

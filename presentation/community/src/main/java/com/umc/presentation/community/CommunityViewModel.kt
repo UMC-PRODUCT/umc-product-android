@@ -209,7 +209,7 @@ class CommunityViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         errorMessage =
-                            "네트워크 연결을 확인하고 다시 시도해주세요.",
+                            AppStrings.COMMON_NETWORK_ERROR_DESCRIPTION,
                     )
                 }
             }
@@ -320,7 +320,7 @@ class CommunityViewModel @Inject constructor(
                 sendEvent(
                     CommunityEvent.ShowToast(
                         message = throwable.message
-                            ?: "스레드 고정 상태를 변경하지 못했어요.",
+                            ?: AppStrings.COMMUNITY_PIN_UPDATE_ERROR,
                     )
                 )
             }
@@ -355,7 +355,7 @@ class CommunityViewModel @Inject constructor(
                 sendEvent(
                     CommunityEvent.ShowToast(
                         message = throwable.message
-                            ?: "알림 설정을 변경하지 못했어요.",
+                            ?: AppStrings.COMMUNITY_NOTIFICATION_UPDATE_ERROR,
                     )
                 )
             }
@@ -467,7 +467,7 @@ class CommunityViewModel @Inject constructor(
                 sendEvent(
                     CommunityEvent.ShowToast(
                         message = throwable.message
-                            ?: "스레드에서 나가지 못했어요.",
+                            ?: AppStrings.COMMUNITY_LEAVE_ERROR,
                     )
                 )
             }

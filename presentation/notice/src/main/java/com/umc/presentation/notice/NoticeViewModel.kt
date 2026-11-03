@@ -126,7 +126,7 @@ class NoticeViewModel @Inject constructor(
         }
 
         val chipList = mutableListOf(
-            NoticeChipState(text = AppStrings.ALL, isClicked = selectedText == AppStrings.ALL)
+            NoticeChipState(text = AppStrings.COMMON_ALL, isClicked = selectedText == AppStrings.COMMON_ALL)
         )
 
         // 중앙운영사무국 공지(noticeTab=CENTRAL_MEMBER)는 중앙운영진만 조회할 수 있다.
@@ -172,7 +172,7 @@ class NoticeViewModel @Inject constructor(
         val selectedPart = uiState.value.selectedPart
         chipList.add(
             NoticeChipState(
-                text = selectedPart?.label ?: AppStrings.PART,
+                text = selectedPart?.label ?: AppStrings.COMMON_PART,
                 part = selectedPart?.name,
                 hanBottomSheet = true,
                 isClicked = selectedPart != null,
@@ -201,7 +201,7 @@ class NoticeViewModel @Inject constructor(
                 chipList = chipList.map { chip ->
                     // 파트 칩은 다른 칩을 누르면 선택했던 파트 문구를 지우고 초기 상태('파트')로 되돌린다
                     if (chip.hanBottomSheet) {
-                        chip.copy(text = AppStrings.PART, part = null, isClicked = false)
+                        chip.copy(text = AppStrings.COMMON_PART, part = null, isClicked = false)
                     } else {
                         chip.copy(isClicked = chip.text == clickedItem.text)
                     }
@@ -237,7 +237,7 @@ class NoticeViewModel @Inject constructor(
             copy(
                 nowTitle = item.displayText,
                 selectedGisu = item.gisuId.toLong(),
-                selectedChipText = AppStrings.ALL,
+                selectedChipText = AppStrings.COMMON_ALL,
                 selectedPart = null,
                 isShowDropDown = false,
             )
@@ -402,7 +402,7 @@ internal data class NoticeQuery(
  * 가르는 기준이라 소속 칩 값을 그대로 실어 보내면 의미가 어긋난다
  */
 internal fun buildNoticeQuery(state: NoticeUiState, staffNoticeTab: String): NoticeQuery {
-    val selected = state.chipList.firstOrNull { it.isClicked && it.text != AppStrings.ALL }
+    val selected = state.chipList.firstOrNull { it.isClicked && it.text != AppStrings.COMMON_ALL }
         ?: return NoticeQuery(noticeTab = NOTICE_TAB_CHALLENGER)
 
     // 중앙운영사무국 공지: 탭만 바꾼다.
@@ -425,7 +425,7 @@ data class NoticeUiState(
     val selectedGisu: Long = 0,
     val dropdownList: ImmutableList<GisuItem> = persistentListOf(),
     val chipList: ImmutableList<NoticeChipState> = persistentListOf(),
-    val selectedChipText: String = AppStrings.ALL,
+    val selectedChipText: String = AppStrings.COMMON_ALL,
     val selectedPart: UserPart? = null,
     val noticeList: ImmutableList<NoticeSummary> = persistentListOf(),
     val currentPage: Int = 0,

@@ -100,7 +100,7 @@ fun FixLocationRoute(
         } else {
             Toast.makeText(
                 context,
-                "현재 위치를 확인하려면 위치 권한이 필요합니다.",
+                AppStrings.ACT_LOCATION_PERMISSION_REQUIRED_TOAST,
                 Toast.LENGTH_SHORT
             ).show()
         }

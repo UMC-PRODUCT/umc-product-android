@@ -543,7 +543,7 @@ fun ScheduleAddTopBar(
         Spacer(modifier = Modifier.weight(1f))
 
         UText(
-            text = if (editMode) AppStrings.EDIT else AppStrings.REGISTER,
+            text = if (editMode) AppStrings.COMMON_EDIT else AppStrings.COMMON_REGISTER,
             style = UmcTypographyTokens.HeadlineBold,
             color = if (registerOk) main500() else grey400(),
             modifier = Modifier
@@ -712,7 +712,7 @@ fun AttendanceTimeRow(
                 )
             }
             else{
-                UChip(text = "${dateText} · ${timeText}",
+                UChip(text = AppStrings.HOME_SCHEDULE_DATE_TIME_FORMAT.format(dateText, timeText),
                     backgroundColor = main100(),
                     borderColor = grey200(),
                     borderWidth = 0.dp,

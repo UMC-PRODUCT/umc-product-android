@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,7 +57,7 @@ fun UReasonDialog(
     content : String?= null,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    confirmText: String = "확인",
+    confirmText: String = AppStrings.COMMON_CONFIRM,
     onConfirm: () -> Unit = onDismissRequest,
 ) {
     Dialog(onDismissRequest = onDismissRequest) {

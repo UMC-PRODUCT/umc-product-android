@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
@@ -60,7 +61,7 @@ fun CommunityErrorContent(
 
         // 에러 상태 제목
         UText(
-            text = "스레드를 불러오지 못했어요.",
+            text = AppStrings.COMMUNITY_LOAD_ERROR_TITLE,
             style = UmcTypographyTokens.HeadlineBold,
             color = grey600(),
             textAlign = TextAlign.Center,
@@ -70,7 +71,7 @@ fun CommunityErrorContent(
 
         // 네트워크 확인 안내 문구
         UText(
-            text = "네트워크 연결을 확인하고 다시 시도해주세요.",
+            text = AppStrings.COMMUNITY_LOAD_ERROR_DESCRIPTION,
             style = UmcTypographyTokens.Subheadline,
             color = grey500(),
             textAlign = TextAlign.Center,
@@ -80,7 +81,7 @@ fun CommunityErrorContent(
 
         // 스레드 목록 재조회 버튼
         UButton(
-            text = "다시 시도하기",
+            text = AppStrings.COMMUNITY_RETRY,
             onClick = onRetryClick,
             modifier = Modifier
                 .padding(top = 24.dp)

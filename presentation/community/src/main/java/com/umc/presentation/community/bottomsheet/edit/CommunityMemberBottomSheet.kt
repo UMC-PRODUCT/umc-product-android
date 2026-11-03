@@ -1,5 +1,6 @@
 package com.umc.presentation.community.bottomsheet.edit
 
+import com.umc.component.theme.AppStrings
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -132,7 +133,7 @@ fun CommunityMemberBottomSheet(
                 is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
                     focusManager.clearFocus()
                     keyboard?.hide()
-                    val message = "${event.addedMemberCount}명을 추가했어요."
+                    val message = AppStrings.COMMUNITY_MEMBER_ADD_SUCCESS_FORMAT.format(event.addedMemberCount)
 
                     Toast.makeText(
                         context,
@@ -197,9 +198,9 @@ private fun CommunityMemberSheetContent(
     ) {
         CommunityMemberBottomSheetHeader(
             title = if (isSearchMode) {
-                "초대할 챌린저를 검색하세요"
+                AppStrings.COMMUNITY_MEMBER_SEARCH_TITLE
             } else {
-                "초대할 챌린저를 추가하세요"
+                AppStrings.COMMUNITY_MEMBER_ADD_TITLE
             },
             isSearching = isSearchMode,
             isConfirmEnabled = if (isSearchMode) state.isConfirmEnabled else state.canManage && !state.isUpdatingMembers,
@@ -221,7 +222,7 @@ private fun CommunityMemberSheetContent(
             value = state.query,
             onValueChange = onQueryChange,
             modifier = searchFieldModifier,
-            placeholder = "이름을 입력해주세요",
+            placeholder = AppStrings.COMMUNITY_MEMBER_NAME_PLACEHOLDER,
             fieldHeight = 52.dp,
             showClearButton = true,
         )
@@ -258,9 +259,9 @@ private fun CommunityMemberSheetContent(
                 state.isEmpty -> {
                     CommunityMemberEmptyContent(
                         text = if (state.isSearching) {
-                            "검색 결과가 없습니다."
+                            AppStrings.COMMUNITY_SEARCH_EMPTY
                         } else {
-                            "아직 초대한 챌린저가 없어요"
+                            AppStrings.COMMUNITY_MEMBER_EMPTY
                         },
                         iconRes = if (state.isSearching) R.drawable.ic_search else R.drawable.ic_community_invite_empty,
                     )
@@ -316,7 +317,7 @@ internal fun CommunityMemberBottomSheetHeader(
             modifier = Modifier.weight(1f).heightIn(min = 32.dp),
         )
         UButton(
-            text = if (isUpdatingMembers) "처리 중" else if (isSearching) "초대" else "추가",
+            text = if (isUpdatingMembers) AppStrings.COMMUNITY_MEMBER_PROCESSING else if (isSearching) AppStrings.COMMUNITY_MEMBER_INVITE else AppStrings.COMMUNITY_MEMBER_ADD,
             onClick = onConfirmClick,
             enabled = isConfirmEnabled,
             modifier = Modifier.widthIn(min = 50.dp).heightIn(min = 32.dp),

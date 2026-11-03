@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -54,7 +55,7 @@ fun UInfoChip(
     modifier: Modifier = Modifier,
 ) {
     val chipText = when (type) {
-        UInfoChipType.SCHOOL -> text.ifBlank { "알수없음" }
+        UInfoChipType.SCHOOL -> text.ifBlank { AppStrings.COMPONENT_UNKNOWN_SCHOOL }
         UInfoChipType.PART -> text.toPartLabel()
     }
     val colors = when (type) {

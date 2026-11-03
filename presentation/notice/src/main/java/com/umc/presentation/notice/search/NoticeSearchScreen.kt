@@ -165,7 +165,7 @@ fun NoticeSearchScreen(
             Spacer(modifier = Modifier.width(16.dp))
 
             UText(
-                text = AppStrings.CANCEL,
+                text = AppStrings.COMMON_CANCEL,
                 style = UmcTypographyTokens.HeadlineBold,
                 color = grey950(),
                 modifier = Modifier.clickable { onClickCancel() },

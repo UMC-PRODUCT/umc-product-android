@@ -182,7 +182,7 @@ fun ReceivedCardScreen(
                 exit = fadeOut()
             ) {
                 UText(
-                    text = AppStrings.CANCEL,
+                    text = AppStrings.COMMON_CANCEL,
                     style = UmcTypographyTokens.HeadlineBold,
                     color = grey950(),
                     modifier = Modifier

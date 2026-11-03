@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -119,9 +120,9 @@ fun UText(
 @Composable
 fun getGrowthText(day: Int): AnnotatedString = buildAnnotatedString {
     withStyle(style = SpanStyle(color = main600())) {
-        append("${day}일째")
+        append(AppStrings.COMPONENT_GROWTH_DAY_FORMAT.format(day))
     }
     withStyle(style = SpanStyle(color = grey800())) {
-        append(" 성장하고 있어요")
+        append(AppStrings.COMPONENT_GROWTH_SUFFIX)
     }
 }

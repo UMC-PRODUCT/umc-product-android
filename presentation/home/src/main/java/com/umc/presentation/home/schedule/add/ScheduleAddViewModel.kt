@@ -1,5 +1,6 @@
 package com.umc.presentation.home.schedule.add
 
+import com.umc.component.theme.AppStrings
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
@@ -228,14 +229,18 @@ constructor(
             val summaryText = when {
                 selectedOnes.isEmpty() -> ""
                 selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
-                else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
+                else -> AppStrings.HOME_SCHEDULE_CATEGORY_SUMMARY_FORMAT.format(
+                    selectedOnes.take(3).joinToString(", ") { it.name }, selectedOnes.size - 3
+                )
             }
 
             //7. 참석자 매칭
             val participantSummaryText = when {
                 participants.isEmpty() -> ""
                 participants.size == 1 -> participants[0].name
-                else -> "${participants[0].name} 외 ${participants.size - 1}명"
+                else -> AppStrings.HOME_SCHEDULE_PARTICIPANT_SUMMARY_FORMAT.format(
+                    participants[0].name, participants.size - 1
+                )
             }
 
             //8. 갱신 저장
@@ -680,7 +685,9 @@ constructor(
             val summaryText = when {
                 selectedOnes.isEmpty() -> ""
                 selectedOnes.size <= 3 -> selectedOnes.joinToString(", ") { it.name }
-                else -> "${selectedOnes.take(3).joinToString(", ") { it.name }} 외 ${selectedOnes.size - 3}개"
+                else -> AppStrings.HOME_SCHEDULE_CATEGORY_SUMMARY_FORMAT.format(
+                    selectedOnes.take(3).joinToString(", ") { it.name }, selectedOnes.size - 3
+                )
             }
 
             copy(categories = selectedCategories,
