@@ -146,6 +146,7 @@ data class CommunityMessageReportReceipt(
     val messageId: String = "",
     val reason: CommunityMessageReportReason = CommunityMessageReportReason.ETC,
     val createdAt: String = "",
+    val reasons: List<CommunityMessageReportReason> = emptyList(),
 )
 
 data class CreateCommunityThread(

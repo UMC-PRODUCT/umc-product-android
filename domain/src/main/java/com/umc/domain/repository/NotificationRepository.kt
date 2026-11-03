@@ -4,4 +4,5 @@ import com.umc.domain.model.base.ApiState
 
 interface NotificationRepository {
     suspend fun registerFcmToken(fcmToken: String): ApiState<Unit>
+    suspend fun unregisterFcmInstallation(): ApiState<Unit>
 }

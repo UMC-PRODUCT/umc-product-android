@@ -24,7 +24,7 @@ data class CommunityThreadUiModel(
     /**
      * 내가 강퇴된 스레드인지 여부
      *
-     * TODO: 강퇴 상태 API 스펙 확정 후 매핑 연결 (현재는 항상 false)
+     * 목록 응답의 membershipState 가 KICKED(강퇴 확인 전)일 때 true
      */
     val isKicked: Boolean = false,
 ) {

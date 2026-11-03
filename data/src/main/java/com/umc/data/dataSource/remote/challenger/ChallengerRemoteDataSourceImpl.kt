@@ -2,10 +2,8 @@ package com.umc.data.dataSource.remote.challenger
 
 import com.umc.data.api.ChallengerApi
 import com.umc.data.dataSource.base.apiCall
-import com.umc.data.request.challenger.AddChallengerPointRequest
 import com.umc.data.response.challenger.ChallengerResponse
 import com.umc.data.response.challenger.ChallengerCursorResponse
-import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.mapCatching
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
@@ -74,12 +72,5 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun addChallengerRecordMember(request: ChallengerRecordMemberRequest): ApiState<Unit> {
         return apiCall { challengerApi.addChallengerRecordMember(request) }
-    }
-
-    override suspend fun addChallengerPoint(
-        challengerId: Long,
-        request: AddChallengerPointRequest
-    ): ApiState<MemberResponse> {
-        return apiCall { challengerApi.addChallengerPoint(challengerId, request) }
     }
 }

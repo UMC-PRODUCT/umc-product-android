@@ -2,6 +2,7 @@ package com.umc.failcode
 
 import androidx.lifecycle.viewModelScope
 import com.kakao.sdk.auth.TokenManagerProvider
+import com.umc.component.fcm.FcmTokenSynchronizer
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -14,6 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpFailViewModel @Inject constructor(
+    private val tokenSynchronizer: FcmTokenSynchronizer,
     private val clearTokensUseCase: ClearTokensUseCase,
     private val clearAllDataUseCase: ClearAllDataUseCase,
     private val deleteUserUseCase: DeleteUserUseCase,
@@ -40,7 +42,7 @@ class SignUpFailViewModel @Inject constructor(
 
     /** 카카오 토큰 초기화 후 로그인 화면으로 이동 */
     fun onClickLogout() = viewModelScope.launch {
-        clearTokensUseCase()
+        tokenSynchronizer.logout { clearTokensUseCase() }
         emitEvent(SignUpFailEvent.MoveToLogin)
     }
 
@@ -56,7 +58,7 @@ class SignUpFailViewModel @Inject constructor(
             response = deleteUserUseCase(kakaoToken, googleToken),
             successCallback = {
                 viewModelScope.launch {
-                    clearAllDataUseCase()
+                    tokenSynchronizer.logout { clearAllDataUseCase() }
                     emitEvent(SignUpFailEvent.MoveToLogin)
                 }
             },

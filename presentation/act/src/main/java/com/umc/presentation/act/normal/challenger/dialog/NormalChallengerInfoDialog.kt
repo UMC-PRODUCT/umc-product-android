@@ -48,6 +48,7 @@ import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
+import com.umc.component.util.UPointFormat.toPointText
 import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerInfoHistory
 import com.umc.domain.model.enums.CheckHistoryStatus
@@ -144,8 +145,8 @@ fun NormalChallengerInfoDialog(
 
                 InfoStatCard(
                     modifier = Modifier.weight(1f),
-                    title = AppStrings.CHALLENGER_INFO_WARNING_LABEL,
-                    value = formatPoint(model.totalPoints)
+                    title = AppStrings.CHALLENGER_INFO_TOTAL_SCORE_LABEL,
+                    value = model.totalPoints.toPointText()
                 )
             }
 
@@ -255,14 +256,6 @@ private fun HistoryItemRow(history: ChallengerInfoHistory) {
             style = Subheadline,
             color = grey800()
         )
-    }
-}
-
-private fun formatPoint(point: Double): String {
-    return if (point % 1.0 == 0.0) {
-        point.toInt().toString()
-    } else {
-        point.toString()
     }
 }
 

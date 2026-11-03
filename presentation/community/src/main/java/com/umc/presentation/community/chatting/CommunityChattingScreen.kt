@@ -66,6 +66,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
@@ -121,11 +122,10 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.main600
 import com.umc.presentation.community.bottomsheet.ConversationSummaryBottomSheet
-import com.umc.presentation.community.component.chatting.CommunityChatMemberTag
 import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
 import com.umc.presentation.community.component.chatting.CommunityChatInputBar
 import com.umc.presentation.community.component.chatting.CommunityChatEditInputBar
-import com.umc.presentation.community.component.chatting.communityChatPartTag
+import com.umc.presentation.community.component.chatting.CommunityMessageText
 import com.umc.presentation.community.component.chatting.communityMentionText
 import com.umc.presentation.community.component.chatting.communityMentionNameRanges
 import com.umc.domain.model.community.thread.CommunityMessageReportReason
@@ -145,6 +145,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.net.URI
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.collections.immutable.toImmutableList
 
@@ -174,8 +176,8 @@ fun CommunityChattingScreen(
     val onReact: (CommunityThreadMessage, String) -> Unit = { message, emoji ->
         onAction(CommunityChattingAction.OnReact(message, emoji))
     }
-    val onReportMessage: (String, Set<CommunityMessageReportReason>) -> Unit = { messageId, reason ->
-        onAction(CommunityChattingAction.OnReportMessage(messageId, reason))
+    val onReportMessage: (String, Set<CommunityMessageReportReason>) -> Unit = { messageId, reasons ->
+        onAction(CommunityChattingAction.OnReportMessage(messageId, reasons))
     }
     val onToggleMuted = { onAction(CommunityChattingAction.OnToggleMuted) }
     val onTogglePinned = { onAction(CommunityChattingAction.OnTogglePinned) }
@@ -189,6 +191,19 @@ fun CommunityChattingScreen(
     val onKickMember: (String) -> Unit = { onAction(CommunityChattingAction.OnKickMember(it)) }
     val onTransferOwnership: (String) -> Unit = {
         onAction(CommunityChattingAction.OnTransferOwnership(it))
+    }
+
+    // 강퇴된 스레드(목록의 강퇴 카드에서 진입)는 참여 종료 안내 화면으로 이동
+    if (state.isKicked) {
+        KickedThreadScreen(
+            onBack = onBack,
+            onAcknowledge = { onAction(CommunityChattingAction.OnAcknowledgeKick) },
+            isAcknowledging = state.isAcknowledgingKick,
+            toastData = toastData,
+            toastGeneration = toastGeneration,
+            onToastDismiss = onToastDismiss,
+        )
+        return
     }
 
     if (state.isThreadUnavailable) {
@@ -229,6 +244,7 @@ fun CommunityChattingScreen(
     val deletedMessageIds = remember(state.messages, state.knownDeletedMessageIds) {
         communityDeletedMessageIds(state.messages, state.knownDeletedMessageIds)
     }
+    val replySources = remember(state.messages) { state.messages.associateBy { it.messageId } }
     val displayedMessages = remember(state.messages, deletedMessageIds) {
         communityDisplayedMessages(
             state.messages, deletedMessageIds,
@@ -318,7 +334,20 @@ fun CommunityChattingScreen(
             maxItems = COMMUNITY_CHAT_MAX_IMAGE_COUNT,
         ),
     ) { uris ->
-        onSendImages(uris.take(COMMUNITY_CHAT_MAX_IMAGE_COUNT).map { it.toString() })
+        if (uris.size > COMMUNITY_CHAT_MAX_IMAGE_COUNT) {
+            onSendImages(uris.map { it.toString() })
+        } else if (uris.isNotEmpty()) scope.launch {
+            val selected = uris
+            val error = withContext(Dispatchers.IO) {
+                validateCommunityChatImageSizes(selected.map { communityChatImageSize(context.contentResolver, it) })
+            }
+            when (error) {
+                CommunityChatImageSizeError.IMAGE_TOO_LARGE -> onAction(CommunityChattingAction.OnImageSizeExceeded)
+                CommunityChatImageSizeError.TOTAL_TOO_LARGE -> onAction(CommunityChattingAction.OnImageTotalSizeExceeded)
+                CommunityChatImageSizeError.UNREADABLE -> onAction(CommunityChattingAction.OnImageSizeUnreadable)
+                null -> onSendImages(selected.map { it.toString() })
+            }
+        }
     }
 
     if (state.showOwnershipTransferRequiredDialog) {
@@ -559,8 +588,7 @@ fun CommunityChattingScreen(
                     onBack = onBack,
                     isMuted = state.thread?.isMuted == true,
                     isPinned = state.thread?.isPinned == true,
-                    isOwner = state.thread?.myRole == CommunityThreadRole.OWNER,
-                    canManage = state.thread?.myRole in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN),
+                    canManage = state.thread?.myRole.canManageCommunityThread(),
                     showMoreMenu = state.thread != null && !isViewOnly,
                     onSummary = onUnreadSummary,
                     onToggleMuted = onToggleMuted,
@@ -588,6 +616,23 @@ fun CommunityChattingScreen(
                     onEditThread = onEditThread,
                     onDeleteThread = onDeleteThread,
                 )
+                if (state.blockedMembersStatus != BlockedMembersStatus.LOADED) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            if (state.blockedMembersStatus == BlockedMembersStatus.FAILED) AppStrings.CHAT_BLOCK_STATUS_FAILED
+                            else AppStrings.CHAT_BLOCK_STATUS_LOADING,
+                            modifier = Modifier.weight(1f), color = grey600(), style = UmcTypographyTokens.Footnote,
+                        )
+                        if (state.blockedMembersStatus == BlockedMembersStatus.FAILED) {
+                            TextButton(onClick = { onAction(CommunityChattingAction.OnRetryBlockedMembers) }) {
+                                Text("다시 시도", color = main500())
+                            }
+                        }
+                    }
+                }
                 if (showUnreadSummary) {
                     UnreadSummaryCard(
                         unreadCount = newMessageCount,
@@ -707,6 +752,11 @@ fun CommunityChattingScreen(
                         imageUris = state.localImageUrisByMessageId[message.messageId].orEmpty(),
                         member = message.senderId?.let(state.members::get),
                         isMine = isMine,
+                        isBlocked = !isMine && message.senderId in state.blockedMemberIds,
+                        isVisibilityPending = state.isSenderVisibilityPending(message.senderId),
+                        showReplySnippet = state.canShowReplySnippet(replySources[message.replyTo?.messageId]),
+                        isBlockedMessageRevealed = message.messageId in state.revealedBlockedMessageIds,
+                        onToggleBlockedMessage = { onAction(CommunityChattingAction.OnToggleBlockedMessage(message.messageId)) },
                         isViewOnly = isViewOnly,
                         canDelete = isMine || state.thread?.myRole in setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN),
                         onEdit = {
@@ -838,7 +888,11 @@ fun CommunityChattingScreen(
                             onAction(CommunityChattingAction.OnMentionSelected(memberId, start, end))
                         },
                         enabled = true,
-                        replyingMessage = replyingMessage,
+                        replyingMessage = replyingMessage?.let { source ->
+                            val canShow = state.canShowReplySnippet(source) ||
+                                (state.blockedMembersStatus == BlockedMembersStatus.LOADED && source.messageId in state.revealedBlockedMessageIds)
+                            if (canShow) source else source.copy(content = AppStrings.CHAT_REPLY_PREVIEW_HIDDEN)
+                        },
                         onValueChange = onDraftChange,
                         onCamera = {
                             onCamera()
@@ -920,14 +974,14 @@ fun CommunityChattingScreen(
     reportingMessageId?.let { messageId ->
         MessageReportSheet(
             onDismiss = { reportingMessageId = null },
-            onReport = { reason ->
-                pendingReportConfirmation = messageId to reason
+            onReport = { reasons ->
+                pendingReportConfirmation = messageId to reasons.toSet()
                 reportingMessageId = null
             },
         )
     }
 
-    pendingReportConfirmation?.let { (messageId, reason) ->
+    pendingReportConfirmation?.let { (messageId, reasons) ->
         UDialog(
             title = AppStrings.CHAT_REPORT_CONFIRM_TITLE,
             subtitle = AppStrings.CHAT_REPORT_CONFIRM_DESCRIPTION,
@@ -942,7 +996,7 @@ fun CommunityChattingScreen(
             positiveTextColor = red500(),
             onNegative = { pendingReportConfirmation = null },
             onPositive = {
-                onReportMessage(messageId, reason)
+                onReportMessage(messageId, reasons)
                 pendingReportConfirmation = null
             },
             onDismissRequest = { pendingReportConfirmation = null },
@@ -1083,6 +1137,113 @@ private fun ThreadUnavailableScreen(
                 cornerRadius = 8.dp,
             )
             Spacer(Modifier.height(100.dp))
+        }
+    }
+}
+
+/**
+ * 강퇴된 스레드에 진입했을 때의 참여 종료 안내 화면 (Figma `커뮤니티_스레드_강퇴`)
+ *
+ * '커뮤니티로 돌아가기'를 누르면 강퇴 확인을 서버에 저장하고, 뒤로가기는 확인 없이 돌아간다.
+ */
+@Composable
+private fun KickedThreadScreen(
+    onBack: () -> Unit,
+    onAcknowledge: () -> Unit,
+    isAcknowledging: Boolean,
+    toastData: UToastData? = null,
+    toastGeneration: Int = 0,
+    onToastDismiss: () -> Unit = {},
+) {
+    Scaffold(
+        containerColor = grey100(),
+        snackbarHost = {
+            key(toastGeneration) {
+                UToastHost(
+                    data = toastData,
+                    onDismiss = onToastDismiss,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
+        },
+        topBar = {
+            // Figma `TopBar/Community` 참여종료
+            Surface(color = white()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_community_back),
+                            contentDescription = AppStrings.CHAT_CD_BACK,
+                            modifier = Modifier.size(24.dp),
+                            tint = grey950(),
+                        )
+                    }
+                    UText(
+                        text = AppStrings.CHAT_UNAVAILABLE_TOP_BAR,
+                        color = grey950(),
+                        style = UmcTypographyTokens.Title2Bold,
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 64.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            // 아이콘 + 제목
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_community_block),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = grey400(),
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            UText(
+                text = AppStrings.CHAT_UNAVAILABLE_TITLE,
+                color = grey600(),
+                style = UmcTypographyTokens.HeadlineBold,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(4.dp))
+            UText(
+                text = AppStrings.CHAT_KICKED_DESCRIPTION,
+                modifier = Modifier.fillMaxWidth(),
+                color = grey500(),
+                style = UmcTypographyTokens.Subheadline,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(40.dp))
+            UButton(
+                text = AppStrings.CHAT_BACK_TO_COMMUNITY,
+                onClick = onAcknowledge,
+                enabled = !isAcknowledging,
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .fillMaxWidth()
+                    .height(52.dp),
+                backgroundColor = main500(),
+                pressedColor = main600(),
+                textColor = white(),
+                textStyle = UmcTypographyTokens.HeadlineBold,
+                cornerRadius = 8.dp,
+            )
         }
     }
 }
@@ -1228,7 +1389,6 @@ private fun ChatTopBar(
     onBack: () -> Unit,
     isMuted: Boolean,
     isPinned: Boolean,
-    isOwner: Boolean,
     canManage: Boolean,
     showMoreMenu: Boolean,
     onSummary: () -> Unit,
@@ -1338,7 +1498,7 @@ private fun ChatTopBar(
                         menuExpanded = false
                         onThreadInfo()
                     }
-                    if (isOwner) {
+                    if (canManage) {
                         ThreadMenuItem(AppStrings.CHAT_MENU_EDIT_THREAD) {
                             menuExpanded = false
                             onEditThread()
@@ -1436,8 +1596,7 @@ private fun UnreadSummaryCard(
     }
 }
 
-private const val COMMUNITY_DEEP_LINK_HOST = "https://api.university.neordinary.com"
-private const val COMMUNITY_DEEP_LINK_PATH = "/community/threads"
+private const val COMMUNITY_THREAD_SHARE_LINK_BASE = "https://api.university.neordinary.com/community/threads"
 private val INITIAL_UNREAD_SCROLL_OFFSET = 96.dp
 private val MESSAGE_TIME_MIN_WIDTH = 32.dp
 
@@ -1466,7 +1625,7 @@ internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
 
     if (threadId.isBlank()) return rawUrl
 
-    return "$COMMUNITY_DEEP_LINK_HOST$COMMUNITY_DEEP_LINK_PATH?threadId=$threadId"
+    return "$COMMUNITY_THREAD_SHARE_LINK_BASE?threadId=$threadId"
 }
 
 @Composable
@@ -1538,6 +1697,11 @@ private fun ChatMessageRow(
     imageUris: List<String>,
     member: CommunityThreadMember?,
     isMine: Boolean,
+    isBlocked: Boolean,
+    isVisibilityPending: Boolean,
+    showReplySnippet: Boolean,
+    isBlockedMessageRevealed: Boolean,
+    onToggleBlockedMessage: () -> Unit,
     isViewOnly: Boolean,
     canDelete: Boolean,
     onEdit: () -> Unit,
@@ -1551,10 +1715,11 @@ private fun ChatMessageRow(
     onReact: (String) -> Unit,
     onShowMoreEmojis: () -> Unit,
 ) {
-    if (message.type.isSystemNotice) {
+    val isDeleted = message.deletedAt != null || message.status == "DELETED"
+    if (message.type.isSystemNotice || isDeleted) {
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
-                text = message.content.orEmpty(),
+                text = if (isDeleted) DELETED_MESSAGE_NOTICE else message.content.orEmpty(),
                 style = UmcTypographyTokens.Footnote,
                 color = grey500(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -1576,11 +1741,13 @@ private fun ChatMessageRow(
     Box(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (isMine) {
-                MineMessage(message, imageUris, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
+                MineMessage(message, imageUris, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick, showReplySnippet = showReplySnippet)
             } else {
-                OtherMessage(message, imageUris, member, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick)
+                OtherMessage(message, imageUris, member, openMenu, selected = menuExpanded, bubbleModifier = bubbleModifier, onReplySourceClick = onReplySourceClick,
+                    isBlocked = isBlocked, isVisibilityPending = isVisibilityPending, showReplySnippet = showReplySnippet, isBlockedMessageRevealed = isBlockedMessageRevealed,
+                    onToggleBlockedMessage = onToggleBlockedMessage)
             }
-            if (message.reactions.isNotEmpty()) {
+            if (!isVisibilityPending && (!isBlocked || isBlockedMessageRevealed) && message.reactions.isNotEmpty()) {
                 MessageReactions(
                     reactions = message.reactions,
                     isMine = isMine,
@@ -1590,7 +1757,7 @@ private fun ChatMessageRow(
             }
         }
         val anchor = bubbleBounds
-        if (menuExpanded && anchor != null && message.deletedAt == null && message.status != "DELETED") {
+        if (!isVisibilityPending && (!isBlocked || isBlockedMessageRevealed) && menuExpanded && anchor != null && message.deletedAt == null && message.status != "DELETED") {
             MessageActionPopup(
                 messageBounds = anchor,
                 isMine = isMine,
@@ -1664,6 +1831,11 @@ private fun OtherMessage(
     selected: Boolean = false,
     bubbleModifier: Modifier = Modifier,
     onReplySourceClick: () -> Unit = {},
+    isBlocked: Boolean = false,
+    isVisibilityPending: Boolean = false,
+    showReplySnippet: Boolean = true,
+    isBlockedMessageRevealed: Boolean = false,
+    onToggleBlockedMessage: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1675,42 +1847,34 @@ private fun OtherMessage(
                 .weight(1f)
                 .padding(start = 16.dp),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-            ) {
-                Text(
-                    message.senderName.orEmpty().ifBlank { AppStrings.CHAT_UNKNOWN_USER },
-                    color = grey950(),
-                    style = UmcTypographyTokens.SubheadlineBold
-                )
-                if (
-                    member?.role == CommunityThreadRole.ADMIN ||
-                    member?.part == UserPart.ADMIN
-                ) {
-                    CommunityChatMemberTag(AppStrings.CHAT_ADMIN_BADGE, grey950(), white())
-                }
-                member?.part?.takeUnless { it == UserPart.ADMIN }?.let { part ->
-                    val tag = communityChatPartTag(part)
-                    CommunityChatMemberTag(tag.first, tag.second, tag.third)
-                }
-            }
+            Text(
+                message.senderName.orEmpty().ifBlank { AppStrings.CHAT_UNKNOWN_USER },
+                color = grey950(),
+                style = UmcTypographyTokens.SubheadlineBold,
+            )
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Surface(
                     modifier = Modifier.weight(1f, fill = false).then(bubbleModifier),
                     color = when {
-                        message.type == CommunityMessageType.IMAGE -> Color.Transparent
+                        !isBlocked && !isVisibilityPending && message.type == CommunityMessageType.IMAGE -> Color.Transparent
                         selected -> grey200()
                         else -> white()
                     },
                     shape = RoundedCornerShape(12.dp),
                 ) {
-                    MessageBubbleContent(
+                    if (isVisibilityPending) {
+                        Text(AppStrings.CHAT_BLOCK_STATUS_REQUIRED, color = grey500(),
+                            style = UmcTypographyTokens.Subheadline, modifier = Modifier.padding(12.dp))
+                    } else if (isBlocked) {
+                        BlockedMessageBubble(message, imageUris, isBlockedMessageRevealed, onToggleBlockedMessage, onLongClick)
+                    } else MessageBubbleContent(
                         message = message,
+                        showReplySnippet = showReplySnippet,
                         imageUris = imageUris,
                         isMine = false,
                         onLongClick = onLongClick,
+                        onBodyClick = { if (message.replyTo != null) onReplySourceClick() },
                         modifier = Modifier
                             .widthIn(max = 256.dp)
                             .combinedClickable(
@@ -1736,6 +1900,46 @@ private fun OtherMessage(
     }
 }
 
+@Composable
+private fun BlockedMessageBubble(
+    message: CommunityThreadMessage,
+    imageUris: List<String>,
+    revealed: Boolean,
+    onToggle: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.widthIn(max = 256.dp).width(256.dp).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(AppStrings.CHAT_BLOCKED_MESSAGE, color = grey950(), style = UmcTypographyTokens.Subheadline)
+            if (revealed) {
+                if (message.type == CommunityMessageType.IMAGE) {
+                    MessageBubbleContent(message = message, imageUris = imageUris, isMine = false, onLongClick = onLongClick, showReplySnippet = false)
+                } else {
+                    CommunityMessageText(
+                        text = androidx.compose.ui.text.AnnotatedString(message.content.orEmpty()),
+                        color = grey400(), linkColor = grey400(), style = UmcTypographyTokens.Footnote,
+                        onLongClick = onLongClick,
+                    )
+                }
+            }
+        }
+        Box(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                .background(grey100()).clickable(onClick = onToggle)
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (revealed) AppStrings.CHAT_HIDE_BLOCKED_MESSAGE else AppStrings.CHAT_SHOW_BLOCKED_MESSAGE,
+                color = grey700(), style = UmcTypographyTokens.SubheadlineBold,
+            )
+        }
+    }
+}
+
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun MineMessage(
@@ -1745,6 +1949,7 @@ private fun MineMessage(
     selected: Boolean = false,
     bubbleModifier: Modifier = Modifier,
     onReplySourceClick: () -> Unit = {},
+    showReplySnippet: Boolean = true,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1767,9 +1972,11 @@ private fun MineMessage(
         ) {
             MessageBubbleContent(
                 message = message,
+                showReplySnippet = showReplySnippet,
                 imageUris = imageUris,
                 isMine = true,
                 onLongClick = onLongClick,
+                onBodyClick = { if (message.replyTo != null) onReplySourceClick() },
                 modifier = Modifier
                     .widthIn(max = 256.dp)
                     .combinedClickable(
@@ -1797,6 +2004,8 @@ private fun MessageBubbleContent(
     isMine: Boolean,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    onBodyClick: () -> Unit = {},
+    showReplySnippet: Boolean = true,
 ) {
     if (message.deletedAt != null || message.status == "DELETED") {
         UText(AppStrings.CHAT_DELETED_MESSAGE, modifier = modifier.padding(12.dp))
@@ -1868,7 +2077,7 @@ private fun MessageBubbleContent(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = reply.snippet.ifBlank { AppStrings.CHAT_MESSAGE_CONTENT },
+                text = if (showReplySnippet) reply.snippet.ifBlank { AppStrings.CHAT_MESSAGE_CONTENT } else AppStrings.CHAT_REPLY_PREVIEW_HIDDEN,
                 modifier = Modifier.padding(top = 3.dp),
                 color = secondary,
                 style = UmcTypographyTokens.Footnote,
@@ -1881,14 +2090,17 @@ private fun MessageBubbleContent(
                 color = divider,
             )
         }
-        Text(
+        CommunityMessageText(
             text = communityMentionText(
                 message.content.orEmpty(),
                 communityMentionNameRanges(message.content.orEmpty(), message.mentions.map { it.name }),
                 if (isMine) main100() else main500(),
             ),
             color = foreground,
-            style = UmcTypographyTokens.Subheadline
+            linkColor = if (isMine) white() else main500(),
+            style = UmcTypographyTokens.Subheadline,
+            onClick = onBodyClick,
+            onLongClick = onLongClick,
         )
     }
 }
@@ -2202,7 +2414,7 @@ private fun MessageReportSheet(
     onDismiss: () -> Unit,
     onReport: (Set<CommunityMessageReportReason>) -> Unit,
 ) {
-    var selectedReasons by remember { mutableStateOf(emptySet<CommunityMessageReportReason>()) }
+    var selectedReasons by remember { mutableStateOf<Set<CommunityMessageReportReason>>(emptySet()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss, sheetState = sheetState, containerColor = white(),
@@ -2219,24 +2431,26 @@ private fun MessageReportSheet(
             Spacer(Modifier.height(8.dp))
             Text(AppStrings.CHAT_REPORT_GUIDE, color = grey600(), style = UmcTypographyTokens.Subheadline)
             Spacer(Modifier.height(16.dp))
-            MessageReportReasons.forEach { (reason, label) ->
-                Column(Modifier.fillMaxWidth().height(56.dp)) {
-                    Row(Modifier.fillMaxWidth().weight(1f).toggleable(
-                        value = reason in selectedReasons, role = Role.Checkbox,
-                        onValueChange = { checked -> selectedReasons = if (checked) selectedReasons + reason else selectedReasons - reason },
-                    ), verticalAlignment = Alignment.CenterVertically) {
-                        Text(label, modifier = Modifier.weight(1f), color = grey950(), style = UmcTypographyTokens.Body)
-                        Checkbox(checked = reason in selectedReasons, onCheckedChange = null, modifier = Modifier.size(24.dp),
-                            colors = CheckboxDefaults.colors(checkedColor = main500(), uncheckedColor = grey400(), checkmarkColor = white()))
+            Column {
+                MessageReportReasons.forEach { (reason, label) ->
+                    Column(Modifier.fillMaxWidth().height(56.dp)) {
+                        Row(Modifier.fillMaxWidth().weight(1f).toggleable(
+                            value = reason in selectedReasons, role = Role.Checkbox,
+                            onValueChange = { checked -> selectedReasons = if (checked) selectedReasons + reason else selectedReasons - reason },
+                        ), verticalAlignment = Alignment.CenterVertically) {
+                            Text(label, modifier = Modifier.weight(1f), color = grey950(), style = UmcTypographyTokens.Body)
+                            Checkbox(checked = reason in selectedReasons, onCheckedChange = null, modifier = Modifier.size(24.dp),
+                                colors = CheckboxDefaults.colors(checkedColor = main500(), uncheckedColor = grey400(), checkmarkColor = white()))
+                        }
+                        HorizontalDivider(color = grey200())
                     }
-                    HorizontalDivider(color = grey200())
                 }
             }
             Spacer(Modifier.height(32.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 UButton(text = AppStrings.CHAT_REPORT_CANCEL, onClick = onDismiss, modifier = Modifier.weight(1f).height(52.dp),
                     backgroundColor = grey100(), textColor = grey700(), textStyle = UmcTypographyTokens.HeadlineBold)
-                UButton(text = AppStrings.CHAT_REPORT_ACTION, onClick = { onReport(selectedReasons.toSet()) },
+                UButton(text = AppStrings.CHAT_REPORT_ACTION, onClick = { if (selectedReasons.isNotEmpty()) onReport(selectedReasons.toSet()) },
                     enabled = selectedReasons.isNotEmpty(), modifier = Modifier.weight(1f).height(52.dp),
                     backgroundColor = red100(), textColor = red500(), textStyle = UmcTypographyTokens.HeadlineBold)
             }
@@ -2593,6 +2807,18 @@ private fun CommunityChattingScreenViewOnlyEmptyPreview() {
 private fun CommunityChattingScreenNoAccessPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(threadId = "1", isAccessDenied = true),
+        onAction = {},
+    )
+}
+
+/**
+ * 강퇴된 스레드에 진입했을 때의 참여 종료 화면 Preview (Figma `커뮤니티_스레드_강퇴`)
+ */
+@Preview(showBackground = true, widthDp = 412, heightDp = 917)
+@Composable
+private fun CommunityChattingScreenKickedPreview() {
+    CommunityChattingScreen(
+        state = CommunityChattingState(threadId = "1", isKicked = true),
         onAction = {},
     )
 }

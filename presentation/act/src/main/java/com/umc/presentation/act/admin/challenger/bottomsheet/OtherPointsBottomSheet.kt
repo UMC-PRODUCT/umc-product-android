@@ -52,6 +52,7 @@ import com.umc.component.theme.grey900
 import com.umc.component.theme.green500
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
 import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
+import com.umc.presentation.act.admin.challenger.POINT_DESCRIPTION_MAX_LENGTH
 
 @Composable
 fun OtherPointsRoute(
@@ -278,6 +279,7 @@ private fun ReasonInput(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp),
+        acceptInput = { it.length <= POINT_DESCRIPTION_MAX_LENGTH },
     )
 }
 

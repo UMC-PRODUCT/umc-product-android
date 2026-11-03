@@ -561,11 +561,15 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         apiCall { communityThreadApi.leaveCommunityThread(threadId) }
             .map { it.toChatDomain() }
 
+    override suspend fun acknowledgeKick(threadId: String) =
+        apiCall { communityThreadApi.acknowledgeCommunityThreadKick(threadId) }
+            .map { it.toChatDomain() }
+
     override suspend fun changeMemberRole(threadId: String, memberId: String, role: CommunityThreadRole) =
         apiCall { communityThreadApi.changeMemberRole(threadId, memberId, ChangeMemberRoleRequest(role)) }
 
-    override suspend fun reportMessage(messageId: String, reason: CommunityMessageReportReason) =
-        apiCall { communityThreadApi.reportMessage(messageId, ReportMessageRequest(reason)) }
+    override suspend fun reportMessage(messageId: String, reasons: Set<CommunityMessageReportReason>) =
+        apiCall { communityThreadApi.reportMessage(messageId, ReportMessageRequest(reasons.toList())) }
 
 
     /**

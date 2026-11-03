@@ -21,7 +21,7 @@ import com.umc.component.base.CollectUiEvents
  */
 @Composable
 fun CommunityRoute(
-    onNavigateToThreadDetail: (String) -> Unit,
+    onNavigateToThreadDetail: (threadId: String, isKicked: Boolean) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToCreateThread: () -> Unit,
     onNavigateToEditThread: (String) -> Unit,
@@ -42,7 +42,7 @@ fun CommunityRoute(
     CollectUiEvents(viewModel.event) { event ->
         when (event) {
             is CommunityEvent.NavigateToThreadDetail -> {
-                onNavigateToThreadDetail(event.threadId)
+                onNavigateToThreadDetail(event.threadId, event.isKicked)
             }
 
             CommunityEvent.NavigateToSearch -> {

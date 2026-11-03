@@ -83,6 +83,7 @@ import com.umc.domain.model.home.SchedulePlanItem
 import kotlinx.coroutines.flow.collectLatest
 import java.time.YearMonth
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.util.UPointFormat.toPointText
 import kotlinx.collections.immutable.persistentListOf
 
 /**
@@ -833,7 +834,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
 private fun ScoreCard(
     modifier: Modifier,
     label: String,
-    score: Int,
+    score: Double,
     color: Color
 ) {
 
@@ -877,7 +878,7 @@ private fun ScoreCard(
             // 글꼴을 키워도 숫자만 따라 커지고 단위(point)는 UText 로 고정한다
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = score.toString(),
+                    text = score.toPointText(),
                     style = UmcTypographyTokens.CalloutBold.copy(fontSize = 16.sp),
                     color = grey900(),
                     maxLines = 1,
@@ -1010,9 +1011,9 @@ private fun HomeScreenPreview() {
         userType = UserType.ACTIVE,
         growDay = 120,
         activeString = "12기 활동 상태",
-        sangjum = 5,
-        buljum = -2,
-        total = 3,
+        sangjum = 5.0,
+        buljum = -4.5,
+        total = 0.5,
         gisuTag = persistentListOf("10기", "11기", "12기"),
         viewMode = HomeViewMode.CALENDAR,
         // 필요하다면 가짜 일정 리스트도 추가 가능
@@ -1048,9 +1049,9 @@ private fun HomeScreenLargeFontPreview() {
             userType = UserType.ACTIVE,
             growDay = 120,
             activeString = "12기 활동 상태",
-            sangjum = 10,
-            buljum = -10,
-            total = 100,
+            sangjum = 10.0,
+            buljum = -10.5,
+            total = -0.5,
             gisuTag = persistentListOf("10기", "11기", "12기"),
             viewMode = HomeViewMode.CALENDAR,
             dailyPlans = persistentListOf()

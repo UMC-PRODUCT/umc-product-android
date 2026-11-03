@@ -29,6 +29,8 @@ import com.umc.domain.model.community.thread.CommunityMessageMerge
 import com.umc.domain.model.community.thread.CommunityThreadMemberState
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import com.umc.domain.model.member.MemberBlockChanges
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -69,6 +71,7 @@ class CommunityChattingViewModel @Inject constructor(
     private var manualReconnectInProgress = false
     private var hasCapturedEntryUnreadMessages = false
     private var lastSummaryMessages: List<CommunityThreadMessage> = emptyList()
+    private var blockedQueryGeneration = 0L
     private var summaryGeneration = 0L
     private val recoveryMutex = Mutex()
     private var bufferingRecoveryEvents = false
@@ -85,8 +88,19 @@ class CommunityChattingViewModel @Inject constructor(
 
     init {
         observeCurrentMember()
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            MemberBlockChanges.events.collect { change ->
+                if (change.ownerId.toString() == state.value.myMemberId) {
+                    blockedQueryGeneration++
+                    blockedMembersJob?.cancel()
+                    summaryGeneration++
+                    updateState { withMemberBlockChange(change.memberId.toString(), change.blocked) }
+                }
+            }
+        }
         checkAiAvailability()
-        if (state.value.threadId.isNotBlank()) {
+        // 강퇴된 스레드는 상세·메시지를 불러올 수 없으므로 바로 참여 종료 화면을 보여준다
+        if (state.value.threadId.isNotBlank() && !state.value.isKicked) {
             bootstrap()
         } else {
             stopRealtime()
@@ -95,6 +109,8 @@ class CommunityChattingViewModel @Inject constructor(
 
     fun onAction(action: CommunityChattingAction) {
         when (action) {
+            CommunityChattingAction.OnRetryBlockedMembers -> refreshBlockedMembers()
+            is CommunityChattingAction.OnToggleBlockedMessage -> updateState { toggleBlockedMessage(action.messageId) }
             is CommunityChattingAction.OnStartEdit -> {
                 val message = state.value.messages.find { it.messageId == action.messageId }
                 if (message != null && state.value.editCommandId == null) updateState {
@@ -136,7 +152,7 @@ class CommunityChattingViewModel @Inject constructor(
                 summarizeUnreadMessages()
             CommunityChattingAction.OnRetryUnreadSummary -> {
                 updateState { copy(aiFeatureStatus = null) }
-                summarizeUnreadMessages(requestedMessages = lastSummaryMessages)
+                summarizeUnreadMessages(requestedMessages = lastSummaryMessages.takeIf { it.isNotEmpty() })
             }
             CommunityChattingAction.OnDismissUnreadSummary -> {
                 summaryGeneration++
@@ -151,6 +167,15 @@ class CommunityChattingViewModel @Inject constructor(
             }
             CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
             is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
+            CommunityChattingAction.OnImageSizeExceeded -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지는 한 장당 최대 10MiB까지 전송할 수 있어요.")
+            )
+            CommunityChattingAction.OnImageTotalSizeExceeded -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지는 총합 40MiB까지 전송할 수 있어요.")
+            )
+            CommunityChattingAction.OnImageSizeUnreadable -> emitEvent(
+                CommunityChattingEvent.ShowError("이미지 용량을 확인할 수 없어요. 다시 선택해주세요.")
+            )
             is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value, action.changeStart, action.changeEnd)
             is CommunityChattingAction.OnSendClick -> sendText(
                 content = state.value.draft,
@@ -172,6 +197,7 @@ class CommunityChattingViewModel @Inject constructor(
             is CommunityChattingAction.OnRetryPending -> retryPendingMessage(action.clientMessageId)
             is CommunityChattingAction.OnDismissPending -> dismissPendingMessage(action.clientMessageId)
             CommunityChattingAction.OnRetryLoad -> bootstrap()
+            CommunityChattingAction.OnAcknowledgeKick -> acknowledgeKick()
             CommunityChattingAction.OnInviteParticipants -> emitEvent(
                 CommunityChattingEvent.OpenInviteParticipants
             )
@@ -308,7 +334,11 @@ class CommunityChattingViewModel @Inject constructor(
                 requestedMessages != null -> requestedMessages
                 else -> current.summaryCandidateMessages
             }
-            val input = SummarizeUnreadChatUseCase.prepareInput(boundedMessages.asReversed())
+            if (current.blockedMembersStatus != BlockedMembersStatus.LOADED) {
+                updateState { copy(unreadSummaryError = AppStrings.CHAT_BLOCK_STATUS_REQUIRED) }
+                return@launch
+            }
+            val input = SummarizeUnreadChatUseCase.prepareInput(current.summaryInputMessages(boundedMessages).asReversed())
             val targetMessages = input.messages
 
             if (targetMessages.isEmpty()) {
@@ -681,21 +711,24 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     fun reportMessage(messageId: String, reasons: Set<CommunityMessageReportReason>) = viewModelScope.launch {
+        if (reasons.isEmpty()) return@launch
         val current = uiState.value
         val message = current.messages.find { it.messageId == messageId } ?: return@launch
         if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
-        if (reasons.isEmpty() || !reportingMessageIds.add(messageId)) return@launch
+        if (!reportingMessageIds.add(messageId)) return@launch
         try {
-            val result = submitCommunityMessageReports(reasons) { reason -> threadRepository.reportMessage(messageId, reason) }
-            if (result.failures.isEmpty()) emitEvent(CommunityChattingEvent.MessageReported)
-            else {
-                val failure = result.failures.values.first()
-                val detail = if (failure.code.contains("409") || failure.code.contains("REPORT_ALREADY_EXISTS"))
-                    AppStrings.CHAT_REPORT_ALREADY_EXISTS else failure.message
-                emitEvent(CommunityChattingEvent.ShowError(if (reasons.size > 1)
-                    AppStrings.CHAT_REPORT_PARTIAL_RESULT_FORMAT.format(result.accepted.size, result.failures.size) + " " + detail else detail))
+            when (val result = threadRepository.reportMessage(messageId, reasons)) {
+                is ApiState.Success -> emitEvent(CommunityChattingEvent.MessageReported)
+                is ApiState.Fail -> {
+                    val failure = result.failState
+                    val detail = if (failure.code == "COMMUNITY-0016" || failure.code.contains("409") ||
+                        failure.code.contains("REPORT_ALREADY_EXISTS")) AppStrings.CHAT_REPORT_ALREADY_EXISTS else failure.message
+                    emitEvent(CommunityChattingEvent.ShowError(detail))
+                }
             }
-        } finally { reportingMessageIds.remove(messageId) }
+        } finally {
+            reportingMessageIds.remove(messageId)
+        }
     }
 
     fun retryPendingMessage(clientMessageId: String) = viewModelScope.launch {
@@ -1040,7 +1073,7 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     private fun openDeleteThreadDialog() {
-        if (uiState.value.thread?.myRole != CommunityThreadRole.OWNER) return
+        if (!uiState.value.thread?.myRole.canManageCommunityThread()) return
         updateState { copy(showDeleteDialog = true) }
     }
 
@@ -1049,9 +1082,29 @@ class CommunityChattingViewModel @Inject constructor(
         updateState { copy(showDeleteDialog = false) }
     }
 
+    /**
+     * 강퇴 안내를 확인했음을 서버에 저장한다.
+     *
+     * 확인된 스레드는 목록 조회에서 제외되므로 성공하면 목록을 갱신하며 돌아가고,
+     * 실패하면 안내 화면에 남아 다시 시도할 수 있게 한다.
+     */
+    private fun acknowledgeKick() = viewModelScope.launch {
+        val state = uiState.value
+        if (!state.isKicked || state.isAcknowledgingKick) return@launch
+
+        updateState { copy(isAcknowledgingKick = true) }
+        when (val result = threadRepository.acknowledgeKick(state.threadId)) {
+            is ApiState.Success -> emitEvent(CommunityChattingEvent.KickAcknowledged)
+            is ApiState.Fail -> {
+                updateState { copy(isAcknowledgingKick = false) }
+                emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
+            }
+        }
+    }
+
     private fun deleteThread() = viewModelScope.launch {
         val state = uiState.value
-        if (state.thread?.myRole != CommunityThreadRole.OWNER || state.isDeleting) return@launch
+        if (!state.thread?.myRole.canManageCommunityThread() || state.isDeleting) return@launch
 
         updateState { copy(showDeleteDialog = false, isDeleting = true) }
         when (val result = threadRepository.deleteThread(state.threadId)) {
@@ -1505,10 +1558,48 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
+    private var blockedMembersJob: Job? = null
+
+    private fun refreshBlockedMembers() {
+        blockedMembersJob?.cancel()
+        // 조회 중에도 프로필에서 새로 차단한 메시지가 이전 요약에 노출되지 않게 한다.
+        summaryGeneration++
+        val generation = ++blockedQueryGeneration
+        updateState {
+            withoutUnreadSummary().copy(
+                blockedMembersStatus = BlockedMembersStatus.LOADING,
+                verifiedUnblockedMemberIds = if (blockedMembersStatus == BlockedMembersStatus.LOADED)
+                    confirmedUnblockedSenders() else verifiedUnblockedMemberIds,
+            )
+        }
+        blockedMembersJob = viewModelScope.launch {
+            val result = memberRepository.getBlockedMemberIds()
+            if (generation != blockedQueryGeneration) return@launch
+            when (result) {
+                is ApiState.Success -> {
+                    val ids = result.data.map { it.toString() }.toSet()
+                    if (ids != state.value.blockedMemberIds) summaryGeneration++
+                    updateState {
+                        withoutUnreadSummary().copy(
+                            blockedMembersStatus = BlockedMembersStatus.LOADED,
+                            blockedMemberIds = ids,
+                            verifiedUnblockedMemberIds = (verifiedUnblockedMemberIds + messages.mapNotNull { it.senderId } + members.keys) - ids,
+                            revealedBlockedMessageIds = emptySet(),
+                        )
+                    }
+                }
+                is ApiState.Fail -> updateState { copy(blockedMembersStatus = BlockedMembersStatus.FAILED) }
+            }
+        }
+    }
+
     fun onForegroundChanged(active: Boolean) {
         if (foreground == active) return
         foreground = active
-        if (active) onNetworkAvailable()
+        if (active) {
+            refreshBlockedMembers()
+            onNetworkAvailable()
+        }
     }
 
     fun onNetworkAvailable() {
@@ -1572,5 +1663,6 @@ private fun createInitialChattingState(savedStateHandle: SavedStateHandle): Comm
     return CommunityChattingState(
         threadId = threadId,
         isThreadUnavailable = threadId.isBlank(),
+        isKicked = savedStateHandle.get<Boolean>("isKicked") ?: false,
     )
 }
