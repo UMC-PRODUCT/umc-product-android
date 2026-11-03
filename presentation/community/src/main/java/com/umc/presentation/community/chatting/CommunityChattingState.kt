@@ -9,6 +9,8 @@ import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 import com.umc.domain.model.enums.AiFeatureStatus
 
+enum class BlockedMembersStatus { LOADING, LOADED, FAILED }
+
 data class CommunityChattingState(
     val threadId: String,
     val thread: CommunityThreadDetail? = null,
@@ -16,6 +18,10 @@ data class CommunityChattingState(
     val members: Map<String, CommunityThreadMember> = emptyMap(),
     val memberProfiles: Map<String, CommunityParticipantProfile> = emptyMap(),
     val messages: List<CommunityThreadMessage> = emptyList(),
+    val blockedMembersStatus: BlockedMembersStatus = BlockedMembersStatus.LOADING,
+    val verifiedUnblockedMemberIds: Set<String> = emptySet(),
+    val blockedMemberIds: Set<String> = emptySet(),
+    val revealedBlockedMessageIds: Set<String> = emptySet(),
     val isManagingParticipants: Boolean = false,
     val participantManagementRevision: Int = 0,
     val managedParticipantIds: Set<String> = emptySet(),
@@ -57,7 +63,47 @@ data class CommunityChattingState(
     val errorMessage: String? = null,
     val isThreadUnavailable: Boolean = false,
     val isAccessDenied: Boolean = false,
+    /** 목록의 강퇴 카드(membershipState = KICKED)에서 진입했는지 여부 */
+    val isKicked: Boolean = false,
+    /** 강퇴 확인 API 요청 중 여부 (중복 클릭 방지) */
+    val isAcknowledgingKick: Boolean = false,
 ) : UiState {
+    internal fun toggleBlockedMessage(messageId: String): CommunityChattingState {
+        val message = messages.firstOrNull { it.messageId == messageId } ?: return this
+        if (message.senderId == myMemberId || message.senderId !in blockedMemberIds ||
+            message.type.isSystemNotice || message.deletedAt != null || message.status == "DELETED") return this
+        return copy(revealedBlockedMessageIds = if (messageId in revealedBlockedMessageIds)
+            revealedBlockedMessageIds - messageId else revealedBlockedMessageIds + messageId)
+    }
+
+    internal fun canShowReplySnippet(source: CommunityThreadMessage?): Boolean =
+        source?.senderId?.let { sender -> sender == myMemberId ||
+            (!isSenderVisibilityPending(sender) && sender !in blockedMemberIds) } == true
+
+    internal fun isSenderVisibilityPending(senderId: String?): Boolean =
+        senderId != myMemberId && blockedMembersStatus != BlockedMembersStatus.LOADED &&
+            senderId !in blockedMemberIds && senderId !in verifiedUnblockedMemberIds
+
+    internal fun confirmedUnblockedSenders(): Set<String> =
+        (verifiedUnblockedMemberIds + messages.mapNotNull { it.senderId } + members.keys) - blockedMemberIds
+
+    internal fun withMemberBlockChange(memberId: String, blocked: Boolean): CommunityChattingState =
+        withoutUnreadSummary().copy(
+            blockedMemberIds = if (blocked) blockedMemberIds + memberId else blockedMemberIds - memberId,
+            verifiedUnblockedMemberIds = if (blocked) verifiedUnblockedMemberIds - memberId else verifiedUnblockedMemberIds + memberId,
+            revealedBlockedMessageIds = revealedBlockedMessageIds - messages.filter { it.senderId == memberId }.map { it.messageId }.toSet(),
+        )
+
+    internal fun summaryInputMessages(candidates: List<CommunityThreadMessage>): List<CommunityThreadMessage> =
+        if (blockedMembersStatus != BlockedMembersStatus.LOADED) emptyList()
+        else candidates.filterNot { it.senderId in blockedMemberIds }
+
+    internal fun withoutUnreadSummary(): CommunityChattingState = copy(
+        unreadSummary = null, unreadSummaryError = null, isSummarizingUnread = false,
+        aiDownloadPercent = null, summarizedMessageCount = 0, summaryMessageIds = emptyList(),
+        summaryStart = "", summaryEnd = "", summaryTruncated = false,
+    )
+
     val isLastRemainingOwner: Boolean
         get() = thread?.myRole == CommunityThreadRole.OWNER && thread.memberCount.toIntOrNull() == 1
 

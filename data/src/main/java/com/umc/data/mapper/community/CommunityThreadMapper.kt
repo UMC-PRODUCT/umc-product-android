@@ -8,6 +8,7 @@ import com.umc.domain.model.community.CommunityThread
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadDetail
 import com.umc.domain.model.community.CommunityThreadLastMessage
+import com.umc.domain.model.community.CommunityThreadMembershipState
 import com.umc.domain.model.community.CommunityThreadPage
 import com.umc.domain.model.community.CommunityThreadRole
 
@@ -42,6 +43,7 @@ fun CommunityThreadSummaryResponse.toDomain(): CommunityThread {
         createdAt = createdAt,
         updatedAt = updatedAt,
         isJoined = isJoined,
+        membershipState = membershipState.toMembershipState(),
     )
 }
 
@@ -76,21 +78,14 @@ private fun CommunityThreadLastMessageResponse.toDomain(): CommunityThreadLastMe
     )
 }
 
-private fun String.toThreadCategory(): CommunityThreadCategory {
-    return when (uppercase()) {
-        "STUDY" -> CommunityThreadCategory.STUDY
-        "QNA" -> CommunityThreadCategory.QNA
-        "PROJECT" -> CommunityThreadCategory.PROJECT
-        "FREE" -> CommunityThreadCategory.FREE
-        else -> CommunityThreadCategory.UNKNOWN
-    }
-}
+private fun String.toThreadCategory(): CommunityThreadCategory =
+    CommunityThreadCategory.entries.firstOrNull { it.name == uppercase() }
+        ?: CommunityThreadCategory.UNKNOWN
 
-private fun String?.toThreadRole(): CommunityThreadRole {
-    return when (this?.uppercase()) {
-        "OWNER" -> CommunityThreadRole.OWNER
-        "ADMIN" -> CommunityThreadRole.ADMIN
-        "MEMBER" -> CommunityThreadRole.MEMBER
-        else -> CommunityThreadRole.UNKNOWN
-    }
-}
+// 참여한 적 없는 스레드(null)나 모르는 값은 상태 없음으로 본다
+private fun String?.toMembershipState(): CommunityThreadMembershipState? =
+    CommunityThreadMembershipState.entries.firstOrNull { it.name == this?.uppercase() }
+
+private fun String?.toThreadRole(): CommunityThreadRole =
+    CommunityThreadRole.entries.firstOrNull { it.name == this?.uppercase() }
+        ?: CommunityThreadRole.UNKNOWN

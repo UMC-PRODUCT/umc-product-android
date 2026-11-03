@@ -59,6 +59,7 @@ import com.umc.domain.model.enums.PunishCategory
 import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
 import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
+import com.umc.presentation.act.admin.challenger.POINT_DESCRIPTION_MAX_LENGTH
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -145,7 +146,7 @@ fun PenaltyPointsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             UText(
-                text = AppStrings.MEMO,
+                text = AppStrings.REWARD_ETC_REASON,
                 style = SubheadlineBold,
                 color = grey800()
             )
@@ -302,7 +303,7 @@ private fun MemoInput(
     UTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = AppStrings.COMMON_MEMO_PLACEHOLDER,
+        placeholder = AppStrings.REWARD_ETC_PLACEHOLDER,
         placeholderColor = grey400(),
         textColor = grey800(),
         textStyle = Callout.copy(color = grey800()),
@@ -312,7 +313,8 @@ private fun MemoInput(
         verticalAlignment = Alignment.Top,
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(100.dp),
+        acceptInput = { it.length <= POINT_DESCRIPTION_MAX_LENGTH },
     )
 }
 

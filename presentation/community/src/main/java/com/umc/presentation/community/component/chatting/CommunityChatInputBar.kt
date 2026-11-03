@@ -158,7 +158,7 @@ internal fun CommunityChatInputBar(
                                 )
                                 member.part?.let { part ->
                                     Text(
-                                        text = communityChatPartTag(part).first,
+                                        text = communityChatPartTag(part).label,
                                         color = grey600(), style = UmcTypographyTokens.Footnote,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     )

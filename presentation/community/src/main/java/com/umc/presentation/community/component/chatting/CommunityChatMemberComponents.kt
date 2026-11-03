@@ -22,25 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.umc.component.R
-import com.umc.component.theme.green100
-import com.umc.component.theme.green700
-import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
-import com.umc.component.theme.grey600
-import com.umc.component.theme.main100
-import com.umc.component.theme.main600
-import com.umc.component.theme.red100
-import com.umc.component.theme.red600
 import com.umc.component.theme.white
-import com.umc.component.theme.yellow100
-import com.umc.component.theme.yellow500
-import com.umc.component.theme.yellow600
-import com.umc.component.theme.green500
-import com.umc.component.theme.yellow400
-import com.umc.component.theme.main800
-import com.umc.component.theme.yellow800
-import com.umc.component.theme.mint100
-import com.umc.component.theme.teal600
+import com.umc.component.component.UPartChipColors
+import com.umc.component.component.partChipColors
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.domain.model.enums.UserPart
@@ -77,12 +62,14 @@ internal fun CommunityChatMemberTag(
     text: String,
     background: Color,
     foreground: Color,
+    border: Color? = null, //1dp 테두리. null 이면 그리지 않는다
 ) {
     Text(
         text = text,
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
             .background(background)
+            .then(if (border != null) Modifier.border(1.dp, border, RoundedCornerShape(4.dp)) else Modifier)
             .padding(horizontal = 7.dp, vertical = 4.dp),
         color = foreground,
         fontSize = 10.sp,
@@ -90,25 +77,14 @@ internal fun CommunityChatMemberTag(
     )
 }
 
+/** 참여자 파트 태그의 이름과 색 */
+internal data class CommunityChatPartTag(
+    val label: String,
+    val colors: UPartChipColors,
+)
+
 @Composable
-internal fun communityChatPartTag(part: UserPart): Triple<String, Color, Color> {
-    // 라벨은 UserPart 하나만 쓰고, 여기서는 색만 고른다.
-    val (background, foreground) = when (part) {
-        // 지난 기수 파트. 파트 칩(UInfoChip)과 같은 색을 쓴다.
-        UserPart.ADMIN -> main100() to main600()
-        UserPart.PLAN -> main100() to main800()
-        UserPart.DESIGN -> red100() to red600()
-        UserPart.WEB -> yellow100() to yellow800()
-        UserPart.ANDROID -> mint100() to teal600()
-        UserPart.IOS -> yellow100() to yellow500()
-        UserPart.SPRINGBOOT -> green100() to green500()
-        UserPart.NODEJS -> yellow100() to yellow400()
-
-        // 11기에 생긴 파트
-        UserPart.WEB_PRODUCT_ENGINEER -> yellow100() to yellow600()
-        UserPart.MOBILE_PRODUCT_ENGINEER -> green100() to green700()
-
-        UserPart.UNKNOWN -> grey100() to grey600()
-    }
-    return Triple(part.label, background, foreground)
+internal fun communityChatPartTag(part: UserPart): CommunityChatPartTag {
+    // 라벨은 UserPart 하나만 쓰고, 색은 파트 칩(UInfoChip)과 같은 정의를 쓴다
+    return CommunityChatPartTag(label = part.label, colors = partChipColors(part))
 }

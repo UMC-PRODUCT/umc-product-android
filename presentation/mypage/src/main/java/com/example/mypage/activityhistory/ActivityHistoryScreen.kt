@@ -35,8 +35,15 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.example.mypage.dialog.AddCodeDialog
+import com.example.mypage.mypage.UMC_KAKAO_CHANNEL_ID
+import com.example.mypage.mypage.openKakaoChannel
 import com.umc.component.R
+import com.umc.component.base.CollectUiEvents
 import com.umc.component.component.UButton
+import com.umc.component.component.UDialog
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
@@ -45,12 +52,15 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
+import com.umc.component.theme.grey400
+import com.umc.component.theme.grey800
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
-import com.umc.component.theme.main100
 import com.umc.component.theme.main500
+import com.umc.component.theme.tagColors
 import com.umc.component.theme.white
+import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.mypage.UserActiveItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -66,12 +76,51 @@ fun ActivityHistoryRoute(
     onNavigateToBack: () -> Unit, //뒤로가기
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    CollectUiEvents(viewModel.uiEvent) { event ->
+        when (event) {
+            is ActivityHistoryEvent.RecordAdded ->
+                Toast.makeText(context, AppStrings.ACTIVITY_HISTORY_RECORD_ADDED, Toast.LENGTH_SHORT).show()
+            is ActivityHistoryEvent.ShowToast ->
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     ActivityHistoryScreen(
         uiState = uiState,
         onBackClick = onNavigateToBack,
         onRetryClick = viewModel::onClickRetry,
+        onAddRecordClick = viewModel::onClickAddRecord,
     )
+
+    //챌린저 기록 추가 - 6자리 코드 입력
+    if (uiState.isAddCodeSheetOpen) {
+        AddCodeDialog(
+            code = uiState.code,
+            onCodeChanged = viewModel::onCodeChanged,
+            onConfirmClick = viewModel::addChallengerCode,
+            isSubmitting = uiState.isAddingCode,
+            onDismissRequest = viewModel::onDismissAddCode
+        )
+    }
+
+    //이미 사용된 코드 안내 (문의하기 = UMC 카카오톡 채널)
+    if (uiState.isUsedCodeDialogOpen) {
+        UDialog(
+            title = AppStrings.MYPAGE_ADDCODE_USED_TITLE,
+            content = AppStrings.MYPAGE_ADDCODE_USED_CONTENT,
+            isTwoButton = true,
+            positiveText = AppStrings.MYPAGE_ADDCODE_INQUIRE,
+            negativeText = AppStrings.CONFIRM,
+            positiveTextColor = grey800(),
+            onPositive = {
+                viewModel.onDismissUsedCodeDialog()
+                openKakaoChannel(context, UMC_KAKAO_CHANNEL_ID)
+            },
+            onDismissRequest = viewModel::onDismissUsedCodeDialog
+        )
+    }
 }
 
 @Composable
@@ -79,6 +128,7 @@ fun ActivityHistoryScreen(
     uiState: ActivityHistoryUiState,
     onBackClick: () -> Unit,
     onRetryClick: () -> Unit,
+    onAddRecordClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -107,7 +157,52 @@ fun ActivityHistoryScreen(
                     histories = uiState.histories,
                     isLoading = uiState.isLoading
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AddRecordButton(onClick = onAddRecordClick)
             }
+        }
+    }
+}
+
+/**
+ * 운영진에게 받은 6자리 코드로 챌린저 기록을 추가하는 행 (설정 > 내 활동에서 옮겨 왔다)
+ */
+@Composable
+private fun AddRecordButton(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, grey200()),
+        colors = CardDefaults.cardColors(containerColor = white())
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_plus_circle),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = grey800()
+            )
+            UText(
+                text = AppStrings.MYPAGE_ADDACTIVITY,
+                style = UmcTypographyTokens.Body,
+                color = grey800(),
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f)
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.ic_arrow_next),
+                contentDescription = null,
+                tint = grey400()
+            )
         }
     }
 }
@@ -170,7 +265,7 @@ fun ActiveHistorySection(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(vertical = 16.dp)
+                    .padding(vertical = 13.dp)
             ) {
                 when {
                     histories.isNotEmpty() -> histories.forEach { history ->
@@ -254,15 +349,17 @@ fun ActiveHistoryItem(
             )
 
             // 회장·챌린저처럼 두세 글자 직함은 같은 크기로 보이게 최소 너비를 맞추고, 더 긴 직함만 넓어진다
+            // 색은 역할 태그 체계(100 배경 · 600 글자)를 따른다
+            val roleColors = history.role.tagColors()
             UButton(
                 text = history.position,
                 onClick = {},
                 modifier = Modifier
                     .height(28.dp)
                     .widthIn(min = 56.dp),
-                backgroundColor = main100(),
+                backgroundColor = roleColors.base,
                 borderWidth = 0.dp,
-                textColor = main500(),
+                textColor = roleColors.strong,
                 textStyle = UmcTypographyTokens.FootnoteBold,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 5.dp),
             )
@@ -321,10 +418,12 @@ private fun ActivityHistoryScreenPreview() {
             uiState = ActivityHistoryUiState(
                 // 글자 폭이 다른 기수·직함이 섞여도 칩 크기가 같은지 보이도록 섞어 둔다
                 histories = persistentListOf(
-                    UserActiveItem("12기", "Web Part", "파트장"),
+                    UserActiveItem("12기", "Web Part", "교내 파트장", UserChallengerRole.SCHOOL_PART_LEADER),
                     UserActiveItem("11기", "PM Part", "챌린저"),
-                    UserActiveItem("10기", "중앙대학교 회장", "회장"),
-                    UserActiveItem("11기", "중앙대학교 교내 운영진", "교내 운영진"),
+                    UserActiveItem("10기", "중앙대학교 회장", "교내 회장", UserChallengerRole.SCHOOL_PRESIDENT),
+                    UserActiveItem("11기", "중앙대학교 교내 운영진", "교내 운영진", UserChallengerRole.SCHOOL_ETC_ADMIN),
+                    UserActiveItem("9기", "수달지부 지부장", "지부장", UserChallengerRole.CHAPTER_PRESIDENT),
+                    UserActiveItem("9기", "중앙운영사무국 총괄", "총괄", UserChallengerRole.CENTRAL_PRESIDENT),
                 ),
             ),
             onBackClick = {},

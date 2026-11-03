@@ -131,7 +131,7 @@ private fun CommunityThreadMenuContent(
             // 방장 또는 관리자일 때만 편집 메뉴 표시
             if (thread.canEdit) {
                 CommunityThreadMenuItem(
-                    text = AppStrings.COMMON_EDIT,
+                    text = AppStrings.COMMUNITY_THREAD_MENU_EDIT,
                     onClick = {
                         onEditClick()
                         onDismissRequest()

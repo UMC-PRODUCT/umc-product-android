@@ -4,6 +4,7 @@ import com.umc.domain.model.community.thread.CommunityMessageReportReason
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 
 sealed interface CommunityChattingAction {
+    data object OnRetryBlockedMembers : CommunityChattingAction
     data object OnBackClick : CommunityChattingAction
     data object OnMoreClick : CommunityChattingAction
     data object OnUnreadSummaryClick : CommunityChattingAction
@@ -11,6 +12,9 @@ sealed interface CommunityChattingAction {
     data object OnDismissUnreadSummary : CommunityChattingAction
     data object OnCameraClick : CommunityChattingAction
     data class OnSendImages(val uris: List<String>) : CommunityChattingAction
+    data object OnImageSizeExceeded : CommunityChattingAction
+    data object OnImageTotalSizeExceeded : CommunityChattingAction
+    data object OnImageSizeUnreadable : CommunityChattingAction
     data class OnDraftChanged(val value: String, val changeStart: Int, val changeEnd: Int) : CommunityChattingAction
     data class OnSendClick(val replyToId: String?) : CommunityChattingAction
     data class OnStartEdit(val messageId: String) : CommunityChattingAction
@@ -33,6 +37,8 @@ sealed interface CommunityChattingAction {
     data object OnToggleMuted : CommunityChattingAction
     data object OnTogglePinned : CommunityChattingAction
     data object OnLeave : CommunityChattingAction
+    /** 참여 종료(강퇴) 안내에서 '커뮤니티로 돌아가기' 클릭 */
+    data object OnAcknowledgeKick : CommunityChattingAction
     data object OnDismissOwnershipTransferRequired : CommunityChattingAction
     data class OnRetryPending(val clientMessageId: String) : CommunityChattingAction
     data class OnDismissPending(val clientMessageId: String) : CommunityChattingAction
@@ -45,6 +51,7 @@ sealed interface CommunityChattingAction {
     data class OnKickMember(val memberId: String) : CommunityChattingAction
     data class OnTransferOwnership(val memberId: String) : CommunityChattingAction
     data class OnToggleMemberAdmin(val memberId: String) : CommunityChattingAction
+    data class OnToggleBlockedMessage(val messageId: String) : CommunityChattingAction
     data class OnViewMemberProfile(val memberId: String) : CommunityChattingAction
     data class OnManageParticipants(val memberIds: Set<String>, val action: CommunityParticipantBatchAction) : CommunityChattingAction
 }

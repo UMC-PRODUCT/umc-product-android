@@ -1,9 +1,7 @@
 package com.umc.data.dataSource.remote.challenger
 
-import com.umc.data.request.challenger.AddChallengerPointRequest
 import com.umc.data.response.challenger.ChallengerCursorResponse
 import com.umc.data.response.challenger.ChallengerResponse
-import com.umc.data.response.member.MemberResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
@@ -36,8 +34,6 @@ interface ChallengerRemoteDataSource {
     suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>
 
     suspend fun addChallengerRecordMember(request: ChallengerRecordMemberRequest): ApiState<Unit>
-
-    suspend fun addChallengerPoint(challengerId: Long, request: AddChallengerPointRequest): ApiState<MemberResponse>
 
 
 }

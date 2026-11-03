@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,8 +74,11 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.white
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow400
+import com.umc.component.util.UPointFormat.toPointText
+import com.umc.component.util.UPointFormat.toSignedPointText
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.act.challenger.ChallengerPoint
+import com.umc.domain.model.act.challenger.ChallengerPointPermission
 import com.umc.domain.model.enums.PointType
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.act.admin.challenger.bottomsheet.OtherPointsScreen
@@ -214,6 +218,7 @@ fun AdminChallengerDetailScreen(
         }
 
         val ui = detail.toDetailUi()
+        val permission = uiState.pointPermission
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -224,12 +229,14 @@ fun AdminChallengerDetailScreen(
                 ProfileInfoSection(ui = ui)
             }
 
-            item {
-                ScoreButtons(
-                    onAddClick = onAddScoreClick,
-                    onMinusClick = onMinusScoreClick,
-                    onOtherClick = onOtherScoreClick,
-                )
+            if (permission.canGrant) {
+                item {
+                    ScoreButtons(
+                        onAddClick = onAddScoreClick,
+                        onMinusClick = onMinusScoreClick,
+                        onOtherClick = onOtherScoreClick,
+                    )
+                }
             }
 
             item {
@@ -243,15 +250,16 @@ fun AdminChallengerDetailScreen(
 
             item {
                 HistorySection(
-                    totalRewardScore = ui.totalRewardScore,
-                    totalPenaltyScore = ui.totalPenaltyScore,
+                    totalRewardScore = ui.totalRewardScoreText,
+                    totalPenaltyScore = ui.totalPenaltyScoreText,
                     history = ui.history,
-                    isEditMode = uiState.isDetailEditMode,
+                    // 기록 수정 모드는 지금 삭제만 하므로 삭제 권한(총괄단)이 있을 때만 X 를 보인다.
+                    isEditMode = uiState.isDetailEditMode && permission.canDelete,
                     onDeleteClick = { item -> onDeleteClick(item.id) },
                 )
             }
 
-            if (ui.history.isNotEmpty()) {
+            if (ui.history.isNotEmpty() && permission.canDelete) {
                 item {
                     EditChip(onEditClick = onEditClick)
                 }
@@ -259,7 +267,7 @@ fun AdminChallengerDetailScreen(
         }
     }
 
-    if (uiState.deleteTarget != null && detail != null) {
+    if (uiState.deleteTarget != null && detail != null && uiState.pointPermission.canDelete) {
         UDialog(
             isAccept = false,
             title = AppStrings.CHALLENGER_MANAGE_DELETE_TITLE,
@@ -380,7 +388,7 @@ private fun ProfileInfoSection(ui: ChallengerDetailUi) {
         ) {
             UText(
                 text = AppStrings.CHALLENGER_TOTAL_SCORE_DESCRIPTION_FORMAT.format(
-                    ui.nicknameWithName.split("(").first(), ui.totalScore
+                    ui.nicknameWithName.split("(").first(), ui.totalScoreText
                 ),
                 style = Body,
                 color = grey800()
@@ -525,8 +533,8 @@ private fun OtherScore(
 
 @Composable
 private fun HistorySection(
-    totalRewardScore: Int,
-    totalPenaltyScore: Int,
+    totalRewardScore: String,
+    totalPenaltyScore: String,
     history: ImmutableList<HistoryDetail>,
     isEditMode: Boolean,
     onDeleteClick: (HistoryDetail) -> Unit
@@ -647,9 +655,13 @@ private fun ScoreCountChip(
 private fun HistoryRow(
     item: HistoryDetail, isEditMode: Boolean, onDeleteClick: () -> Unit
 ) {
-    val scoreText = if (item.score > 0) "+${item.score}" else item.score.toString()
-    val scoreBgColor = if (item.score > 0) green100() else red100()
-    val scoreTextColor = if (item.score > 0) green500() else red500()
+    val scoreText = item.score.toSignedPointText()
+    // 0점(구형 경고)은 상점·벌점 어느 쪽도 아니라 중립색으로 둔다.
+    val (scoreBgColor, scoreTextColor) = when {
+        item.score > 0 -> green100() to green500()
+        item.score < 0 -> red100() to red500()
+        else -> grey100() to grey600()
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
@@ -706,59 +718,96 @@ private fun HistoryRow(
 private data class ChallengerDetailUi(
     val nicknameWithName: String,
     val generation: String,
-    val totalScore: Int,
+    val totalScoreText: String,
     val school: String,
     val part: UserPart,
     /** 인프라를 겸하는 챌린저인지 */
     val infra: Boolean,
-    val totalRewardScore: Int,
-    val totalPenaltyScore: Int,
+    val totalRewardScoreText: String,
+    val totalPenaltyScoreText: String,
     val history: ImmutableList<HistoryDetail>
 )
 
 private data class HistoryDetail(
-    val id: Long, val date: String, val content: String, val score: Int
+    val id: Long, val date: String, val content: String, val score: Double
 )
 
 private fun ChallengerManageDialogModel.toDetailUi(): ChallengerDetailUi {
     return ChallengerDetailUi(
         nicknameWithName = AppStrings.CHALLENGER_NAME_NICKNAME_FORMAT.format(nickname, name),
         generation = AppStrings.CHALLENGER_INFO_FORMAT_GENERATION.format(gisu),
-        totalScore = totalScore.toInt(),
+        totalScoreText = totalScore.toPointText(),
         school = university,
         part = part,
         infra = infra,
-        totalRewardScore = rewardScore,
-        totalPenaltyScore = penaltyScore,
+        totalRewardScoreText = rewardScore.toPointText(),
+        totalPenaltyScoreText = penaltyScore.toPointText(),
         history = history.map { point ->
             HistoryDetail(
-                id = point.id, date = point.date, content = point.title, score = point.value.toInt()
+                id = point.id, date = point.date, content = point.title, score = point.value
             )
         }.toImmutableList())
 }
 
-@Preview(showBackground = true, name = "Unfocused State")
+// 상점 2, 벌점 4 + 구형 베스트 워크북 0.5, 구형 경고 0점 → 총점 -2.5
+private val previewDetail = ChallengerManageDialogModel(
+    challengerId = 1L,
+    name = "홍길동",
+    nickname = "닉네임",
+    university = "중앙대학교",
+    part = UserPart.WEB_PRODUCT_ENGINEER,
+    infra = true,
+    gisu = 11,
+    totalScore = -2.5,
+    rewardScore = 2.0,
+    penaltyScore = 4.5,
+    history = listOf(
+        ChallengerPoint(id = 1L, date = "2025.10.01", title = "베스트 워크북 선정", pointType = PointType.BEST_WORKBOOK_V2, value = 2.0),
+        ChallengerPoint(id = 2L, date = "2025.10.08", title = "과제 미수행", pointType = PointType.NO_WORKBOOK_MISSION, value = -4.0),
+        ChallengerPoint(id = 3L, date = "2024.05.01", title = "베스트 워크북 수행", pointType = PointType.BEST_WORKBOOK, value = -0.5),
+        ChallengerPoint(id = 4L, date = "2024.04.01", title = "스터디 미제출", pointType = PointType.WARNING, value = 0.0),
+    )
+)
+
+@PreviewScreenSizes
+@Preview(showBackground = true, name = "총괄단 (부여·삭제 가능)")
 @Composable
 private fun PreviewScreen() {
     UmcTheme(darkTheme = false) {
         AdminChallengerDetailScreen(
             uiState = AdminChallengerUiState(
-                detail = ChallengerManageDialogModel(
-                    challengerId = 1L,
-                    name = "홍길동",
-                    nickname = "닉네임",
-                    university = "중앙대학교",
-                    part = UserPart.WEB_PRODUCT_ENGINEER,
-                    infra = true,
-                    gisu = 11,
-                    rewardScore = 1,
-                    penaltyScore = 1,
-                    history = listOf(
-                        ChallengerPoint(id = 1L, date = "2024.01.01", title = "스터디 미제출", pointType = PointType.WARNING, value = -1.0),
-                        ChallengerPoint(id = 2L, date = "2024.01.01", title = "베스트 워크북 수행", pointType = PointType.BEST_WORKBOOK, value = 1.0)
-                    )
-                ),
-                detailLoadState = AdminChallengerLoadState.SUCCESS
+                detail = previewDetail,
+                detailLoadState = AdminChallengerLoadState.SUCCESS,
+                pointPermission = ChallengerPointPermission(canRead = true, canGrant = true, canEditDescription = true, canDelete = true),
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "총괄단 기록 수정 모드")
+@Composable
+private fun PreviewEditModeScreen() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerDetailScreen(
+            uiState = AdminChallengerUiState(
+                detail = previewDetail,
+                detailLoadState = AdminChallengerLoadState.SUCCESS,
+                isDetailEditMode = true,
+                pointPermission = ChallengerPointPermission(canRead = true, canGrant = true, canEditDescription = true, canDelete = true),
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "중앙 운영국원·교내 회장단 (삭제 불가)")
+@Composable
+private fun PreviewGrantOnlyScreen() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerDetailScreen(
+            uiState = AdminChallengerUiState(
+                detail = previewDetail,
+                detailLoadState = AdminChallengerLoadState.SUCCESS,
+                pointPermission = ChallengerPointPermission(canRead = true, canGrant = true, canEditDescription = true, canDelete = false),
             )
         )
     }

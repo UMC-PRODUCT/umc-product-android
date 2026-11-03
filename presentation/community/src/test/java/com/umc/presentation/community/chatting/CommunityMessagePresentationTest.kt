@@ -47,7 +47,7 @@ class CommunityMessagePresentationTest {
         assertTrue(communityUnreadSummaryCandidates(messages, deletedIds, 0).isEmpty())
     }
 
-    @Test fun deletedSourceIsHiddenAndItsExistingReplyKeepsOnlyTheDeletionNotice() {
+    @Test fun deletedSourceUsesANoticeAndItsExistingReplyKeepsTheOriginalSnippet() {
         val source = CommunityThreadMessage(messageId = "source", content = "원문", status = "DELETED")
         val reply = CommunityThreadMessage(
             messageId = "reply", content = "답장 본문",
@@ -55,18 +55,23 @@ class CommunityMessagePresentationTest {
         )
         val messages = listOf(reply, source)
         val displayed = communityDisplayedMessages(messages, communityDeletedMessageIds(messages))
-        assertEquals(listOf("reply"), displayed.map { it.messageId })
-        assertEquals("답장 본문", displayed.single().content)
-        assertEquals("홍길동", displayed.single().replyTo?.senderName)
-        assertEquals(DELETED_REPLY_SNIPPET, displayed.single().replyTo?.snippet)
+        assertEquals(listOf("source", "reply"), displayed.map { it.messageId })
+        assertEquals(DELETED_MESSAGE_NOTICE, displayed.first().content)
+        assertEquals("DELETED", displayed.first().status)
+        assertEquals("답장 본문", displayed.last().content)
+        assertEquals("홍길동", displayed.last().replyTo?.senderName)
+        assertEquals("원문", displayed.last().replyTo?.snippet)
         assertEquals("원문", reply.replyTo?.snippet)
     }
 
-    @Test fun deletionTimestampHidesTheMessageWithoutAStandalonePlaceholder() {
+    @Test fun deletionTimestampDisplaysANoticeAtTheOriginalPosition() {
         val deleted = CommunityThreadMessage(messageId = "deleted", deletedAt = "2026-10-28T00:00:00Z")
         val normal = CommunityThreadMessage(messageId = "normal", content = "정상")
         val messages = listOf(deleted, normal)
-        assertEquals(listOf(normal), communityDisplayedMessages(messages, communityDeletedMessageIds(messages)))
+        val displayed = communityDisplayedMessages(messages, communityDeletedMessageIds(messages))
+        assertEquals(listOf("normal", "deleted"), displayed.map { it.messageId })
+        assertEquals(normal, displayed.first())
+        assertEquals(DELETED_MESSAGE_NOTICE, displayed.last().content)
     }
 
     @Test fun knownDeletionSurvivesAnUnloadedSourceAndAStaleHistoryResponse() {
@@ -75,8 +80,12 @@ class CommunityMessagePresentationTest {
         )
         val staleSource = CommunityThreadMessage(messageId = "source", content = "이전 원문")
         val deletedIds = communityDeletedMessageIds(listOf(reply), setOf("source"))
-        assertEquals(DELETED_REPLY_SNIPPET, communityDisplayedMessages(listOf(reply), deletedIds).single().replyTo?.snippet)
-        assertEquals(listOf("reply"), communityDisplayedMessages(listOf(reply, staleSource), deletedIds).map { it.messageId })
+        assertEquals("이전 원문", communityDisplayedMessages(listOf(reply), deletedIds).single().replyTo?.snippet)
+        val displayed = communityDisplayedMessages(listOf(reply, staleSource), deletedIds)
+        assertEquals(listOf("source", "reply"), displayed.map { it.messageId })
+        assertEquals(DELETED_MESSAGE_NOTICE, displayed.first().content)
+        assertEquals("DELETED", displayed.first().status)
+        assertEquals(reply, displayed.last())
     }
 
     @Test fun anUnloadedOriginalIsNotAssumedDeleted() {
@@ -85,5 +94,25 @@ class CommunityMessagePresentationTest {
         )
         val messages = listOf(reply)
         assertEquals(reply, communityDisplayedMessages(messages, communityDeletedMessageIds(messages)).single())
+    }
+
+    @Test fun deletedImageAndReplyExposeOnlyTheDeletionNotice() {
+        val source = CommunityThreadMessage(
+            messageId = "deleted-image",
+            type = com.umc.domain.model.community.thread.CommunityMessageType.IMAGE,
+            content = "이전 이미지 주소",
+            fileMetadataIds = listOf("file"),
+            files = listOf(com.umc.domain.model.community.thread.CommunityMessageFile(fileId = "file")),
+            replyTo = CommunityReplyTo("older", "이름", "이전 인용문"),
+            reactions = listOf(com.umc.domain.model.community.thread.CommunityReaction(emoji = "👍")),
+        )
+        val displayed = communityDisplayedMessages(listOf(source), setOf(source.messageId)).single()
+        assertEquals(DELETED_MESSAGE_NOTICE, displayed.content)
+        assertEquals("DELETED", displayed.status)
+        assertTrue(displayed.files.isEmpty())
+        assertTrue(displayed.fileMetadataIds.isEmpty())
+        assertTrue(displayed.reactions.isEmpty())
+        assertNull(displayed.replyTo)
+        assertEquals("이전 이미지 주소", source.content)
     }
 }

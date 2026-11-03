@@ -4,7 +4,7 @@ import android.net.Uri
 
 /** Shared by data notifications and the launcher extras of background mixed notifications. */
 data class CommunityNotification(val threadId: String, val eventId: String?) {
-    fun uri(): Uri = Uri.parse("https://api.university.neordinary.com/community/threads")
+    fun uri(): Uri = Uri.parse("umc://thread")
         .buildUpon().appendQueryParameter("threadId", threadId).build()
 
     companion object {

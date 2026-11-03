@@ -89,6 +89,7 @@ object AppStrings {
     const val DIALOG_TIME_FORMAT_HINT = "12:00"
     const val DIALOG_MINUTE = "분"
     const val COMPONENT_TIME_SELECT = "시간 선택"
+    const val COMPONENT_UNKNOWN_SCHOOL = "알수없음"
     const val COMPONENT_GROWTH_DAY_FORMAT = "%d일째"
     const val COMPONENT_GROWTH_SUFFIX = " 성장하고 있어요"
     // 홈 화면
@@ -191,13 +192,16 @@ object AppStrings {
     const val HOME_LOCATION_SEARCH_FAILED = "장소 검색에 실패했습니다."
 
     // 내 명함 화면
-    const val MYCARD_INTRODUCE = "Business card"
+    const val MYCARD_INTRODUCE = "BUSINESS CARD"
+    const val MYCARD_GENERATION_FORMAT = "GEN.%d"
+    const val MYCARD_BACK_EMPTY_TITLE = "등록된 연락처와 소개 링크가 없어요"
+    const val MYCARD_BACK_EMPTY_DESCRIPTION = "프로필 정보 편집에서 정보를 추가해 명함을 완성해 보세요."
     const val MYCARD_EXCHANGE_CARD = "명함 교환"
     const val MYCARD_QRCODE = COMMON_QR_CODE
     const val MYCARD_CARD_TITLE = "명함 관리"
     const val RECEIVED_CARD_TITLE = "받은 명함"
     const val MYCARD_CARD_CONTENT_RECEIVED = RECEIVED_CARD_TITLE
-    const val MYCARD_CARD_EDIT = "명함 편집"
+    const val MYCARD_CARD_EDIT = "프로필 정보 편집"
     const val MYCARD_ACTVITY_TITLE = "나의 활동"
     const val MYCARD_ACTVITY_MYSTUDY = "나의 스터디"
     const val ACTIVITY_HISTORY_TITLE = "활동 이력"
@@ -253,13 +257,13 @@ object AppStrings {
     const val MYPAGE_UMC_OUT_CHANNEL = "UMC 외부 채널"
     const val MYPAGE_OUT_LINK = "외부 링크"
     const val MYPAGE_OUT_LINK_GITHUB = "Github"
-    const val MYPAGE_OUT_LINK_LINKEDIN = "Linked in"
+    const val MYPAGE_OUT_LINK_LINKEDIN = "LinkedIn"
     const val MYPAGE_OUT_LINK_BLOG = "Blog"
     const val MYPAGE_ASSIST = "지원"
     const val MYPAGE_LAW = "법률"
     const val MYPAGE_DELETE_USER = "회원탈퇴"
     const val MYPAGE_PERSONAL_INFORMATION = "개인정보처리 방침"
-    const val MYPAGE_USE_MANUAL = "이용 약관"
+    const val MYPAGE_USE_MANUAL = "이용약관"
     const val MYPAGE_INQUIRE_UMC_KAKAO = "UMC 카카오톡 문의"
 
     const val MYPAGE_LOGOUT_TITLE = COMMON_LOGOUT
@@ -289,16 +293,63 @@ object AppStrings {
     const val PROFILE_NAME_NICKNAME = "닉네임/이름"
     const val PROFILE_SCHOOL = COMMON_SCHOOL
     const val PROFILE_PART = "기수/파트"
-    const val PROFILE_GITHUB_URL = "Github URL"
-    const val PROFILE_LINKEDIN_URL = "LinkedIn URL"
-    const val PROFILE_BLOG_URL = "Blog URL"
-    const val PROFILE_HTTP_START_PLACEHOLDER = "http://-"
+    const val PROFILE_LINK_EMAIL = "이메일"
+    const val PROFILE_LINK_GITHUB = "GitHub"
+    const val PROFILE_LINK_LINKEDIN = "LinkedIn"
+    const val PROFILE_LINK_BLOG = "Blog"
+    const val PROFILE_LINK_INSTAGRAM = "Instagram"
+    const val PROFILE_LINK_PERSONAL = "개인 사이트"
+    const val PROFILE_LINK_EMAIL_PLACEHOLDER = "example@email.com"
+    const val PROFILE_LINK_GITHUB_PLACEHOLDER = "https://github.com/"
+    const val PROFILE_LINK_LINKEDIN_PLACEHOLDER = "https://linkedin.com/in/yourprofile"
+    const val PROFILE_LINK_BLOG_PLACEHOLDER = "https://yourblog.com"
+    const val PROFILE_LINK_INSTAGRAM_PLACEHOLDER = "https://instagram.com/yourid"
+    const val PROFILE_LINK_PERSONAL_PLACEHOLDER = "https://yourwebsite.com"
+    const val PROFILE_LINK_PUBLIC = "공개"
+    const val PROFILE_LINK_PRIVATE = "비공개"
+    const val PROFILE_LINK_VISIBILITY_CHANGE = "공개 범위 변경"
+    const val PROFILE_LINK_VISIBILITY_GUIDE = "프로필 링크는 공개·비공개를 선택할 수 있으며, 공개된 정보는 다른 회원이 스레드에서 내 프로필을 조회할 때 표시돼요."
     const val PROFILE_LOAD_ERROR_TITLE = "프로필 정보를 불러오지 못했어요"
     const val PROFILE_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
     const val PROFILE_RETRY = COMMON_RETRY
+    // 타인 프로필 조회 (스레드 > 프로필 정보 보기)
+    const val MEMBER_PROFILE_TITLE = "프로필"
+    const val MEMBER_PROFILE_NAME_NICKNAME = "이름/닉네임"
+    const val MEMBER_PROFILE_GISU_PART_FORMAT = "%d기/%s"
+    const val MEMBER_PROFILE_PRIVATE = "비공개 항목이에요."
+    const val MEMBER_PROFILE_MENU = "더보기"
+    const val MEMBER_PROFILE_MENU_BLOCK = "사용자 차단"
+    const val MEMBER_PROFILE_MENU_UNBLOCK = "차단 해제"
+    const val MEMBER_PROFILE_MENU_REPORT = "사용자 신고"
+    const val MEMBER_REPORT_TITLE = "신고 사유"
+    const val MEMBER_REPORT_SUBTITLE = "신고 내용은 운영진만 확인하며, 익명으로 처리돼요."
+    const val MEMBER_REPORT_REASON_HARASSMENT = "괴롭힘·지속적인 불쾌 행위"
+    const val MEMBER_REPORT_REASON_IMPERSONATION = "사칭·허위 프로필"
+    const val MEMBER_REPORT_REASON_SPAM = "스팸·광고 활동"
+    const val MEMBER_REPORT_REASON_ETC = "기타"
+    const val MEMBER_REPORT_DETAIL_TITLE = "상세 신고 내용 (필수 입력)"
+    const val MEMBER_REPORT_DETAIL_PLACEHOLDER = "신고 사유를 구체적으로 입력해주세요. (최대 500자)"
+    const val MEMBER_REPORT_MESSAGE_GUIDE = "특정 메세지에 대한 신고는 해당 메세지의 신고 기능을 이용해 주세요."
+    const val MEMBER_REPORT_CANCEL = "취소하기"
+    const val MEMBER_REPORT_SUBMIT = "신고하기"
+    const val MEMBER_REPORT_CONFIRM_TITLE = "신고하시겠습니까?"
+    const val MEMBER_REPORT_CONFIRM_CONTENT = "신고하신 내용은 관리자 검토 후\n운영 정책에 따라 처리됩니다."
+    const val MEMBER_REPORT_DONE = "신고가 정상적으로 접수되었습니다."
+    const val MEMBER_REPORT_FAIL = "신고 접수에 실패했습니다. 다시 시도해 주세요."
+    const val MEMBER_BLOCK_CONFIRM_TITLE = "이 사용자를 차단할까요?"
+    const val MEMBER_BLOCK_CONFIRM_CONTENT = "차단한 사용자의 메세지는 숨겨져요.\n숨겨진 메세지는 원할 때 다시 확인할 수 있어요."
+    const val MEMBER_BLOCK_CONFIRM = "차단하기"
+    const val MEMBER_BLOCK_DONE = "차단이 완료되었습니다."
+    const val MEMBER_UNBLOCK_CONFIRM_TITLE = "차단을 해제할까요?"
+    const val MEMBER_UNBLOCK_CONFIRM_CONTENT = "차단을 해제하면 숨겨진 메세지가 다시 표시돼요."
+    const val MEMBER_UNBLOCK_CONFIRM = "해제하기"
+    const val MEMBER_UNBLOCK_DONE = "차단이 해제되었습니다."
+    const val MEMBER_BLOCK_FAIL = "요청을 처리하지 못했어요. 다시 시도해 주세요."
     const val PROFILE_LINK_INVALID = "올바른 URL 형식(https://...)으로 입력해주세요."
+    const val PROFILE_EMAIL_INVALID = "올바른 이메일 형식으로 입력해주세요."
     const val PROFILE_SAVE_FAIL = "저장하지 못했어요. 네트워크 연결을 확인해주세요."
     // 활동 이력 화면
+    const val ACTIVITY_HISTORY_RECORD_ADDED = "활동기록이 추가되었습니다."
     const val ACTIVITY_HISTORY_EMPTY = "아직 활동 이력이 없어요"
     const val ACTIVITY_HISTORY_LOAD_ERROR_TITLE = "활동 이력을 불러오지 못했어요"
     const val ACTIVITY_HISTORY_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
@@ -369,6 +420,48 @@ object AppStrings {
     const val COMMUNITY_SEARCH_MORE_LOAD_ERROR = "추가 결과를 불러오지 못했어요. 다시 시도해주세요."
     const val COMMUNITY_SEARCH_CURSOR_ERROR = "검색 페이지 정보가 올바르지 않아요. 다시 시도해주세요."
     // 로그인 화면
+    // 기존 화면에서 사용하는 이름은 공통 문구를 참조한다.
+    const val SIGN_UP = COMMON_SIGN_UP
+    const val NAME = COMMON_NAME
+    const val NICKNAME = COMMON_NICKNAME
+    const val EMAIL = COMMON_EMAIL
+    const val ALLDAY = COMMON_ALLDAY
+    const val START = COMMON_START
+    const val END = COMMON_END
+    const val CANCEL = COMMON_CANCEL
+    const val SCHOOL = COMMON_SCHOOL
+    const val NEXT = COMMON_NEXT
+    const val GITHUB = "Github"
+    const val LINKEDIN = "LinkedIn"
+    const val BLOG = "Blog"
+    const val INSTAGRAM = "Instagram"
+    const val PERSONAL_SITE = "개인 사이트"
+    const val SETTING = COMMON_SETTING
+    const val INFORMATION = COMMON_INFORMATION
+    const val LOGOUT = COMMON_LOGOUT
+    const val DELETE_USER = "회원탈퇴"
+    const val COMPLETE = COMMON_COMPLETE
+    const val REGISTER = COMMON_REGISTER
+    const val REGION = COMMON_REGION
+    const val ALL = COMMON_ALL
+    const val SOFT = COMMON_SOFT
+    const val HARD = COMMON_HARD
+    const val QNA = COMMON_QNA
+    const val CENTRAL = COMMON_CENTRAL
+    const val PART = COMMON_PART
+    const val BRANCH = COMMON_BRANCH
+    const val CONFIRM = COMMON_CONFIRM
+    const val UNCONFIRM = COMMON_UNCONFIRM
+    const val EDIT = COMMON_EDIT
+    const val SEE = COMMON_SEE
+    const val START_TIME = COMMON_START_TIME
+    const val START_LOCATION = COMMON_START_LOCATION
+    const val START_PARTICIPANT = COMMON_START_PARTICIPANT
+    const val SELECT = COMMON_SELECT
+    const val LAW = MYPAGE_LAW
+    const val ASSIST = MYPAGE_ASSIST
+    const val TIME_AM = COMMON_TIME_AM
+    const val TIME_PM = COMMON_TIME_PM
     const val LOGIN_TITLE = "동아리 활동을 한 곳에서"
     const val LOGIN_SUBTITLE = "Focus on Growth, We Handle the Ops"
     const val LOGIN_UMC_ACCOUNT = "UMC 계정 로그인"
@@ -544,6 +637,8 @@ object AppStrings {
     const val CHALLENGER_NAME_NICKNAME_FORMAT = "%2\$s(%1\$s)"
     const val CHALLENGER_LIST_LOAD_ERROR_TITLE = "챌린저 목록을 불러오지 못했어요"
     const val CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION = COMMON_NETWORK_ERROR_DESCRIPTION
+    const val CHALLENGER_MANAGE_NO_ACCESS_TITLE = "챌린저 관리 권한이 없어요"
+    const val CHALLENGER_MANAGE_NO_ACCESS_CONTENT = "상벌점은 중앙운영사무국과 교내 회장·부회장만 관리할 수 있어요.\n권한이 바뀌었다면 잠시 후 다시 확인해 주세요."
     const val CHALLENGER_RETRY = COMMON_RETRY
     // 공지 목록 및 작성 화면
     const val NOTICE_TITLE = "%d기 공지사항"
@@ -658,7 +753,7 @@ object AppStrings {
     const val LOCATION_DIALOG_CHANGE = COMMON_CHANGE_ACTION
     // 챌린저 정보 화면
     const val CHALLENGER_INFO_GENERATION_LABEL = "활동 기수"
-    const val CHALLENGER_INFO_WARNING_LABEL = "총점수"
+    const val CHALLENGER_INFO_TOTAL_SCORE_LABEL = "총점수"
     const val CHALLENGER_INFO_HISTORY_LABEL = "출석/활동 기록"
     const val CHALLENGER_INFO_FORMAT_GENERATION = COMMON_GENERATION_FORMAT
     // 챌린저 관리 화면
@@ -676,9 +771,9 @@ object AppStrings {
     const val CHALLENGER_MANAGE_ACTION_OUT = "아웃 부여"
     const val CHALLENGER_MANAGE_ACTION_EDIT_HISTORY = "기록 수정하기"
     const val CHALLENGER_MANAGE_REASON_PLACEHOLDER = "사유를 입력하세요"
-    const val CHALLENGER_TOTAL_SCORE_DESCRIPTION_FORMAT = "%s님의 총점수는 %d점입니다."
-    const val CHALLENGER_REWARD_SCORE_FORMAT = "상점 %d"
-    const val CHALLENGER_PENALTY_SCORE_FORMAT = "벌점 %d"
+    const val CHALLENGER_TOTAL_SCORE_DESCRIPTION_FORMAT = "%s님의 총점수는 %s점입니다."
+    const val CHALLENGER_REWARD_SCORE_FORMAT = "상점 %s"
+    const val CHALLENGER_PENALTY_SCORE_FORMAT = "벌점 %s"
     const val CHALLENGER_POINTS_CONFLICT_TOAST = "상점과 벌점을 동시에 입력할 수 없습니다."
     // 상벌점 부여 화면
     const val REWARD_ETC_TITLE = "기타 상벌점 부여하기"
@@ -704,8 +799,8 @@ object AppStrings {
     const val COMMUNITY_CREATE_MEMBER_SELECT = "챌린저를 선택하세요"
     const val COMMUNITY_CREATE_MEMBER_SUMMARY_FORMAT = "%s 외 %d명"
     const val COMMUNITY_CREATE_REQUIRED_FIELDS_ERROR = "제목과 스레드 특징을 입력해주세요."
-    const val COMMUNITY_CREATE_VALIDATION_ERROR = "제목 1~80자·특징 1~500자와 초대 대상을 확인해주세요."
-    const val COMMUNITY_EDIT_VALIDATION_ERROR = "제목 1~80자·특징 1~500자와 수정 권한을 확인해주세요."
+    const val COMMUNITY_CREATE_VALIDATION_ERROR = "제목 1~80자·특징 500자 이하와 초대 대상을 확인해주세요."
+    const val COMMUNITY_EDIT_VALIDATION_ERROR = "제목 1~80자·특징 500자 이하와 수정 권한을 확인해주세요."
     const val COMMUNITY_DELETE_ACTION = "스레드 삭제하기"
     const val COMMUNITY_MEMBER_ADD_SUCCESS_FORMAT = "%d명을 추가했어요."
     const val COMMUNITY_MEMBER_SEARCH_TITLE = "초대할 챌린저를 검색하세요"
@@ -736,16 +831,18 @@ object AppStrings {
     const val COMMUNITY_AI_QNA_RESULT = "\"질문과 답변\" 성격으로 분류했어요"
     const val COMMUNITY_AI_FREE_RESULT = "미지정 기기, 오프라인일 땐 기본 분류(자유)로 \n만들어요"
     const val COMMUNITY_AI_DEFAULT_RESULT = "카테고리를 분류했어요"
-    const val COMMUNITY_CREATE_MEMBER_ADD_TITLE = "챌린저를 추가하세요"
-    const val COMMUNITY_CREATE_MEMBER_SEARCH_TITLE = "챌린저를 검색하세요"
+    const val COMMUNITY_CREATE_MEMBER_ADD_TITLE = "초대할 챌린저를 추가하세요"
+    const val COMMUNITY_CREATE_MEMBER_SEARCH_TITLE = "초대할 챌린저를 검색하세요"
     const val COMMUNITY_CREATE_MEMBER_SEARCH_PLACEHOLDER = COMMON_NAME_PLACEHOLDER
     const val COMMUNITY_CREATE_MEMBER_NO_RESULT = COMMON_NO_SEARCH_RESULTS
     const val COMMUNITY_CREATE_MEMBER_EMPTY = "아직 추가한 챌린저가 없어요"
     const val COMMUNITY_CREATE_MEMBER_GENERATION_FORMAT = "(%d기)"
     const val COMMUNITY_CREATE_MEMBER_DELETE = COMMON_DELETE
+    const val COMMUNITY_CREATE_MEMBER_INVITE = "초대"
+    const val COMMUNITY_THREAD_MENU_EDIT = "편집"
     const val COMMUNITY_CREATE_MEMBER_CD_CHECKED = "선택됨"
     const val COMMUNITY_CREATE_MEMBER_CD_UNCHECKED = "선택되지 않음"
-    const val COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT = "챌린저는 최대 %d명까지 추가할 수 있어요."
+    const val COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT = "최대 %d명까지 초대할 수 있습니다."
     const val COMMUNITY_CREATE_MEMBER_SEARCH_FAILED = "챌린저 검색 결과를 불러오지 못했어요."
     const val COMMUNITY_CREATE_AI_GUIDE_TITLE = "Galaxy AI로 도와드릴게요"
     const val COMMUNITY_CREATE_AI_GUIDE_DESCRIPTION = "스레드 특징을 입력하면\nAI가 카테고리, 아이콘을 정해줘요"
@@ -823,6 +920,13 @@ object AppStrings {
     const val CHAT_PARTICIPANTS_RETRY_DESCRIPTION = "실패한 참여자를 다시 확인해주세요."
     const val CHAT_EDIT_DISCONNECTED_ERROR = "연결이 끊겼어요. 내용을 유지했으니 다시 시도해주세요."
     const val CHAT_UNKNOWN_USER = COMMON_UNKNOWN
+    const val CHAT_BLOCK_STATUS_LOADING = "차단 정보를 확인하고 있어요."
+    const val CHAT_BLOCK_STATUS_FAILED = "차단 정보를 불러오지 못했어요."
+    const val CHAT_BLOCK_STATUS_REQUIRED = "차단 정보를 확인한 후 다시 시도해주세요."
+    const val CHAT_REPLY_PREVIEW_HIDDEN = "원문 미리보기를 표시할 수 없어요."
+    const val CHAT_BLOCKED_MESSAGE = "차단한 사용자의 메시지입니다."
+    const val CHAT_SHOW_BLOCKED_MESSAGE = "메시지 보기"
+    const val CHAT_HIDE_BLOCKED_MESSAGE = "메시지 숨기기"
     const val CHAT_ME = "나"
     const val CHAT_CONFIRM = COMMON_CONFIRM
     const val CHAT_CANCEL = COMMON_CANCEL
@@ -841,6 +945,7 @@ object AppStrings {
     const val CHAT_UNAVAILABLE_TOP_BAR = "참여 종료"
     const val CHAT_UNAVAILABLE_TITLE = "더 이상 참여할 수 없는 스레드예요"
     const val CHAT_UNAVAILABLE_DESCRIPTION = "운영진에 의해 참여가 종료되었어요."
+    const val CHAT_KICKED_DESCRIPTION = "스레드 관리자에 의해 참여가 종료되었어요."
     const val CHAT_BACK_TO_COMMUNITY = "커뮤니티로 돌아가기"
     const val CHAT_OWNERSHIP_REQUIRED_TITLE = "스레드를 나갈 수 없어요"
     const val CHAT_OWNERSHIP_REQUIRED_DESCRIPTION = "현재 방장인 경우 스레드를 나갈 수 없습니다. 다른 참여자에게 권한을 넘긴 후 다시 시도해주세요."
@@ -854,7 +959,6 @@ object AppStrings {
     const val CHAT_REPORT_CONFIRM_TITLE = "신고하시겠습니까?"
     const val CHAT_REPORT_CONFIRM_DESCRIPTION = "신고하신 내용은 관리자 검토 후\n운영 정책에 따라 처리됩니다."
     const val CHAT_REPORT_ALREADY_EXISTS = "이미 접수된 신고예요."
-    const val CHAT_REPORT_PARTIAL_RESULT_FORMAT = "신고 사유 %d개 접수, %d개 미접수."
     const val CHAT_REPORT_SUCCESS = "신고가 정상적으로 접수되었습니다."
     const val CHAT_MENU_SUMMARY_SETTINGS = "요약 및 설정"
     const val CHAT_SUMMARY = "대화 요약"
