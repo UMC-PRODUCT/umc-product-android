@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.component.theme.AppStrings
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
+import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.ClassifyCommunityThreadUseCase
 import com.umc.domain.usecase.community.CreateCommunityThreadUseCase
 import com.umc.presentation.community.model.CommunityAiState
@@ -14,7 +15,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +41,7 @@ import kotlinx.coroutines.launch
 class CommunityCreateViewModel @Inject constructor(
     private val createCommunityThreadUseCase: CreateCommunityThreadUseCase,
     private val classifyCommunityThreadUseCase: ClassifyCommunityThreadUseCase,
+    private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
 ) : ViewModel() {
 
@@ -54,6 +58,16 @@ class CommunityCreateViewModel @Inject constructor(
 
     /** AI 분류 요청 및 디바운스를 관리하는 Job */
     private var classificationJob: Job? = null
+
+    /**
+     * 온디바이스 AI 사용 가능 여부
+     *
+     * 미지원 기기에서는 모델 추론이 일어나지 않으므로 분류 로딩 연출을 생략합니다.
+     * 화면 진입 시 한 번만 확인하고, 분류 시점에 결과를 기다립니다.
+     */
+    private val isOnDeviceAiUsable: Deferred<Boolean> = viewModelScope.async {
+        checkAiFeatureStatusUseCase().isUsable
+    }
 
     init {
         // 생성 시점에 동기로 검사할 수 있도록 내 memberId를 미리 들고 있는다
@@ -269,14 +283,8 @@ class CommunityCreateViewModel @Inject constructor(
             // 입력 도중 매 글자마다 분석되지 않도록 대기
             delay(AUTO_CLASSIFICATION_DEBOUNCE)
 
-            _state.update {
-                it.copy(
-                    aiState = CommunityAiState.LOADING,
-                )
-            }
-
             // 현재는 테스트용 AI 분석 시간
-            delay(AUTO_CLASSIFICATION_DELAY)
+            showClassificationLoading(duration = AUTO_CLASSIFICATION_DELAY)
 
             // 대기 중 입력값이 변경됐을 수 있으므로 최신 상태 사용
             val latestState = _state.value
@@ -359,14 +367,8 @@ class CommunityCreateViewModel @Inject constructor(
         }
 
         classificationJob = viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    aiState = CommunityAiState.LOADING,
-                )
-            }
-
             // 수동 재분류 로딩 연출 시간
-            delay(MANUAL_CLASSIFICATION_DELAY)
+            showClassificationLoading(duration = MANUAL_CLASSIFICATION_DELAY)
 
             val latestState = _state.value
 
@@ -385,6 +387,26 @@ class CommunityCreateViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * 분류 로딩 카드를 [duration] 동안 표시합니다.
+     *
+     * 온디바이스 AI 미지원 기기에서는 규칙 분류만 즉시 끝나므로
+     * 로딩 상태로 바꾸지 않고 대기 없이 바로 반환합니다.
+     */
+    private suspend fun showClassificationLoading(
+        duration: Long,
+    ) {
+        if (!isOnDeviceAiUsable.await()) return
+
+        _state.update {
+            it.copy(
+                aiState = CommunityAiState.LOADING,
+            )
+        }
+
+        delay(duration)
     }
 
     /**
