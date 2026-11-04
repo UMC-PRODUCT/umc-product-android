@@ -110,9 +110,9 @@ fun GroupCreatePartLeaderBottomSheet(
             // 검색 여부에 따라 제목 변경
             GroupCreatePickerTitle(
                 title = if (state.isSearching) {
-                    "담당 파트장을 검색하세요"
+                    AppStrings.STUDY_LEADER_SEARCH_TITLE
                 } else {
-                    "담당 파트장을 추가하세요"
+                    AppStrings.STUDY_LEADER_ADD_PLACEHOLDER
                 }
             )
 
@@ -124,7 +124,7 @@ fun GroupCreatePartLeaderBottomSheet(
             UTextField(
                 value = state.query,
                 onValueChange = viewModel::searchMembers,
-                placeholder = "이름을 입력하세요",
+                placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -190,7 +190,7 @@ fun GroupCreatePartLeaderBottomSheet(
                     // 선택된 파트장이 없는 경우
                     state.selectedMembers.isEmpty() -> {
                         GroupCreateEmptyContent(
-                            text = "아직 추가한 파트장이 없어요"
+                            text = AppStrings.STUDY_GROUP_LEADER_EMPTY
                         )
                     }
 

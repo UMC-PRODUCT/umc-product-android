@@ -89,7 +89,7 @@ fun QrCodeRoute(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         if (!permissions.values.all { it }) {
-            Toast.makeText(context, "주변 기기 연결을 위해 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppStrings.QRCODE_PERMISSION_REQUIRED, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -120,12 +120,12 @@ fun QrCodeRoute(
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // 읽기 권한 부여
                         }
 
-                        context.startActivity(Intent.createChooser(shareIntent, "명함 QR 코드 공유하기"))
+                        context.startActivity(Intent.createChooser(shareIntent, AppStrings.QRCODE_SHARE_CHOOSER_TITLE))
                     } else {
-                        Toast.makeText(context, "공유용 이미지를 생성하지 못했습니다.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppStrings.QRCODE_IMAGE_CREATE_ERROR, Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(context, "공유할 QR 이미지 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStrings.QRCODE_IMAGE_MISSING_ERROR, Toast.LENGTH_SHORT).show()
                 }
             }
         }

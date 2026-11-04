@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -123,9 +124,9 @@ fun GroupScheduleChallengerBottomSheet(
             // 검색 여부에 따라 제목과 확인 버튼 표시
             GroupScheduleChallengerHeader(
                 title = if (state.isSearching) {
-                    "초대할 챌린저를 검색하세요"
+                    AppStrings.STUDY_SCHEDULE_INVITE_SEARCH_TITLE
                 } else {
-                    "초대할 챌린저를 추가하세요"
+                    AppStrings.STUDY_SCHEDULE_INVITE_ADD_TITLE
                 },
                 showConfirmButton = state.isSearching,
                 isConfirmEnabled =
@@ -144,7 +145,7 @@ fun GroupScheduleChallengerBottomSheet(
                 value = state.query,
                 onValueChange =
                     viewModel::searchChallengers,
-                placeholder = "이름을 입력하세요",
+                placeholder = AppStrings.STUDY_SCHEDULE_MEMBER_NAME_PLACEHOLDER,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -241,7 +242,7 @@ fun GroupScheduleChallengerHeader(
         // 검색 중일 때만 확인 버튼 표시
         if (showConfirmButton) {
             UButton(
-                text = "확인",
+                text = AppStrings.COMMON_CONFIRM,
                 onClick = onConfirmClick,
                 enabled = isConfirmEnabled,
                 modifier = Modifier
@@ -292,7 +293,7 @@ fun GroupScheduleEmptyChallengerContent() {
         )
 
         UText(
-            text = "아직 초대한 챌린저가 없어요",
+            text = AppStrings.STUDY_SCHEDULE_INVITE_EMPTY,
             style = UmcTypographyTokens.Body,
             color = grey600()
         )
@@ -377,7 +378,7 @@ fun GroupScheduleAddedChallengerRow(
 
         // 초대 대상에서 제거
         UButton(
-            text = "삭제",
+            text = AppStrings.COMMON_DELETE,
             onClick = onRemoveClick,
             modifier = Modifier
                 .width(50.dp)

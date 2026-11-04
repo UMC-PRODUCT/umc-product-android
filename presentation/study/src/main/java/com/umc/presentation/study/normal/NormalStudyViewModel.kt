@@ -1,5 +1,6 @@
 package com.umc.presentation.study.normal
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -91,7 +92,7 @@ class UserStudyViewModel @Inject constructor(
 
                         emitEvent(
                             UserStudyEvent.ShowToast(
-                                message = "사용자 정보 형식이 올바르지 않아요.",
+                                message = AppStrings.STUDY_USER_INFO_FORMAT_ERROR,
                             )
                         )
                         return@launch
@@ -169,7 +170,7 @@ class UserStudyViewModel @Inject constructor(
 
                     emitEvent(
                         UserStudyEvent.ShowToast(
-                            message = "커리큘럼 데이터 형식이 올바르지 않아요.",
+                            message = AppStrings.STUDY_CURRICULUM_FORMAT_ERROR,
                         )
                     )
                     return

@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -69,14 +70,14 @@ fun AdminStudyGroupScheduleScreen(
 
             // 스터디명 입력
             GroupScheduleSectionTitle(
-                text = "스터디명"
+                text = AppStrings.STUDY_SCHEDULE_NAME_LABEL
             )
 
             Spacer(Modifier.height(12.dp))
 
             GroupScheduleTextField(
                 value = state.studyName,
-                placeholder = "스터디명을 입력하세요.",
+                placeholder = AppStrings.STUDY_SCHEDULE_NAME_PLACEHOLDER,
                 onValueChange = {
                     onAction(
                         AdminStudyGroupScheduleAction
@@ -89,7 +90,7 @@ fun AdminStudyGroupScheduleScreen(
 
             // 일정 시작 / 종료 일시
             GroupScheduleSectionTitle(
-                text = "일시"
+                text = AppStrings.STUDY_SCHEDULE_TIME_LABEL
             )
 
             Spacer(Modifier.height(16.dp))
@@ -119,14 +120,14 @@ fun AdminStudyGroupScheduleScreen(
 
             // 대면 진행 여부 및 장소
             GroupScheduleSectionTitle(
-                text = "장소"
+                text = AppStrings.STUDY_SCHEDULE_LOCATION_LABEL
             )
 
             Spacer(Modifier.height(12.dp))
 
             GroupScheduleToggleRow(
                 checked = state.isOffline,
-                text = "대면으로 진행하기",
+                text = AppStrings.STUDY_SCHEDULE_ONLINE_TITLE,
                 onClick = {
                     onAction(
                         AdminStudyGroupScheduleAction.ToggleOffline
@@ -140,7 +141,7 @@ fun AdminStudyGroupScheduleScreen(
 
                 GroupScheduleSelectRow(
                     text = state.placeText,
-                    placeholder = "장소를 선택하세요",
+                    placeholder = AppStrings.STUDY_SCHEDULE_LOCATION_PLACEHOLDER,
                     enabled = true,
                     onClick = {
                         onAction(
@@ -154,14 +155,14 @@ fun AdminStudyGroupScheduleScreen(
 
             // 일정 상세 안내 입력
             GroupScheduleSectionTitle(
-                text = "상세 안내"
+                text = AppStrings.STUDY_SCHEDULE_DESCRIPTION_LABEL
             )
 
             Spacer(Modifier.height(12.dp))
 
             GroupScheduleMemoBox(
                 value = state.detail,
-                placeholder = "상세 내용을 입력하세요",
+                placeholder = AppStrings.STUDY_SCHEDULE_DESCRIPTION_PLACEHOLDER,
                 onValueChange = {
                     onAction(
                         AdminStudyGroupScheduleAction
@@ -174,14 +175,14 @@ fun AdminStudyGroupScheduleScreen(
 
             // 일정에 참여할 챌린저 선택
             GroupScheduleSectionTitle(
-                text = "챌린저 명단"
+                text = AppStrings.STUDY_SCHEDULE_CHALLENGER_LABEL
             )
 
             Spacer(Modifier.height(12.dp))
 
             GroupScheduleSelectRow(
                 text = state.challengerText,
-                placeholder = "챌린저를 선택하세요",
+                placeholder = AppStrings.STUDY_SCHEDULE_CHALLENGER_PLACEHOLDER,
                 onClick = {
                     onAction(
                         AdminStudyGroupScheduleAction.ClickChallenger
@@ -194,7 +195,7 @@ fun AdminStudyGroupScheduleScreen(
             // 출석부 생성 여부
             GroupScheduleToggleRow(
                 checked = state.createAttendance,
-                text = "출석부 생성하기",
+                text = AppStrings.STUDY_SCHEDULE_ATTENDANCE_TITLE,
                 onClick = {
                     onAction(
                         AdminStudyGroupScheduleAction.ToggleAttendance
@@ -232,14 +233,14 @@ fun AdminStudyGroupScheduleScreen(
 
             // 일정과 연결할 커리큘럼 주차
             GroupScheduleSectionTitle(
-                text = "주차"
+                text = AppStrings.STUDY_SCHEDULE_WEEK_LABEL
             )
 
             Spacer(Modifier.height(12.dp))
 
             GroupScheduleSelectRow(
                 text = state.weekText,
-                placeholder = "주차를 선택하세요",
+                placeholder = AppStrings.STUDY_SCHEDULE_WEEK_PLACEHOLDER,
                 onClick = {
                     onAction(
                         AdminStudyGroupScheduleAction.ClickWeek

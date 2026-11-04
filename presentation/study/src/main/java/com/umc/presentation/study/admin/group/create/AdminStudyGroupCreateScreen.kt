@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,9 +96,9 @@ fun AdminStudyGroupCreateScreen(
          * OnGroupNameChanged 액션을 통해 ViewModel로 전달합니다.
          */
         GroupCreateTextField(
-            title = "그룹 이름",
+            title = AppStrings.STUDY_GROUP_NAME_LABEL,
             value = state.groupName,
-            placeholder = "예: React 실습 A팀",
+            placeholder = AppStrings.STUDY_GROUP_NAME_PLACEHOLDER,
             onValueChange = { value ->
                 onAction(
                     AdminStudyGroupCreateAction.OnGroupNameChanged(
@@ -118,11 +119,11 @@ fun AdminStudyGroupCreateScreen(
          * 클릭하면 파트 선택 바텀시트를 엽니다.
          */
         GroupCreateSelectRow(
-            title = "해당 파트",
+            title = AppStrings.STUDY_GROUP_PART_LABEL,
             value = state.selectedPart
                 ?.label
                 .orEmpty(),
-            placeholder = "파트를 선택하세요",
+            placeholder = AppStrings.STUDY_GROUP_PART_PLACEHOLDER,
             onClick = {
                 onAction(
                     AdminStudyGroupCreateAction.OnPartClick
@@ -143,9 +144,9 @@ fun AdminStudyGroupCreateScreen(
          * 클릭하면 파트장 검색/선택 바텀시트를 엽니다.
          */
         GroupCreateSelectRow(
-            title = "담당 파트장",
+            title = AppStrings.STUDY_GROUP_LEADER_LABEL,
             value = state.partLeaderSummary,
-            placeholder = "담당 파트장을 선택하세요",
+            placeholder = AppStrings.STUDY_GROUP_LEADER_PLACEHOLDER,
             onClick = {
                 onAction(
                     AdminStudyGroupCreateAction.OnPartLeaderClick
@@ -166,9 +167,9 @@ fun AdminStudyGroupCreateScreen(
          * 클릭하면 스터디원 검색/선택 바텀시트를 엽니다.
          */
         GroupCreateSelectRow(
-            title = "스터디원 추가",
+            title = AppStrings.STUDY_GROUP_MEMBER_ADD_LABEL,
             value = state.memberSummary,
-            placeholder = "스터디원을 선택하세요",
+            placeholder = AppStrings.STUDY_GROUP_MEMBER_PLACEHOLDER,
             onClick = {
                 onAction(
                     AdminStudyGroupCreateAction.OnMemberClick

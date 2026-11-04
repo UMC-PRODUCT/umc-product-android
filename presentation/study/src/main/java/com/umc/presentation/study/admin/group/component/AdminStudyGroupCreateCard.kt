@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -66,7 +67,7 @@ fun AdminStudyGroupCreateCard(
         )
 
         UText(
-            text = "스터디 그룹 생성하기",
+            text = AppStrings.STUDY_GROUP_CREATE_ACTION,
             style = HeadlineBold,
             color = grey800(),
             modifier = Modifier.weight(1f)

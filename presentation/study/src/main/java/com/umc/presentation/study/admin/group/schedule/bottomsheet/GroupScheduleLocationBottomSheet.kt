@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import android.view.MotionEvent
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -332,7 +333,7 @@ fun GroupScheduleLocationHeaderAndSearchBar(
     ) {
         // BottomSheet 제목
         UText(
-            text = "장소를 선택하세요",
+            text = AppStrings.STUDY_SCHEDULE_LOCATION_PLACEHOLDER,
             style = UmcTypographyTokens.Title3Bold,
             color = grey800(),
             modifier = Modifier.padding(
@@ -350,7 +351,7 @@ fun GroupScheduleLocationHeaderAndSearchBar(
             UTextField(
                 value = searchQuery,
                 onValueChange = onQueryChanged,
-                placeholder = "장소 또는 주소를 입력하세요",
+                placeholder = AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_PLACEHOLDER,
                 modifier = Modifier.weight(1f),
 
                 // 키보드의 검색 버튼 사용
@@ -371,7 +372,7 @@ fun GroupScheduleLocationHeaderAndSearchBar(
 
             // 장소 검색 실행
             UButton(
-                text = "검색",
+                text = AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_ACTION,
                 onClick = onSearchClick,
                 modifier = Modifier
                     .width(64.dp)
@@ -515,7 +516,7 @@ fun GroupScheduleSelectedLocationCard(
                 // 선택된 장소명
                 UText(
                     text = selectedPlace.title.ifBlank {
-                        "지정된 장소"
+                        AppStrings.STUDY_SCHEDULE_LOCATION_UNSPECIFIED_PLACE
                     },
                     style =
                         UmcTypographyTokens.BodyBold,
@@ -529,7 +530,7 @@ fun GroupScheduleSelectedLocationCard(
                 // 선택된 장소 주소
                 UText(
                     text = selectedPlace.address.ifBlank {
-                        "지도를 움직여 장소를 지정해 주세요."
+                        AppStrings.STUDY_SCHEDULE_LOCATION_MOVE_MAP_PLACE
                     },
                     style =
                         UmcTypographyTokens.Subheadline,
@@ -543,7 +544,7 @@ fun GroupScheduleSelectedLocationCard(
 
             // 현재 장소 최종 선택
             UButton(
-                text = "선택",
+                text = AppStrings.COMMON_SELECT,
                 onClick = onConfirmClick,
                 modifier = Modifier
                     .width(64.dp)
@@ -573,7 +574,7 @@ fun GroupScheduleRecentSearchList(
         modifier = Modifier.fillMaxSize()
     ) {
         UText(
-            text = "최근 검색어",
+            text = AppStrings.COMMON_RECENT_SEARCH_TITLE,
             style = UmcTypographyTokens.Title3Bold,
             color = grey800(),
             modifier = Modifier.padding(

@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.domain.model.base.ApiState
@@ -152,7 +153,7 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
                 is ApiState.Fail -> {
                     emitEvent(
                         AdminStudyGroupCreateEvent.RegisterFailure(
-                            "기수 정보를 불러오지 못했어요."
+                            AppStrings.STUDY_GROUP_GISU_LOAD_ERROR
                         )
                     )
                 }

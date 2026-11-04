@@ -544,7 +544,7 @@ private fun NoticeReadStatusBar(
                 )
 
                 UText(
-                    text = "/${totalCount}명 (${percent}%)",
+                    text = AppStrings.NOTICE_DETAIL_READ_COUNT_FORMAT.format(totalCount, percent),
                     style = UmcTypographyTokens.Body,
                     color = grey950(),
                 )

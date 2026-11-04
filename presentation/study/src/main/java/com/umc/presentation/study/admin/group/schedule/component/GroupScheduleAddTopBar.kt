@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -47,7 +48,7 @@ fun GroupScheduleAddTopBar(
 
         // 화면 제목
         UText(
-            text = "스터디 일정 등록",
+            text = AppStrings.STUDY_SCHEDULE_CREATE_TITLE,
             style = Title2Bold,
             color = grey900(),
             modifier = Modifier.weight(1f),
@@ -65,7 +66,7 @@ fun GroupScheduleAddTopBar(
 
         // 필수 입력값이 충족된 경우에만 등록 가능
         UText(
-            text = "등록",
+            text = AppStrings.STUDY_SCHEDULE_REGISTER,
             style = HeadlineBold,
             color = if (canRegister) main500() else grey300(),
             modifier = Modifier.clickable(

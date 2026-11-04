@@ -202,7 +202,7 @@ fun ReceivedCardScreen(
 
         //3. 명함 수
         UText(
-            text = "${uiState.filteredCards.size}장",
+            text = AppStrings.RECEIVED_CARD_COUNT_FORMAT.format(uiState.filteredCards.size),
             style = UmcTypographyTokens.HeadlineBold,
             color = grey950(),
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -216,11 +216,11 @@ fun ReceivedCardScreen(
         if (uiState.isLoading) CircularProgressIndicator(Modifier.padding(16.dp))
         uiState.error?.let { error ->
             UText(error, modifier = Modifier.padding(horizontal = 16.dp))
-            TextButton(onClick = onRetry) { UText("다시 시도") }
+            TextButton(onClick = onRetry) { UText(AppStrings.RECEIVED_CARD_RETRY) }
         }
         if (!uiState.isLoading && uiState.error == null && uiState.filteredCards.isEmpty()) {
             UText(
-                if (uiState.searchQuery.isBlank()) "보관한 명함이 없어요." else "검색 결과가 없어요.",
+                if (uiState.searchQuery.isBlank()) AppStrings.RECEIVED_CARD_EMPTY else AppStrings.RECEIVED_CARD_SEARCH_EMPTY,
                 modifier = Modifier.padding(16.dp),
             )
         }
@@ -368,7 +368,7 @@ private fun ReceivedCardItem(
 
                 // 기수 뱃지
                 UButton(
-                    text = "${card.generation}기",
+                    text = AppStrings.RECEIVED_CARD_GENERATION_FORMAT.format(card.generation),
                     enabled = false,
                     backgroundColor = partTheme.badgeColor,
                     textColor = grey50(),
