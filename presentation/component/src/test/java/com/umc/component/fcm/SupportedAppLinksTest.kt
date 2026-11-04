@@ -7,6 +7,7 @@ class SupportedAppLinksTest {
     @Test fun acceptsOnlyRegisteredThreadAndCardTargets() {
         listOf("umc://thread/42", "umc://thread?threadId=42", "umc://card?memberId=42",
             "https://api.university.neordinary.com/community/threads?threadId=42",
+            "https://api.university.neordinary.com/community/threads/42",
             "https://api.university.neordinary.com/community/threads/card?memberId=42")
             .forEach { assertTrue(it, isSupportedAppLink(it)) }
     }
@@ -16,7 +17,14 @@ class SupportedAppLinksTest {
             "umc://thread", "umc://thread/42/43", "umc://thread?threadId=0", "umc://card?memberId=-1",
             "https://evil.test/community/threads?threadId=42", "umc://thread:123/42",
             "https://api.university.neordinary.com.evil.test/community/threads?threadId=42",
-            "https://api.university.neordinary.com/community/threads?threadId=%20", "not a uri")
+            "https://api.university.neordinary.com/community/threads?threadId=%20", "not a uri",
+            "https://api.university.neordinary.com/community/threads/0",
+            "https://api.university.neordinary.com/community/threads/-1",
+            "https://api.university.neordinary.com/community/threads/42/43",
+            "https://api.university.neordinary.com/community/threads/42/",
+            "https://api.university.neordinary.com/community/threads/",
+            "https://api.university.neordinary.com/community/threads/abc",
+            "https://evil.test/community/threads/42")
             .forEach { assertFalse(it, isSupportedAppLink(it)) }
     }
 }

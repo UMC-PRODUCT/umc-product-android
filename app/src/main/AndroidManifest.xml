@@ -91,6 +91,7 @@
                     android:scheme="https"
                     android:host="api.university.neordinary.com"
                     android:path="/community/threads" />
+                <data android:pathPrefix="/community/threads/" />
             </intent-filter>
 
 

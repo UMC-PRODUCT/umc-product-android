@@ -806,6 +806,9 @@ fun MainNavHost(
                     uriPattern = "$COMMUNITY_THREAD_DEEP_LINK_BASE?threadId={threadId}"
                 },
                 navDeepLink {
+                    uriPattern = "$COMMUNITY_THREAD_DEEP_LINK_BASE/{threadId}"
+                },
+                navDeepLink {
                     uriPattern = "umc://thread?threadId={threadId}"
                 },
                 navDeepLink {

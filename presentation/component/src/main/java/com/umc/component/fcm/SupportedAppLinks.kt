@@ -21,7 +21,8 @@ fun isSupportedAppLink(value: String): Boolean = runCatching {
         uri.scheme == "https" && uri.rawAuthority == "api.university.neordinary.com" -> when (uri.path) {
             "/community/threads" -> validId(query["threadId"])
             "/community/threads/card" -> validId(query["memberId"])
-            else -> false
+            else -> uri.path.orEmpty().startsWith("/community/threads/") &&
+                validId(uri.path.removePrefix("/community/threads/"))
         }
         else -> false
     }
