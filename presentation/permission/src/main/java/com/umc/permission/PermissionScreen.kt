@@ -40,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.fcm.NotificationPermission
 import com.umc.component.component.UText
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
@@ -99,6 +100,10 @@ fun PermissionRoute(
                 }
 
                 if (permissions.isNotEmpty()) {
+                    // 가입 직후 홈에서 같은 질문을 다시 띄우지 않게 기록한다
+                    if (Manifest.permission.POST_NOTIFICATIONS in permissions) {
+                        NotificationPermission.markRequested(context)
+                    }
                     requestPermissionsLauncher.launch(permissions.toTypedArray())
                 } else {
                     viewModel.signUp()
