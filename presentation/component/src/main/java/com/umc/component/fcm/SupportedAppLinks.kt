@@ -27,3 +27,10 @@ fun isSupportedAppLink(value: String): Boolean = runCatching {
         else -> false
     }
 }.getOrDefault(false)
+
+/** 매니페스트의 넓은 경로 필터로 받은 웹 주소 중 앱 목적지가 없는 주소는 브라우저가 처리한다. */
+fun shouldOpenAppLinkInBrowser(value: String): Boolean = runCatching {
+    val uri = URI(value)
+    uri.scheme == "https" && uri.rawAuthority == "api.university.neordinary.com" &&
+        !isSupportedAppLink(value)
+}.getOrDefault(false)
