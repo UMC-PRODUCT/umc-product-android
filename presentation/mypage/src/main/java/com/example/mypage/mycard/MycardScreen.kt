@@ -174,7 +174,10 @@ fun MycardRoute(
         if (!viewProfileOnly && uiState.userInfo.name.isNotEmpty()) {
             val nearbyInfo = NearbyUserInfo(
                 name = uiState.userInfo.name,
-                info = "${uiState.userInfo.schoolName} · ${uiState.myRecentInfoString.ifEmpty { "0기" }}",
+                info = AppStrings.MYCARD_SCHOOL_GENERATION_FORMAT.format(
+                    uiState.userInfo.schoolName,
+                    uiState.myRecentInfoString.ifEmpty { AppStrings.MYCARD_UNKNOWN_GENERATION },
+                ),
                 profileImageLink = uiState.userInfo.profileImageLink
             )
             //내 카드 업데이트
@@ -230,7 +233,7 @@ fun MycardRoute(
             title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
             content = AppStrings.EXCHANGE_CARD_BLOCKED_CONTENT,
             onDismissRequest = { showExchangeBlockedDialog = false },
-            confirmText = AppStrings.CONFIRM,
+            confirmText = AppStrings.COMMON_CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
         )
     }
@@ -998,7 +1001,7 @@ fun MycardListItem(
 
         if (cardCount > -1) {
             UButton(
-                text = "${cardCount}장",
+                text = AppStrings.MYCARD_COUNT_FORMAT.format(cardCount),
                 enabled = false,
                 backgroundColor = main100(),
                 textColor = main500(),

@@ -114,7 +114,7 @@ class NoticeDetailViewModel @Inject constructor(
         if (target.targetGisuId != 0) {
             resultResponse(
                 response = getGisuInfoUseCase(target.targetGisuId.toLong()),
-                successCallback = { gisuLabel = "${it.gisu}기" },
+                successCallback = { gisuLabel = AppStrings.COMMON_GENERATION_FORMAT.format(it.gisu) },
             )
         }
 
@@ -129,7 +129,7 @@ class NoticeDetailViewModel @Inject constructor(
         }
 
         val scopeLabel = chapterLabel
-            ?: if (target.targetChapterId == null && target.targetSchoolId == null) "전체" else null
+            ?: if (target.targetChapterId == null && target.targetSchoolId == null) AppStrings.COMMON_ALL else null
         val partLabel = target.targetParts.firstOrNull()?.let { UserPart.from(it).label }
 
         val receiverText = listOfNotNull(gisuLabel, scopeLabel, partLabel).joinToString("/")

@@ -30,6 +30,7 @@ import kotlinx.collections.immutable.ImmutableList
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.tooling.preview.Preview
+import com.umc.component.theme.AppStrings
 import kotlinx.collections.immutable.persistentListOf
 
 /**
@@ -53,7 +54,7 @@ fun CommunityChallengerCard(
     // 선택된 챌린저 수에 따라 카드에 표시할 문구 구성
     val challengerText = when {
         challengers.isEmpty() -> {
-            "챌린저를 선택하세요"
+            AppStrings.COMMUNITY_CREATE_MEMBER_SELECT
         }
 
         challengers.size == 1 -> {
@@ -61,7 +62,7 @@ fun CommunityChallengerCard(
         }
 
         else -> {
-            "${challengers.first().name} 외 ${challengers.size - 1}명"
+            AppStrings.COMMUNITY_CREATE_MEMBER_SUMMARY_FORMAT.format(challengers.first().name, challengers.size - 1)
         }
     }
 

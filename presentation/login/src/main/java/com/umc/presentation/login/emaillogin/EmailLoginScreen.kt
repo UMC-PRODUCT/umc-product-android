@@ -142,7 +142,7 @@ fun EmailLoginScreen(
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            FieldLabel(text = AppStrings.EMAIL)
+            FieldLabel(text = AppStrings.COMMON_EMAIL)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -176,7 +176,7 @@ fun EmailLoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FieldLabel(text = AppStrings.PASSWORD)
+            FieldLabel(text = AppStrings.COMMON_PASSWORD)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -246,7 +246,7 @@ fun EmailLoginScreen(
                 )
 
                 UText(
-                    text = AppStrings.SIGN_UP,
+                    text = AppStrings.COMMON_SIGN_UP,
                     style = UmcTypographyTokens.Footnote,
                     color = grey500(),
                     modifier = Modifier.clickable { onClickSignUp() },
@@ -256,7 +256,7 @@ fun EmailLoginScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             UButton(
-                text = AppStrings.LOGIN,
+                text = AppStrings.COMMON_LOGIN,
                 onClick = onClickLogin,
                 enabled = uiState.enableLoginButton,
                 backgroundColor = if (uiState.enableLoginButton) main500() else grey100(),

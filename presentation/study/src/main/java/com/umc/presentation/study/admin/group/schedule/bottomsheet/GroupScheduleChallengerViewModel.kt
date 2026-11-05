@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -211,7 +212,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                 list[0].name
 
             else ->
-                "${list[0].name} 외 ${list.size - 1}명"
+                AppStrings.STUDY_GROUP_MEMBER_SUMMARY_FORMAT.format(list[0].name, list.size - 1)
         }
     }
 
@@ -280,9 +281,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                                     }
 
                                     if (participant.gisu > 0) {
-                                        append("(")
-                                        append(participant.gisu)
-                                        append("기)")
+                                        append(AppStrings.STUDY_MEMBER_GENERATION_FORMAT.format(participant.gisu))
                                     }
                                 },
 

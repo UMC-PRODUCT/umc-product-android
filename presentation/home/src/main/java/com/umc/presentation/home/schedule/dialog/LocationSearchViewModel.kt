@@ -1,5 +1,6 @@
 package com.umc.presentation.home.schedule.dialog
 
+import com.umc.component.theme.AppStrings
 import android.content.Context
 import android.location.Geocoder
 import android.os.Build
@@ -53,8 +54,8 @@ class LocationSearchViewModel @Inject constructor(
         updateState {
             copy(
                 selectedPlace = LocationItem(
-                    title = "현재 설정된 위치",
-                    address = "지도를 움직이거나 검색하여 장소를 선택하세요.",
+                    title = AppStrings.HOME_LOCATION_CURRENT_TITLE,
+                    address = AppStrings.HOME_LOCATION_MOVE_MAP_GUIDE,
                     latitude = lat,
                     longitude = lng
                 )
@@ -102,7 +103,7 @@ class LocationSearchViewModel @Inject constructor(
                         )
                     }
                     if (locationList.isEmpty()) {
-                        emitEvent(LocationSearchEvent.ShowToast("검색 결과가 없습니다."))
+                        emitEvent(LocationSearchEvent.ShowToast(AppStrings.HOME_LOCATION_SEARCH_EMPTY))
                     } else {
                         //최근 검색어 저장 트리거
                         saveRecentPlace(query)
@@ -110,7 +111,7 @@ class LocationSearchViewModel @Inject constructor(
                 },
                 errorCallback = {
                     updateState { copy(isSearching = false) }
-                    emitEvent(LocationSearchEvent.ShowToast("장소 검색에 실패했습니다."))
+                    emitEvent(LocationSearchEvent.ShowToast(AppStrings.HOME_LOCATION_SEARCH_FAILED))
                 }
             )
         }
@@ -135,7 +136,7 @@ class LocationSearchViewModel @Inject constructor(
                             updateState {
                                 copy(
                                     selectedPlace = LocationItem(
-                                        title = addr.featureName ?: "지정된 위치",
+                                        title = addr.featureName ?: AppStrings.HOME_LOCATION_UNSPECIFIED_TITLE,
                                         address = addr.getAddressLine(0) ?: "",
                                         latitude = lat,
                                         longitude = lng
@@ -153,7 +154,7 @@ class LocationSearchViewModel @Inject constructor(
                         updateState {
                             copy(
                                 selectedPlace = LocationItem(
-                                    title = addr.featureName ?: "지정된 위치",
+                                    title = addr.featureName ?: AppStrings.HOME_LOCATION_UNSPECIFIED_TITLE,
                                     address = addr.getAddressLine(0) ?: "",
                                     latitude = lat,
                                     longitude = lng
@@ -167,8 +168,8 @@ class LocationSearchViewModel @Inject constructor(
                 updateState {
                     copy(
                         selectedPlace = LocationItem(
-                            title = "선택한 지점",
-                            address = "상세 주소를 불러올 수 없습니다.",
+                            title = AppStrings.HOME_LOCATION_SELECTED_POINT_TITLE,
+                            address = AppStrings.HOME_LOCATION_ADDRESS_UNAVAILABLE,
                             latitude = lat,
                             longitude = lng
                         )

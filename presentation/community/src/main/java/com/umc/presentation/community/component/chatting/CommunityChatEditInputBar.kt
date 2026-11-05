@@ -20,6 +20,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
+import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -80,8 +82,8 @@ internal fun CommunityChatEditInputBar(
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("메시지 수정", color = grey950(), style = UmcTypographyTokens.SubheadlineBold)
-                        Text(
+                        UText(AppStrings.CHAT_EDIT_MESSAGE_TITLE, color = grey950(), style = UmcTypographyTokens.SubheadlineBold)
+                        UText(
                             originalText,
                             color = grey400(),
                             style = UmcTypographyTokens.Footnote,
@@ -130,8 +132,8 @@ internal fun CommunityChatEditInputBar(
                         }
                     }
                 }
-                if (saving) Text("저장 확인 중…", color = grey600(), style = UmcTypographyTokens.Footnote)
-                error?.let { Text(it, color = red400(), style = UmcTypographyTokens.Footnote) }
+                if (saving) UText(AppStrings.CHAT_EDIT_CONFIRMING, color = grey600(), style = UmcTypographyTokens.Footnote)
+                error?.let { UText(it, color = red400(), style = UmcTypographyTokens.Footnote) }
             }
         }
     }

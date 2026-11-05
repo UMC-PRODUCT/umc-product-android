@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.enums.PermissionType
 import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.enums.UserPart
@@ -256,7 +257,7 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    "그룹 정보가 수정됐어요."
+                                    AppStrings.STUDY_GROUP_EDIT_SUCCESS
                                 )
                             )
                         }
@@ -267,7 +268,7 @@ class AdminStudyGroupViewModel @Inject constructor(
                         is ApiState.Fail -> {
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    "수정에 실패했어요."
+                                    AppStrings.STUDY_GROUP_EDIT_ERROR
                                 )
                             )
                         }
@@ -343,7 +344,7 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    "그룹이 삭제됐어요."
+                                    AppStrings.STUDY_GROUP_DELETE_SUCCESS
                                 )
                             )
                         }
@@ -361,7 +362,7 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    "삭제에 실패했어요."
+                                    AppStrings.STUDY_GROUP_DELETE_ERROR
                                 )
                             )
                         }
@@ -545,9 +546,9 @@ class AdminStudyGroupViewModel @Inject constructor(
                             if (hasFailed) {
                                 // 서버 메시지(예: 권한 없음)를 우선 안내하고, 없으면 기본 문구 표시
                                 failMessage?.takeIf { it.isNotBlank() }
-                                    ?: "스터디원 수정에 실패했어요."
+                                    ?: AppStrings.STUDY_GROUP_MEMBER_EDIT_ERROR
                             } else {
-                                "스터디원이 수정됐어요."
+                                AppStrings.STUDY_GROUP_MEMBER_EDIT_SUCCESS
                             }
                         )
                     )
@@ -624,7 +625,7 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                     emitEvent(
                         AdminStudyGroupEvent.ShowToast(
-                            "스터디 그룹 목록을 불러오지 못했어요."
+                            AppStrings.STUDY_GROUP_LIST_ERROR
                         )
                     )
                 }

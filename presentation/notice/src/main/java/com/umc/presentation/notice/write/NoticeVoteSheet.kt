@@ -201,7 +201,7 @@ fun NoticeVoteSheetContent(
                 .border(1.dp, grey200(), RoundedCornerShape(12.dp)),
         ) {
             VoteDateRow(
-                label = AppStrings.START,
+                label = AppStrings.COMMON_START,
                 dateText = formatVoteDateTime(form.startsAt),
                 onClick = { showStartPicker = true },
             )
@@ -209,7 +209,7 @@ fun NoticeVoteSheetContent(
             HorizontalDivider(thickness = 1.dp, color = grey200())
 
             VoteDateRow(
-                label = AppStrings.END,
+                label = AppStrings.COMMON_END,
                 dateText = formatVoteDateTime(form.endsAt),
                 onClick = { showEndPicker = true },
             )

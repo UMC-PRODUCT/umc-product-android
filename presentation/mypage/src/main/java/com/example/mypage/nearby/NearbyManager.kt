@@ -1,5 +1,6 @@
 package com.example.mypage.nearby
 
+import com.umc.component.theme.AppStrings
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -98,11 +99,11 @@ class NearbyManager(
 
         client.startAdvertising(advertisingName, SERVICE_ID, lifecycleCallback, options)
             .addOnSuccessListener {
-                onEvent(NearbyManagerEvent.StatusUpdate("광고가 시작되었습니다. (탐색 가능)"))
+                onEvent(NearbyManagerEvent.StatusUpdate(AppStrings.NEARBY_ADVERTISING))
                 Log.d("NearbyDebug", "1-1. Advertising 성공 (광고 중...)")
             }
             .addOnFailureListener { e ->
-                onEvent(NearbyManagerEvent.Error("광고 시작 실패: ${e.localizedMessage}"))
+                onEvent(NearbyManagerEvent.Error(AppStrings.NEARBY_ADVERTISING_ERROR_FORMAT.format(e.localizedMessage)))
                 Log.e("NearbyDebug", "1-2. Advertising 실패: ${e.message}")
             }
     }
@@ -119,11 +120,11 @@ class NearbyManager(
             .build()
         client.startDiscovery(SERVICE_ID, discoveryCallback, options)
             .addOnSuccessListener {
-                onEvent(NearbyManagerEvent.StatusUpdate("주변 기기 탐색 중..."))
+                onEvent(NearbyManagerEvent.StatusUpdate(AppStrings.NEARBY_DISCOVERING))
                 Log.d("NearbyDebug", "2-1. Discovery 성공 (탐색 중...)")
             }
             .addOnFailureListener { e ->
-                onEvent(NearbyManagerEvent.Error("탐색 시작 실패: ${e.localizedMessage}"))
+                onEvent(NearbyManagerEvent.Error(AppStrings.NEARBY_DISCOVERY_ERROR_FORMAT.format(e.localizedMessage)))
                 Log.e("NearbyDebug", "2-2. Discovery 실패: ${e.message}")
             }
     }
@@ -154,13 +155,13 @@ class NearbyManager(
 
                 val message = if (exception is com.google.android.gms.common.api.ApiException) {
                     when (exception.statusCode) {
-                        ConnectionsStatusCodes.STATUS_ENDPOINT_UNKNOWN -> "기기를 찾을 수 없습니다."
-                        ConnectionsStatusCodes.STATUS_NETWORK_NOT_CONNECTED -> "네트워크에 연결되지 않았습니다."
-                        ConnectionsStatusCodes.STATUS_BLUETOOTH_ERROR -> "블루투스 오류가 발생했습니다."
-                        else -> "연결 오류: ${exception.statusCode}"
+                        ConnectionsStatusCodes.STATUS_ENDPOINT_UNKNOWN -> AppStrings.NEARBY_ENDPOINT_UNKNOWN
+                        ConnectionsStatusCodes.STATUS_NETWORK_NOT_CONNECTED -> AppStrings.NEARBY_NETWORK_DISCONNECTED
+                        ConnectionsStatusCodes.STATUS_BLUETOOTH_ERROR -> AppStrings.NEARBY_BLUETOOTH_ERROR
+                        else -> AppStrings.NEARBY_CONNECTION_ERROR_FORMAT.format(exception.statusCode)
                     }
                 } else {
-                    "알 수 없는 오류 발생"
+                    AppStrings.NEARBY_UNKNOWN_ERROR
                 }
                 //에러 메시지를 UI에 전달 (이벤트를 새롭게 추가해야 합니다)
                 onEvent(NearbyManagerEvent.Error(message))
@@ -188,10 +189,10 @@ class NearbyManager(
     fun sendUserCard(endpointId: String, card: UserCard) {
         client.sendPayload(endpointId, Payload.fromBytes(card.toJson().toByteArray()))
             .addOnSuccessListener {
-                onEvent(NearbyManagerEvent.StatusUpdate("카드 전송이 완료되었습니다. 연결을 종료합니다."))
+                onEvent(NearbyManagerEvent.StatusUpdate(AppStrings.NEARBY_SEND_COMPLETE))
             }
             .addOnFailureListener {
-                onEvent(NearbyManagerEvent.Error("카드 전송에 실패했습니다."))
+                onEvent(NearbyManagerEvent.Error(AppStrings.NEARBY_SEND_ERROR))
             }
     }
 
@@ -250,7 +251,7 @@ class NearbyManager(
                 onEvent(NearbyManagerEvent.ConnectionSuccess(id))
             }
             else{
-                onEvent(NearbyManagerEvent.Error("연결이 거절되었거나 실패했습니다."))
+                onEvent(NearbyManagerEvent.Error(AppStrings.NEARBY_CONNECTION_REJECTED))
             }
         }
 
@@ -259,7 +260,7 @@ class NearbyManager(
          */
         override fun onDisconnected(id: String) {
             Log.d("NearbyDebug", "X. Disconnected 발생: $id")
-            onEvent(NearbyManagerEvent.StatusUpdate("연결이 끊어졌습니다."))
+            onEvent(NearbyManagerEvent.StatusUpdate(AppStrings.NEARBY_DISCONNECTED))
         }
     }
 
@@ -293,7 +294,7 @@ class NearbyManager(
                     }
 
             } catch (e: Exception) {
-                onEvent(NearbyManagerEvent.Error("유저카드 파싱에 실패했습니다."))
+                onEvent(NearbyManagerEvent.Error(AppStrings.NEARBY_CARD_PARSE_ERROR))
             }
         }
 
@@ -311,7 +312,7 @@ class NearbyManager(
 
             //endpointName(JSON)을 파싱하여 NearbyUserInfo로 복원
             val parsedUserInfo = NearbyUserInfo.fromJson(info.endpointName)
-                ?: NearbyUserInfo(name = info.endpointName, info = "기본 테스트 정보")
+                ?: NearbyUserInfo(name = info.endpointName, info = AppStrings.NEARBY_TEST_INFO)
 
             //UI 이벤트 전달
             onEvent(NearbyManagerEvent.EndpointFound(id, parsedUserInfo))

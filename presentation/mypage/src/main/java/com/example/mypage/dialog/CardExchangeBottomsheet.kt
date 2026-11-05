@@ -223,8 +223,8 @@ fun CardExchangeBottomSheet(
         val targetInfo = selectedTargetUser.second
         UDialog(
             title = AppStrings.EXCHANGE_CARD_SEND_TITLE,
-            content = "${targetInfo.name}님에게 명함을 전송합니다.",
-            confirmText = "전송하기",
+            content = AppStrings.EXCHANGE_CARD_SEND_CONFIRM_FORMAT.format(targetInfo.name),
+            confirmText = AppStrings.EXCHANGE_CARD_SEND_ACTION,
             onConfirm = onConfirmConnect,
             onDismissRequest = onCancelDialog
         )

@@ -102,7 +102,7 @@ fun SignUpFailCodeRoute(
     errorMessage?.let { message ->
         UDialog(
             title = message,
-            confirmText = AppStrings.CONFIRM,
+            confirmText = AppStrings.COMMON_CONFIRM,
             onDismissRequest = { errorMessage = null },
             onConfirm = { errorMessage = null },
         )

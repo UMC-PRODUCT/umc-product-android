@@ -137,26 +137,26 @@ fun NoticeTags(target: NoticeTarget) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (isCentral) {
             val colors = UserChallengerRole.CENTRAL_PRESIDENT.tagColors()
-            NoticeTag(text = AppStrings.CENTRAL, backgroundColor = colors.base, textColor = colors.strong)
+            NoticeTag(text = AppStrings.COMMON_CENTRAL, backgroundColor = colors.base, textColor = colors.strong)
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetChapterId != null) {
             val colors = UserChallengerRole.CHAPTER_PRESIDENT.tagColors()
-            NoticeTag(text = AppStrings.BRANCH, backgroundColor = colors.base, textColor = colors.strong)
+            NoticeTag(text = AppStrings.COMMON_BRANCH, backgroundColor = colors.base, textColor = colors.strong)
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetSchoolId != null) {
             val colors = UserChallengerRole.SCHOOL_PRESIDENT.tagColors()
-            NoticeTag(text = AppStrings.SCHOOL, backgroundColor = colors.base, textColor = colors.strong)
+            NoticeTag(text = AppStrings.COMMON_SCHOOL, backgroundColor = colors.base, textColor = colors.strong)
             Spacer(modifier = Modifier.width(6.dp))
         }
 
         if (target.targetParts.isNotEmpty()) {
             val partColors = target.targetParts.map { UserPart.from(it) }.distinct().singleOrNull()?.tagColors()
             NoticeTag(
-                text = AppStrings.PART,
+                text = AppStrings.COMMON_PART,
                 backgroundColor = partColors?.base ?: grey100(),
                 textColor = partColors?.strong ?: grey600(),
             )
@@ -202,6 +202,7 @@ private fun NoticeCardPreview() {
             createdAt = "2024-03-01T00:00:00",
             targetInfo = NoticeTarget(
                 targetGisuId = 1,
+                targetChapterId = 1,
                 targetSchoolId = 1,
                 targetParts = listOf(UserPart.ANDROID.serverValue),
             ),
@@ -210,4 +211,10 @@ private fun NoticeCardPreview() {
             authorName = "홍길동",
         ),
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoticeTagsCentralPreview() {
+    NoticeTags(target = NoticeTarget(targetGisuId = 1))
 }

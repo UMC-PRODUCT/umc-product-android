@@ -138,7 +138,7 @@ fun PendingListScreen(
 
             if(isSelectApproveMode) {
                 UButton(
-                    text = AppStrings.CONFIRM,
+                    text = AppStrings.COMMON_CONFIRM,
                     textStyle = SubheadlineBold,
                     textColor = if(isConfirmEnabled) grey50() else grey300(),
                     enabled = isConfirmEnabled,
@@ -324,7 +324,7 @@ private fun PendingUserRow(
 
         Column(modifier = Modifier.weight(1f)) {
             UText(
-                text = "${user.name}(${user.nickname})",
+                text = AppStrings.CHALLENGER_NAME_NICKNAME_FORMAT.format(user.nickname, user.name),
                 style = CalloutBold,
                 color = grey800(),
                 maxLines = 1,
@@ -335,7 +335,7 @@ private fun PendingUserRow(
                 text = if (user.requestTime.isBlank()) {
                     user.university
                 } else {
-                    "${user.university}  ${user.requestTime} 요청"
+                    AppStrings.ADMIN_PENDING_SCHOOL_REQUEST_TIME_FORMAT.format(user.university, user.requestTime)
                 },
                 style = Footnote,
                 color = grey600()

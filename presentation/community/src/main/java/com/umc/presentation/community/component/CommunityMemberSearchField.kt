@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.Dp
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.R
 import com.umc.component.component.UTextField
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
@@ -20,7 +21,7 @@ internal fun CommunityMemberSearchField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "이름, 닉네임, 파트로 검색",
+    placeholder: String = AppStrings.COMMUNITY_MEMBER_SEARCH_PLACEHOLDER,
     fieldHeight: Dp = 48.dp,
     showClearButton: Boolean = false,
 ) {

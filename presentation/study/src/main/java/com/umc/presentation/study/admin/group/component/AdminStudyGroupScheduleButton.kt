@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -57,7 +58,7 @@ fun AdminStudyGroupScheduleButton(
         )
 
         UText(
-            text = "스터디 일정 등록하기",
+            text = AppStrings.STUDY_GROUP_SCHEDULE_CREATE_ACTION,
             style = CalloutBold,
             color = grey700()
         )

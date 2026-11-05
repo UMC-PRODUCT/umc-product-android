@@ -31,6 +31,7 @@ import com.umc.presentation.community.component.search.CommunitySearchBar
 import com.umc.presentation.community.component.search.CommunitySearchEmptyContent
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
+import com.umc.component.theme.AppStrings
 
 /**
  * 커뮤니티 스레드 검색 화면
@@ -232,10 +233,10 @@ private fun CommunitySearchResultList(
                 state.isLoadingMore -> CircularProgressIndicator(Modifier.padding(16.dp))
                 state.loadMoreError != null -> Column {
                     UText(state.loadMoreError)
-                    TextButton(onClick = onLoadMore) { UText("다시 시도") }
+                    TextButton(onClick = onLoadMore) { UText(AppStrings.COMMUNITY_SEARCH_RETRY) }
                 }
                 state.nextOffset != null -> TextButton(onClick = onLoadMore) {
-                    UText("검색 결과 더 보기")
+                    UText(AppStrings.COMMUNITY_SEARCH_MORE_ACTION)
                 }
             }
         }

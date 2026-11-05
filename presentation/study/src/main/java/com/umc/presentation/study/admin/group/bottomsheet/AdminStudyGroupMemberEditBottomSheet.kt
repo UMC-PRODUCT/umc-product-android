@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -131,7 +132,7 @@ fun AdminStudyGroupMemberEditBottomSheet(
             UTextField(
                 value = state.query,
                 onValueChange = viewModel::searchMembers,
-                placeholder = "이름을 입력하세요",
+                placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -219,9 +220,9 @@ private fun EditMemberHeader(
     ) {
         UText(
             text = if (isSearching) {
-                "스터디원을 검색하세요"
+                AppStrings.STUDY_MEMBER_SEARCH_TITLE
             } else {
-                "스터디원을 추가하세요"
+                AppStrings.STUDY_MEMBER_ADD_TITLE
             },
             style = UmcTypographyTokens.Title3Bold,
             color = grey800(),
@@ -231,7 +232,7 @@ private fun EditMemberHeader(
         // 검색 중일 때만 확인 버튼 표시
         if (isSearching) {
             UButton(
-                text = "확인",
+                text = AppStrings.STUDY_MEMBER_CONFIRM,
                 onClick = onConfirmClick,
                 enabled = isConfirmEnabled,
                 modifier = Modifier
@@ -271,7 +272,7 @@ private fun EditCurrentMemberContent(
             contentAlignment = Alignment.Center,
         ) {
             UText(
-                text = "추가된 스터디원이 없어요",
+                text = AppStrings.STUDY_MEMBER_EMPTY_EDIT,
                 style = UmcTypographyTokens.Body,
                 color = grey500(),
             )
@@ -351,7 +352,7 @@ private fun EditMemberRow(
 
         // 현재 그룹에서 스터디원 삭제
         UButton(
-            text = "삭제",
+            text = AppStrings.STUDY_MEMBER_DELETE,
             onClick = onDeleteClick,
             modifier = Modifier
                 .width(50.dp)

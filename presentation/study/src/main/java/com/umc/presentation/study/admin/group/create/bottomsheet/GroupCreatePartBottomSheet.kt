@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -64,7 +65,7 @@ fun GroupCreatePartBottomSheet(
         ) {
             // 파트 선택 안내 문구
             UText(
-                text = "파트를 선택하세요",
+                text = AppStrings.STUDY_GROUP_PART_PLACEHOLDER,
                 style = UmcTypographyTokens.Title3Bold,
                 color = grey800(),
                 modifier = Modifier.padding(top = 8.dp),

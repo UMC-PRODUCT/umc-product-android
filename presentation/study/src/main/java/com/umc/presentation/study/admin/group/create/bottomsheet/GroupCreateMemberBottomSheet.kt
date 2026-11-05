@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -115,9 +116,9 @@ fun GroupCreateMemberBottomSheet(
             // 검색 여부에 따라 제목 및 확인 버튼 표시
             GroupCreatePickerHeader(
                 title = if (state.isSearching) {
-                    "스터디원을 검색하세요"
+                    AppStrings.STUDY_MEMBER_SEARCH_TITLE
                 } else {
-                    "스터디원을 추가하세요"
+                    AppStrings.STUDY_MEMBER_ADD_TITLE
                 },
                 showConfirmButton = state.isSearching,
                 isConfirmEnabled = state.isConfirmEnabled,
@@ -134,7 +135,7 @@ fun GroupCreateMemberBottomSheet(
             UTextField(
                 value = state.query,
                 onValueChange = viewModel::searchMembers,
-                placeholder = "이름을 입력하세요",
+                placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -270,7 +271,7 @@ fun GroupCreateAddedMemberRow(
 
         // 멤버 삭제 버튼
         UButton(
-            text = "삭제",
+            text = AppStrings.STUDY_MEMBER_DELETE,
             onClick = onRemoveClick,
             modifier = Modifier
                 .width(50.dp)
@@ -312,7 +313,7 @@ fun GroupCreatePickerHeader(
 
         if (showConfirmButton) {
             UButton(
-                text = "확인",
+                text = AppStrings.STUDY_MEMBER_CONFIRM,
                 onClick = onConfirmClick,
                 enabled = isConfirmEnabled,
                 modifier = Modifier
@@ -395,7 +396,7 @@ private fun CurrentMemberContent(
 ) {
     if (members.isEmpty()) {
         GroupCreateEmptyContent(
-            text = "아직 추가한 스터디원이 없어요"
+            text = AppStrings.STUDY_MEMBER_EMPTY_CREATE
         )
         return
     }

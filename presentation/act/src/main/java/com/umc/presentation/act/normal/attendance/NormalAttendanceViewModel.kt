@@ -12,6 +12,7 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.act.check.UserCheckAvailable
 import com.umc.domain.model.act.check.UserCheckHistory
 import com.umc.domain.model.enums.CheckAvailableStatus
@@ -64,7 +65,7 @@ class NormalAttendanceViewModel @Inject constructor(
         if (session.isOnline) return
 
         if (!hasLocationPermission()) {
-            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_PERMISSION_REQUIRED_TOAST))
             return
         }
 
@@ -75,7 +76,7 @@ class NormalAttendanceViewModel @Inject constructor(
             targetLongitude == null ||
             (targetLatitude == 0.0 && targetLongitude == 0.0)
         ) {
-            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_MISSING_TOAST))
             return
         }
 
@@ -85,7 +86,7 @@ class NormalAttendanceViewModel @Inject constructor(
                 CancellationTokenSource().token
             ).addOnSuccessListener { currentLocation ->
                 if (currentLocation == null) {
-                    if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
+                    if (!silent) emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ACT_CURRENT_LOCATION_UNAVAILABLE_TOAST))
                     return@addOnSuccessListener
                 }
 
@@ -101,10 +102,10 @@ class NormalAttendanceViewModel @Inject constructor(
                     distanceMeters = distanceMeters.toInt(),
                 )
             }.addOnFailureListener {
-                if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
+                if (!silent) emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_LOOKUP_FAILED_TOAST))
             }
         } catch (_: SecurityException) {
-            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            if (!silent) emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_PERMISSION_REQUIRED_TOAST))
         }
     }
 
@@ -125,7 +126,7 @@ class NormalAttendanceViewModel @Inject constructor(
         }
 
         if (!hasLocationPermission()) {
-            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_PERMISSION_REQUIRED_TOAST))
             return
         }
 
@@ -136,7 +137,7 @@ class NormalAttendanceViewModel @Inject constructor(
             targetLongitude == null ||
             (targetLatitude == 0.0 && targetLongitude == 0.0)
         ) {
-            emitEvent(NormalAttendanceEvent.ShowToast("출석 위치 정보가 없습니다."))
+            emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_MISSING_TOAST))
             return
         }
 
@@ -149,7 +150,7 @@ class NormalAttendanceViewModel @Inject constructor(
             ).addOnSuccessListener { currentLocation ->
                 if (currentLocation == null) {
                     finishAttendanceRequest()
-                    emitEvent(NormalAttendanceEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
+                    emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ACT_CURRENT_LOCATION_UNAVAILABLE_TOAST))
                     return@addOnSuccessListener
                 }
 
@@ -169,7 +170,7 @@ class NormalAttendanceViewModel @Inject constructor(
                     )
                     emitEvent(
                         NormalAttendanceEvent.ShowToast(
-                            "출석 위치에서 ${distanceMeters.toInt()}m 떨어져 있습니다."
+                            AppStrings.ATTENDANCE_LOCATION_DISTANCE_FORMAT.format(distanceMeters.toInt())
                         )
                     )
                     return@addOnSuccessListener
@@ -189,13 +190,13 @@ class NormalAttendanceViewModel @Inject constructor(
                 )
             }.addOnFailureListener {
                 finishAttendanceRequest()
-                emitEvent(NormalAttendanceEvent.ShowToast("현재 위치 확인에 실패했습니다."))
+                emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_LOOKUP_FAILED_TOAST))
             }.addOnCanceledListener {
                 finishAttendanceRequest()
             }
         } catch (_: SecurityException) {
             finishAttendanceRequest()
-            emitEvent(NormalAttendanceEvent.ShowToast("정확한 위치 권한이 필요합니다."))
+            emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_PERMISSION_REQUIRED_TOAST))
         }
     }
 
@@ -438,7 +439,7 @@ private fun UserCheckAvailable.toUi(): NormalAvailableSessionUi {
         id = id,
         sheetId = sheetId,
         title = title,
-        timeRange = "$startTime - $endTime",
+        timeRange = AppStrings.ATTENDANCE_TIME_RANGE_FORMAT.format(startTime, endTime),
         status = status,
         isLocationCertified = isLocationCertified,
         address = address
@@ -455,7 +456,7 @@ private fun UserCheckHistory.toUi(): NormalHistorySessionUi {
     return NormalHistorySessionUi(
         id = id.toLong(),
         title = title,
-        timeRange = "$startTime - $endTime",
+        timeRange = AppStrings.ATTENDANCE_TIME_RANGE_FORMAT.format(startTime, endTime),
         status = status
     )
 }

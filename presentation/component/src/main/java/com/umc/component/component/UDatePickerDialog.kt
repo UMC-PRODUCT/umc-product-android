@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -54,7 +55,7 @@ fun UDatePickerDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 UText(
-                    text = "날짜를 선택해주세요.",
+                    text = AppStrings.DIALOG_DATE_PICKER_TITLE,
                     style = UmcTypographyTokens.Title3Bold,
                     color = grey900(),
                     modifier = Modifier.padding(bottom = 24.dp)
@@ -74,7 +75,7 @@ fun UDatePickerDialog(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     UText(
-                        text = "날짜",
+                        text = AppStrings.DIALOG_DATETIME_DATE,
                         style = UmcTypographyTokens.CalloutBold,
                         color = grey900()
                     )
@@ -92,7 +93,7 @@ fun UDatePickerDialog(
                     ),
                     placeholder = {
                         UText(
-                            text = "YYYY . MM . DD",
+                            text = AppStrings.DIALOG_DATE_FORMAT_HINT,
                             color = grey400()
                         )
                     },
@@ -114,7 +115,7 @@ fun UDatePickerDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 UButton(
-                    text = "취소",
+                    text = AppStrings.COMMON_CANCEL,
                     onClick = onDismiss,
                     backgroundColor = grey100(),
                     textColor = grey700(),
@@ -124,7 +125,7 @@ fun UDatePickerDialog(
                 )
 
                 UButton(
-                    text = "확인",
+                    text = AppStrings.COMMON_CONFIRM,
                     onClick = {
                         if (isConfirmEnabled) {
                             val year = dateInput.substring(0, 4).toInt()

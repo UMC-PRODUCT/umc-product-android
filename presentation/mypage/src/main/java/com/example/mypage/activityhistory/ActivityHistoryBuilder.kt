@@ -1,5 +1,6 @@
 package com.example.mypage.activityhistory
 
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.enums.UserChallengerRole
@@ -44,7 +45,7 @@ class ActivityHistoryBuilder @Inject constructor(
         val gisuSummaryList = userInfo.getGisuSummaryList()
 
         gisuSummaryList.flatMap { summary ->
-            val generationText = "${summary.gisu}기"
+            val generationText = AppStrings.ACTIVITY_HISTORY_GENERATION_FORMAT.format(summary.gisu)
             val hasRole = summary.fromRoles.isNotEmpty()
 
             //운영진 기록
@@ -96,7 +97,11 @@ class ActivityHistoryBuilder @Inject constructor(
             val chapterName = userInfo.challengerRecords
                 .firstOrNull { it.challengerId == roleItem.challengerId }
                 ?.chapterName
-            return if (!chapterName.isNullOrBlank()) item("${chapterName}지부 $roleLabel") else item(roleLabel)
+            return if (!chapterName.isNullOrBlank()) {
+                item(AppStrings.ACTIVITY_HISTORY_CHAPTER_ROLE_FORMAT.format(chapterName, roleLabel))
+            } else {
+                item(roleLabel)
+            }
         }
 
         //담당 파트가 있는 경우 (ex. 안드로이드 파트장)
@@ -113,7 +118,7 @@ class ActivityHistoryBuilder @Inject constructor(
         //그 외 - 지부 단위 운영진인 경우 (지부 이름을 못 불러오면 직함만 넣는다)
         if (roleItem.organizationType == "CHAPTER") {
             return when (val result = getChapterDetailUseCase(roleItem.organizationId)) {
-                is ApiState.Success -> item("${result.data.name}지부 $roleLabel")
+                is ApiState.Success -> item(AppStrings.ACTIVITY_HISTORY_CHAPTER_ROLE_FORMAT.format(result.data.name, roleLabel))
                 is ApiState.Fail -> item(roleLabel)
             }
         }
@@ -128,7 +133,7 @@ class ActivityHistoryBuilder @Inject constructor(
         return UserActiveItem(
             generation = generationText,
             partName = "${UserPart.from(recordItem.responsiblePart).label} Part",
-            position = UserChallengerRole.CHALLENGER.tagLabel.orEmpty(),
+            position = AppStrings.ACTIVITY_HISTORY_CHALLENGER,
             role = UserChallengerRole.CHALLENGER,
         )
     }

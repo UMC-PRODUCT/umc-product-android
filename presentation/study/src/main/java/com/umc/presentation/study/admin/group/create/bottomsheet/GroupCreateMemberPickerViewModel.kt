@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.create.bottomsheet
 
+import com.umc.component.theme.AppStrings
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
@@ -359,9 +360,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                 }
 
                 if (gisu > 0L) {
-                    append("(")
-                    append(gisu)
-                    append("기)")
+                    append(AppStrings.STUDY_MEMBER_GENERATION_FORMAT.format(gisu))
                 }
             },
             partLabel = partLabel,

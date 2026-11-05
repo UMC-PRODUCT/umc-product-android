@@ -13,6 +13,7 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
 import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
@@ -177,7 +178,7 @@ class FixLocationViewModel @Inject constructor(
                 ) == PackageManager.PERMISSION_GRANTED
 
         if (!hasLocationPermission) {
-            emitEvent(FixLocationEvent.ShowToast("현재 위치를 확인하려면 위치 권한이 필요합니다."))
+            emitEvent(FixLocationEvent.ShowToast(AppStrings.ACT_LOCATION_PERMISSION_REQUIRED_TOAST))
             return
         }
 
@@ -189,18 +190,18 @@ class FixLocationViewModel @Inject constructor(
             ).addOnSuccessListener { location ->
                 stopLoading()
                 if (location == null) {
-                    emitEvent(FixLocationEvent.ShowToast("현재 위치를 확인할 수 없습니다."))
+                    emitEvent(FixLocationEvent.ShowToast(AppStrings.ACT_CURRENT_LOCATION_UNAVAILABLE_TOAST))
                     return@addOnSuccessListener
                 }
 
                 updateLocationFromCoordinates(location.latitude, location.longitude)
             }.addOnFailureListener {
                 stopLoading()
-                emitEvent(FixLocationEvent.ShowToast("현재 위치를 확인하지 못했습니다."))
+                emitEvent(FixLocationEvent.ShowToast(AppStrings.ACT_LOCATION_LOOKUP_FAILED_TOAST))
             }
         } catch (_: SecurityException) {
             stopLoading()
-            emitEvent(FixLocationEvent.ShowToast("현재 위치를 확인하려면 위치 권한이 필요합니다."))
+            emitEvent(FixLocationEvent.ShowToast(AppStrings.ACT_LOCATION_PERMISSION_REQUIRED_TOAST))
         }
     }
 
@@ -212,7 +213,7 @@ class FixLocationViewModel @Inject constructor(
                         val address = addresses.firstOrNull() ?: return@getFromLocation
                         selectLocation(
                             location = LocationItem(
-                                title = address.featureName ?: "선택한 위치",
+                                title = address.featureName ?: AppStrings.ACT_LOCATION_SELECTED_PLACE,
                                 address = address.getAddressLine(0).orEmpty(),
                                 latitude = latitude,
                                 longitude = longitude,
@@ -226,7 +227,7 @@ class FixLocationViewModel @Inject constructor(
                         ?: return@launch
                     selectLocation(
                         location = LocationItem(
-                            title = address.featureName ?: "선택한 위치",
+                            title = address.featureName ?: AppStrings.ACT_LOCATION_SELECTED_PLACE,
                             address = address.getAddressLine(0).orEmpty(),
                             latitude = latitude,
                             longitude = longitude,
@@ -236,7 +237,7 @@ class FixLocationViewModel @Inject constructor(
             } catch (_: Exception) {
                 selectLocation(
                     location = LocationItem(
-                        title = "선택한 위치",
+                        title = AppStrings.ACT_LOCATION_SELECTED_PLACE,
                         address = "",
                         latitude = latitude,
                         longitude = longitude,

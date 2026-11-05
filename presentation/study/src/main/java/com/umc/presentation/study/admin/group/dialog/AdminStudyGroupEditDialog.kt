@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group.dialog
 
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.enums.UserPart
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -104,7 +105,7 @@ fun AdminStudyGroupEditDialog(
              * 다이얼로그 제목
              */
             UText(
-                text = "그룹 정보 수정",
+                text = AppStrings.STUDY_GROUP_EDIT_TITLE,
                 style = SubheadlineBold,
                 color = grey900(),
                 modifier = Modifier.align(
@@ -120,7 +121,7 @@ fun AdminStudyGroupEditDialog(
              * 다이얼로그 설명
              */
             UText(
-                text = "스터디 그룹의 기본 정보를 변경합니다.",
+                text = AppStrings.STUDY_GROUP_EDIT_DESCRIPTION,
                 style = Caption1,
                 color = grey500(),
                 modifier = Modifier.align(
@@ -136,7 +137,7 @@ fun AdminStudyGroupEditDialog(
              * 그룹 이름 입력 영역
              */
             UText(
-                text = "그룹 이름",
+                text = AppStrings.STUDY_GROUP_NAME_LABEL,
                 style = Caption1Bold,
                 color = grey800()
             )
@@ -175,7 +176,7 @@ fun AdminStudyGroupEditDialog(
                          */
                         if (groupName.isBlank()) {
                             UText(
-                                text = "예: React 실습 A팀",
+                                text = AppStrings.STUDY_GROUP_NAME_PLACEHOLDER,
                                 style = Body,
                                 color = grey400()
                             )
@@ -195,7 +196,7 @@ fun AdminStudyGroupEditDialog(
              * 소속 파트 선택 영역
              */
             UText(
-                text = "소속 파트",
+                text = AppStrings.STUDY_GROUP_AFFILIATION_PART_LABEL,
                 style = Caption1Bold,
                 color = grey800()
             )
@@ -320,7 +321,7 @@ fun AdminStudyGroupEditDialog(
             ) {
                 // 수정 취소
                 UButton(
-                    text = "취소",
+                    text = AppStrings.COMMON_CANCEL,
                     onClick = onDismiss,
                     modifier = Modifier
                         .weight(1f)
@@ -339,7 +340,7 @@ fun AdminStudyGroupEditDialog(
                  * 활성/비활성 상태에 따라 버튼 색상도 변경합니다.
                  */
                 UButton(
-                    text = "수정 완료",
+                    text = AppStrings.STUDY_GROUP_EDIT_COMPLETE,
                     onClick = onConfirm,
                     modifier = Modifier
                         .weight(1f)

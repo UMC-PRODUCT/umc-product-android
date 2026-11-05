@@ -139,7 +139,7 @@ fun NormalAttendanceRoute(
         } else if (pendingSession != null || pendingVerificationSessionId != null) {
             Toast.makeText(
                 context,
-                "출석 위치 확인을 위해 정확한 위치 권한이 필요합니다.",
+                AppStrings.ATTENDANCE_LOCATION_PERMISSION_REQUEST_TOAST,
                 Toast.LENGTH_SHORT
             ).show()
             // '다시 묻지 않음'까지 거부된 상태면 팝업이 뜨지 않으므로 앱 설정으로 안내한다

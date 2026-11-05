@@ -137,7 +137,7 @@ fun HomeRoute(
             title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
             content = AppStrings.EXCHANGE_CARD_BLOCKED_CONTENT,
             onDismissRequest = { showExchangeBlockedDialog = false },
-            confirmText = AppStrings.CONFIRM,
+            confirmText = AppStrings.COMMON_CONFIRM,
             onConfirm = { showExchangeBlockedDialog = false },
         )
     }
@@ -485,7 +485,7 @@ fun HomeShareCardsRow(
                     modifier = Modifier.padding(end = 50.dp)
                 ) {
                     UText(
-                        text = if (isTypeA) "오늘 만난 인연,\n명함으로 이어가세요" else "디지털 명함,\n이제 UMC 앱에서",
+                        text = if (isTypeA) AppStrings.HOME_CARD_BANNER_TITLE_A else AppStrings.HOME_CARD_BANNER_TITLE_B,
                         color = grey50(),
                         style = UmcTypographyTokens.Title3Bold
                     )
@@ -493,7 +493,7 @@ fun HomeShareCardsRow(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     UText(
-                        text = "디지털 명함으로 간편하게 교환하세요",
+                        text = AppStrings.HOME_CARD_BANNER_DESCRIPTION,
                         color = grey50(),
                         style = UmcTypographyTokens.Footnote
                     )
@@ -503,7 +503,7 @@ fun HomeShareCardsRow(
 
 
                 UButton(
-                    text = "명함 교환하기",
+                    text = AppStrings.EXCHANGE_CARD_TITLE,
                     onClick = onCardClick,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -598,7 +598,7 @@ fun HomeProfileCardsRow(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             UText(
-                                text = "Days",
+                                text = AppStrings.HOME_ACTIVITY_DAYS_UNIT,
                                 style = UmcTypographyTokens.Footnote,
                                 color = grey700(),
                                 softWrap = false,
@@ -818,7 +818,7 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
                         ScoreCard(
                             modifier = Modifier
                                 .weight(1f),
-                            label = AppStrings.PUNISH,
+                            label = AppStrings.COMMON_PUNISH,
                             score = uiState.buljum,
                             color = red500(),
                         )
@@ -886,7 +886,7 @@ private fun ScoreCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 UText(
-                    text = "point",
+                    text = AppStrings.HOME_POINT_UNIT,
                     style = UmcTypographyTokens.Caption1.copy(fontSize = 12.sp),
                     color = grey600(),
                     softWrap = false,

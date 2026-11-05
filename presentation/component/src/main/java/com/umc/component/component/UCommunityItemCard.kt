@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -90,7 +91,7 @@ fun UCommunityItemCard(
             ) {
                 // 유저 정보 및 작성 시간
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    val userText = if (item.username.isEmpty()) "알 수 없음"
+                    val userText = if (item.username.isEmpty()) AppStrings.COMMON_UNKNOWN
                     else "${item.userNickName}(${item.username})"
 
                     UText(

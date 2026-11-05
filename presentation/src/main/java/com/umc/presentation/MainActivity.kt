@@ -2,6 +2,7 @@ package com.umc.presentation
 
 import com.umc.component.fcm.NotificationEventHistory
 import com.umc.component.fcm.isSupportedAppLink
+import com.umc.component.fcm.shouldOpenAppLinkInBrowser
 import com.umc.component.fcm.CommunityNotification
 import com.umc.component.fcm.FcmTokenSynchronizer
 import javax.inject.Inject
@@ -53,6 +54,7 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.presentation.remotenotice.RemoteNoticeHost
+import com.umc.presentation.analytics.ScreenViewTracker
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -60,6 +62,10 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (openUnsupportedWebLink(intent)) {
+            finish()
+            return
+        }
         PendingDeepLink.initialize(this)
         // 외부 링크로 처음 열린 경우 NavController 가 곧바로 목적지를 열지 않도록 링크를 보류한다.
         // 앱은 항상 스플래시(인증 판정)부터 시작하고, 홈에 도착한 뒤 원래 목적지로 이동한다.
@@ -89,9 +95,28 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (openUnsupportedWebLink(intent)) return
         setIntent(intent)
         acceptDeepLink(intent)
         intent.data = null
+    }
+
+    private fun openUnsupportedWebLink(incoming: Intent?): Boolean {
+        if (incoming?.action != Intent.ACTION_VIEW) return false
+        val link = incoming.data ?: return false
+        if (!shouldOpenAppLinkInBrowser(link.toString())) return false
+        // URL 자체로 앱을 재선택하지 않고 브라우저 카테고리로 실행 대상을 고른다.
+        val browserIntent = Intent(Intent.ACTION_VIEW, link).apply {
+            selector = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_BROWSER)
+        }
+        return try {
+            startActivity(browserIntent)
+            incoming.data = null
+            true
+        } catch (error: android.content.ActivityNotFoundException) {
+            android.util.Log.w("DeepLink", "No browser available for unsupported web link", error)
+            false
+        }
     }
 
     private fun acceptDeepLink(incoming: Intent?) {
@@ -183,6 +208,9 @@ private fun UmcApp() {
 
             // 원격 설정으로 켠 안내. 이용을 막는 화면(BLOCKING)은 하단바까지 덮어야 해서 Scaffold 바깥에 둔다
             RemoteNoticeHost(currentRoute = currentDestination?.route)
+
+            // 화면 이동마다 Firebase Analytics 에 screen_view 를 남긴다
+            ScreenViewTracker(backStackEntry = navBackStackEntry)
         }
     }
 }

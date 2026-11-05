@@ -1,5 +1,6 @@
 package com.umc.presentation.study.admin.group
 
+import com.umc.component.theme.AppStrings
 import com.umc.domain.model.enums.UserPart
 
 import kotlinx.collections.immutable.ImmutableList
@@ -81,7 +82,7 @@ data class AdminStudyGroupItemUiModel(
         get() = createdAtRaw
             .takeIf { it.length >= 10 }
             ?.let {
-                "생성일: ${it.take(10).replace("-", ".")}"
+                AppStrings.STUDY_GROUP_CREATED_AT_FORMAT.format(it.take(10).replace("-", "."))
             }
-            ?: "생성일: -"
+            ?: AppStrings.STUDY_GROUP_CREATED_AT_UNKNOWN
 }

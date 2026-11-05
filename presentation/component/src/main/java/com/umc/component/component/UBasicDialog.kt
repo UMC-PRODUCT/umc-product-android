@@ -1,5 +1,6 @@
 package com.umc.component.component
 
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -70,8 +71,8 @@ enum class DialogType { WARNING, CANCEL, ERROR, SUCCESS }
 fun UBasicDialog(
     title: String, //제목
     content: String? = null, //내용
-    negativeText: String = "취소", //취소 버튼의 텍스트 
-    positiveText: String = "확인", //확인 버튼의 텍스트
+    negativeText: String = AppStrings.COMMON_CANCEL, //취소 버튼의 텍스트
+    positiveText: String = AppStrings.COMMON_CONFIRM, //확인 버튼의 텍스트
     type: DialogType = DialogType.WARNING,
     onPositive: () -> Unit,
     onNegative: () -> Unit,

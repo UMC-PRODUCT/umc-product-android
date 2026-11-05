@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.theme.AppStrings
 
 /**
  * 스레드 수정 화면의 Route
@@ -49,7 +50,7 @@ fun CommunityEditRoute(
             CommunityEditEvent.SaveSuccess -> {
                 Toast.makeText(
                     context,
-                    "스레드가 수정되었습니다.",
+                    AppStrings.COMMUNITY_EDIT_SUCCESS,
                     Toast.LENGTH_SHORT,
                 ).show()
 
@@ -60,7 +61,7 @@ fun CommunityEditRoute(
             CommunityEditEvent.DeleteSuccess -> {
                 Toast.makeText(
                     context,
-                    "스레드가 삭제되었습니다.",
+                    AppStrings.COMMUNITY_DELETE_SUCCESS,
                     Toast.LENGTH_SHORT,
                 ).show()
 
@@ -77,7 +78,7 @@ fun CommunityEditRoute(
             CommunityEditEvent.MemberInviteSuccess -> {
                 Toast.makeText(
                     context,
-                    "챌린저를 추가했습니다.",
+                    AppStrings.COMMUNITY_MEMBER_ADD_SUCCESS,
                     Toast.LENGTH_SHORT,
                 ).show()
             }

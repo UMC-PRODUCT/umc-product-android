@@ -124,7 +124,7 @@ fun SignUpRoute(
             UDialog(
                 title = message,
                 onDismissRequest = { errorDialogMessage = null },
-                confirmText = AppStrings.CONFIRM,
+                confirmText = AppStrings.COMMON_CONFIRM,
                 onConfirm = {
                     errorDialogMessage = null
                 },
@@ -236,7 +236,7 @@ fun SignUpScreen(
         )
 
         UText(
-            text = AppStrings.SIGN_UP,
+            text = AppStrings.COMMON_SIGN_UP,
             style = UmcTypographyTokens.Title1Bold,
             color = grey950(),
             modifier = Modifier.padding(start = 24.dp, top = 16.dp),
@@ -258,7 +258,7 @@ fun SignUpScreen(
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    FieldLabel(text = AppStrings.NAME)
+                    FieldLabel(text = AppStrings.COMMON_NAME)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -278,7 +278,7 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    FieldLabel(text = AppStrings.NICKNAME)
+                    FieldLabel(text = AppStrings.COMMON_NICKNAME)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -298,7 +298,7 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FieldLabel(text = AppStrings.SCHOOL)
+            FieldLabel(text = AppStrings.COMMON_SCHOOL)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -327,7 +327,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             UButton(
-                text = AppStrings.NEXT,
+                text = AppStrings.COMMON_NEXT,
                 onClick = onClickNext,
                 enabled = uiState.enableNextButton,
                 backgroundColor = if (uiState.enableNextButton) main500() else grey100(),

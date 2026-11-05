@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
@@ -78,7 +79,7 @@ fun CommunityThreadPreview(
             ) {
                 // 제목이 길어도 카테고리 칩이 밀려나지 않도록 남은 폭까지만 차지
                 UText(
-                    text = title.ifBlank { "스레드 제목" },
+                    text = title.ifBlank { AppStrings.COMMUNITY_CREATE_PREVIEW_TITLE },
                     style = UmcTypographyTokens.HeadlineBold,
                     color = if (title.isBlank()) grey400() else grey900(),
                     maxLines = 1,
@@ -94,7 +95,7 @@ fun CommunityThreadPreview(
             }
 
             UText(
-                text = description.ifBlank { "특징" },
+                text = description.ifBlank { AppStrings.COMMUNITY_CREATE_PREVIEW_DESCRIPTION },
                 style = UmcTypographyTokens.Subheadline,
                 color = if (description.isBlank()) grey400() else grey700(),
                 maxLines = 1,
