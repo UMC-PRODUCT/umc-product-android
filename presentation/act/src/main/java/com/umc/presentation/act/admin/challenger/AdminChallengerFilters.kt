@@ -1,7 +1,6 @@
 package com.umc.presentation.act.admin.challenger
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,18 +8,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,13 +27,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.USelectSheetContent
+import com.umc.component.component.UChip
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
@@ -52,6 +55,7 @@ import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import androidx.compose.ui.semantics.onClick as accessibilityClick
 import com.umc.component.R as ComponentR
 
 data class AdminChallengerFilterOption(val id: Long, val label: String)
@@ -120,6 +124,7 @@ internal fun AdminChallengerFilterBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChallengerFilterChip(
     label: String,
@@ -128,31 +133,39 @@ private fun ChallengerFilterChip(
     onClick: () -> Unit,
 ) {
     val active = isSelected && !isFixed
-    // 공용 UChip은 onClick이 null이어도 클릭 의미를 가지므로, 고정 칩은 표시 전용 Row로 구성한다.
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(100.dp))
-            .background(if (active) grey800() else grey100())
-            .then(if (isFixed) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick))
-            .heightIn(min = 38.dp)
-            .padding(start = 16.dp, end = if (isFixed) 16.dp else 12.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        UText(
-            text = label,
-            style = CalloutBold,
-            color = if (active) white() else grey500(),
-            maxLines = 1,
-        )
+    // UChip을 수정하지 않고 고정 칩의 클릭 접근성 정보와 터치 효과만 호출부에서 제거한다.
+    val chipModifier = Modifier.clearAndSetSemantics {
+        text = AnnotatedString(label)
         if (!isFixed) {
-            Icon(
-                painter = painterResource(ComponentR.drawable.ic_dropdown_down),
-                contentDescription = null,
-                tint = grey400(),
-                modifier = Modifier.size(24.dp),
-            )
+            role = Role.Button
+            accessibilityClick {
+                onClick()
+                true
+            }
         }
+    }
+    val rippleConfiguration = LocalRippleConfiguration.current
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides if (isFixed) null else rippleConfiguration,
+        // Surface의 기본 최소 높이 대신 필터 디자인의 38dp 높이를 사용한다.
+        LocalMinimumInteractiveComponentSize provides 0.dp,
+    ) {
+        UChip(
+            text = label,
+            modifier = chipModifier,
+            backgroundColor = if (active) grey800() else grey100(),
+            textColor = if (active) white() else grey500(),
+            textStyle = CalloutBold,
+            minHeight = 38.dp,
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = if (isFixed) 16.dp else 12.dp,
+                top = 6.dp,
+                bottom = 6.dp,
+            ),
+            nextIcon = if (isFixed) null else ComponentR.drawable.ic_dropdown_down,
+            onClick = if (isFixed) null else onClick,
+        )
     }
 }
 
