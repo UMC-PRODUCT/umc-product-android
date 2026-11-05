@@ -1,7 +1,5 @@
 package com.umc.presentation.analytics
 
-import android.content.Context
-import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -9,11 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.toRoute
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.umc.presentation.MainDestination
 import com.umc.presentation.remotenotice.toScreenName
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 /** 딥링크로 연 다른 회원의 명함. route 는 MY 탭(Mycard)과 같아서 이름을 따로 붙인다 */
@@ -48,9 +44,8 @@ internal fun ScreenViewTracker(
 
 @HiltViewModel
 class ScreenViewTrackerViewModel @Inject constructor(
-    @ApplicationContext context: Context,
+    private val screenViewSink: ScreenViewSink,
 ) : ViewModel() {
-    private val analytics = FirebaseAnalytics.getInstance(context)
 
     /**
      * 마지막으로 기록한 백스택 항목 id.
@@ -64,12 +59,6 @@ class ScreenViewTrackerViewModel @Inject constructor(
     fun onScreenShown(entryId: String, screenName: String) {
         if (entryId == lastLoggedEntryId) return
         lastLoggedEntryId = entryId
-        analytics.logEvent(
-            FirebaseAnalytics.Event.SCREEN_VIEW,
-            Bundle().apply {
-                putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
-                putString(FirebaseAnalytics.Param.SCREEN_CLASS, screenName)
-            }
-        )
+        screenViewSink.logScreenView(screenName)
     }
 }
