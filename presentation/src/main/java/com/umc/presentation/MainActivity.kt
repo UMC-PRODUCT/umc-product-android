@@ -54,6 +54,7 @@ import com.umc.component.theme.grey400
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.presentation.remotenotice.RemoteNoticeHost
+import com.umc.presentation.analytics.ScreenViewTracker
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -207,6 +208,9 @@ private fun UmcApp() {
 
             // 원격 설정으로 켠 안내. 이용을 막는 화면(BLOCKING)은 하단바까지 덮어야 해서 Scaffold 바깥에 둔다
             RemoteNoticeHost(currentRoute = currentDestination?.route)
+
+            // 화면 이동마다 Firebase Analytics 에 screen_view 를 남긴다
+            ScreenViewTracker(backStackEntry = navBackStackEntry)
         }
     }
 }
