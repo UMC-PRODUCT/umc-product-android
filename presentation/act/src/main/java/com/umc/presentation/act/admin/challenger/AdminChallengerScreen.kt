@@ -235,6 +235,8 @@ fun AdminChallengerScreen(
     onPartFilterClick: () -> Unit = {},
     onMemberClick: (Long) -> Unit = {},
     onRetryClick: () -> Unit = {},
+    filters: AdminChallengerFiltersUi = AdminChallengerFiltersUi(),
+    onFilterSelected: (AdminChallengerFilterType, AdminChallengerFilterOption?) -> Unit = { _, _ -> },
 ) {
     LazyColumn(
         modifier = Modifier
@@ -261,6 +263,8 @@ fun AdminChallengerScreen(
                 selectedPart = uiState.selectedPart,
                 onSearchKeywordChange = onSearchKeywordChange,
                 onPartFilterClick = onPartFilterClick,
+                filters = filters,
+                onFilterSelected = onFilterSelected,
             )
         }
         when {
@@ -294,11 +298,13 @@ private fun SearchBar(
     selectedPart: UserPart?,
     onSearchKeywordChange: (String) -> Unit,
     onPartFilterClick: () -> Unit,
+    filters: AdminChallengerFiltersUi,
+    onFilterSelected: (AdminChallengerFilterType, AdminChallengerFilterOption?) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .background(grey50())
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(16.dp)
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
@@ -317,29 +323,14 @@ private fun SearchBar(
             prevIconTint = grey400()
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (selectedPart == null) grey100() else grey800())
-                .clickable(onClick = onPartFilterClick)
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            UText(
-                text = selectedPart?.label ?: AppStrings.COMMON_PART,
-                style = Footnote,
-                color = if (selectedPart == null) grey600() else grey50(),
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(
-                painter = painterResource(R.drawable.ic_dropdown_down),
-                contentDescription = "파트 선택",
-                tint = if (selectedPart == null) grey600() else grey50(),
-                modifier = Modifier.size(12.dp),
-            )
-        }
+        AdminChallengerFilterBar(
+            filters = filters,
+            selectedPart = selectedPart,
+            onPartFilterClick = onPartFilterClick,
+            onFilterSelected = onFilterSelected,
+        )
     }
 }
 
