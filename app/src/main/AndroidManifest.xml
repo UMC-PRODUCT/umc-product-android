@@ -38,6 +38,17 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!--광고를 쓰지 않으므로 Firebase Analytics 가 병합하는 광고 ID·광고 측정(Privacy Sandbox) 권한을 뺀다-->
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION"
+        tools:node="remove" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -48,6 +59,22 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.UMCProduct">
+
+        <!--Firebase Analytics: prod flavor 만 수집한다(build.gradle.kts 의 ANALYTICS_COLLECTION_ENABLED)-->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="${ANALYTICS_COLLECTION_ENABLED}" />
+        <!--광고 ID 와 광고 개인화 신호는 쓰지 않는다-->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_personalization_signals"
+            android:value="false" />
+        <!--단일 Activity(Compose)라 자동 화면 보고는 MainActivity 로만 찍힌다. 화면 이동은 ScreenViewTracker 가 직접 기록한다-->
+        <meta-data
+            android:name="google_analytics_automatic_screen_reporting_enabled"
+            android:value="false" />
 
         <!--FileProvider 등록-->
         <provider

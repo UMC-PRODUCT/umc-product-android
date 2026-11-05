@@ -38,6 +38,8 @@ android {
             "\"${getApiKey("naver.client.id")}\""
         )
         manifestPlaceholders["KAKAO_APP_KEY"] = getApiKey("kakao.app.key")
+        // Firebase Analytics 수집은 기본적으로 끄고 prod flavor 에서만 켠다(QA·개발 데이터가 운영 통계에 섞이지 않게)
+        manifestPlaceholders["ANALYTICS_COLLECTION_ENABLED"] = "false"
         applicationId = "com.umc.product"
         minSdk = 24
         targetSdk = 36
@@ -70,6 +72,7 @@ android {
             dimension = "server"
             buildConfigField("String", "BASE_URL", "\"https://api.university.neordinary.com/\"")
             buildConfigField("String", "API_ENV", "\"prod\"")
+            manifestPlaceholders["ANALYTICS_COLLECTION_ENABLED"] = "true"
         }
     }
 
