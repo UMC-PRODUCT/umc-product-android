@@ -219,9 +219,7 @@ internal fun AdminChallengerFilterSheetContent(
     } else {
         matchingOptions
     }
-    val selectedIndex = filter.selectedOption?.let { selected ->
-        options.indexOfFirst { it?.id == selected.id }.takeIf { it >= 0 }
-    }
+    val selectedIndex = options.indexOfFirst { it?.id == filter.selectedOption?.id }.takeIf { it >= 0 }
     USelectSheetContent(
         title = type.title,
         items = options.map { it?.label ?: AppStrings.COMMON_ALL }.toImmutableList(),

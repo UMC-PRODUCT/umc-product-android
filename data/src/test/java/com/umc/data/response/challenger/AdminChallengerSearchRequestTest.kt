@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 import retrofit2.http.GET
+import retrofit2.http.Query
 
 class AdminChallengerSearchRequestTest {
     @Test fun `관리 검색은 기수 지부 학교와 페이지 조건을 v2 API에 보낸다`() = runBlocking {
@@ -29,6 +30,10 @@ class AdminChallengerSearchRequestTest {
         assertTrue(response is ApiState.Success)
         assertEquals("getChallengers", methodName)
         assertEquals(listOf(3, 100, "ANDROID", "이름", 10L, 4L, 2L), received)
+        val queryNames = ChallengerApi::class.java.declaredMethods.single { it.name == "getChallengers" }
+            .parameterAnnotations.take(7)
+            .map { annotations -> annotations.filterIsInstance<Query>().single().value }
+        assertEquals(listOf("page", "size", "part", "keyword", "schoolId", "chapterId", "gisuId"), queryNames)
     }
 
     @Test fun `일반 회원 검색의 학교와 기수 전달은 유지된다`() = runBlocking {

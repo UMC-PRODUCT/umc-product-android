@@ -50,6 +50,8 @@ class ChallengerFilterOrganizationTest {
         listOf(
             GisuPageResponse(listOf(GisuItemResponse(1, 9)), 7, true),
             GisuPageResponse(emptyList(), 0, true),
+            Gson().fromJson("""{"content":[{"gisuId":1,"generation":9}],"page":0}""", GisuPageResponse::class.java),
+            Gson().fromJson("""{"content":[{"gisuId":1,"generation":9}],"hasNext":false}""", GisuPageResponse::class.java),
         ).forEach { page ->
             assertTrue(OrganizationRepositoryImpl(source { ApiState.Success(page) }).getSearchGisus() is ApiState.Fail)
         }

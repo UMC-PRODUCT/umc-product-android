@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,6 +71,8 @@ import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
 import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun AdminChallengerRoute(
@@ -108,7 +111,7 @@ fun AdminChallengerRoute(
             selectedPart = uiState.selectedPart,
             onDismissRequest = viewModel::dismissPartFilter,
             onPartSelected = viewModel::selectPartFilter,
-            parts = UserPart.filtersOf(uiState.selectedGisu?.generation ?: 0),
+            parts = UserPart.filtersOf(uiState.selectedGisu?.generation ?: 0).toImmutableList(),
         )
     }
 }
@@ -282,13 +285,15 @@ fun AdminChallengerScreen(
                 filtersEnabled = filtersEnabled,
             )
         }
-        when {
-            uiState.sections.isNotEmpty() -> items(uiState.sections) { section ->
+        if (uiState.sections.isNotEmpty()) {
+            items(uiState.sections) { section ->
                 ChallengerSection(
                     section = section,
                     onMemberClick = onMemberClick
                 )
             }
+        }
+        when {
             uiState.loadState == AdminChallengerLoadState.LOADING -> item {
                 ChallengerLoading(modifier = Modifier.padding(top = 64.dp))
             }
@@ -301,7 +306,7 @@ fun AdminChallengerScreen(
                         ?: AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
                 )
             }
-            else -> item { EmptyScreen() }
+            uiState.sections.isEmpty() -> item { EmptyScreen() }
         }
     }
 
@@ -358,7 +363,7 @@ private fun AdminChallengerPartBottomSheet(
     selectedPart: UserPart?,
     onDismissRequest: () -> Unit,
     onPartSelected: (UserPart) -> Unit,
-    parts: List<UserPart> = UserPart.filters,
+    parts: ImmutableList<UserPart> = UserPart.filters.toImmutableList(),
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -588,6 +593,25 @@ private fun PreviewMainLoading() {
                 manageAccess = AdminChallengerAccess.ALLOWED,
                 loadState = AdminChallengerLoadState.LOADING,
             )
+        )
+    }
+}
+
+@PreviewScreenSizes
+@Composable
+private fun PreviewLoadingMoreChallengers() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(
+                manageAccess = AdminChallengerAccess.ALLOWED,
+                loadState = AdminChallengerLoadState.LOADING,
+                sections = persistentListOf(
+                    AdminChallengerSectionUi(
+                        partName = "Android",
+                        members = persistentListOf(AdminChallengerMemberUi(1, "홍길동(길동)", "12기", 0)),
+                    ),
+                ),
+            ),
         )
     }
 }

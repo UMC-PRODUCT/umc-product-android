@@ -144,8 +144,10 @@ class OrganizationRepositoryImpl @Inject constructor(
         // 잘못된 hasNext 응답으로 무한 조회하거나 일부 기수만 성공으로 반환하지 않는다.
         repeat(100) { page ->
             val response = organizationDataSource.getGisuPage(page, 100).mapCatching { result ->
-                check(result.page == page && (!result.hasNext || result.content.isNotEmpty()))
-                result.content.map { it.toModel() } to result.hasNext
+                val responsePage = checkNotNull(result.page)
+                val hasNext = checkNotNull(result.hasNext)
+                check(responsePage == page && (!hasNext || result.content.isNotEmpty()))
+                result.content.map { it.toModel() } to hasNext
             }
             currentCoroutineContext().ensureActive()
             when (response) {

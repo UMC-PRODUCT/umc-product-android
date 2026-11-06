@@ -81,7 +81,7 @@ class AdminChallengerViewModel @Inject constructor(
      */
     fun refresh() = initializeSearch()
 
-    private fun initializeSearch() {
+    private fun initializeSearch(retryList: Boolean = true, deniedMessage: String? = null) {
         val previousFilters = uiState.value.searchFilters
         val preferredGisuId = uiState.value.selectedGisu?.gisuId?.toLong()
         filterContextJob?.cancel()
@@ -137,7 +137,7 @@ class AdminChallengerViewModel @Inject constructor(
                     selectedPart = selectedPart?.takeIf { it in UserPart.filtersOf(selected.generation) },
                 )
             }
-            loadOrganization(selected, previousFilters)
+            loadOrganization(selected, previousFilters, retryList, deniedMessage)
         }
     }
 
@@ -157,6 +157,8 @@ class AdminChallengerViewModel @Inject constructor(
     private suspend fun loadOrganization(
         gisu: GisuItem,
         previous: ChallengerManagementFilters? = null,
+        retryList: Boolean = true,
+        deniedMessage: String? = null,
     ) {
         val response = getChapterWithSchoolUseCase(gisu.gisuId)
         currentCoroutineContext().ensureActive()
@@ -181,11 +183,12 @@ class AdminChallengerViewModel @Inject constructor(
             copy(
                 searchFilters = filters,
                 filterLoadState = AdminChallengerLoadState.SUCCESS,
-                loadState = AdminChallengerLoadState.LOADING,
-                loadErrorMessage = null,
+                loadState = if (retryList) AdminChallengerLoadState.LOADING else AdminChallengerLoadState.ERROR,
+                loadErrorMessage = deniedMessage,
             )
         }
-        getChallengers()
+        // 403 직후에는 갱신된 권한만 보여 주고, 사용자가 재시도할 때 검색한다.
+        if (retryList) getChallengers()
     }
 
     private fun organizationFailed(failure: FailState) {
@@ -278,11 +281,15 @@ class AdminChallengerViewModel @Inject constructor(
         val filters = uiState.value.searchFilters ?: return
         if (!uiState.value.filtersReady) return
         challengerListJob?.cancel()
+        updateState {
+            copy(loadState = AdminChallengerLoadState.LOADING, loadErrorMessage = null, sections = persistentListOf())
+        }
         challengerListJob = viewModelScope.launch {
             if (debounce) delay(300)
-            updateState { copy(loadState = AdminChallengerLoadState.LOADING, sections = persistentListOf()) }
             startLoading()
-            val response = fetchChallengers(filters, keyword, selectedPart)
+            val response = fetchChallengers(filters, keyword, selectedPart) { page ->
+                updateState { copy(sections = page.toSections(), loadState = AdminChallengerLoadState.LOADING) }
+            }
             // apiCall이 취소를 Fail로 바꿔도 이전 조건의 결과를 반영하지 않는다.
             currentCoroutineContext().ensureActive()
             resultResponse(
@@ -291,7 +298,12 @@ class AdminChallengerViewModel @Inject constructor(
                     updateState { copy(sections = challengers.toSections(), loadState = AdminChallengerLoadState.SUCCESS, loadErrorMessage = null) }
                 },
                 errorCallback = { failure ->
-                    updateState { copy(loadState = AdminChallengerLoadState.ERROR, loadErrorMessage = failure.message) }
+                    if (failure.code == "403" || failure.code.endsWith("-403")) {
+                        // 서버에서 역할 변경을 감지하면 기존 선택 범위를 폐기한다. 자동 재요청은 하지 않는다.
+                        initializeSearch(retryList = false, deniedMessage = failure.message)
+                    } else {
+                        updateState { copy(loadState = AdminChallengerLoadState.ERROR, loadErrorMessage = failure.message) }
+                    }
                 },
             )
         }
@@ -302,10 +314,11 @@ class AdminChallengerViewModel @Inject constructor(
         filters: ChallengerManagementFilters,
         keyword: String?,
         selectedPart: UserPart?,
+        onPage: (List<AdminChallenger>) -> Unit,
     ): ApiState<List<AdminChallenger>> {
         val challengers = mutableListOf<AdminChallenger>()
+        val seenCursors = mutableSetOf<Long>()
         var cursor: Long? = null
-        // 서버가 계속 다음 페이지를 알리더라도 상한에서 중단하고, 일부 목록을 완전한 결과처럼 표시하지 않는다.
         repeat(MAX_PAGES) {
             val response = getAdminChallengerListUseCase(
                 cursor = cursor,
@@ -320,10 +333,12 @@ class AdminChallengerViewModel @Inject constructor(
             when (response) {
                 is ApiState.Fail -> return response
                 is ApiState.Success -> {
+                    if (response.data.hasNext && response.data.challengers.isEmpty()) return incompleteChallengerList()
                     challengers += response.data.challengers
+                    onPage(challengers.distinctBy { it.id })
                     if (!response.data.hasNext) return ApiState.Success(challengers.distinctBy { it.id })
                     val next = response.data.nextCursor
-                    if (next == null || next == cursor) return incompleteChallengerList()
+                    if (next == null || !seenCursors.add(next)) return incompleteChallengerList()
                     cursor = next
                 }
             }
