@@ -90,7 +90,7 @@ class OrganizationRemoteDataSourceImpl @Inject constructor(
         return apiCall { organizationApi.getActiveGisu() }
     }
 
-    override suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterBySchoolListResponse> {
+    override suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchoolsListResponse> {
         return apiCall { organizationApi.getActiveGisu(gisuId) }
     }
 

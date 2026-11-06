@@ -1,7 +1,7 @@
 package com.umc.data.dataSource
 
 import com.umc.data.response.organization.Chapter
-import com.umc.data.response.organization.ChapterBySchoolListResponse
+import com.umc.data.response.organization.ChapterWithSchoolsListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
 import com.umc.data.response.organization.GisuItemResponse
@@ -105,7 +105,7 @@ interface OrganizationDataSource {
 
     suspend fun getChapterWithSchool(
         gisuId: Int,
-    ): ApiState<ChapterBySchoolListResponse>
+    ): ApiState<ChapterWithSchoolsListResponse>
 
     suspend fun getGisuInfo(
         gisuId: Long,

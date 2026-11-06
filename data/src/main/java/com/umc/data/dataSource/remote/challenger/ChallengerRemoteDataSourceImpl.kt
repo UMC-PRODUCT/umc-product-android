@@ -30,7 +30,8 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         part: String?,
         name: String?,
         nickname: String?,
-        keyword: String?
+        keyword: String?,
+        chapterId: Long?,
     ): ApiState<ChallengerCursorResponse> {
         // 변환은 apiCall 밖에서 일어나 예외가 잡히지 않는다. 응답이 약속과 달라도 앱이 종료되지 않게 실패로 바꾼다.
         return apiCall {
@@ -40,7 +41,7 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
                 part = part,
                 keyword = keyword,
                 schoolId = schoolId,
-                chapterId = null,
+                chapterId = chapterId,
                 gisuId = gisuId
             )
         }.mapCatching { it.toCursorResponse() }

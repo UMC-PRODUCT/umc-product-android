@@ -1,7 +1,7 @@
 package com.umc.data.api
 
 import com.umc.data.response.organization.Chapter
-import com.umc.data.response.organization.ChapterBySchoolListResponse
+import com.umc.data.response.organization.ChapterWithSchoolsListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
 import com.umc.data.response.organization.GisuItemResponse
@@ -124,7 +124,7 @@ interface OrganizationApi {
     @GET(Endpoints.Organization.CHAPTER_WITH_SCHOOL)
     suspend fun getActiveGisu(
         @Query(PATH_GISU_ID) gisuId: Int,
-    ): ApiResponse<ChapterBySchoolListResponse>
+    ): ApiResponse<ChapterWithSchoolsListResponse>
 
     @GET(Endpoints.Organization.MANAGED_STUDY_GROUPS)
     suspend fun getManagedStudyGroups(
