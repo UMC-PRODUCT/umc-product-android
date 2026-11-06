@@ -17,7 +17,10 @@ class AdminChallengerSearchRequestTest {
         var received: List<Any?> = emptyList()
         val api = Proxy.newProxyInstance(ChallengerApi::class.java.classLoader, arrayOf(ChallengerApi::class.java)) { _, method, args ->
             methodName = method.name
-            assertEquals("api/v2/challenger/search", method.getAnnotation(GET::class.java).value)
+            val getAnnotation = requireNotNull(method.getAnnotation(GET::class.java)) {
+                "관리 검색 API에 @GET 어노테이션이 필요합니다."
+            }
+            assertEquals("api/v2/challenger/search", getAnnotation.value)
             received = args!!.dropLast(1)
             ApiResponse(success = true, code = "OK", message = "", result = ChallengerSearchV2Response())
         } as ChallengerApi

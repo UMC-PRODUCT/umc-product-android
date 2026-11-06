@@ -19,6 +19,7 @@ import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -82,8 +83,14 @@ internal fun AdminChallengerFilterBar(
     onPartFilterClick: () -> Unit,
     onFilterSelected: (AdminChallengerFilterType, AdminChallengerFilterOption?) -> Unit,
     modifier: Modifier = Modifier,
+    partFilterEnabled: Boolean = true,
 ) {
     var openedFilter by rememberSaveable { mutableStateOf<AdminChallengerFilterType?>(null) }
+
+    LaunchedEffect(filters) {
+        val opened = openedFilter
+        if (opened != null && filters.forType(opened).isFixed) openedFilter = null
+    }
 
     Row(
         modifier = modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -102,7 +109,7 @@ internal fun AdminChallengerFilterBar(
         ChallengerFilterChip(
             label = selectedPart?.label ?: AppStrings.COMMON_PART,
             isSelected = selectedPart != null,
-            isFixed = false,
+            isFixed = !partFilterEnabled,
             onClick = onPartFilterClick,
         )
     }
@@ -383,3 +390,28 @@ private fun ChallengerLongSchoolFilterPreview() {
         )
     }
 }
+
+internal fun AdminChallengerUiState.filterUi(): AdminChallengerFiltersUi {
+    val context = searchFilters
+    val fixed = context?.isOrganizationFixed ?: true
+    val chapterOptions = context?.organization?.chapterList.orEmpty().filter {
+        !fixed || it.id.toLong() == context?.chapterId
+    }.map {
+        AdminChallengerFilterOption(it.id.toLong(), it.name)
+    }.toImmutableList()
+    val schoolOptions = context?.availableSchools.orEmpty().filter {
+        !fixed || it.schoolId.toLong() == context?.schoolId
+    }.map {
+        AdminChallengerFilterOption(it.schoolId.toLong(), it.schoolName)
+    }.toImmutableList()
+    return AdminChallengerFiltersUi(
+        gisu = AdminChallengerFilterUi(
+            selectedOption = selectedGisu?.let { AdminChallengerFilterOption(it.gisuId.toLong(), "${it.generation}기") },
+            options = searchableGisus.map { AdminChallengerFilterOption(it.gisuId.toLong(), "${it.generation}기") }.toImmutableList(),
+            isFixed = searchableGisus.size <= 1,
+        ),
+        chapter = AdminChallengerFilterUi(chapterOptions.firstOrNull { it.id == context?.chapterId }, chapterOptions, fixed),
+        school = AdminChallengerFilterUi(schoolOptions.firstOrNull { it.id == context?.schoolId }, schoolOptions, fixed),
+    )
+}
+

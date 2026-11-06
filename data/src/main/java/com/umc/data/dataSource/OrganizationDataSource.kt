@@ -6,6 +6,7 @@ import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
 import com.umc.data.response.organization.GisuItemResponse
 import com.umc.data.response.organization.GisuListResponse
+import com.umc.data.response.organization.GisuPageResponse
 import com.umc.data.response.organization.ManagedStudyGroupListResponse
 import com.umc.data.response.organization.MyStudyGroupListResponse
 import com.umc.data.response.organization.SchoolDetailResponse
@@ -100,6 +101,8 @@ interface OrganizationDataSource {
     suspend fun getAllSchool(): ApiState<SchoolListResponse>
 
     suspend fun getAllGisu(): ApiState<GisuListResponse>
+
+    suspend fun getGisuPage(page: Int, size: Int): ApiState<GisuPageResponse>
 
     suspend fun getActiveGisu(): ApiState<GisuItemResponse>
 

@@ -9,6 +9,16 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GetAdminChallengerListUseCaseTest {
+    @Test fun `선택 기수가 없으면 저장소 검색을 호출하지 않는다`() = runBlocking {
+        var calls = 0
+        val repository = repository { calls++; error("검색하면 안 됨") }
+        listOf(null, 0L, -1L).forEach { gisuId ->
+            val result = GetAdminChallengerListUseCase(repository)(null, 100, null, gisuId)
+            assertTrue(result is ApiState.Fail)
+        }
+        assertEquals(0, calls)
+    }
+
     @Test fun `선택한 기수 ID와 조직 파트 검색어를 그대로 전달한다`() = runBlocking {
         var received: List<Any?> = emptyList()
         val repository = repository { args ->

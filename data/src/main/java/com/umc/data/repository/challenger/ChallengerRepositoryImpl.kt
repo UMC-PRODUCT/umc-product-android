@@ -9,6 +9,7 @@ import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerList
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.FailState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.home.ParticipantSearchPage
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
@@ -103,6 +104,9 @@ class ChallengerRepositoryImpl @Inject constructor(
         schoolId: Long?, gisuId: Long?,
         keyword: String?, part: String?, chapterId: Long?,
     ): ApiState<AdminChallengerList> {
+        if (gisuId == null || gisuId <= 0) {
+            return ApiState.Fail(FailState(code = "GISU_REQUIRED", message = "조회할 기수를 선택해 주세요."))
+        }
         // 관리 목록은 회원 검색으로 우회하지 않고 대상 기수의 권한을 검증하는 v2 API를 사용한다.
         return challengerRemoteDataSource.getChallengerList(
             cursor = cursor, size = size,

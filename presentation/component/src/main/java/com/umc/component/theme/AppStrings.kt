@@ -715,6 +715,8 @@ object AppStrings {
     const val CHALLENGER_CHAPTER_SELECT_TITLE = "지부를 선택하세요"
     const val CHALLENGER_SCHOOL_SELECT_TITLE = "학교를 선택하세요"
     const val CHALLENGER_SCHOOL_SEARCH_PLACEHOLDER = "학교를 입력하세요"
+    const val CHALLENGER_SCHOOL_CHAPTER_NOT_FOUND = "선택한 기수의 소속 학교·지부 정보를 확인할 수 없어요. 다시 시도해주세요."
+    const val CHALLENGER_LIST_INCOMPLETE = "챌린저 목록을 모두 불러오지 못했어요. 다시 시도해주세요."
     const val CHALLENGER_MEMBER_COUNT_FORMAT = "(%d)"
     const val ADMIN_CHALLENGER_OUT_COUNT = "아웃 %d"
     const val ADMIN_CHALLENGER_WARNING_COUNT = "경고 %d"

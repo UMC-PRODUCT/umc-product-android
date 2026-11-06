@@ -10,6 +10,9 @@ import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.base.mapCatching
+import com.umc.domain.model.base.FailState
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.organization.ChapterWithSchool
 import com.umc.domain.model.organization.GisuList
@@ -135,6 +138,26 @@ class OrganizationRepositoryImpl @Inject constructor(
 
     override suspend fun getAllGisu(): ApiState<GisuList> =
         organizationDataSource.getAllGisu().map { it.toModel() }
+
+    override suspend fun getSearchGisus(): ApiState<GisuList> {
+        val gisus = mutableListOf<GisuItem>()
+        // 잘못된 hasNext 응답으로 무한 조회하거나 일부 기수만 성공으로 반환하지 않는다.
+        repeat(100) { page ->
+            val response = organizationDataSource.getGisuPage(page, 100).mapCatching { result ->
+                check(result.page == page && (!result.hasNext || result.content.isNotEmpty()))
+                result.content.map { it.toModel() } to result.hasNext
+            }
+            currentCoroutineContext().ensureActive()
+            when (response) {
+                is ApiState.Fail -> return response
+                is ApiState.Success -> {
+                    gisus += response.data.first
+                    if (!response.data.second) return ApiState.Success(GisuList(gisus.distinctBy { it.gisuId }))
+                }
+            }
+        }
+        return ApiState.Fail(FailState(code = "GISU_LIST_INCOMPLETE", message = "기수 목록을 모두 불러오지 못했어요. 다시 시도해주세요."))
+    }
 
     override suspend fun getActiveGisu(): ApiState<GisuItem> =
         organizationDataSource.getActiveGisu().map { response ->
