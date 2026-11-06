@@ -25,7 +25,7 @@ class AdminChallengerSearchRequestTest {
             ApiResponse(success = true, code = "OK", message = "", result = ChallengerSearchV2Response())
         } as ChallengerApi
         val remote: ChallengerRemoteDataSource = ChallengerRemoteDataSourceImpl(api)
-        val response = remote.getChallengerList(cursor = 3, size = 100, gisuId = 2, chapterId = 4, schoolId = 10, part = "ANDROID", keyword = "이름")
+        val response = remote.getAdminChallengerList(cursor = 3, size = 100, gisuId = 2, chapterId = 4, schoolId = 10, part = "ANDROID", keyword = "이름")
         assertTrue(response is ApiState.Success)
         assertEquals("getChallengers", methodName)
         assertEquals(listOf(3, 100, "ANDROID", "이름", 10L, 4L, 2L), received)

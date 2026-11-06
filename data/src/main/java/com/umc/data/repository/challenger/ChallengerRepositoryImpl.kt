@@ -108,7 +108,7 @@ class ChallengerRepositoryImpl @Inject constructor(
             return ApiState.Fail(FailState(code = "GISU_REQUIRED", message = "조회할 기수를 선택해 주세요."))
         }
         // 관리 목록은 회원 검색으로 우회하지 않고 대상 기수의 권한을 검증하는 v2 API를 사용한다.
-        return challengerRemoteDataSource.getChallengerList(
+        return challengerRemoteDataSource.getAdminChallengerList(
             cursor = cursor, size = size,
             schoolId = schoolId, gisuId = gisuId,
             keyword = keyword, part = part, chapterId = chapterId,

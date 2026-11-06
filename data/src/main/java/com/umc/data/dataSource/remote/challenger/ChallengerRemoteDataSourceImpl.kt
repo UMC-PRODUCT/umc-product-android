@@ -31,7 +31,6 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         name: String?,
         nickname: String?,
         keyword: String?,
-        chapterId: Long?,
     ): ApiState<ChallengerCursorResponse> {
         // 변환은 apiCall 밖에서 일어나 예외가 잡히지 않는다. 응답이 약속과 달라도 앱이 종료되지 않게 실패로 바꾼다.
         return apiCall {
@@ -41,11 +40,31 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
                 part = part,
                 keyword = keyword,
                 schoolId = schoolId,
-                chapterId = chapterId,
+                chapterId = null,
                 gisuId = gisuId
             )
         }.mapCatching { it.toCursorResponse() }
     }
+
+    override suspend fun getAdminChallengerList(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        chapterId: Long?,
+        gisuId: Long,
+        part: String?,
+        keyword: String?,
+    ): ApiState<ChallengerCursorResponse> = apiCall {
+        challengerApi.getChallengers(
+            page = cursor?.toInt() ?: 0,
+            size = size,
+            part = part,
+            keyword = keyword,
+            schoolId = schoolId,
+            chapterId = chapterId,
+            gisuId = gisuId,
+        )
+    }.mapCatching { it.toCursorResponse() }
 
     override suspend fun searchMembers(
         cursor: Long?,
