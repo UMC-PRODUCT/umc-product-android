@@ -64,7 +64,6 @@ class AdminChallengerViewModel @Inject constructor(
     private var filterContextJob: Job? = null
     private var searchUserInfo: UserInfo? = null
 
-    //초기 챌린저 목록 조회
     //검색어 변경 시 첫 페이지부터 다시 조회
     fun onSearchKeywordChanged(keyword: String) {
         if (!uiState.value.filtersReady) return
@@ -98,7 +97,7 @@ class AdminChallengerViewModel @Inject constructor(
             )
         }
         filterContextJob = viewModelScope.launch {
-            // 권한은 서버의 최신 프로필로 확인한다. 실패 시 캐시 권한으로 검색 범위를 열지 않는다.
+            // 최신 프로필로 검색 후보 범위를 구성한다. v2 검색 API가 최종 권한을 검사하므로 실패 시 캐시 권한으로 목록을 열지 않는다.
             val profile = getMyProfileUseCase()
             currentCoroutineContext().ensureActive()
             if (profile is ApiState.Fail) {
@@ -174,6 +173,7 @@ class AdminChallengerViewModel @Inject constructor(
             ))
             return
         }
+        // 권한 범위가 바뀌었으면 이전 조직 선택을 버리고, 같은 범위에서도 최신 선택지에 있는 값만 복원한다.
         if (previous?.gisu?.gisuId == gisu.gisuId && previous.isOrganizationFixed == filters.isOrganizationFixed) {
             filters = filters.selectChapter(previous.chapterId).selectSchool(previous.schoolId)
         }
@@ -206,6 +206,7 @@ class AdminChallengerViewModel @Inject constructor(
         if (type == AdminChallengerFilterType.GISU) {
             val gisu = uiState.value.searchableGisus.firstOrNull { it.gisuId.toLong() == option?.id } ?: return
             if (gisu.gisuId == uiState.value.selectedGisu?.gisuId) return
+            // 이전 기수의 조직 조회와 목록 요청을 취소하고, 새 기수의 범위가 준비될 때까지 기존 결과를 비운다.
             filterContextJob?.cancel()
             challengerListJob?.cancel()
             stopLoading()
@@ -304,6 +305,7 @@ class AdminChallengerViewModel @Inject constructor(
     ): ApiState<List<AdminChallenger>> {
         val challengers = mutableListOf<AdminChallenger>()
         var cursor: Long? = null
+        // 서버가 계속 다음 페이지를 알리더라도 상한에서 중단하고, 일부 목록을 완전한 결과처럼 표시하지 않는다.
         repeat(MAX_PAGES) {
             val response = getAdminChallengerListUseCase(
                 cursor = cursor,

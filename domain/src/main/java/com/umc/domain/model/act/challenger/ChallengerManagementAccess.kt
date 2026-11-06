@@ -3,9 +3,12 @@ package com.umc.domain.model.act.challenger
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.organization.GisuItem
 
-/** 검색 권한은 활성 기수나 회원의 챌린저 이력이 아닌, 선택 기수의 역할로 판정한다. */
 enum class ChallengerManagementAccess { DENIED, ALL_SCHOOLS, OWN_SCHOOL }
 
+/**
+ * 선택 기수의 역할과 현재 프로필 학교로 UI 검색 범위를 미리 판단한다.
+ * v2 프로필의 과거 역할 organizationId는 현재 학교로 채워질 수 있어 최종 권한은 검색 API가 검사한다.
+ */
 fun UserInfo.challengerManagementAccess(gisuId: Long): ChallengerManagementAccess {
     if (gisuId <= 0) return ChallengerManagementAccess.DENIED
     if (isSuperAdmin) return ChallengerManagementAccess.ALL_SCHOOLS
