@@ -90,7 +90,6 @@ class CommunityChattingViewModel @Inject constructor(
     private var membershipMutationInProgress = false
     private var isLeaving = false
     private var hasEmittedThreadLeft = false
-    private var hasLoggedThreadDeleted = false
     /**
      * 소켓으로 보냈고 아직 기록하지 않은 내 메시지의 로그 파라미터(clientMessageId 기준).
      * pending(UI 상태)과 따로 둔다. 실패 말풍선을 지워 pending 이 사라진 뒤 서버 확인이 와도 셀 수 있어야 한다.
@@ -916,13 +915,6 @@ class CommunityChattingViewModel @Inject constructor(
         }
     }
 
-    // 삭제 성공은 HTTP 응답과 소켓 thread.deleted 중 먼저 온 쪽에서 한 번만 센다.
-    private fun logThreadDeletedOnce() {
-        if (hasLoggedThreadDeleted) return
-        hasLoggedThreadDeleted = true
-        analyticsLogger.log(CommunityAnalytics.THREAD_DELETED)
-    }
-
     // 소켓으로 보낸 내 메시지를 서버 확인 전까지 기억한다. createMessage 는 suspend 가 아니어서 ack 처리보다 먼저 실행된다.
     private fun rememberSentMessage(
         clientMessageId: String,
@@ -1175,10 +1167,11 @@ class CommunityChattingViewModel @Inject constructor(
         if (!state.thread?.myRole.canManageCommunityThread() || state.isDeleting) return@launch
 
         updateState { copy(showDeleteDialog = false, isDeleting = true) }
-        // 응답 전에 화면이 닫혀도(소켓 이벤트로 먼저 나감·뒤로 가기) 서버에서는 삭제되므로 결과를 끝까지 받아 기록한다
+        // 응답 전에 화면이 닫혀도(소켓 이벤트로 먼저 나감·뒤로 가기) 결과를 끝까지 받는다.
+        // 삭제는 내 요청의 HTTP 성공으로만 센다. thread.deleted·member.left 는 누구 요청의 결과인지 알 수 없다
         val result = withContext(NonCancellable) {
             threadRepository.deleteThread(state.threadId).also {
-                if (it is ApiState.Success) logThreadDeletedOnce()
+                if (it is ApiState.Success) analyticsLogger.log(CommunityAnalytics.THREAD_DELETED)
             }
         }
         when (result) {
@@ -1450,7 +1443,8 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is CommunityChatEvent.MessageChanged -> {
                 if (event.type == CommunityChatEvent.MessageChanged.Type.CREATED) {
-                    event.clientMessageId?.let(::logMessageSentOnce)
+                    // 최상위 clientMessageId 가 없으면 본문 값을 쓴다(commandRecovery 키와 같은 기준)
+                    (event.clientMessageId ?: event.message.clientMessageId)?.let(::logMessageSentOnce)
                 }
                 updateState {
                     val pending = event.clientMessageId?.let(pendingMessages::get)
@@ -1535,8 +1529,6 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is CommunityChatEvent.ThreadStateChanged -> when (event.type) {
                 CommunityChatEvent.ThreadStateChanged.Type.DELETED -> {
-                    // 내가 요청한 삭제의 thread.deleted 가 HTTP 응답보다 먼저 와도 삭제 성공으로 센다
-                    if (uiState.value.isDeleting) logThreadDeletedOnce()
                     if (uiState.value.isDeleting || isLeaving) emitThreadLeftOnce()
                     else showAccessDenied()
                 }
@@ -1545,8 +1537,6 @@ class CommunityChattingViewModel @Inject constructor(
                     if (event.memberId == uiState.value.myMemberId) {
                         // 내가 요청한 나가기의 member.left 가 HTTP 응답보다 먼저 와도 나가기 완료로 처리한다(토스트 누락 방지).
                         if ((isLeaving || uiState.value.isDeleting) && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
-                            // 삭제 중 내 member.left 가 먼저 오면 여기서 소켓을 끊어 thread.deleted 를 못 받으므로 지금 센다
-                            if (uiState.value.isDeleting) logThreadDeletedOnce()
                             emitThreadLeftOnce()
                         } else {
                             showAccessDenied()
@@ -1604,7 +1594,7 @@ class CommunityChattingViewModel @Inject constructor(
             }) {
                 is ApiState.Success -> {
                     if (generation != accessGeneration) return@withLock true
-                    // ack·생성 이벤트를 놓친 내 메시지도 서버에 있으면 전송된 것으로 센다
+                    // ack·생성 이벤트를 놓친 내 메시지도 서버에 있으면 전송된 것으로 센다(조회 응답에 clientMessageId 가 있을 때만)
                     result.data.messages.mapNotNull { it.clientMessageId }.forEach(::logMessageSentOnce)
                     updateState {
                         val delivered = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
@@ -1717,10 +1707,7 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        // ack 전에 화면을 떠나도 소켓에 이미 실린 메시지는 닫히기 전에 서버로 간다. 실패 표시가 없는 전송 중 메시지는 보낸 것으로 센다
-        uiState.value.pendingMessages.values
-            .filter { it.commandId.isNotBlank() && it.error == null }
-            .forEach { logMessageSentOnce(it.clientMessageId) }
+        // 서버 확인(ack·생성 이벤트) 전에 나간 메시지는 세지 않는다. 소켓 큐 등록만으로는 서버가 받았는지 알 수 없다
         stopRealtime()
         super.onCleared()
     }

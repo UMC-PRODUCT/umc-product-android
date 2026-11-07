@@ -13,6 +13,7 @@ internal object CommunityAnalytics {
     const val THREAD_CREATE_ATTEMPTED = "community_thread_create_attempted"
     const val THREAD_CREATED = "community_thread_created"
     const val THREAD_CREATE_FAILED = "community_thread_create_failed"
+    /** 내 삭제 요청의 HTTP 성공 응답에서 한 번(채팅·수정 화면). 소켓 thread.deleted 로는 세지 않는다 */
     const val THREAD_DELETED = "community_thread_deleted"
 
     // 1. AI 카테고리 자동 분류 (iOS 미전송, Android 에서 새로 정함)
@@ -25,7 +26,7 @@ internal object CommunityAnalytics {
     const val LIST_VIEWED = "community_list_viewed"
     /** 채팅방 화면마다 첫 로드가 성공했을 때 한 번 */
     const val THREAD_VIEWED = "community_thread_viewed"
-    /** 내가 보낸 메시지를 서버가 확인했을 때 메시지당 한 번. 확인 전에 채팅방을 나가면 나갈 때 센다 */
+    /** 내가 보낸 메시지를 서버가 확인했을 때(ack·생성 이벤트) 메시지당 한 번. 확인 전에 채팅방을 나가면 세지 않는다 */
     const val MESSAGE_SENT = "community_message_sent"
 
     // 3. AI 대화 요약
