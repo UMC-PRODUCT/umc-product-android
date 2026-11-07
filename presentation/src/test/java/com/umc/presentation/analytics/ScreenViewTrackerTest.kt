@@ -1,5 +1,6 @@
 package com.umc.presentation.analytics
 
+import com.umc.domain.analytics.AnalyticsLogger
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -22,20 +23,21 @@ class ScreenViewTrackerTest {
     }
 
     @Test fun `same back stack entry is logged only once`() {
-        val sink = FakeScreenViewSink()
-        val viewModel = ScreenViewTrackerViewModel(sink)
+        val logger = FakeAnalyticsLogger()
+        val viewModel = ScreenViewTrackerViewModel(logger)
         viewModel.onScreenShown("A", "Home")
         viewModel.onScreenShown("A", "Home")
-        assertEquals(listOf("Home"), sink.names)
+        assertEquals(listOf("Home"), logger.screenNames)
+        assertEquals(mapOf("screen_name" to "Home", "screen_class" to "Home"), logger.events.single().second)
     }
 
     @Test fun `returning to an entry after another screen is logged again`() {
-        val sink = FakeScreenViewSink()
-        val viewModel = ScreenViewTrackerViewModel(sink)
+        val logger = FakeAnalyticsLogger()
+        val viewModel = ScreenViewTrackerViewModel(logger)
         viewModel.onScreenShown("A", "Home")
         viewModel.onScreenShown("B", "NoticeDetail")
         viewModel.onScreenShown("A", "Home")
-        assertEquals(listOf("Home", "NoticeDetail", "Home"), sink.names)
+        assertEquals(listOf("Home", "NoticeDetail", "Home"), logger.screenNames)
     }
 
     @Test fun `my card and other member card are told apart`() {
@@ -44,10 +46,11 @@ class ScreenViewTrackerTest {
         assertEquals(OTHER_MEMBER_CARD_SCREEN, analyticsScreenName(route, isOtherMemberCard = true))
     }
 
-    private class FakeScreenViewSink : ScreenViewSink {
-        val names = mutableListOf<String>()
-        override fun logScreenView(screenName: String) {
-            names += screenName
+    private class FakeAnalyticsLogger : AnalyticsLogger {
+        val events = mutableListOf<Pair<String, Map<String, String>>>()
+        val screenNames get() = events.filter { it.first == "screen_view" }.map { it.second.getValue("screen_name") }
+        override fun log(name: String, params: Map<String, String>) {
+            events += name to params
         }
     }
 }
