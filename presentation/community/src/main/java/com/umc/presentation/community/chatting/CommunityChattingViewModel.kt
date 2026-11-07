@@ -30,8 +30,11 @@ import com.umc.domain.model.community.thread.CommunityThreadMemberState
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.umc.domain.model.member.MemberBlockChanges
+import com.umc.presentation.community.analytics.CommunityAnalytics
+import com.umc.domain.analytics.AnalyticsLogger
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -40,6 +43,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 import javax.inject.Inject
@@ -54,6 +58,7 @@ class CommunityChattingViewModel @Inject constructor(
     private val uploadFileUseCase: UploadFileUseCase,
     private val checkAiFeatureStatusUseCase: CheckAiFeatureStatusUseCase,
     private val summarizeUnreadChatUseCase: SummarizeUnreadChatUseCase,
+    private val analyticsLogger: AnalyticsLogger,
 ) : BaseViewModel<CommunityChattingState, CommunityChattingEvent>(
     createInitialChattingState(savedStateHandle)
 ) {
@@ -85,6 +90,14 @@ class CommunityChattingViewModel @Inject constructor(
     private var membershipMutationInProgress = false
     private var isLeaving = false
     private var hasEmittedThreadLeft = false
+    private var hasLoggedThreadDeleted = false
+    /**
+     * 소켓으로 보냈고 아직 기록하지 않은 내 메시지의 로그 파라미터(clientMessageId 기준).
+     * pending(UI 상태)과 따로 둔다. 실패 말풍선을 지워 pending 이 사라진 뒤 서버 확인이 와도 셀 수 있어야 한다.
+     */
+    private val unconfirmedSentMessages = hashMapOf<String, Map<String, String>>()
+    /** 기록한 내 메시지. 재전송·늦은 ack·복구로 같은 메시지를 두 번 세지 않는다 */
+    private val loggedSentClientMessageIds = hashSetOf<String>()
 
     init {
         observeCurrentMember()
@@ -288,6 +301,13 @@ class CommunityChattingViewModel @Inject constructor(
                     reason = "CREATED",
                     messages = uiState.value.summaryCandidateMessages,
                 )
+                analyticsLogger.log(
+                    CommunityAnalytics.THREAD_VIEWED,
+                    CommunityAnalytics.threadViewedParams(
+                        category = detail.data.category.name,
+                        isJoined = detail.data.myRole != CommunityThreadRole.UNKNOWN,
+                    ),
+                )
             }
             if (detail.data.myRole != CommunityThreadRole.UNKNOWN) {
                 loadMembers()
@@ -329,12 +349,14 @@ class CommunityChattingViewModel @Inject constructor(
             val current = uiState.value
             if (current.isSummarizingUnread) return@launch
             val generation = ++summaryGeneration
+            analyticsLogger.log(CommunityAnalytics.SUMMARY_ATTEMPTED)
 
             val boundedMessages = when {
                 requestedMessages != null -> requestedMessages
                 else -> current.summaryCandidateMessages
             }
             if (current.blockedMembersStatus != BlockedMembersStatus.LOADED) {
+                analyticsLogger.log(CommunityAnalytics.SUMMARY_FAILED)
                 updateState { copy(unreadSummaryError = AppStrings.CHAT_BLOCK_STATUS_REQUIRED) }
                 return@launch
             }
@@ -342,6 +364,7 @@ class CommunityChattingViewModel @Inject constructor(
             val targetMessages = input.messages
 
             if (targetMessages.isEmpty()) {
+                analyticsLogger.log(CommunityAnalytics.SUMMARY_FAILED)
                 updateState {
                     copy(
                         isSummarizingUnread = false,
@@ -375,6 +398,7 @@ class CommunityChattingViewModel @Inject constructor(
             }
             if (generation != summaryGeneration) return@launch
             if (!aiStatus.isUsable) {
+                analyticsLogger.log(CommunityAnalytics.SUMMARY_FAILED)
                 updateState {
                     copy(
                         isSummarizingUnread = false,
@@ -390,17 +414,22 @@ class CommunityChattingViewModel @Inject constructor(
                     if (generation == summaryGeneration) updateState { copy(aiDownloadPercent = percent) }
                 }
             ) {
-                is ApiState.Success -> if (generation == summaryGeneration) updateState {
-                    copy(
-                        isSummarizingUnread = false,
-                        aiDownloadPercent = null,
-                        unreadSummary = result.data,
-                        unreadSummaryError = null,
-                    )
+                is ApiState.Success -> if (generation == summaryGeneration) {
+                    analyticsLogger.log(CommunityAnalytics.SUMMARY_COMPLETED)
+                    updateState {
+                        copy(
+                            isSummarizingUnread = false,
+                            aiDownloadPercent = null,
+                            unreadSummary = result.data,
+                            unreadSummaryError = null,
+                        )
+                    }
                 }
 
                 is ApiState.Fail -> {
+                    // 닫기 등으로 결과를 버린 요청은 실패로 세지 않는다
                     if (generation != summaryGeneration) return@launch
+                    analyticsLogger.log(CommunityAnalytics.SUMMARY_FAILED)
                     updateState {
                         copy(
                             isSummarizingUnread = false,
@@ -494,6 +523,12 @@ class CommunityChattingViewModel @Inject constructor(
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
                 commandRecovery.expect(commandId, "created:$clientMessageId")
+                rememberSentMessage(
+                    clientMessageId = clientMessageId,
+                    type = CommunityMessageType.TEXT,
+                    hasReply = replyToId != null,
+                    hasMention = mentionedMemberIds.isNotEmpty(),
+                )
                 updateState {
                     copy(
                         draft = if (clearDraft) "" else draft,
@@ -642,6 +677,7 @@ class CommunityChattingViewModel @Inject constructor(
         runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
             .onSuccess { commandId ->
                 commandRecovery.expect(commandId, "created:$clientMessageId")
+                rememberSentMessage(clientMessageId, CommunityMessageType.IMAGE, hasReply = false, hasMention = false)
                 updateState {
                     val pending = pendingMessages[clientMessageId]
                         ?: return@updateState this
@@ -768,6 +804,12 @@ class CommunityChattingViewModel @Inject constructor(
                     runCatching { chatRepository.createMessage(uiState.value.threadId, command) }
                         .onSuccess { commandId ->
                             commandRecovery.expect(commandId, "created:$newClientMessageId")
+                            rememberSentMessage(
+                                clientMessageId = newClientMessageId,
+                                type = pending.type,
+                                hasReply = pending.replyToId != null,
+                                hasMention = pending.mentionedMemberIds.isNotEmpty(),
+                            )
                             updateState {
                                 copy(
                                     pendingMessages = pendingMessages + (
@@ -872,6 +914,32 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is ApiState.Fail -> emitEvent(CommunityChattingEvent.ShowError(result.failState.message))
         }
+    }
+
+    // 삭제 성공은 HTTP 응답과 소켓 thread.deleted 중 먼저 온 쪽에서 한 번만 센다.
+    private fun logThreadDeletedOnce() {
+        if (hasLoggedThreadDeleted) return
+        hasLoggedThreadDeleted = true
+        analyticsLogger.log(CommunityAnalytics.THREAD_DELETED)
+    }
+
+    // 소켓으로 보낸 내 메시지를 서버 확인 전까지 기억한다. createMessage 는 suspend 가 아니어서 ack 처리보다 먼저 실행된다.
+    private fun rememberSentMessage(
+        clientMessageId: String,
+        type: CommunityMessageType,
+        hasReply: Boolean,
+        hasMention: Boolean,
+    ) {
+        if (clientMessageId in loggedSentClientMessageIds) return
+        unconfirmedSentMessages[clientMessageId] = CommunityAnalytics.messageSentParams(type, hasReply, hasMention)
+    }
+
+    // 서버가 내 메시지를 받았다고 확인한 시점(ack·생성 이벤트·복구 조회 중 먼저 온 것)에 메시지당 한 번 센다.
+    // 다른 기기에서 보낸 메시지는 이 화면에서 보낸 기록이 없어 세지 않는다.
+    private fun logMessageSentOnce(clientMessageId: String) {
+        val params = unconfirmedSentMessages.remove(clientMessageId) ?: return
+        if (!loggedSentClientMessageIds.add(clientMessageId)) return
+        analyticsLogger.log(CommunityAnalytics.MESSAGE_SENT, params)
     }
 
     // 나가기 완료는 HTTP 응답과 소켓 member.left 중 먼저 온 쪽에서 한 번만 알린다.
@@ -1107,7 +1175,13 @@ class CommunityChattingViewModel @Inject constructor(
         if (!state.thread?.myRole.canManageCommunityThread() || state.isDeleting) return@launch
 
         updateState { copy(showDeleteDialog = false, isDeleting = true) }
-        when (val result = threadRepository.deleteThread(state.threadId)) {
+        // 응답 전에 화면이 닫혀도(소켓 이벤트로 먼저 나감·뒤로 가기) 서버에서는 삭제되므로 결과를 끝까지 받아 기록한다
+        val result = withContext(NonCancellable) {
+            threadRepository.deleteThread(state.threadId).also {
+                if (it is ApiState.Success) logThreadDeletedOnce()
+            }
+        }
+        when (result) {
             is ApiState.Success -> emitThreadLeftOnce()
             is ApiState.Fail -> {
                 if (hasEmittedThreadLeft) return@launch
@@ -1366,6 +1440,7 @@ class CommunityChattingViewModel @Inject constructor(
                     }
                 }
                 event.clientMessageId?.let { clientId ->
+                    logMessageSentOnce(clientId)
                     updateState {
                         copy(pendingMessages = pendingMessages.mapValues { (id, pending) ->
                             if (id == clientId) pending.copy(acknowledged = true) else pending
@@ -1373,65 +1448,69 @@ class CommunityChattingViewModel @Inject constructor(
                     }
                 }
             }
-            is CommunityChatEvent.MessageChanged -> updateState {
-                val pending = event.clientMessageId?.let(pendingMessages::get)
-                val rawMessage = if (
-                    event.message.type == CommunityMessageType.IMAGE &&
-                    event.message.content.isNullOrBlank() &&
-                    pending?.localUris?.isNotEmpty() == true
-                ) {
-                    event.message.copy(content = pending.localUris.first())
-                } else {
-                    event.message
+            is CommunityChatEvent.MessageChanged -> {
+                if (event.type == CommunityChatEvent.MessageChanged.Type.CREATED) {
+                    event.clientMessageId?.let(::logMessageSentOnce)
                 }
-                val receivedMessage = CommunityMessageMerge.merge(
-                    messages.find { it.messageId == rawMessage.messageId },
-                    if (event.type == CommunityChatEvent.MessageChanged.Type.DELETED)
-                        rawMessage.copy(status = "DELETED", content = null, files = emptyList(), reactions = emptyList())
-                    else rawMessage,
-                )
-                // 수정·삭제 이벤트는 제자리에서 갱신하고, 새 메시지(CREATED)만 맨 앞(최신)에 넣는다.
-                val updatedMessages = when {
-                    messages.any { it.messageId == receivedMessage.messageId } ->
-                        messages.map { if (it.messageId == receivedMessage.messageId) receivedMessage else it }
-                    event.type == CommunityChatEvent.MessageChanged.Type.CREATED ->
-                        listOf(receivedMessage) + messages
-                    else -> messages
-                }
-                val isOwnMessage = receivedMessage.senderId == myMemberId || pending != null
-                val updatedSummaryCandidates = when (event.type) {
-                    CommunityChatEvent.MessageChanged.Type.CREATED -> {
-                        if (isOwnMessage || receivedMessage.type.isSystemNotice) {
-                            summaryCandidateMessages
-                        } else {
-                            (listOf(receivedMessage) + summaryCandidateMessages)
-                                .distinctBy(CommunityThreadMessage::messageId)
-                                .take(MAX_SUMMARY_MESSAGE_COUNT)
-                        }
-                    }
-                    CommunityChatEvent.MessageChanged.Type.UPDATED -> {
-                        summaryCandidateMessages.map { message ->
-                            if (message.messageId == receivedMessage.messageId) receivedMessage else message
-                        }
-                    }
-                    CommunityChatEvent.MessageChanged.Type.DELETED -> {
-                        summaryCandidateMessages.filterNot { message ->
-                            message.messageId == receivedMessage.messageId
-                        }
-                    }
-                }
-                copy(
-                    messages = updatedMessages,
-                    knownDeletedMessageIds = communityDeletedMessageIds(listOf(receivedMessage), knownDeletedMessageIds),
-                    summaryCandidateMessages = updatedSummaryCandidates,
-                    localImageUrisByMessageId = if (pending?.localUris?.isNotEmpty() == true) {
-                        localImageUrisByMessageId + (receivedMessage.messageId to pending.localUris)
+                updateState {
+                    val pending = event.clientMessageId?.let(pendingMessages::get)
+                    val rawMessage = if (
+                        event.message.type == CommunityMessageType.IMAGE &&
+                        event.message.content.isNullOrBlank() &&
+                        pending?.localUris?.isNotEmpty() == true
+                    ) {
+                        event.message.copy(content = pending.localUris.first())
                     } else {
-                        localImageUrisByMessageId
-                    },
-                    pendingMessages = event.clientMessageId?.let { pendingMessages - it } ?: pendingMessages,
-                )
-            }.also {
+                        event.message
+                    }
+                    val receivedMessage = CommunityMessageMerge.merge(
+                        messages.find { it.messageId == rawMessage.messageId },
+                        if (event.type == CommunityChatEvent.MessageChanged.Type.DELETED)
+                            rawMessage.copy(status = "DELETED", content = null, files = emptyList(), reactions = emptyList())
+                        else rawMessage,
+                    )
+                    // 수정·삭제 이벤트는 제자리에서 갱신하고, 새 메시지(CREATED)만 맨 앞(최신)에 넣는다.
+                    val updatedMessages = when {
+                        messages.any { it.messageId == receivedMessage.messageId } ->
+                            messages.map { if (it.messageId == receivedMessage.messageId) receivedMessage else it }
+                        event.type == CommunityChatEvent.MessageChanged.Type.CREATED ->
+                            listOf(receivedMessage) + messages
+                        else -> messages
+                    }
+                    val isOwnMessage = receivedMessage.senderId == myMemberId || pending != null
+                    val updatedSummaryCandidates = when (event.type) {
+                        CommunityChatEvent.MessageChanged.Type.CREATED -> {
+                            if (isOwnMessage || receivedMessage.type.isSystemNotice) {
+                                summaryCandidateMessages
+                            } else {
+                                (listOf(receivedMessage) + summaryCandidateMessages)
+                                    .distinctBy(CommunityThreadMessage::messageId)
+                                    .take(MAX_SUMMARY_MESSAGE_COUNT)
+                            }
+                        }
+                        CommunityChatEvent.MessageChanged.Type.UPDATED -> {
+                            summaryCandidateMessages.map { message ->
+                                if (message.messageId == receivedMessage.messageId) receivedMessage else message
+                            }
+                        }
+                        CommunityChatEvent.MessageChanged.Type.DELETED -> {
+                            summaryCandidateMessages.filterNot { message ->
+                                message.messageId == receivedMessage.messageId
+                            }
+                        }
+                    }
+                    copy(
+                        messages = updatedMessages,
+                        knownDeletedMessageIds = communityDeletedMessageIds(listOf(receivedMessage), knownDeletedMessageIds),
+                        summaryCandidateMessages = updatedSummaryCandidates,
+                        localImageUrisByMessageId = if (pending?.localUris?.isNotEmpty() == true) {
+                            localImageUrisByMessageId + (receivedMessage.messageId to pending.localUris)
+                        } else {
+                            localImageUrisByMessageId
+                        },
+                        pendingMessages = event.clientMessageId?.let { pendingMessages - it } ?: pendingMessages,
+                    )
+                }
                 logSummaryCandidates(
                     reason = "MESSAGE_${event.type.name}",
                     messages = uiState.value.summaryCandidateMessages,
@@ -1456,6 +1535,8 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is CommunityChatEvent.ThreadStateChanged -> when (event.type) {
                 CommunityChatEvent.ThreadStateChanged.Type.DELETED -> {
+                    // 내가 요청한 삭제의 thread.deleted 가 HTTP 응답보다 먼저 와도 삭제 성공으로 센다
+                    if (uiState.value.isDeleting) logThreadDeletedOnce()
                     if (uiState.value.isDeleting || isLeaving) emitThreadLeftOnce()
                     else showAccessDenied()
                 }
@@ -1464,6 +1545,8 @@ class CommunityChattingViewModel @Inject constructor(
                     if (event.memberId == uiState.value.myMemberId) {
                         // 내가 요청한 나가기의 member.left 가 HTTP 응답보다 먼저 와도 나가기 완료로 처리한다(토스트 누락 방지).
                         if ((isLeaving || uiState.value.isDeleting) && event.type == CommunityChatEvent.ThreadStateChanged.Type.MEMBER_LEFT) {
+                            // 삭제 중 내 member.left 가 먼저 오면 여기서 소켓을 끊어 thread.deleted 를 못 받으므로 지금 센다
+                            if (uiState.value.isDeleting) logThreadDeletedOnce()
                             emitThreadLeftOnce()
                         } else {
                             showAccessDenied()
@@ -1521,6 +1604,8 @@ class CommunityChattingViewModel @Inject constructor(
             }) {
                 is ApiState.Success -> {
                     if (generation != accessGeneration) return@withLock true
+                    // ack·생성 이벤트를 놓친 내 메시지도 서버에 있으면 전송된 것으로 센다
+                    result.data.messages.mapNotNull { it.clientMessageId }.forEach(::logMessageSentOnce)
                     updateState {
                         val delivered = result.data.messages.mapNotNullTo(hashSetOf()) { it.clientMessageId }
                         copy(
@@ -1632,6 +1717,10 @@ class CommunityChattingViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        // ack 전에 화면을 떠나도 소켓에 이미 실린 메시지는 닫히기 전에 서버로 간다. 실패 표시가 없는 전송 중 메시지는 보낸 것으로 센다
+        uiState.value.pendingMessages.values
+            .filter { it.commandId.isNotBlank() && it.error == null }
+            .forEach { logMessageSentOnce(it.clientMessageId) }
         stopRealtime()
         super.onCleared()
     }
