@@ -9,6 +9,7 @@ import com.umc.domain.model.act.challenger.ChallengerInfoDialogModel
 import com.umc.domain.model.act.challenger.ChallengerList
 import com.umc.domain.model.act.challenger.ChallengerManageDialogModel
 import com.umc.domain.model.base.ApiState
+import com.umc.domain.model.base.FailState
 import com.umc.domain.model.base.map
 import com.umc.domain.model.home.ParticipantSearchPage
 import com.umc.domain.model.request.challenger.ChallengerPointRequest
@@ -21,7 +22,7 @@ class ChallengerRepositoryImpl @Inject constructor(
     private val searchScopeProvider: ChallengerSearchScopeProvider,
 ) : ChallengerRepository {
 
-    // 챌린저 검색은 모두 여기를 거친다. 중앙운영사무국만 운영진 검색으로 전 학교를 보고,
+    // 일반 챌린저·일정 검색의 범위. 최고 관리자·현재 기수 중앙운영사무국은 전 학교를 보고,
     // 나머지는 회원 검색에 본인 학교를 넣어 부른다(운영진 검색은 일반 챌린저에게 403).
     private suspend fun searchInScope(
         cursor: Long?,
@@ -101,12 +102,16 @@ class ChallengerRepositoryImpl @Inject constructor(
     override suspend fun getAdminChallengerList(
         cursor: Long?, size: Int,
         schoolId: Long?, gisuId: Long?,
-        keyword: String?, part: String?
+        keyword: String?, part: String?, chapterId: Long?,
     ): ApiState<AdminChallengerList> {
-        return searchInScope(
+        if (gisuId == null || gisuId <= 0) {
+            return ApiState.Fail(FailState(code = "GISU_REQUIRED", message = "조회할 기수를 선택해 주세요."))
+        }
+        // 관리 목록은 회원 검색으로 우회하지 않고 대상 기수의 권한을 검증하는 v2 API를 사용한다.
+        return challengerRemoteDataSource.getAdminChallengerList(
             cursor = cursor, size = size,
             schoolId = schoolId, gisuId = gisuId,
-            keyword = keyword, part = part
+            keyword = keyword, part = part, chapterId = chapterId,
         ).map { it.toAdminList() }
     }
 

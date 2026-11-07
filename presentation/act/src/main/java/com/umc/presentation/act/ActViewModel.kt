@@ -28,7 +28,7 @@ class ActViewModel @Inject constructor(
             resultResponse(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
-                    val hasAdminAccess = userInfo.roles.any { role ->
+                    val hasAdminAccess = userInfo.isSuperAdmin || userInfo.roles.any { role ->
                         runCatching { RoleType.valueOf(role.roleType) }.isSuccess
                     }
 
