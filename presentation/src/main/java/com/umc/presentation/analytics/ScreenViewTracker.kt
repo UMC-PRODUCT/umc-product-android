@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.toRoute
+import com.umc.domain.analytics.AnalyticsLogger
 import com.umc.presentation.MainDestination
 import com.umc.presentation.remotenotice.toScreenName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,11 @@ internal const val OTHER_MEMBER_CARD_SCREEN = "MemberCard"
  */
 internal fun analyticsScreenName(route: String, isOtherMemberCard: Boolean): String =
     if (isOtherMemberCard) OTHER_MEMBER_CARD_SCREEN else route.toScreenName()
+
+/** Firebase 표준 화면 조회 이벤트(FirebaseAnalytics.Event.SCREEN_VIEW 와 Param 값) */
+internal const val SCREEN_VIEW_EVENT = "screen_view"
+internal const val SCREEN_NAME_PARAM = "screen_name"
+internal const val SCREEN_CLASS_PARAM = "screen_class"
 
 /**
  * 화면 이동마다 screen_view 를 한 번 기록한다.
@@ -44,7 +50,7 @@ internal fun ScreenViewTracker(
 
 @HiltViewModel
 class ScreenViewTrackerViewModel @Inject constructor(
-    private val screenViewSink: ScreenViewSink,
+    private val analyticsLogger: AnalyticsLogger,
 ) : ViewModel() {
 
     /**
@@ -59,6 +65,9 @@ class ScreenViewTrackerViewModel @Inject constructor(
     fun onScreenShown(entryId: String, screenName: String) {
         if (entryId == lastLoggedEntryId) return
         lastLoggedEntryId = entryId
-        screenViewSink.logScreenView(screenName)
+        analyticsLogger.log(
+            SCREEN_VIEW_EVENT,
+            mapOf(SCREEN_NAME_PARAM to screenName, SCREEN_CLASS_PARAM to screenName),
+        )
     }
 }
