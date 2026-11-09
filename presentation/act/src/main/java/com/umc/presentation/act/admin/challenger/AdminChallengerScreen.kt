@@ -77,14 +77,15 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 fun AdminChallengerRoute(
     isActive: Boolean = true,
+    adminModeSession: Int = 0,
     onNavigateToDetail: (Long) -> Unit = {},
     viewModel: AdminChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(isActive) {
-        if (isActive) viewModel.refresh()
+    LaunchedEffect(isActive, adminModeSession) {
+        if (isActive) viewModel.refresh(adminModeSession)
     }
 
     CollectUiEvents(viewModel.uiEvent) { event ->

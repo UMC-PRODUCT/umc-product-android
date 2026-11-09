@@ -50,7 +50,11 @@ class ActViewModel @Inject constructor(
     //관리자 모드 전환
     fun setAdminMode(isAdmin: Boolean) {
         updateState {
-            copy(isAdmin = isAdmin && hasAdminAccess)
+            val nextIsAdmin = isAdmin && hasAdminAccess
+            copy(
+                isAdmin = nextIsAdmin,
+                adminModeSession = adminModeSession + if (!this.isAdmin && nextIsAdmin) 1 else 0,
+            )
         }
     }
 }

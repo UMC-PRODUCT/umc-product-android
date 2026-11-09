@@ -63,6 +63,7 @@ class AdminChallengerViewModel @Inject constructor(
     private var challengerListJob: Job? = null
     private var filterContextJob: Job? = null
     private var searchUserInfo: UserInfo? = null
+    private var lastAdminModeSession: Int? = null
 
     //검색어 변경 시 첫 페이지부터 다시 조회
     fun onSearchKeywordChanged(keyword: String) {
@@ -77,9 +78,31 @@ class AdminChallengerViewModel @Inject constructor(
     /**
      * 탭 재진입·재시도 시 최신 프로필로 검색 가능한 기수와 소속 범위를 다시 구성한다.
      * 이전 기수·조직·파트 선택은 새 범위에서 유효할 때 유지하고 검색어도 보존한다.
+     * 어드민 모드를 다시 켠 뒤 처음 진입할 때는 이전 선택과 검색어를 초기화한다.
      * 이전 요청과 목록을 정리해 다른 조회 조건의 결과가 화면에 남지 않게 한다.
      */
-    fun refresh() = initializeSearch()
+    fun refresh(adminModeSession: Int? = null) {
+        if (adminModeSession != null && lastAdminModeSession != adminModeSession) {
+            lastAdminModeSession = adminModeSession
+            filterContextJob?.cancel()
+            challengerListJob?.cancel()
+            stopLoading()
+            searchUserInfo = null
+            updateState {
+                copy(
+                    searchKeyword = "",
+                    selectedPart = null,
+                    isPartFilterVisible = false,
+                    searchableGisus = persistentListOf(),
+                    selectedGisu = null,
+                    searchFilters = null,
+                    sections = persistentListOf(),
+                    loadErrorMessage = null,
+                )
+            }
+        }
+        initializeSearch()
+    }
 
     private fun initializeSearch(retryList: Boolean = true, deniedMessage: String? = null) {
         val previousFilters = uiState.value.searchFilters
