@@ -120,8 +120,6 @@ dependencies {
     //firebase meesage
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
-    // 화면 이동 기록(screen_view). 수집 여부는 :app 매니페스트의 flavor 값으로 정한다
-    implementation(libs.firebase.analytics)
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 

@@ -78,6 +78,9 @@ interface OrganizationRepository {
 
     suspend fun getAllGisu(): ApiState<GisuList>
 
+    /** 공개 페이지 API에서 전체 기수를 읽는다. 최고 관리자도 본인 참여 이력으로 제한하지 않는다. */
+    suspend fun getSearchGisus(): ApiState<GisuList>
+
     suspend fun getActiveGisu(): ApiState<GisuItem> //GisuItemResponse
 
     suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool>

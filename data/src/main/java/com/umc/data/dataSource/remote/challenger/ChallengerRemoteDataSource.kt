@@ -18,7 +18,18 @@ interface ChallengerRemoteDataSource {
         part: String? = null,
         name: String? = null,
         nickname: String? = null,
-        keyword: String? = null
+        keyword: String? = null,
+    ): ApiState<ChallengerCursorResponse>
+
+    /** 운영진 목록 전용 조회. 선택 기수와 조직 조건의 권한은 서버의 v2 검색에서 검사한다. */
+    suspend fun getAdminChallengerList(
+        cursor: Long?,
+        size: Int,
+        schoolId: Long?,
+        chapterId: Long?,
+        gisuId: Long,
+        part: String?,
+        keyword: String?,
     ): ApiState<ChallengerCursorResponse>
 
     // 학교를 반드시 지정하는 회원 검색. 운영진 전용 검색을 쓸 수 없는 사용자에게 쓴다

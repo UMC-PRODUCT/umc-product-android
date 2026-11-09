@@ -3,9 +3,12 @@ package com.umc.presentation.community.create
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.component.theme.AppStrings
+import com.umc.domain.analytics.AnalyticsLogger
+import com.umc.domain.usecase.ai.CommunityCategoryRules
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.ai.ClassifyCommunityThreadUseCase
 import com.umc.domain.usecase.community.CreateCommunityThreadUseCase
+import com.umc.presentation.community.analytics.CommunityAnalytics
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -14,7 +17,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +29,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 커뮤니티 스레드 생성 화면의 상태와 비즈니스 로직을 관리하는 ViewModel
@@ -39,6 +46,7 @@ class CommunityCreateViewModel @Inject constructor(
     private val createCommunityThreadUseCase: CreateCommunityThreadUseCase,
     private val classifyCommunityThreadUseCase: ClassifyCommunityThreadUseCase,
     private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val analyticsLogger: AnalyticsLogger,
 ) : ViewModel() {
 
     /** 스레드 생성 화면 UI 상태 */
@@ -284,6 +292,7 @@ class CommunityCreateViewModel @Inject constructor(
             val result = classifyCategory(
                 title = latestState.title,
                 description = latestState.description,
+                trigger = CommunityAnalytics.TRIGGER_AUTO,
             )
 
             // AI 분류 결과 상태 반영
@@ -373,6 +382,7 @@ class CommunityCreateViewModel @Inject constructor(
             val result = classifyCategory(
                 title = latestState.title,
                 description = latestState.description,
+                trigger = CommunityAnalytics.TRIGGER_MANUAL,
             )
 
             if (_state.value.title != latestState.title || _state.value.description != latestState.description) return@launch
@@ -396,20 +406,37 @@ class CommunityCreateViewModel @Inject constructor(
     private suspend fun classifyCategory(
         title: String,
         description: String,
+        trigger: String,
     ): ClassificationResult {
+        // 키워드 규칙으로 확정되면 모델을 부르지 않는다. 모델 성공률과 섞이지 않게 방식을 함께 남긴다
+        val method = if (CommunityCategoryRules.classify(title, description) != null) {
+            CommunityAnalytics.METHOD_RULE
+        } else {
+            CommunityAnalytics.METHOD_MODEL
+        }
+        analyticsLogger.log(
+            CommunityAnalytics.AI_CLASSIFY_ATTEMPTED,
+            CommunityAnalytics.classifyParams(trigger, method),
+        )
 
-        return when (
-            val result = classifyCommunityThreadUseCase(
-                title = title,
-                description = description,
-            )
-        ) {
+        val result = classifyCommunityThreadUseCase(
+            title = title,
+            description = description,
+        )
+        // 입력이 바뀌어 분류가 취소됐으면 성공·실패로 세지 않는다(취소가 실패로 감싸져 돌아올 수 있다)
+        currentCoroutineContext().ensureActive()
+
+        return when (result) {
             is ApiState.Success<*> -> {
                 val category = (result.data as? String)
                     ?.trim()
                     ?.uppercase()
                     ?.toCommunityCategory()
                     ?: CommunityCategory.FREE
+                analyticsLogger.log(
+                    CommunityAnalytics.AI_CLASSIFY_COMPLETED,
+                    CommunityAnalytics.classifyParams(trigger, method, category.name),
+                )
 
                 ClassificationResult(
                     aiState = CommunityAiState.SUCCESS,
@@ -417,14 +444,11 @@ class CommunityCreateViewModel @Inject constructor(
                 )
             }
 
-            is ApiState.Fail -> {
-                ClassificationResult(
-                    aiState = CommunityAiState.FAILED,
-                    category = CommunityCategory.FREE,
-                )
-            }
-
             else -> {
+                analyticsLogger.log(
+                    CommunityAnalytics.AI_CLASSIFY_FAILED,
+                    CommunityAnalytics.classifyParams(trigger, method),
+                )
                 ClassificationResult(
                     aiState = CommunityAiState.FAILED,
                     category = CommunityCategory.FREE,
@@ -488,16 +512,33 @@ class CommunityCreateViewModel @Inject constructor(
                     isSubmitting = true,
                 )
             }
+            analyticsLogger.log(CommunityAnalytics.THREAD_CREATE_ATTEMPTED)
 
-            createCommunityThreadUseCase(
-                title = currentState.title.trim(),
-                description = currentState.description.trim(),
-                category = category.toApiCategory(),
-                icon = currentState.selectedIcon.ifBlank {
-                    DEFAULT_ICON
-                },
-                memberIds = memberIds,
-            ).onSuccess { createdThread ->
+            // 응답 전에 뒤로 가도 요청은 이미 서버로 갔을 수 있으므로 결과를 끝까지 받아 생성·실패를 기록한다
+            withContext(NonCancellable) {
+                createCommunityThreadUseCase(
+                    title = currentState.title.trim(),
+                    description = currentState.description.trim(),
+                    category = category.toApiCategory(),
+                    icon = currentState.selectedIcon.ifBlank {
+                        DEFAULT_ICON
+                    },
+                    memberIds = memberIds,
+                ).also { result ->
+                    result.onSuccess { createdThread ->
+                        // 카테고리 비율은 서버가 확정한 값으로 센다. 알 수 없는 값이면 요청한 값으로 둔다
+                        val createdCategory = createdThread.category.name
+                            .takeUnless { it == "UNKNOWN" }
+                            ?: category.toApiCategory()
+                        analyticsLogger.log(
+                            CommunityAnalytics.THREAD_CREATED,
+                            CommunityAnalytics.threadCreatedParams(createdCategory, hasInvitees = memberIds.isNotEmpty()),
+                        )
+                    }.onFailure {
+                        analyticsLogger.log(CommunityAnalytics.THREAD_CREATE_FAILED)
+                    }
+                }
+            }.onSuccess { createdThread ->
                 // Keep submission locked until navigation consumes the successful result.
                 // 생성된 threadId와 함께 성공 이벤트 전달
                 sendEvent(

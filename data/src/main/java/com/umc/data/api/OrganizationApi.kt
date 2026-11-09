@@ -1,11 +1,12 @@
 package com.umc.data.api
 
 import com.umc.data.response.organization.Chapter
-import com.umc.data.response.organization.ChapterBySchoolListResponse
+import com.umc.data.response.organization.ChapterWithSchoolsListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
 import com.umc.data.response.organization.GisuItemResponse
 import com.umc.data.response.organization.GisuListResponse
+import com.umc.data.response.organization.GisuPageResponse
 import com.umc.data.response.organization.MyStudyGroupListResponse
 import com.umc.data.response.organization.SchoolDetailResponse
 import com.umc.data.response.organization.SchoolLinksResponse
@@ -118,13 +119,20 @@ interface OrganizationApi {
     @GET(Endpoints.Organization.GISU_ALL)
     suspend fun getAllGisu(): ApiResponse<GisuListResponse>
 
+    @GET(Endpoints.Organization.GISU)
+    suspend fun getGisuPage(
+        @Query(QUERY_PAGE) page: Int,
+        @Query(QUERY_SIZE) size: Int,
+        @Query(QUERY_SORT) sort: String = "generation,desc",
+    ): ApiResponse<GisuPageResponse>
+
     @GET(Endpoints.Organization.GISU_ACTIVE)
     suspend fun getActiveGisu(): ApiResponse<GisuItemResponse>
 
     @GET(Endpoints.Organization.CHAPTER_WITH_SCHOOL)
     suspend fun getActiveGisu(
         @Query(PATH_GISU_ID) gisuId: Int,
-    ): ApiResponse<ChapterBySchoolListResponse>
+    ): ApiResponse<ChapterWithSchoolsListResponse>
 
     @GET(Endpoints.Organization.MANAGED_STUDY_GROUPS)
     suspend fun getManagedStudyGroups(
