@@ -131,6 +131,7 @@ fun ActManageScreen(
                 ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
                     AdminChallengerRoute(
                         isActive = isActive,
+                        adminModeSession = uiState.adminModeSession,
                         onNavigateToDetail = onNavigateToChallengerDetail,
                     )
                 }
