@@ -197,8 +197,8 @@ class HomeViewModel @Inject constructor(
      */
     private fun loadGisuDetailAndCalculateStatus(latestGisuId: Long?, startGisuId: Long?) {
         if (latestGisuId == null || startGisuId == null) {
-            // 기수 정보가 없으면 판별할 수 없으므로 기존 기본값(ACTIVE)대로 확정한다
-            updateState { copy(userType = UserType.ACTIVE) }
+            // 챌린저 기록이 없는 계정(프로덕트팀 계정)이다. 보여줄 기수가 없으니 "0기 활동 상태" 카드를 그리지 않는다
+            updateState { copy(userType = null) }
             return
         }
 
@@ -474,7 +474,8 @@ data class HomeUiState(
     //프로필 응답 상태 (기본값이 실제 값처럼 보이지 않게 구분)
     val profileLoadState: HomeLoadState = HomeLoadState.LOADING,
 
-    //null = 아직 확정 전 (기수 조회 응답 전까지 활동 상태 카드를 그리지 않는다)
+    //null = 아직 확정 전이거나 기수가 없는 계정(프로덕트팀 계정). 어느 쪽이든 활동 상태 카드를 그리지 않는다.
+    //기수가 없는 계정은 null 로 끝나므로 null 을 로딩 표시 조건으로 쓰지 않는다
     val userType: UserType? = null,
     val warningStatus: WarningStatus = WarningStatus.NORMAL,
 
