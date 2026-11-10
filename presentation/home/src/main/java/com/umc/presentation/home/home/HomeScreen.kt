@@ -224,7 +224,7 @@ fun HomeScreen(
                 } else {
                     HomeProfileCardsRow(uiState = uiState)
 
-                    //userType 이 null(확정 전)인 동안에는 활동 상태 카드를 그리지 않는다
+                    //userType 이 null(확정 전, 또는 기수가 없는 프로덕트팀 계정)이면 활동 상태 카드를 그리지 않는다
                     if (uiState.userType == UserType.ACTIVE) {
                         Spacer(modifier = Modifier
                             .height(16.dp)
@@ -1053,6 +1053,35 @@ private fun HomeScreenLargeFontPreview() {
             buljum = -10.5,
             total = -0.5,
             gisuTag = persistentListOf("10기", "11기", "12기"),
+            viewMode = HomeViewMode.CALENDAR,
+            dailyPlans = persistentListOf()
+        ),
+        onDateClick = {},
+        onMonthChange = {},
+        onChangeViewMode = {},
+        onNotificationClick = {},
+        onScheduleAddClick = {},
+        onScheduleDetailClick = {},
+        onNoticeClick = {},
+        onShareCardClick = {},
+        onProfileRetryClick = {},
+        onScheduleRetryClick = {},
+        onScheduleRefresh = {},
+    )
+}
+
+/** 챌린저 기록 없이 들어온 프로덕트팀 계정(isUmcProduct): 기수 태그가 비고 활동 상태 카드가 없다. */
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenNoGisuPreview() {
+    HomeScreen(
+        uiState = HomeUiState(
+            profileLoadState = HomeLoadState.SUCCESS,
+            userName = "프로덕트",
+            userNickName = "플덕",
+            userType = null,
+            growDay = 0,
+            gisuTag = persistentListOf(),
             viewMode = HomeViewMode.CALENDAR,
             dailyPlans = persistentListOf()
         ),
