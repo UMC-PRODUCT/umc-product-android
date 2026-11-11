@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.domain.model.UserInfo
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -51,14 +50,14 @@ class PermissionViewModel @Inject constructor(
     }
 
     /**
-     * 권한 요청 완료 후 내 프로필을 조회해 챌린저 기록 보유 여부로 홈/실패 화면을 결정.
+     * 권한 요청 완료 후 내 프로필을 조회해 메인 진입 가능 여부(챌린저 기록·프로덕트팀 계정)로 홈/실패 화면을 결정.
      * PermissionRoute의 ActivityResultCallback에서 호출됨
      */
     fun signUp() = viewModelScope.launch {
         resultResponse(
             response = getMyProfileUseCase(),
             successCallback = { userInfo ->
-                if (hasChallengerRecords(userInfo)) {
+                if (userInfo.canEnterMain()) {
                     emitEvent(PermissionEvent.MoveToMainEvent)
                 } else {
                     emitEvent(PermissionEvent.MoveToFailEvent)
@@ -70,13 +69,6 @@ class PermissionViewModel @Inject constructor(
                 emitEvent(PermissionEvent.ShowErrorToast(failState.message))
             }
         )
-    }
-
-    /** roles 또는 challengerRecords 중 하나라도 challengerId > 0 이면 챌린저 기록이 있는 것으로 판단 */
-    private fun hasChallengerRecords(userInfo: UserInfo): Boolean {
-        val hasRoleChallengerId = userInfo.roles.any { it.challengerId > 0 }
-        val hasRecordChallengerId = userInfo.challengerRecords.any { it.challengerId > 0 }
-        return hasRoleChallengerId || hasRecordChallengerId
     }
 }
 
