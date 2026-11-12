@@ -1248,4 +1248,10 @@ object AppStrings {
     const val CHAT_NO_ACCESS_DESCRIPTION = "스레드가 삭제되었거나 접근 권한이 없어요."
     const val CHAT_NO_ACCESS_BACK = COMMON_BACK
     const val CHAT_LEAVE_SUCCESS = "스레드에서 나갔어요."
+
+    // 인앱 업데이트
+    const val IN_APP_UPDATE_READY_TITLE = "업데이트 준비 완료"
+    const val IN_APP_UPDATE_READY_BODY = "새 버전을 내려받았어요.\n다시 시작하면 바로 적용돼요."
+    const val IN_APP_UPDATE_LATER = "나중에"
+    const val IN_APP_UPDATE_RESTART = "다시 시작"
 }

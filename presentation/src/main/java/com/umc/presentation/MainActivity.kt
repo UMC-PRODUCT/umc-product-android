@@ -55,17 +55,23 @@ import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.presentation.remotenotice.RemoteNoticeHost
 import com.umc.presentation.analytics.ScreenViewTracker
+import com.umc.presentation.update.InAppUpdateController
+import com.umc.presentation.update.InAppUpdateReadyDialog
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
+    private var updateController: InAppUpdateController? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (openUnsupportedWebLink(intent)) {
             finish()
             return
         }
+        // Play 인앱 업데이트. 결과 런처를 등록해야 해서 onCreate 에서 만든다. 확인은 화면에 올라올 때마다 스스로 한다
+        val updateController = InAppUpdateController(this).also { updateController = it }
         PendingDeepLink.initialize(this)
         // 외부 링크로 처음 열린 경우 NavController 가 곧바로 목적지를 열지 않도록 링크를 보류한다.
         // 앱은 항상 스플래시(인증 판정)부터 시작하고, 홈에 도착한 뒤 원래 목적지로 이동한다.
@@ -79,7 +85,7 @@ class MainActivity : ComponentActivity() {
         // 아이콘 명암은 시스템 다크모드를 따라 자동으로 바뀐다
         enableEdgeToEdge()
         setContent {
-            UmcApp()
+            UmcApp(updateController = updateController)
         }
     }
 
@@ -95,6 +101,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // 즉시 업데이트 화면이 알림 탭 등으로 걷힌 경우를 사용자 취소와 구분한다
+        updateController?.onNewIntent()
         if (openUnsupportedWebLink(intent)) return
         setIntent(intent)
         acceptDeepLink(intent)
@@ -148,7 +156,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun UmcApp() {
+private fun UmcApp(updateController: InAppUpdateController) {
     UmcTheme {
 
         val navController = rememberNavController()
@@ -211,6 +219,15 @@ private fun UmcApp() {
 
             // 화면 이동마다 Firebase Analytics 에 screen_view 를 남긴다
             ScreenViewTracker(backStackEntry = navBackStackEntry)
+
+            // 유연한 업데이트를 다 받았으면 다시 시작해 적용할지 묻는다.
+            // 글쓰기·채팅 중에 끼어들지 않도록 메인 탭(하단바가 보이는 화면)에서만 띄운다
+            if (updateController.isReadyToInstall && showBottomBar) {
+                InAppUpdateReadyDialog(
+                    onRestart = updateController::completeUpdate,
+                    onLater = updateController::postponeInstall,
+                )
+            }
         }
     }
 }
