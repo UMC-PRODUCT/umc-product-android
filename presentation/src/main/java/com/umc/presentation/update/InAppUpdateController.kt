@@ -55,8 +55,14 @@ internal class InAppUpdateController(private val activity: ComponentActivity) : 
      */
     private var immediateFailed = false
 
-    /** 이 화면의 첫 onResume 인지. 유연한 업데이트 동의 창은 이때만 띄워 글쓰기·채팅 도중에 끼어들지 않게 한다 */
-    private var firstResume = true
+    /**
+     * 유연한 업데이트 동의 창을 띄울 차례가 남았는지. 화면이 뜬 뒤 처음 성공한 조회에서만 써서
+     * 글쓰기·채팅 도중에 끼어들지 않게 한다. 첫 조회가 실패하면 다음에 성공한 조회까지 차례를 남긴다
+     */
+    private var flexibleTurnPending = true
+
+    /** 업데이트 정보 조회 번호. Task 완료 순서는 보장되지 않으므로 늦게 도착한 이전 조회 결과는 버린다 */
+    private var querySeq = 0
 
     // 런처는 방식별로 하나씩, 항상 이 순서로 등록한다. 등록 순서가 같아야 화면 회전이나 프로세스 복원 뒤에도
     // 결과가 같은 방식의 콜백으로 돌아온다(ActivityResultRegistry 가 등록 순서로 키를 만든다)
@@ -102,8 +108,6 @@ internal class InAppUpdateController(private val activity: ComponentActivity) : 
     override fun onResume(owner: LifecycleOwner) {
         val interrupted = interruptedByNewIntent
         interruptedByNewIntent = false
-        val isFirstResume = firstResume
-        firstResume = false
         if (cancelPending) {
             cancelPending = false
             // 긴급 업데이트를 사용자가 취소했으면 앱을 닫는다. 다시 열면 또 묻는다
@@ -113,8 +117,14 @@ internal class InAppUpdateController(private val activity: ComponentActivity) : 
             }
         }
 
+        val seq = ++querySeq
         appUpdateManager.appUpdateInfo
-            .addOnSuccessListener(activity) { info -> handle(info, allowFlexiblePrompt = isFirstResume) }
+            .addOnSuccessListener(activity) { info ->
+                if (seq != querySeq) return@addOnSuccessListener
+                val allowFlexiblePrompt = flexibleTurnPending
+                flexibleTurnPending = false
+                handle(info, allowFlexiblePrompt)
+            }
             .addOnFailureListener(activity) { error ->
                 // Play 설치본이 아니면(ERROR_APP_NOT_OWNED 등) 여기로 온다
                 Log.d(TAG, "업데이트 정보를 가져오지 못함", error)
