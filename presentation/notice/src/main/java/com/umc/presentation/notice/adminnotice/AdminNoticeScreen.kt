@@ -309,6 +309,18 @@ private fun AdminNoticeScreenNoAccessPreview() {
 
 @Preview(showBackground = true)
 @Composable
+private fun AdminNoticeScreenChapterPresidentPreview() {
+    AdminNoticeScreen(
+        uiState = AdminNoticeUiState(
+            visibleTabs = persistentListOf(AdminNoticeTab.SCHOOL_CORE, AdminNoticeTab.PART_LEADER),
+            selectedTab = AdminNoticeTab.SCHOOL_CORE,
+            hasLoaded = true,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
 private fun AdminNoticeScreenLoadingPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
