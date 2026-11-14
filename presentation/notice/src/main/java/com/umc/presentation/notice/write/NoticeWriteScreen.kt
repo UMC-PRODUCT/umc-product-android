@@ -103,13 +103,14 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.enums.WriteCategoryType
 import com.umc.domain.model.notice.NoticeImageAttachment
 import com.umc.domain.model.notice.WriteCategory
+import com.umc.domain.model.organization.GisuItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
 
 /** 공지 작성 화면 바텀시트 종류 */
-private enum class WriteSheetType { CATEGORY, CHAPTER, SCHOOL, PART, VOTE }
+private enum class WriteSheetType { CATEGORY, GISU, CHAPTER, SCHOOL, PART, VOTE }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,11 +161,24 @@ fun NoticeWriteRoute(
         onClickBack = navigateToBack,
         onToggleNotification = viewModel::onToggleNotification,
         onClickRegister = viewModel::onClickRegister,
-        onClickCategory = { sheetType = WriteSheetType.CATEGORY },
+        onClickCategory = {
+            viewModel.onOpenCategorySelector()
+            sheetType = WriteSheetType.CATEGORY
+        },
+        onClickGisu = {
+            viewModel.onOpenCategorySelector()
+            sheetType = WriteSheetType.GISU
+        },
         onToggleAll = viewModel::onToggleAll,
         onToggleStaff = viewModel::onToggleStaff,
-        onClickChapterChip = { sheetType = WriteSheetType.CHAPTER },
-        onClickSchoolChip = { sheetType = WriteSheetType.SCHOOL },
+        onClickChapterChip = {
+            viewModel.onOpenOrganizationSelector()
+            sheetType = WriteSheetType.CHAPTER
+        },
+        onClickSchoolChip = {
+            viewModel.onOpenOrganizationSelector()
+            sheetType = WriteSheetType.SCHOOL
+        },
         onClickPartChip = { sheetType = WriteSheetType.PART },
         onTitleChanged = viewModel::onTitleChanged,
         onContentChanged = viewModel::onContentChanged,
@@ -231,6 +245,22 @@ fun NoticeWriteRoute(
                     },
                 )
 
+                WriteSheetType.GISU -> {
+                    val selectableGisus = uiState.writerRole?.let { role ->
+                        allowedNoticeTargetGisus(role, uiState.availableGisus, uiState.authorityGisuId)
+                    }.orEmpty()
+                    USelectSheetContent(
+                        title = AppStrings.CHALLENGER_GISU_SELECT_TITLE,
+                        items = selectableGisus.map {
+                            AppStrings.COMMON_GENERATION_FORMAT.format(it.generation)
+                        }.toImmutableList(),
+                        onSelect = { index ->
+                            viewModel.onSelectGisu(selectableGisus[index])
+                            sheetType = null
+                        },
+                    )
+                }
+
                 WriteSheetType.CHAPTER -> USelectSheetContent(
                     title = AppStrings.NOTICE_WRITE_CHAPTER_SELECT,
                     items = uiState.chapterList.map { it.name }.toImmutableList(),
@@ -250,7 +280,7 @@ fun NoticeWriteRoute(
                 )
 
                 WriteSheetType.PART -> {
-                    val parts = UserPart.filters
+                    val parts = UserPart.selectable
                     USelectSheetContent(
                         title = AppStrings.NOTICE_BOTTOMSHEET_TITLE,
                         items = parts.map { it.label }.toImmutableList(),
@@ -285,6 +315,7 @@ fun NoticeWriteScreen(
     onToggleNotification: () -> Unit = {},
     onClickRegister: () -> Unit = {},
     onClickCategory: () -> Unit = {},
+    onClickGisu: () -> Unit = {},
     onToggleAll: () -> Unit = {},
     onToggleStaff: () -> Unit = {},
     onClickChapterChip: () -> Unit = {},
@@ -401,6 +432,36 @@ fun NoticeWriteScreen(
                         contentDescription = null,
                         tint = grey400(),
                     )
+                }
+
+                if ((uiState.writerRole == NoticeWriterRole.SUPER_ADMIN ||
+                            uiState.writerRole == NoticeWriterRole.CENTRAL_CORE) &&
+                    uiState.selectedCategory?.type != WriteCategoryType.ALL_GISU) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, grey200(), RoundedCornerShape(8.dp))
+                            .clickable { onClickGisu() }
+                            .padding(horizontal = 16.dp, vertical = 15.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val selectedGisu = uiState.availableGisus.firstOrNull { it.gisuId == uiState.targetGisuId }
+                        UText(
+                            text = selectedGisu?.let { AppStrings.COMMON_GENERATION_FORMAT.format(it.generation) }
+                                ?: AppStrings.CHALLENGER_GISU_SELECT_TITLE,
+                            style = UmcTypographyTokens.Headline,
+                            color = if (selectedGisu == null) grey400() else grey800(),
+                            modifier = Modifier.weight(1f),
+                        )
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_next),
+                            contentDescription = null,
+                            tint = grey400(),
+                        )
+                    }
                 }
 
                 // 게시판 분류 (권한/카테고리에 따라 노출)
@@ -1177,28 +1238,45 @@ private fun WriteBoardChip(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeWriteScreenPreview() {
+private fun NoticeWriteScreenSpecificGisuPreview() {
     NoticeWriteScreen(
         uiState = NoticeWriteUiState(
-            writerRole = NoticeWriterRole.CENTRAL_STAFF,
-            selectedCategory = WriteCategory(
-                WriteCategoryType.CENTRAL_STAFF,
-                AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL
-            ),
+            writerRole = NoticeWriterRole.CENTRAL_CORE,
+            selectedCategory = WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL),
             boardChips = persistentListOf(
-                BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.CHAPTER
+                BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART,
             ),
             boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,
+            availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
+            targetGisuId = 12,
         ),
     )
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeWriteScreenSuperAdminPreview() {
+private fun NoticeWriteScreenFixedGisuPreview() {
+    NoticeWriteScreen(
+        uiState = NoticeWriteUiState(
+            writerRole = NoticeWriterRole.SCHOOL_CORE,
+            selectedCategory = WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
+            boardChips = persistentListOf(BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART),
+            boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,
+            availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
+            targetGisuId = 12,
+            authorityGisuId = 12,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoticeWriteScreenAllGisuPreview() {
     NoticeWriteScreen(
         uiState = NoticeWriteUiState(
             writerRole = NoticeWriterRole.SUPER_ADMIN,
+            selectedCategory = WriteCategory(WriteCategoryType.ALL_GISU, AppStrings.NOTICE_WRITE_ALL_GISU),
+            availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
         ),
     )
 }

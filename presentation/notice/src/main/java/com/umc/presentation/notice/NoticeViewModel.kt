@@ -9,6 +9,7 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.noticeRolesForGisu
+import com.umc.domain.model.notice.noticeWriterRole
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
@@ -16,6 +17,7 @@ import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
 import com.umc.domain.usecase.organization.GetSearchGisusUseCase
+import com.umc.domain.usecase.organization.GetActiveGisuUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -52,6 +54,7 @@ class NoticeViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getNoticeListUseCase: GetNoticeListUseCase,
     private val getSearchGisusUseCase: GetSearchGisusUseCase,
+    private val getActiveGisuUseCase: GetActiveGisuUseCase,
     private val appDataStoreRepository: AppDataStoreRepository,
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
@@ -59,11 +62,24 @@ class NoticeViewModel @Inject constructor(
     private var cachedUserInfo: UserInfo? = null
     private var allGisus: List<GisuItem> = emptyList()
     private var isLoadingAllGisus = false
+    private var serverActiveGisuId: Long? = null
     private var listJob: Job? = null
 
     init {
         getMyProfile()
+        loadActiveGisu()
         collectReadNoticeIds()
+    }
+
+    /** 작성 권한은 서버 활성 기수로 판단한다. 프로필이 먼저 도착했으면 응답 후 버튼 노출을 다시 계산한다. */
+    private fun loadActiveGisu() = viewModelScope.launch {
+        resultResponse(
+            response = getActiveGisuUseCase(),
+            successCallback = { gisu ->
+                serverActiveGisuId = gisu.gisuId.takeIf { it > 0 }?.toLong()
+                cachedUserInfo?.let(::updateWritePermission)
+            },
+        )
     }
 
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
@@ -216,11 +232,10 @@ class NoticeViewModel @Inject constructor(
         return chipList
     }
 
-    /** 공지 작성 권한 확인 (MEMBER가 아닌 경우에만 권한 있음) */
+    /** 공지 작성 권한 확인. 작성은 선택한 과거 기수가 아니라 서버가 권한을 판정하는 현재 기수 역할을 사용한다. */
     private fun updateWritePermission(userInfo: UserInfo) {
-        val hasWritePermission = userInfo.roles.any { role ->
-            UserChallengerRole.from(role.roleType) != UserChallengerRole.MEMBER
-        }
+        val activeGisuId = serverActiveGisuId ?: userInfo.currentGisuMemberInfo?.gisuId ?: 0L
+        val hasWritePermission = userInfo.noticeWriterRole(activeGisuId) != null
         updateState { copy(canWriteNotice = hasWritePermission) }
     }
 
