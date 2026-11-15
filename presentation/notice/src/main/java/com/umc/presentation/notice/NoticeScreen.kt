@@ -345,14 +345,16 @@ private fun NoticeHeader(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Icon(
-            painter = painterResource(id = R.drawable.ic_guard),
-            contentDescription = null,
-            tint = grey950(),
-            modifier = Modifier.clickable { onClickAdminNotice() },
-        )
+        if (uiState.canOpenAdminNotice) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_guard),
+                contentDescription = null,
+                tint = grey950(),
+                modifier = Modifier.clickable { onClickAdminNotice() },
+            )
 
-        Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+        }
 
         Icon(
             painter = painterResource(id = R.drawable.ic_search),
@@ -451,6 +453,7 @@ private fun NoticeScreenPreview() {
                 NoticeChipState(text = "파트", hanBottomSheet = true),
             ),
             canWriteNotice = true,
+            canOpenAdminNotice = true,
         ),
     )
 }
@@ -474,6 +477,18 @@ private fun NoticeScreenPartSelectedPreview() {
             selectedChipText = UserPart.PLAN.label,
             selectedPart = UserPart.PLAN,
             canWriteNotice = true,
+            canOpenAdminNotice = true,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoticeScreenChallengerPreview() {
+    NoticeScreen(
+        uiState = NoticeUiState(
+            nowTitle = "12기 공지사항",
+            chipList = persistentListOf(NoticeChipState(text = "전체", isClicked = true)),
         ),
     )
 }

@@ -13,6 +13,7 @@ import com.umc.domain.model.notice.noticeWriterRole
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
+import com.umc.presentation.notice.adminnotice.AdminNoticeTab
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
@@ -146,6 +147,7 @@ class NoticeViewModel @Inject constructor(
                 selectedGisu = selected?.gisuId?.toLong() ?: 0L,
                 nowTitle = selected?.displayText.orEmpty(),
                 dropdownList = options.toImmutableList(),
+                canOpenAdminNotice = userInfo.canOpenAdminNotice(selected?.gisuId?.toLong() ?: 0L),
                 selectedChipText = if (selectedGisu == selected?.gisuId?.toLong()) selectedChipText else AppStrings.COMMON_ALL,
                 noticeList = if (changedGisu) persistentListOf() else noticeList,
                 currentPage = if (changedGisu) 0 else currentPage,
@@ -286,6 +288,7 @@ class NoticeViewModel @Inject constructor(
             copy(
                 nowTitle = item.displayText,
                 selectedGisu = item.gisuId.toLong(),
+                canOpenAdminNotice = cachedUserInfo?.canOpenAdminNotice(item.gisuId.toLong()) == true,
                 selectedChipText = AppStrings.COMMON_ALL,
                 selectedPart = null,
                 isShowDropDown = false,
@@ -323,6 +326,7 @@ class NoticeViewModel @Inject constructor(
     }
 
     fun onClickAdminNotice() {
+        if (!uiState.value.canOpenAdminNotice) return
         emitEvent(NoticeEvent.MoveToAdminNoticeEvent(uiState.value.selectedGisu))
     }
 
@@ -438,6 +442,10 @@ class NoticeViewModel @Inject constructor(
     }
 }
 
+/** 운영진 공지 화면과 같은 선택 기수의 역할을 기준으로 진입 여부를 판단한다. */
+internal fun UserInfo.canOpenAdminNotice(gisuId: Long): Boolean =
+    gisuId > 0 && (isSuperAdmin || AdminNoticeTab.highestAccessibleTab(noticeRolesForGisu(gisuId)) != null)
+
 /** 공지 목록 조회 쿼리. 소속·파트·운영진 탭 중 하나만 채워진다 */
 internal data class NoticeQuery(
     val noticeTab: String,
@@ -488,6 +496,7 @@ data class NoticeUiState(
     val errorMessage: String? = null,
     val isLastPage: Boolean = false,
     val canWriteNotice: Boolean = false,
+    val canOpenAdminNotice: Boolean = false,
     val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
     val currentNoticeTab: String = NOTICE_TAB_CHALLENGER,
 ) : UiState {
