@@ -9,7 +9,6 @@ import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.theme.AppStrings
 import com.umc.domain.model.enums.BoardChipType
-import com.umc.domain.model.enums.NoticeTab
 import com.umc.domain.model.enums.NoticeWriterRole
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserChallengerRole
@@ -24,7 +23,6 @@ import com.umc.domain.model.notice.noticeWriterSchoolId
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.request.notice.NoticeCreateRequest
-import com.umc.domain.model.request.notice.NoticeTargetRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.domain.model.school.SchoolInfo
@@ -921,127 +919,6 @@ internal fun allowedNoticeTargetGisus(
 ): List<GisuItem> = when (writerRole) {
     NoticeWriterRole.SUPER_ADMIN, NoticeWriterRole.CENTRAL_CORE -> gisus
     else -> gisus.filter { it.gisuId == authorityGisuId }
-}
-
-/**
- * 화면 선택을 서버가 허용하는 공지 대상 조합으로 변환한다. null이면 등록할 수 없다.
- * noticeTab은 CHALLENGER(일반), CENTRAL_MEMBER(중앙 운영진), SCHOOL_CORE(학교 회장단),
- * SCHOOL_PART_LEADER(학교 파트장)를 사용한다. 운영진 공지 칩은 파트가 있으면 SCHOOL_PART_LEADER,
- * 없으면 SCHOOL_CORE로 발행하며, Super Admin의 중앙 운영진 카테고리만 CENTRAL_MEMBER로 발행한다.
- * 작성 권한에 없는 대상이나 소속 ID가 누락된 조합은 서버 요청 전에 거절한다.
- */
-internal fun buildNoticeTargetRequest(state: NoticeWriteUiState): NoticeTargetRequest? {
-    val selectedCategory = state.selectedCategory ?: return null
-    val category = selectedCategory.type
-    val writerRole = state.writerRole ?: return null
-    // 지부장과 교내 회장 역할을 함께 가진 경우 카테고리별 권한으로 요청을 만든다.
-    val role = if (writerRole == NoticeWriterRole.CHAPTER_PRESIDENT &&
-        category == WriteCategoryType.SCHOOL_CORE && state.canWriteAsSchoolCore) NoticeWriterRole.SCHOOL_CORE else writerRole
-    if (state.selectedPart != null && state.selectedPart !in UserPart.selectable) return null
-    if (state.selectedChapter != null && state.chapterList.none { it.id == state.selectedChapter.id }) return null
-    if (state.selectedSchool != null && state.schoolList.none { it.schoolId == state.selectedSchool.schoolId }) return null
-    val part = state.selectedPart?.name
-    val targetSchoolId = state.selectedSchool?.schoolId?.takeIf { it > 0 }
-    if (state.selectedSchool != null && targetSchoolId == null) return null
-
-    if (category == WriteCategoryType.ALL_GISU) {
-        // 기수와 학교 소속을 함께 지정할 수 없으므로 전체 기수 공지는 필터 없이 발행한다.
-        if (role != NoticeWriterRole.SUPER_ADMIN && role != NoticeWriterRole.CENTRAL_CORE) return null
-        if (state.selectedChapter != null || state.selectedSchool != null || part != null ||
-            state.isStaffSelected || state.isAllSelected) return null
-        return NoticeTargetRequest(null, null, null, emptyList(), NoticeTab.CHALLENGER.value)
-    }
-
-    // 대상 기수는 카테고리와 별도로 선택하며, 일반 운영진은 권한 기수로 고정한다.
-    val gisuId = state.targetGisuId?.takeIf { it > 0 } ?: return null
-    if (state.availableGisus.none { it.gisuId == gisuId }) return null
-    // 다른 대상 기수 선택은 Super Admin·총괄단만 허용한다. 다른 역할의 직접 지정도 요청 전에 거절한다.
-    if (role != NoticeWriterRole.SUPER_ADMIN && role != NoticeWriterRole.CENTRAL_CORE) {
-        if (gisuId != state.authorityGisuId) return null
-    }
-    val schoolId = state.writerSchoolId?.takeIf { it > 0 }
-
-    if (role == NoticeWriterRole.SUPER_ADMIN || role == NoticeWriterRole.CENTRAL_CORE ||
-        role == NoticeWriterRole.CENTRAL_STAFF) {
-        return when (category) {
-            WriteCategoryType.GISU -> {
-                if (!state.isAllSelected && part == null && state.selectedChapter == null && state.selectedSchool == null) return null
-                if (role != NoticeWriterRole.SUPER_ADMIN &&
-                    (state.selectedChapter != null || state.selectedSchool != null)) return null
-                if (state.selectedChapter != null && state.selectedSchool != null) return null
-                NoticeTargetRequest(
-                    targetGisuId = gisuId,
-                    targetChapterId = state.selectedChapter?.id?.toInt().takeUnless { state.isAllSelected },
-                    targetSchoolId = targetSchoolId.takeUnless { state.isAllSelected },
-                    targetParts = if (state.isAllSelected) emptyList() else listOfNotNull(part),
-                    targetNoticeTab = NoticeTab.CHALLENGER.value,
-                )
-            }
-            WriteCategoryType.CENTRAL_STAFF -> {
-                if (state.selectedChapter != null || state.selectedSchool != null) return null
-                if (role == NoticeWriterRole.SUPER_ADMIN) {
-                    if (state.isAllSelected || state.isStaffSelected || part != null) return null
-                    NoticeTargetRequest(gisuId, null, null, emptyList(), NoticeTab.CENTRAL_MEMBER.value)
-                } else {
-                    if (state.isAllSelected && (state.isStaffSelected || part != null)) return null
-                    if (state.isStaffSelected) {
-                        // 중앙 권한의 운영진 공지는 파트 유무에 따라 회장단·파트장 탭으로 발행한다.
-                        val tab = if (part == null) NoticeTab.SCHOOL_CORE else NoticeTab.SCHOOL_PART_LEADER
-                        NoticeTargetRequest(gisuId, null, null, listOfNotNull(part), tab.value)
-                    } else {
-                        if (!state.isAllSelected && part == null) return null
-                        NoticeTargetRequest(gisuId, null, null, listOfNotNull(part), NoticeTab.CHALLENGER.value)
-                    }
-                }
-            }
-            WriteCategoryType.SCHOOL_CORE -> {
-                if (role != NoticeWriterRole.SUPER_ADMIN && targetSchoolId != null) return null
-                NoticeTargetRequest(gisuId, null, targetSchoolId, emptyList(), NoticeTab.SCHOOL_CORE.value)
-            }
-            WriteCategoryType.SCHOOL_PART_LEADER -> {
-                if (role != NoticeWriterRole.SUPER_ADMIN && targetSchoolId != null) return null
-                NoticeTargetRequest(gisuId, null, targetSchoolId, listOfNotNull(part), NoticeTab.SCHOOL_PART_LEADER.value)
-            }
-            else -> null
-        }
-    }
-
-    // 지부장 전용 noticeTab이 없으므로 CHALLENGER에 본인 지부 ID를 싣는다. 운영진 공지 작성은 허용하지 않는다.
-    if (role == NoticeWriterRole.CHAPTER_PRESIDENT) {
-        val chapterId = state.writerChapterId?.takeIf { it > 0 } ?: return null
-        if (category != WriteCategoryType.GISU || state.isStaffSelected ||
-            state.selectedSchool != null || state.selectedChapter != null) return null
-        if (!state.isAllSelected && part == null) return null
-        return NoticeTargetRequest(
-            gisuId, chapterId, null,
-            if (state.isAllSelected) emptyList() else listOfNotNull(part),
-            NoticeTab.CHALLENGER.value,
-        )
-    }
-
-    // 교내 권한에서 schoolId가 없으면 발행 대상이 학교 밖으로 넓어질 수 있어 요청을 막는다.
-    if (schoolId == null || when (role) {
-            NoticeWriterRole.SCHOOL_CORE, NoticeWriterRole.SCHOOL_ETC_ADMIN -> category != WriteCategoryType.SCHOOL_CORE
-            NoticeWriterRole.SCHOOL_PART_LEADER -> category != WriteCategoryType.SCHOOL_PART_LEADER
-            else -> true
-        }) return null
-    if (state.selectedChapter != null || state.selectedSchool != null) return null
-    if (role == NoticeWriterRole.SCHOOL_PART_LEADER && part == null) return null
-    if (role == NoticeWriterRole.SCHOOL_ETC_ADMIN && part == null) return null
-
-    // 교내 운영진 공지는 파트 미지정 시 회장단, 특정 파트 선택 시 파트장 탭으로 발행한다.
-    if (state.isStaffSelected) {
-        if (role != NoticeWriterRole.SCHOOL_CORE) return null
-        val tab = if (part == null) NoticeTab.SCHOOL_CORE else NoticeTab.SCHOOL_PART_LEADER
-        return NoticeTargetRequest(gisuId, null, schoolId, listOfNotNull(part), tab.value)
-    }
-    if (!state.isAllSelected && part == null) return null
-    // 일반 공지의 '전체'는 전체 기수가 아닌 본인 학교 전체를 뜻하므로 schoolId를 유지한다.
-    return NoticeTargetRequest(
-        gisuId, null, schoolId,
-        if (state.isAllSelected) emptyList() else listOfNotNull(part),
-        NoticeTab.CHALLENGER.value,
-    )
 }
 
 data class NoticeWriteUiState(
