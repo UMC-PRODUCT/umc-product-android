@@ -44,6 +44,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        // ViewModel 의 android.util.Log 호출이 JVM 단위 테스트에서 예외 대신 기본값을 돌려주게 한다
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -77,4 +82,7 @@ dependencies {
 
     //비동기 이미지
     implementation(libs.coil.compose)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

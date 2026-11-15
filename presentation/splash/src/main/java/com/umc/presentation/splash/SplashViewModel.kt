@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.isNetworkError
 import com.umc.domain.usecase.appDataStore.HasSessionTokenUseCase
 import com.umc.domain.usecase.member.GetMyProfileUseCase
@@ -41,8 +40,8 @@ class SplashViewModel @Inject constructor(
             resultResponse(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
-                    if (hasChallengerId(userInfo)) {
-                        // 기록된 정보가 있으면 메인으로 이동
+                    if (userInfo.canEnterMain()) {
+                        // 챌린저 기록이 있거나 프로덕트팀 계정이면 메인으로 이동
                         emitEvent(SplashEvent.MoveToMainEvent)
                     } else {
                         // 챌린저 정보가 없으면 코드 입력 페이지로
@@ -60,14 +59,6 @@ class SplashViewModel @Inject constructor(
                 }
             )
         }
-    }
-
-    private fun hasChallengerId(userInfo: UserInfo): Boolean {
-        // roles에서 challengerId 확인
-        val hasRoleChallengerId = userInfo.roles.any { it.challengerId > 0 }
-        // challengerRecords에서 challengerId 확인
-        val hasRecordChallengerId = userInfo.challengerRecords.any { it.challengerId > 0 }
-        return hasRoleChallengerId || hasRecordChallengerId
     }
 }
 

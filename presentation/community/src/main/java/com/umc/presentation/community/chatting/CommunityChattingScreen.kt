@@ -143,7 +143,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.net.URI
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -600,12 +599,11 @@ fun CommunityChattingScreen(
                     onInviteParticipants = onInviteParticipants,
                     onShareLink = {
                         state.thread?.shareUrl?.takeIf(String::isNotBlank)?.let { shareUrl ->
-                            val deepLink = buildCommunityThreadDeepLink(shareUrl)
                             context.startActivity(
                                 Intent.createChooser(
                                     Intent(Intent.ACTION_SEND).apply {
                                         type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, deepLink)
+                                        putExtra(Intent.EXTRA_TEXT, shareUrl)
                                     },
                                     AppStrings.CHAT_SHARE_CHOOSER_TITLE,
                                 )
@@ -1596,7 +1594,6 @@ private fun UnreadSummaryCard(
     }
 }
 
-private const val COMMUNITY_THREAD_SHARE_LINK_BASE = "https://api.university.neordinary.com/community/threads"
 private val INITIAL_UNREAD_SCROLL_OFFSET = 96.dp
 private val MESSAGE_TIME_MIN_WIDTH = 32.dp
 
@@ -1608,25 +1605,6 @@ private val CommunityThreadCategory.chatLabel: String
         CommunityThreadCategory.FREE -> AppStrings.COMMUNITY_CATEGORY_FREE
         CommunityThreadCategory.UNKNOWN -> AppStrings.COMMUNITY_CATEGORY_OTHER
     }
-
-internal fun buildCommunityThreadDeepLink(shareUrl: String): String {
-    val rawUrl = shareUrl.trim()
-    val parsed = runCatching { URI(rawUrl) }.getOrNull()
-    val path = parsed?.rawPath
-        ?.takeIf(String::isNotBlank)
-        ?: rawUrl.substringBefore('?').substringBefore('#')
-    val queryThreadId = parsed?.rawQuery
-        ?.split('&')
-        ?.firstOrNull { it.substringBefore('=') == "threadId" }
-        ?.substringAfter('=', missingDelimiterValue = "")
-    val threadId = queryThreadId
-        ?.takeIf(String::isNotBlank)
-        ?: path.trimEnd('/').substringAfterLast('/')
-
-    if (threadId.isBlank()) return rawUrl
-
-    return "$COMMUNITY_THREAD_SHARE_LINK_BASE?threadId=$threadId"
-}
 
 @Composable
 private fun NewMessageButton(

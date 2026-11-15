@@ -29,6 +29,10 @@ on:
         description: "main 자동 릴리스 경로 리허설 (태그를 rehearsal-v 접두사로 남긴다)"
         type: boolean
         default: false
+      hold_review:
+        description: "심사 거부 상태용: Play 에 확정만 하고 심사 제출은 Play Console 게시 개요에서 직접 한다"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -518,6 +522,10 @@ jobs:
           mappingFile: app/build/outputs/mapping/${{ needs.verify.outputs.api-env }}Release/mapping.txt
           # 커밋에서 생성한 "업데이트 내용". 없으면 Play 가 이전 노트를 유지한다.
           whatsNewDirectory: whatsnew
+          # 앱이 심사 거부 상태면 Play 가 자동 심사 제출을 거절하고 확정이 실패한다.
+          # 수동 실행에서 hold_review 를 켜면 확정만 하고, 심사 제출은 Play Console 에서 직접 한다.
+          # push 실행에는 inputs 가 없어 항상 false 다.
+          changesNotSentForReview: ${{ inputs.hold_review == true }}
 
       # Play 업로드가 성공한 뒤에만 태그를 남긴다. 실패한 버전 번호를 태우지 않는다.
       # GITHUB_TOKEN 으로 민 태그는 새 워크플로를 트리거하지 않으므로 재귀 실행이 없다.
@@ -560,8 +568,9 @@ jobs:
 
       # 총괄단이 보는 공유 채널에는 버전마다 스레드 하나만 남긴다.
       # 개발자용 배포 알림(android-github-ci)과 채널도 형식도 다르다.
+      # hold_review 로 올린 버전은 아직 심사 제출 전이라 출시 알림을 보내지 않는다.
       - name: 공유 채널에 릴리스 알림
-        if: needs.verify.outputs.tag-after == 'true' && needs.verify.outputs.track == 'production'
+        if: needs.verify.outputs.tag-after == 'true' && needs.verify.outputs.track == 'production' && inputs.hold_review != true
         env:
           DISCORD_RELEASE_WEBHOOK_URL: ${{ secrets.DISCORD_RELEASE_WEBHOOK_URL }}
           DISCORD_RELEASE_ROLE_ID: ${{ secrets.DISCORD_RELEASE_ROLE_ID }}

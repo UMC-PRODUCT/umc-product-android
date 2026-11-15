@@ -37,7 +37,8 @@ interface ChallengerRepository {
         schoolId: Long?,
         gisuId: Long?,
         keyword: String? = null,
-        part: String? = null
+        part: String? = null,
+        chapterId: Long? = null,
     ): ApiState<AdminChallengerList>
 
     suspend fun deleteChallengerPoint(challengerPointId: Long): ApiState<Unit>

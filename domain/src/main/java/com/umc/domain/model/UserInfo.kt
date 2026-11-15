@@ -23,8 +23,19 @@ data class UserInfo(
     val totalActivityDays: Long = 0L,
     val currentGisuMemberInfo: CurrentGisuMemberInfo? = null,
     // 시스템 역할 SUPER_ADMIN 보유 여부. 챌린저 검색 범위를 정할 때 중앙운영사무국과 같이 본다
-    val isSuperAdmin: Boolean = false
-)
+    val isSuperAdmin: Boolean = false,
+    // 시스템 역할 UMC_PRODUCT 또는 SUPER_ADMIN 보유 여부(member/me v2). 프로덕트팀 계정은 챌린저 기록이 없어도 메인에 들어간다
+    val isUmcProduct: Boolean = false
+) {
+    /**
+     * 메인 화면 진입 가능 여부. 아니면 챌린저 코드 입력 화면으로 보낸다.
+     * 프로덕트팀 계정이거나, roles·challengerRecords 중 하나라도 challengerId > 0 이면 true
+     */
+    fun canEnterMain(): Boolean =
+        isUmcProduct ||
+            roles.any { it.challengerId > 0 } ||
+            challengerRecords.any { it.challengerId > 0 }
+}
 
 
 //v2 신규: 현재 활성 기수 정보

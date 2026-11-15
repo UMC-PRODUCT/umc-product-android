@@ -79,6 +79,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.component.USelectSheetContent
 import com.umc.component.component.UText
 import com.umc.component.component.UTextActionItem
 import com.umc.component.component.uTextActionMenu
@@ -221,7 +222,7 @@ fun NoticeWriteRoute(
             containerColor = grey50(),
         ) {
             when (type) {
-                WriteSheetType.CATEGORY -> WriteSelectSheetContent(
+                WriteSheetType.CATEGORY -> USelectSheetContent(
                     title = AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER,
                     items = uiState.availableCategories.map { it.label }.toImmutableList(),
                     onSelect = { index ->
@@ -230,7 +231,7 @@ fun NoticeWriteRoute(
                     },
                 )
 
-                WriteSheetType.CHAPTER -> WriteSelectSheetContent(
+                WriteSheetType.CHAPTER -> USelectSheetContent(
                     title = AppStrings.NOTICE_WRITE_CHAPTER_SELECT,
                     items = uiState.chapterList.map { it.name }.toImmutableList(),
                     onSelect = { index ->
@@ -239,7 +240,7 @@ fun NoticeWriteRoute(
                     },
                 )
 
-                WriteSheetType.SCHOOL -> WriteSelectSheetContent(
+                WriteSheetType.SCHOOL -> USelectSheetContent(
                     title = AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER,
                     items = uiState.schoolList.map { it.schoolName }.toImmutableList(),
                     onSelect = { index ->
@@ -250,7 +251,7 @@ fun NoticeWriteRoute(
 
                 WriteSheetType.PART -> {
                     val parts = UserPart.filters
-                    WriteSelectSheetContent(
+                    USelectSheetContent(
                         title = AppStrings.NOTICE_BOTTOMSHEET_TITLE,
                         items = parts.map { it.label }.toImmutableList(),
                         onSelect = { index ->
@@ -1170,43 +1171,6 @@ private fun WriteBoardChip(
                 tint = if (isSelected) grey50() else grey500(),
                 modifier = Modifier.size(16.dp),
             )
-        }
-    }
-}
-
-/** 카테고리/지부/학교/파트 공용 선택 바텀시트 */
-@Composable
-private fun WriteSelectSheetContent(
-    title: String,
-    items: ImmutableList<String>,
-    onSelect: (Int) -> Unit = {},
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
-    ) {
-        UText(
-            text = title,
-            style = UmcTypographyTokens.Title3Bold,
-            color = grey950(),
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        items.forEachIndexed { index, item ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect(index) }
-                    .padding(vertical = 16.dp),
-            ) {
-                UText(
-                    text = item,
-                    style = UmcTypographyTokens.Body,
-                    color = grey800(),
-                )
-            }
         }
     }
 }

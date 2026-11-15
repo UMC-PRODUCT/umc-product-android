@@ -62,6 +62,8 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    // 이용 지표 이벤트(AnalyticsLogger 구현). 수집 여부는 :app 매니페스트의 flavor 값으로 정한다
+    implementation(libs.firebase.analytics)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

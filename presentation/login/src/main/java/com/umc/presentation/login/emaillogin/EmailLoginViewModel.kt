@@ -5,7 +5,6 @@ import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.domain.model.JwtToken
-import com.umc.domain.model.UserInfo
 import com.umc.domain.model.base.isNetworkError
 import com.umc.domain.usecase.PostEmailLoginUseCase
 import com.umc.domain.usecase.appDataStore.SaveTokenUseCase
@@ -74,12 +73,12 @@ class EmailLoginViewModel @Inject constructor(
         )
     }
 
-    // 내 정보 먼저 가져와서 해당 데이터로 챌린저 ID 확인
+    // 내 정보 먼저 가져와서 메인 진입 가능 여부(챌린저 기록·프로덕트팀 계정) 확인
     private fun checkUserChallengerRecord() = viewModelScope.launch {
         resultResponse(
             response = getMyProfileUseCase(),
             successCallback = { userInfo ->
-                if (hasChallengerId(userInfo)) {
+                if (userInfo.canEnterMain()) {
                     registerFcmToken()
                 } else {
                     // 챌린저 코드 입력 화면으로 이동
@@ -90,13 +89,6 @@ class EmailLoginViewModel @Inject constructor(
                 emitEvent(EmailLoginEvent.ShowErrorToast(it.message))
             }
         )
-    }
-
-    // 챌린저 ID 확인
-    private fun hasChallengerId(userInfo: UserInfo): Boolean {
-        val hasRoleChallengerId = userInfo.roles.any { it.challengerId > 0 }
-        val hasRecordChallengerId = userInfo.challengerRecords.any { it.challengerId > 0 }
-        return hasRoleChallengerId || hasRecordChallengerId
     }
 
     // FCM 토큰 등록

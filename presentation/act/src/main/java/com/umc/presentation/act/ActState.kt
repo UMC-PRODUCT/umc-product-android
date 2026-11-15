@@ -7,4 +7,5 @@ data class ActUiState(
     val userInfo: UserInfo = UserInfo(),
     val isAdmin: Boolean = false,
     val hasAdminAccess: Boolean = false,
+    val adminModeSession: Int = 0,
 ) : UiState

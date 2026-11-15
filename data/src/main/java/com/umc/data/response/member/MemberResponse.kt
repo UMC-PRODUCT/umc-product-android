@@ -32,6 +32,7 @@ data class MemberResponse(
     @SerializedName("currentGisuMemberInfo") val currentGisuMemberInfo: CurrentGisuMemberInfoResponse?,
     @SerializedName("challengerHistory") val challengerHistory: List<ChallengerHistoryResponse>?,
     @SerializedName("isSuperAdmin") val isSuperAdmin: Boolean? = null,
+    @SerializedName("isUmcProduct") val isUmcProduct: Boolean? = null,
 
     //v1 response (타인 프로필 조회 /member/profile/{memberId} 는 아직 v1 형태로 내려온다)
     @SerializedName("roles") val roles: List<MemberRoleResponse>? = null,
@@ -101,7 +102,8 @@ data class MemberResponse(
                 hasLocalCredential = hasLocalCredential ?: false,
                 totalActivityDays = totalActivityDays ?: 0L,
                 currentGisuMemberInfo = currentGisuMemberInfo?.toDomain(),
-                isSuperAdmin = isSuperAdmin ?: false
+                isSuperAdmin = isSuperAdmin ?: false,
+                isUmcProduct = isUmcProduct ?: false
             )
 
         }
@@ -140,7 +142,8 @@ data class MemberResponse(
                 hasLocalCredential = hasLocalCredential ?: false,
                 totalActivityDays = totalActivityDays ?: 0L,
                 currentGisuMemberInfo = currentGisuMemberInfo?.toDomain(),
-                isSuperAdmin = isSuperAdmin ?: false
+                isSuperAdmin = isSuperAdmin ?: false,
+                isUmcProduct = isUmcProduct ?: false
             )
         }
 

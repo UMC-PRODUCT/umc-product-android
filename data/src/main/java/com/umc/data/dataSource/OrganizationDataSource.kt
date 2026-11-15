@@ -1,11 +1,12 @@
 package com.umc.data.dataSource
 
 import com.umc.data.response.organization.Chapter
-import com.umc.data.response.organization.ChapterBySchoolListResponse
+import com.umc.data.response.organization.ChapterWithSchoolsListResponse
 import com.umc.data.response.organization.ChapterResponse
 import com.umc.data.response.organization.GisuInfoResponse
 import com.umc.data.response.organization.GisuItemResponse
 import com.umc.data.response.organization.GisuListResponse
+import com.umc.data.response.organization.GisuPageResponse
 import com.umc.data.response.organization.ManagedStudyGroupListResponse
 import com.umc.data.response.organization.MyStudyGroupListResponse
 import com.umc.data.response.organization.SchoolDetailResponse
@@ -101,11 +102,13 @@ interface OrganizationDataSource {
 
     suspend fun getAllGisu(): ApiState<GisuListResponse>
 
+    suspend fun getGisuPage(page: Int, size: Int): ApiState<GisuPageResponse>
+
     suspend fun getActiveGisu(): ApiState<GisuItemResponse>
 
     suspend fun getChapterWithSchool(
         gisuId: Int,
-    ): ApiState<ChapterBySchoolListResponse>
+    ): ApiState<ChapterWithSchoolsListResponse>
 
     suspend fun getGisuInfo(
         gisuId: Long,

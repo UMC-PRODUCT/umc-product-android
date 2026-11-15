@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,20 +71,21 @@ import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow500
 import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.persistentListOf
-
-private val challengerPartFilters = UserPart.filters
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun AdminChallengerRoute(
     isActive: Boolean = true,
+    adminModeSession: Int = 0,
     onNavigateToDetail: (Long) -> Unit = {},
     viewModel: AdminChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(isActive) {
-        if (isActive) viewModel.refresh()
+    LaunchedEffect(isActive, adminModeSession) {
+        if (isActive) viewModel.refresh(adminModeSession)
     }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
@@ -100,6 +102,9 @@ fun AdminChallengerRoute(
         onPartFilterClick = viewModel::openPartFilter,
         onMemberClick = onNavigateToDetail,
         onRetryClick = viewModel::refresh,
+        filters = uiState.filterUi(),
+        onFilterSelected = viewModel::selectFilter,
+        filtersEnabled = uiState.filtersReady,
     )
 
     if (uiState.isPartFilterVisible) {
@@ -107,6 +112,7 @@ fun AdminChallengerRoute(
             selectedPart = uiState.selectedPart,
             onDismissRequest = viewModel::dismissPartFilter,
             onPartSelected = viewModel::selectPartFilter,
+            parts = UserPart.filtersOf(uiState.selectedGisu?.generation ?: 0).toImmutableList(),
         )
     }
 }
@@ -235,6 +241,9 @@ fun AdminChallengerScreen(
     onPartFilterClick: () -> Unit = {},
     onMemberClick: (Long) -> Unit = {},
     onRetryClick: () -> Unit = {},
+    filters: AdminChallengerFiltersUi = AdminChallengerFiltersUi(),
+    onFilterSelected: (AdminChallengerFilterType, AdminChallengerFilterOption?) -> Unit = { _, _ -> },
+    filtersEnabled: Boolean = true,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -253,6 +262,17 @@ fun AdminChallengerScreen(
                 item { ChallengerNoAccess(modifier = Modifier.padding(top = 120.dp)) }
                 return@LazyColumn
             }
+            AdminChallengerAccess.ERROR -> {
+                item {
+                    ChallengerLoadError(
+                        title = AppStrings.CHALLENGER_LIST_LOAD_ERROR_TITLE,
+                        onRetryClick = onRetryClick,
+                        description = uiState.loadErrorMessage ?: AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
+                        modifier = Modifier.padding(top = 120.dp),
+                    )
+                }
+                return@LazyColumn
+            }
             AdminChallengerAccess.ALLOWED -> Unit
         }
         item {
@@ -261,15 +281,20 @@ fun AdminChallengerScreen(
                 selectedPart = uiState.selectedPart,
                 onSearchKeywordChange = onSearchKeywordChange,
                 onPartFilterClick = onPartFilterClick,
+                filters = filters,
+                onFilterSelected = onFilterSelected,
+                filtersEnabled = filtersEnabled,
             )
         }
-        when {
-            uiState.sections.isNotEmpty() -> items(uiState.sections) { section ->
+        if (uiState.sections.isNotEmpty()) {
+            items(uiState.sections) { section ->
                 ChallengerSection(
                     section = section,
                     onMemberClick = onMemberClick
                 )
             }
+        }
+        when {
             uiState.loadState == AdminChallengerLoadState.LOADING -> item {
                 ChallengerLoading(modifier = Modifier.padding(top = 64.dp))
             }
@@ -282,7 +307,7 @@ fun AdminChallengerScreen(
                         ?: AppStrings.CHALLENGER_LIST_LOAD_ERROR_DESCRIPTION,
                 )
             }
-            else -> item { EmptyScreen() }
+            uiState.sections.isEmpty() -> item { EmptyScreen() }
         }
     }
 
@@ -294,17 +319,21 @@ private fun SearchBar(
     selectedPart: UserPart?,
     onSearchKeywordChange: (String) -> Unit,
     onPartFilterClick: () -> Unit,
+    filters: AdminChallengerFiltersUi,
+    onFilterSelected: (AdminChallengerFilterType, AdminChallengerFilterOption?) -> Unit,
+    filtersEnabled: Boolean,
 ) {
     Column(
         modifier = Modifier
             .background(grey50())
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(16.dp)
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
         UTextField(
             value = searchKeyword,
             onValueChange = onSearchKeywordChange,
+            enabled = filtersEnabled,
             modifier = Modifier.fillMaxWidth(),
             placeholder = AppStrings.CHALLENGER_SEARCH_PLACEHOLDER,
             placeholderColor = grey400(),
@@ -317,29 +346,15 @@ private fun SearchBar(
             prevIconTint = grey400()
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (selectedPart == null) grey100() else grey800())
-                .clickable(onClick = onPartFilterClick)
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            UText(
-                text = selectedPart?.label ?: AppStrings.COMMON_PART,
-                style = Footnote,
-                color = if (selectedPart == null) grey600() else grey50(),
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(
-                painter = painterResource(R.drawable.ic_dropdown_down),
-                contentDescription = "파트 선택",
-                tint = if (selectedPart == null) grey600() else grey50(),
-                modifier = Modifier.size(12.dp),
-            )
-        }
+        AdminChallengerFilterBar(
+            filters = filters,
+            selectedPart = selectedPart,
+            onPartFilterClick = onPartFilterClick,
+            onFilterSelected = onFilterSelected,
+            partFilterEnabled = filtersEnabled,
+        )
     }
 }
 
@@ -349,6 +364,7 @@ private fun AdminChallengerPartBottomSheet(
     selectedPart: UserPart?,
     onDismissRequest: () -> Unit,
     onPartSelected: (UserPart) -> Unit,
+    parts: ImmutableList<UserPart> = UserPart.filters.toImmutableList(),
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -374,7 +390,7 @@ private fun AdminChallengerPartBottomSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(challengerPartFilters, key = UserPart::name) { part ->
+                items(parts, key = UserPart::name) { part ->
                     UText(
                         text = part.label,
                         style = Body,
@@ -582,6 +598,25 @@ private fun PreviewMainLoading() {
     }
 }
 
+@PreviewScreenSizes
+@Composable
+private fun PreviewLoadingMoreChallengers() {
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = AdminChallengerUiState(
+                manageAccess = AdminChallengerAccess.ALLOWED,
+                loadState = AdminChallengerLoadState.LOADING,
+                sections = persistentListOf(
+                    AdminChallengerSectionUi(
+                        partName = "Android",
+                        members = persistentListOf(AdminChallengerMemberUi(1, "홍길동(길동)", "12기", 0)),
+                    ),
+                ),
+            ),
+        )
+    }
+}
+
 @Preview(showBackground = true, name = "Error State")
 @Composable
 private fun PreviewMainError() {
@@ -623,6 +658,37 @@ private fun PreviewMainServerError() {
                 loadState = AdminChallengerLoadState.ERROR,
                 loadErrorMessage = "권한이 없어 챌린저 목록을 조회할 수 없습니다.",
             )
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "권한별 필터 연결")
+@Composable
+private fun PreviewConnectedSchoolFilters() {
+    val gisu = com.umc.domain.model.organization.GisuItem(2, 12)
+    val user = com.umc.domain.model.UserInfo(
+        id = 1, schoolId = 10,
+        roles = listOf(com.umc.domain.model.UserRole(1, 1, "SCHOOL_PRESIDENT", null, null, "SCHOOL", 10, null, 2, 12)),
+    )
+    val organization = com.umc.domain.model.organization.ChapterWithSchool(
+        listOf(com.umc.domain.model.organization.Chapter(4, "중앙지부")),
+        listOf(com.umc.domain.model.school.SchoolInfo(10, "중앙대학교")),
+        mapOf(4 to listOf(10)),
+    )
+    val state = AdminChallengerUiState(
+        manageAccess = AdminChallengerAccess.ALLOWED,
+        filterLoadState = AdminChallengerLoadState.SUCCESS,
+        loadState = AdminChallengerLoadState.SUCCESS,
+        searchableGisus = persistentListOf(gisu, com.umc.domain.model.organization.GisuItem(90, 9)),
+        selectedGisu = gisu,
+        searchFilters = com.umc.domain.model.act.challenger.ChallengerManagementFilters.create(user, gisu, organization),
+        selectedPart = UserPart.PLAN,
+    )
+    UmcTheme(darkTheme = false) {
+        AdminChallengerScreen(
+            uiState = state,
+            filters = state.filterUi(),
+            filtersEnabled = state.filtersReady,
         )
     }
 }

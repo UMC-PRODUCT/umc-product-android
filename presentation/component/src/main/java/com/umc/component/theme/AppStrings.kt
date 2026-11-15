@@ -709,6 +709,14 @@ object AppStrings {
     const val CHALLENGER_LIST_TITLE = "챌린저 리스트"
     const val CHALLENGER_SEARCH_PLACEHOLDER = "이름으로 멤버 검색"
     const val CHALLENGER_PART_SELECT_TITLE = "파트를 선택하세요"
+    const val CHALLENGER_GISU_FILTER = "기수"
+    const val CHALLENGER_CHAPTER_FILTER = "지부"
+    const val CHALLENGER_GISU_SELECT_TITLE = "기수를 선택하세요"
+    const val CHALLENGER_CHAPTER_SELECT_TITLE = "지부를 선택하세요"
+    const val CHALLENGER_SCHOOL_SELECT_TITLE = "학교를 선택하세요"
+    const val CHALLENGER_SCHOOL_SEARCH_PLACEHOLDER = "학교를 입력하세요"
+    const val CHALLENGER_SCHOOL_CHAPTER_NOT_FOUND = "선택한 기수의 소속 학교·지부 정보를 확인할 수 없어요. 다시 시도해주세요."
+    const val CHALLENGER_LIST_INCOMPLETE = "챌린저 목록을 모두 불러오지 못했어요. 다시 시도해주세요."
     const val CHALLENGER_MEMBER_COUNT_FORMAT = "(%d)"
     const val ADMIN_CHALLENGER_OUT_COUNT = "아웃 %d"
     const val ADMIN_CHALLENGER_WARNING_COUNT = "경고 %d"
@@ -1240,4 +1248,10 @@ object AppStrings {
     const val CHAT_NO_ACCESS_DESCRIPTION = "스레드가 삭제되었거나 접근 권한이 없어요."
     const val CHAT_NO_ACCESS_BACK = COMMON_BACK
     const val CHAT_LEAVE_SUCCESS = "스레드에서 나갔어요."
+
+    // 인앱 업데이트
+    const val IN_APP_UPDATE_READY_TITLE = "업데이트 준비 완료"
+    const val IN_APP_UPDATE_READY_BODY = "새 버전을 내려받았어요.\n다시 시작하면 바로 적용돼요."
+    const val IN_APP_UPDATE_LATER = "나중에"
+    const val IN_APP_UPDATE_RESTART = "다시 시작"
 }

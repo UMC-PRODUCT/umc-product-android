@@ -17,6 +17,8 @@ import com.umc.domain.usecase.community.PinCommunityThreadUseCase
 import com.umc.domain.usecase.community.UnmuteCommunityThreadUseCase
 import com.umc.domain.usecase.community.UnpinCommunityThreadUseCase
 import com.umc.domain.model.community.CommunityThreadDetail
+import com.umc.domain.analytics.AnalyticsLogger
+import com.umc.presentation.community.analytics.CommunityAnalytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -53,6 +55,7 @@ class CommunityViewModel @Inject constructor(
     private val muteCommunityThreadUseCase: MuteCommunityThreadUseCase,
     private val unmuteCommunityThreadUseCase: UnmuteCommunityThreadUseCase,
     private val leaveCommunityThreadUseCase: LeaveCommunityThreadUseCase,
+    private val analyticsLogger: AnalyticsLogger,
 ) : ViewModel() {
 
     private var threadPollingJob: Job? = null
@@ -144,8 +147,10 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
+    /** 목록 화면이 보일 때(진입·포그라운드 복귀) 시작된다. 이때를 커뮤니티 접속 한 번으로 센다 */
     fun startThreadPolling() {
         if (threadPollingJob?.isActive == true) return
+        analyticsLogger.log(CommunityAnalytics.LIST_VIEWED)
 
         threadPollingJob = viewModelScope.launch {
             fetchThreads(showLoading = _state.value.threads.isEmpty())

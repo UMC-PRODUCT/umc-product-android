@@ -3,6 +3,7 @@ package com.umc.presentation.community.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.component.theme.AppStrings
+import com.umc.domain.analytics.AnalyticsLogger
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.community.CommunityThreadCategory
 import com.umc.domain.model.community.CommunityThreadMember
@@ -18,11 +19,13 @@ import com.umc.domain.usecase.community.UpdateCommunityThreadUseCase
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
+import com.umc.presentation.community.analytics.CommunityAnalytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +33,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 
@@ -57,6 +61,7 @@ class CommunityEditViewModel @Inject constructor(
     UpdateCommunityThreadUseCase,
     private val deleteCommunityThreadUseCase:
     DeleteCommunityThreadUseCase,
+    private val analyticsLogger: AnalyticsLogger,
 ) : ViewModel() {
 
     private var classificationJob: Job? = null
@@ -592,10 +597,14 @@ class CommunityEditViewModel @Inject constructor(
                 )
             }
 
-            deleteCommunityThreadUseCase(
-                threadId = currentState.threadId,
-            ).onSuccess {
-
+            // 응답 전에 뒤로 가도 서버에서는 삭제될 수 있으므로 결과를 끝까지 받아 삭제를 기록한다
+            withContext(NonCancellable) {
+                deleteCommunityThreadUseCase(
+                    threadId = currentState.threadId,
+                ).onSuccess {
+                    analyticsLogger.log(CommunityAnalytics.THREAD_DELETED)
+                }
+            }.onSuccess {
                 // 성공 후에는 화면이 닫힐 때까지 isDeleting 을 유지해 DELETE 중복 전송을 막는다.
                 sendEvent(
                     CommunityEditEvent.DeleteSuccess

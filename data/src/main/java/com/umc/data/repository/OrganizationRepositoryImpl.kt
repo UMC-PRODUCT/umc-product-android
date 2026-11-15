@@ -9,6 +9,10 @@ import com.umc.data.response.organization.SchoolNameResponse.Companion.toModel
 import com.umc.domain.model.base.ApiResponse
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.map
+import com.umc.domain.model.base.mapCatching
+import com.umc.domain.model.base.FailState
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.organization.ChapterWithSchool
 import com.umc.domain.model.organization.GisuList
@@ -135,19 +139,35 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun getAllGisu(): ApiState<GisuList> =
         organizationDataSource.getAllGisu().map { it.toModel() }
 
+    override suspend fun getSearchGisus(): ApiState<GisuList> {
+        val gisus = mutableListOf<GisuItem>()
+        // 잘못된 hasNext 응답으로 무한 조회하거나 일부 기수만 성공으로 반환하지 않는다.
+        repeat(100) { page ->
+            val response = organizationDataSource.getGisuPage(page, 100).mapCatching { result ->
+                val responsePage = checkNotNull(result.page)
+                val hasNext = checkNotNull(result.hasNext)
+                check(responsePage == page && (!hasNext || result.content.isNotEmpty()))
+                result.content.map { it.toModel() } to hasNext
+            }
+            currentCoroutineContext().ensureActive()
+            when (response) {
+                is ApiState.Fail -> return response
+                is ApiState.Success -> {
+                    gisus += response.data.first
+                    if (!response.data.second) return ApiState.Success(GisuList(gisus.distinctBy { it.gisuId }))
+                }
+            }
+        }
+        return ApiState.Fail(FailState(code = "GISU_LIST_INCOMPLETE", message = "기수 목록을 모두 불러오지 못했어요. 다시 시도해주세요."))
+    }
+
     override suspend fun getActiveGisu(): ApiState<GisuItem> =
         organizationDataSource.getActiveGisu().map { response ->
             response.toModel()
         }
 
     override suspend fun getChapterWithSchool(gisuId: Int): ApiState<ChapterWithSchool> =
-        organizationDataSource.getChapterWithSchool(gisuId).map { response ->
-            val chapters = response.chapters.map { Chapter(it.chapterId, it.chapterName) }
-            val schools = response.chapters.flatMap { chapter ->
-                chapter.schools.map { it.toModel() }
-            }.distinctBy { it.schoolId }
-            ChapterWithSchool(chapters, schools)
-        }
+        organizationDataSource.getChapterWithSchool(gisuId).mapCatching { it.toModel() }
 
     override suspend fun getGisuInfo(gisuId: Long): ApiState<GisuInfo> =
         organizationDataSource.getGisuInfo(gisuId).map { it.toModel() }

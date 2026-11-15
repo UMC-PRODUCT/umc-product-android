@@ -93,7 +93,8 @@ class AppDataStore @Inject constructor(
             hasLocalCredential = prefs[KEY_HAS_LOCAL_CREDENTIAL] ?: false,
             totalActivityDays = prefs[KEY_TOTAL_ACTIVITY_DAYS] ?: 0L,
             currentGisuMemberInfo = currentGisuData,
-            isSuperAdmin = prefs[KEY_IS_SUPER_ADMIN] ?: false
+            isSuperAdmin = prefs[KEY_IS_SUPER_ADMIN] ?: false,
+            isUmcProduct = prefs[KEY_IS_UMC_PRODUCT] ?: false
         )
     // store.data는 사용자 정보와 무관한 값(토큰, 읽은 공지, 검색 기록 등)이 바뀌어도 방출한다.
     // 같은 사용자 정보를 다시 내보내면 이를 구독해 목록을 다시 불러오는 화면이 매번 재조회한다
@@ -118,6 +119,7 @@ class AppDataStore @Inject constructor(
             prefs[KEY_HAS_LOCAL_CREDENTIAL] = userInfo.hasLocalCredential
             prefs[KEY_TOTAL_ACTIVITY_DAYS] = userInfo.totalActivityDays
             prefs[KEY_IS_SUPER_ADMIN] = userInfo.isSuperAdmin
+            prefs[KEY_IS_UMC_PRODUCT] = userInfo.isUmcProduct
             if (userInfo.currentGisuMemberInfo != null) {
                 prefs[KEY_CURRENT_GISU_INFO] = gson.toJson(userInfo.currentGisuMemberInfo)
             } else {
@@ -431,6 +433,7 @@ class AppDataStore @Inject constructor(
         val KEY_TOTAL_ACTIVITY_DAYS = longPreferencesKey("total_activity_days")
         val KEY_CURRENT_GISU_INFO = stringPreferencesKey("current_gisu_info")
         val KEY_IS_SUPER_ADMIN = booleanPreferencesKey("is_super_admin")
+        val KEY_IS_UMC_PRODUCT = booleanPreferencesKey("is_umc_product")
 
 
         //유저 명하 목록 KEY
