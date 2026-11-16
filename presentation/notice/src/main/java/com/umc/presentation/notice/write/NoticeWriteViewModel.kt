@@ -76,6 +76,8 @@ class NoticeWriteViewModel @Inject constructor(
     private var cachedUserInfo: UserInfo? = null
     private var serverActiveGisu: GisuItem? = null
     private var resolvedAuthorityGisuId: Long? = null
+    private var hasSelectedTargetGisu = false
+    private var hasSelectedCategory = false
     private var loadingOrganizationGisuId: Int? = null
     private var loadedOrganizationGisuId: Int? = null
     private var organizationRequestToken = 0
@@ -185,12 +187,10 @@ class NoticeWriteViewModel @Inject constructor(
             return
         }
 
-        val authorityChanged = resolvedAuthorityGisuId != activeGisuId
         resolvedAuthorityGisuId = activeGisuId
         val canWriteAsSchoolCore = userInfo.noticeRolesForGisu(activeGisuId ?: 0L).any {
             it == UserChallengerRole.SCHOOL_PRESIDENT || it == UserChallengerRole.SCHOOL_VICE_PRESIDENT
         }
-        val roleChanged = uiState.value.writerRole != writerRole
         val authorityGisu = serverActiveGisu ?: activeGisuId?.takeIf { it > 0 }?.let { id ->
             GisuItem(gisuId = id.toInt(), generation = activeGeneration?.toInt() ?: 0, isActive = true)
         }
@@ -198,14 +198,23 @@ class NoticeWriteViewModel @Inject constructor(
             .filter { it.gisuId > 0 && it.generation > 0 }
             .distinctBy { it.gisuId }
             .sortedByDescending { it.generation }
-        val targetGisuId = uiState.value.targetGisuId.takeUnless { roleChanged || authorityChanged }
-            ?.takeIf { id -> allowedNoticeTargetGisus(writerRole, knownGisus, authorityGisu?.gisuId).any { it.gisuId == id } }
-            ?: authorityGisu?.gisuId
-            ?: allowedNoticeTargetGisus(writerRole, knownGisus, authorityGisu?.gisuId).firstOrNull()?.gisuId
+        val selection = resolveNoticeWriteSelection(
+            state = uiState.value,
+            writerRole = writerRole,
+            authorityGisuId = authorityGisu?.gisuId,
+            knownGisus = knownGisus,
+            hasSelectedTargetGisu = hasSelectedTargetGisu,
+            hasSelectedCategory = hasSelectedCategory,
+        )
+        if (selection.resetUserSelection) {
+            hasSelectedTargetGisu = false
+            hasSelectedCategory = false
+        }
+        val targetGisuId = selection.targetGisuId
         val categories = createCategories(writerRole, knownGisus, targetGisuId, canWriteAsSchoolCore)
-        val previousCategory = uiState.value.selectedCategory.takeUnless { roleChanged || authorityChanged }
+        val previousCategory = selection.previousCategory
         val selectedCategory = selectNoticeCategory(categories, previousCategory)
-        val categoryChanged = roleChanged ||
+        val categoryChanged = selection.roleChanged ||
             uiState.value.canWriteAsSchoolCore != canWriteAsSchoolCore ||
             uiState.value.selectedCategory?.type != selectedCategory?.type
         val (chips, hint) = selectedCategory?.let {
@@ -308,6 +317,7 @@ class NoticeWriteViewModel @Inject constructor(
         val role = state.writerRole ?: return
         if (state.isTargetLocked ||
             gisu !in allowedNoticeTargetGisus(role, state.availableGisus, state.authorityGisuId)) return
+        hasSelectedTargetGisu = true
         val categories = createCategories(role, state.availableGisus, gisu.gisuId, state.canWriteAsSchoolCore)
         val selectedCategory = selectNoticeCategory(categories, state.selectedCategory)
         val categoryChanged = selectedCategory?.type != state.selectedCategory?.type
@@ -497,6 +507,7 @@ class NoticeWriteViewModel @Inject constructor(
     fun onSelectCategory(category: WriteCategory) {
         val writerRole = uiState.value.writerRole ?: return
         if (uiState.value.isTargetLocked || category !in uiState.value.availableCategories) return
+        hasSelectedCategory = true
         val (chips, hint) = createBoardChips(writerRole, category.type, uiState.value.canWriteAsSchoolCore)
 
         updateState {
