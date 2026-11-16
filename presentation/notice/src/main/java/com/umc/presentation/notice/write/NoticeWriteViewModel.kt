@@ -315,8 +315,7 @@ class NoticeWriteViewModel @Inject constructor(
     fun onSelectGisu(gisu: GisuItem) {
         val state = uiState.value
         val role = state.writerRole ?: return
-        if (state.isTargetLocked ||
-            gisu !in allowedNoticeTargetGisus(role, state.availableGisus, state.authorityGisuId)) return
+        if (state.isTargetLocked || gisu !in state.selectableTargetGisus) return
         hasSelectedTargetGisu = true
         val categories = createCategories(role, state.availableGisus, gisu.gisuId, state.canWriteAsSchoolCore)
         val selectedCategory = selectNoticeCategory(categories, state.selectedCategory)
@@ -979,6 +978,17 @@ data class NoticeWriteUiState(
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
+    // 화면 선택지와 선택 처리에서 같은 권한 정책을 사용한다. 권한이 없으면 선택지를 제공하지 않는다.
+    val selectableTargetGisus: ImmutableList<GisuItem>
+        get() = writerRole?.let { role ->
+            allowedNoticeTargetGisus(role, availableGisus, authorityGisuId).toImmutableList()
+        } ?: persistentListOf()
+
+    // 전체 기수 공지는 특정 기수를 지정하지 않는다. 그 외에는 기수 간 발행 권한이 있는 역할만 선택기를 표시한다.
+    val showTargetGisuSelector: Boolean
+        get() = (writerRole == NoticeWriterRole.SUPER_ADMIN || writerRole == NoticeWriterRole.CENTRAL_CORE) &&
+                selectedCategory?.type != WriteCategoryType.ALL_GISU
+
     // 게시판 분류가 있는 카테고리에서 하나라도 선택됐는지
     val hasBoardSelection: Boolean
         get() = isAllSelected || isStaffSelected

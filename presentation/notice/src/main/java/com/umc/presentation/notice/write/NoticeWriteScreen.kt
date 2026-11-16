@@ -246,9 +246,7 @@ fun NoticeWriteRoute(
                 )
 
                 WriteSheetType.GISU -> {
-                    val selectableGisus = uiState.writerRole?.let { role ->
-                        allowedNoticeTargetGisus(role, uiState.availableGisus, uiState.authorityGisuId)
-                    }.orEmpty()
+                    val selectableGisus = uiState.selectableTargetGisus
                     USelectSheetContent(
                         title = AppStrings.CHALLENGER_GISU_SELECT_TITLE,
                         items = selectableGisus.map {
@@ -434,9 +432,7 @@ fun NoticeWriteScreen(
                     )
                 }
 
-                if ((uiState.writerRole == NoticeWriterRole.SUPER_ADMIN ||
-                            uiState.writerRole == NoticeWriterRole.CENTRAL_CORE) &&
-                    uiState.selectedCategory?.type != WriteCategoryType.ALL_GISU) {
+                if (uiState.showTargetGisuSelector) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
@@ -1247,8 +1243,12 @@ private fun NoticeWriteScreenSpecificGisuPreview() {
                 BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART,
             ),
             boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,
-            availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
-            targetGisuId = 12,
+            availableGisus = persistentListOf(
+                GisuItem(gisuId = 12, generation = 12),
+                GisuItem(gisuId = 9, generation = 9),
+            ),
+            targetGisuId = 9,
+            authorityGisuId = 12,
         ),
     )
 }
