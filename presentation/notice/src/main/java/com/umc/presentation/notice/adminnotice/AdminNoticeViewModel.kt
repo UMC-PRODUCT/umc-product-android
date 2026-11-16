@@ -20,6 +20,8 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -205,6 +207,8 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     private fun getNoticeList(isRefresh: Boolean) {
+        // 프로필이 갱신돼도 진행 중인 조회의 취소 핸들을 중복 작업으로 덮어쓰지 않는다.
+        if (listJob?.isActive == true) return
         listJob = fetchNoticeList(isRefresh)
     }
 
@@ -219,14 +223,17 @@ class AdminNoticeViewModel @Inject constructor(
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
         // 학교 미지정 시 서버가 역할별 조회 범위를 적용한다. 지부장은 schoolId 지정 조회가 403이다.
+        val response = getNoticeListUseCase(
+            gisuId = state.gisuId,
+            noticeTab = selectedTab.noticeTab,
+            schoolId = null,
+            page = pageToFetch,
+            size = 20
+        )
+        // apiCall이 취소를 실패 응답으로 바꿔도 이전 조회가 새 탭의 상태를 덮어쓰지 않게 한다.
+        currentCoroutineContext().ensureActive()
         resultResponse(
-            response = getNoticeListUseCase(
-                gisuId = state.gisuId,
-                noticeTab = selectedTab.noticeTab,
-                schoolId = null,
-                page = pageToFetch,
-                size = 20
-            ),
+            response = response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
