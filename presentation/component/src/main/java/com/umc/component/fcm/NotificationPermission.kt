@@ -15,8 +15,10 @@ import androidx.core.content.edit
 /**
  * 알림 권한(API 33+)을 이번 설치에서 요청했는지 기록한다.
  *
- * 권한 보유 여부는 이 플래그가 아니라 checkSelfPermission 으로 판단한다. 플래그는 같은 설치에서 여러 번 묻지 않게 하는 용도다.
- * SharedPreferences 는 백업 대상에서 빠져 있어(data_extraction_rules.xml) 재설치하면 초기화되고, 재설치한 사용자에게 다시 묻게 된다.
+ * 권한 보유 여부는 이 플래그가 아니라 checkSelfPermission 으로 판단한다.
+ * 플래그는 같은 설치에서 여러 번 묻지 않게 하는 용도다.
+ * SharedPreferences 는 백업 대상에서 빠져 있어(data_extraction_rules.xml)
+ * 재설치하면 초기화되고, 재설치한 사용자에게 다시 묻게 된다.
  */
 object NotificationPermission {
     private const val PREFS_NAME = "notification_permission"
