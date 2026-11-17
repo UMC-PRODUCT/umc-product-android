@@ -2,7 +2,6 @@ package com.umc.permission
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -40,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.fcm.NotificationPermission
 import com.umc.component.component.UText
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
@@ -82,7 +82,8 @@ fun PermissionRoute(
             PermissionEvent.MoveToBack -> navigateToBack()
             PermissionEvent.ShowPermissionDialog -> {
                 val permissions = buildList {
-                    if (uiState.isAlarmCheck && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    // 가입 재시도에서 이미 물어본 알림 권한을 다시 요청하지 않는다
+                    if (uiState.isAlarmCheck && NotificationPermission.shouldRequest(context)) {
                         add(Manifest.permission.POST_NOTIFICATIONS)
                     }
                     if (uiState.isLocationCheck) {
@@ -99,6 +100,10 @@ fun PermissionRoute(
                 }
 
                 if (permissions.isNotEmpty()) {
+                    // 가입 직후 홈에서 같은 질문을 다시 띄우지 않게 기록한다
+                    if (Manifest.permission.POST_NOTIFICATIONS in permissions) {
+                        NotificationPermission.markRequested(context)
+                    }
                     requestPermissionsLauncher.launch(permissions.toTypedArray())
                 } else {
                     viewModel.signUp()

@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.fcm.NotificationPermissionRequestEffect
 import com.umc.component.component.UButton
 import com.umc.component.component.getGrowthText
 import com.umc.component.theme.AppStrings
@@ -113,6 +114,9 @@ fun HomeRoute(
     // [임시] 명함 교환 차단 — iOS 구현 전까지 안내 다이얼로그만 띄운다.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 MoveShareCardEvent 를 다시 onNavigateToCardShare() 로 연결한다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
+
+    // 가입 흐름을 거치지 않고 들어온 사용자(재설치·새 기기 로그인 등)에게도 알림 권한을 묻는다
+    NotificationPermissionRequestEffect()
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         //이벤트 처리

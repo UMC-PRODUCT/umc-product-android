@@ -50,7 +50,8 @@ class PermissionViewModel @Inject constructor(
     }
 
     /**
-     * 권한 요청 완료 후 내 프로필을 조회해 메인 진입 가능 여부(챌린저 기록·프로덕트팀 계정)로 홈/실패 화면을 결정.
+     * 권한 요청 완료 후 내 프로필을 조회해
+     * 메인 진입 가능 여부(챌린저 기록·프로덕트팀 계정)로 홈/실패 화면을 결정.
      * PermissionRoute의 ActivityResultCallback에서 호출됨
      */
     fun signUp() = viewModelScope.launch {

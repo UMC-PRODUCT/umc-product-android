@@ -13,6 +13,7 @@ import com.umc.domain.repository.ai.AiTextRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * ML Kit GenAI(Gemini Nano) Prompt API 기반 온디바이스 텍스트 생성 구현.
@@ -51,12 +52,17 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
                 val response = generator.generateContent(prompt)
                 val generatedText = response.candidates.firstOrNull()?.text.orEmpty().trim()
                 if (generatedText.isBlank()) {
+                    Log.e(TAG, "generate returned empty text")
                     ApiState.Fail(FailState(code = AI_ERROR_CODE, message = EMPTY_RESPONSE_MESSAGE))
                 } else {
                     ApiState.Success(generatedText)
                 }
             }
-        }.getOrElse { error -> fail(error) }
+        }.getOrElse { error ->
+            // 입력이 바뀌어 호출부가 취소한 경우는 실패가 아니므로 에러 로그를 남기지 않는다
+            if (error !is CancellationException) Log.e(TAG, "generate failed", error)
+            fail(error)
+        }
     }
 
     /** 생성 클라이언트를 만들어 사용하고 반드시 닫는다 */

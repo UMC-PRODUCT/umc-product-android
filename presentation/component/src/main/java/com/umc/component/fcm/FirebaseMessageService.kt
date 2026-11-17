@@ -47,6 +47,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
         tokenSynchronizer.sync(token)
     }
 
+    // 푸시 메세지를 받았을 때 호출되는 콜백
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         runBlocking {
