@@ -351,7 +351,7 @@ class BlockingCallInRequestPathDetectorTest {
     }
 
     @Test
-    fun `람다 프로퍼티를 읽기만 하거나 같은 이름의 메서드를 부르면 무시`() {
+    fun `람다 프로퍼티를 읽기만 하거나 같은 이름의 메서드·다른 객체의 프로퍼티를 부르면 무시`() {
         lintWith(
             BlockingCallInRequestPathDetector.ISSUE,
             kotlin(
@@ -367,6 +367,16 @@ class BlockingCallInRequestPathDetectorTest {
                     private val tokenProvider: () -> String = { runBlocking { load() } }
                     override fun intercept(chain: Interceptor.Chain): Response {
                         val callback = tokenProvider
+                        return chain.proceed(chain.request())
+                    }
+                }
+
+                class Cached(val tokenProvider: () -> String)
+
+                class ForeignReceiverInterceptor(private val other: Cached, private val load: suspend () -> String) : Interceptor {
+                    private val tokenProvider: () -> String = { runBlocking { load() } }
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        other.tokenProvider()
                         return chain.proceed(chain.request())
                     }
                 }

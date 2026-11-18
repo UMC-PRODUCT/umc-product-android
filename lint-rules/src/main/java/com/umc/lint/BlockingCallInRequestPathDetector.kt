@@ -23,6 +23,8 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
+import org.jetbrains.kotlin.psi.KtQualifiedExpression
+import org.jetbrains.kotlin.psi.KtThisExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -192,7 +194,7 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                     val resolvedElsewhere = resolvedDeclaration is KtNamedFunction && resolvedDeclaration != calledByName
                     if (calledByName != null && !resolvedElsewhere) {
                         val call = node.sourcePsi as? KtCallExpression
-                        if (call != null && call.calleeExpression?.text == calledByName.name &&
+                        if (call != null && call.calleeExpression?.text == calledByName.name && !hasOtherReceiver(call) &&
                             PsiTreeUtil.isAncestor(calledByName.parent, call, true) && !isShadowed(call, calledByName)
                         ) {
                             check(node, calledByName)
@@ -208,6 +210,13 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                 }
             })
             return found
+        }
+
+        /** other.tokenProvider() 처럼 this 가 아닌 수신자로 부르면 다른 객체의 같은 이름 프로퍼티다. */
+        private fun hasOtherReceiver(call: KtCallExpression): Boolean {
+            val qualified = call.parent as? KtQualifiedExpression ?: return false
+            if (qualified.selectorExpression != call) return false
+            return qualified.receiverExpression !is KtThisExpression
         }
 
         /**

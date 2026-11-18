@@ -25,6 +25,7 @@ import io
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -218,12 +219,23 @@ def apply(outputs: dict[Path, str | None], originals: dict[Path, bytes]) -> None
     shutil.rmtree(backup_dir, ignore_errors=True)
 
 
+def _private_state_dir() -> Path:
+    """현재 사용자만 쓸 수 있는 상태 디렉터리. 다른 사용자가 만들었거나 권한이 열려 있으면 쓰지 않는다."""
+    state_dir = Path.home() / ".local" / "state" / "umc-lint-baseline"
+    state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    info = state_dir.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+        raise RuntimeError(f"잠금 디렉터리 {state_dir} 의 소유자나 권한이 올바르지 않습니다(현재 사용자 전용, 0700 이어야 함).")
+    return state_dir
+
+
 @contextmanager
 def exclusive_run():
     """
     두 실행이 같은 원본을 읽고 서로의 결과를 덮어쓰지 않도록, 원본을 읽기 전부터 반영이 끝날 때까지 잠근다.
-    잠금 파일은 빌드 정리(./gradlew clean, git clean)가 지우지 않는 시스템 임시 디렉터리에 두고,
-    체크아웃 경로마다 다른 이름을 써서 다른 체크아웃끼리는 막지 않는다.
+    잠금 파일은 빌드 정리(./gradlew clean, git clean)가 지우지 않고 TMPDIR 같은 환경 변수에 따라 바뀌지 않는
+    사용자 전용 디렉터리(~/.local/state/umc-lint-baseline)에 두고, 체크아웃 경로마다 다른 이름을 써서
+    다른 체크아웃끼리는 막지 않는다.
     """
     try:
         import fcntl
@@ -231,8 +243,10 @@ def exclusive_run():
         yield
         return
     checkout = hashlib.sha256(os.fsencode(ROOT)).hexdigest()[:16]
-    lock_path = Path(tempfile.gettempdir()) / f"umc-lint-baseline-{checkout}.lock"
-    with open(lock_path, "w") as handle:
+    lock_path = _private_state_dir() / f"umc-lint-baseline-{checkout}.lock"
+    # 링크를 따라가지 않고 열어, 미리 만들어 둔 심볼릭 링크로 다른 파일을 자르지 않게 한다.
+    descriptor = os.open(lock_path, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    with os.fdopen(descriptor, "w") as handle:
         try:
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
