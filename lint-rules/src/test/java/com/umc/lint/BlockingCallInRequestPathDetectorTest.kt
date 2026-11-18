@@ -200,4 +200,143 @@ class BlockingCallInRequestPathDetectorTest {
             """,
         )
     }
+
+    @Test
+    fun `이름만 같은 오버로드·다른 파일의 재정의·가려진 동명 람다는 무시하고 짧은 호출 경로는 찾는다`() {
+        lintWith(
+            BlockingCallInRequestPathDetector.ISSUE,
+            kotlin(
+                "src/com/umc/product/di/BaseInterceptor.kt",
+                """
+                package com.umc.product.di
+
+                import okhttp3.Interceptor
+                import okhttp3.Response
+
+                abstract class BaseInterceptor : Interceptor {
+                    abstract fun warmUp()
+                    override fun intercept(chain: Interceptor.Chain): Response = chain.proceed(chain.request())
+                }
+                """,
+            ).indented(),
+            kotlin(
+                "src/com/umc/product/di/AppInterceptors.kt",
+                """
+                package com.umc.product.di
+
+                import kotlinx.coroutines.runBlocking
+                import okhttp3.Interceptor
+                import okhttp3.Response
+
+                class WarmUpInterceptor(private val load: suspend () -> String) : BaseInterceptor() {
+                    override fun warmUp() {
+                        runBlocking { load() }
+                    }
+                }
+
+                class OverloadInterceptor(private val load: suspend () -> String) : Interceptor {
+                    private fun intercept() {
+                        runBlocking { load() }
+                    }
+                    override fun intercept(chain: Interceptor.Chain): Response = chain.proceed(chain.request())
+                }
+
+                class ShadowInterceptor(private val load: suspend () -> String) : Interceptor {
+                    private val tokenProvider: () -> String = { runBlocking { load() } }
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        val tokenProvider = { "cached" }
+                        tokenProvider()
+                        return chain.proceed(chain.request())
+                    }
+                }
+
+                class ChainInterceptor(private val load: suspend () -> String) : Interceptor {
+                    private fun a(): String = t()
+                    private fun b(): String = a()
+                    private fun t(): String = runBlocking { load() }
+                    private fun x(): String = b() + t()
+                    private fun y(): String = x()
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        y()
+                        return chain.proceed(chain.request())
+                    }
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/product/di/AppInterceptors.kt:32: Error: 요청 경로(AppInterceptors.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+                private fun t(): String = runBlocking { load() }
+                                          ~~~~~~~~~~~~~~~~~~~~~~
+            1 error
+            """,
+        )
+    }
+
+    @Test
+    fun `자기 초기화식 안의 같은 이름 호출과 다른 파일 기반 클래스가 부르는 훅도 오류`() {
+        lintWith(
+            BlockingCallInRequestPathDetector.ISSUE,
+            kotlin(
+                "src/com/umc/product/di/BaseTokenInterceptor.kt",
+                """
+                package com.umc.product.di
+
+                import okhttp3.Interceptor
+                import okhttp3.Response
+
+                abstract class BaseTokenInterceptor : Interceptor {
+                    abstract fun token(): String
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        token()
+                        return chain.proceed(chain.request())
+                    }
+                }
+                """,
+            ).indented(),
+            kotlin(
+                "src/com/umc/product/di/SelfNamedInterceptors.kt",
+                """
+                package com.umc.product.di
+
+                import kotlinx.coroutines.runBlocking
+                import okhttp3.Interceptor
+                import okhttp3.Response
+
+                class AppTokenInterceptor(private val load: suspend () -> String) : BaseTokenInterceptor() {
+                    override fun token(): String = runBlocking { load() }
+                }
+
+                class SelfNamedInterceptor(private val load: suspend () -> String) : Interceptor {
+                    private val accessToken: () -> String = { runBlocking { load() } }
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        val accessToken = accessToken()
+                        return chain.proceed(chain.request())
+                    }
+                }
+
+                fun provide(load: suspend () -> String): Interceptor {
+                    fun token(): String = runBlocking { load() }
+                    return Interceptor { chain ->
+                        val token: String = token()
+                        chain.proceed(chain.request())
+                    }
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/product/di/SelfNamedInterceptors.kt:8: Error: 요청 경로(SelfNamedInterceptors.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+                override fun token(): String = runBlocking { load() }
+                                               ~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/product/di/SelfNamedInterceptors.kt:12: Error: 요청 경로(SelfNamedInterceptors.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+                private val accessToken: () -> String = { runBlocking { load() } }
+                                                          ~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/product/di/SelfNamedInterceptors.kt:20: Error: 요청 경로(SelfNamedInterceptors.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+                fun token(): String = runBlocking { load() }
+                                      ~~~~~~~~~~~~~~~~~~~~~~
+            3 errors
+            """,
+        )
+    }
 }

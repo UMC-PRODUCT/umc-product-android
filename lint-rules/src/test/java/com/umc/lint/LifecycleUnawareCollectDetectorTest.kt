@@ -37,12 +37,13 @@ class LifecycleUnawareCollectDetectorTest {
                 import androidx.compose.runtime.LaunchedEffect
                 import androidx.compose.runtime.snapshotFlow as observeScroll
                 import androidx.lifecycle.flowWithLifecycle
-                import androidx.lifecycle.repeatOnLifecycle
+                import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
                 import kotlinx.coroutines.flow.Flow
 
                 fun HomeRoute(events: Flow<String>, scrollOffset: () -> Int, lifecycle: Any) {
                     LaunchedEffect(Unit) {
-                        repeatOnLifecycle("STARTED") {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
                             events.collect { }
                         }
                     }
@@ -124,7 +125,17 @@ class LifecycleUnawareCollectDetectorTest {
                 }
                 """,
             ).indented(),
-        ).expectErrorCount(2)
+        ).expect(
+            """
+            src/com/umc/presentation/home/test.kt:11: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    merge(events, other.flowWithLifecycle(lifecycle)).collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:14: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    merge(snapshotFlow { "scroll" }, events).collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors
+            """,
+        )
     }
 
     @Test
@@ -178,6 +189,114 @@ class LifecycleUnawareCollectDetectorTest {
                 }
                 """,
             ).indented(),
-        ).expectErrorCount(2)
+        ).expect(
+            """
+            src/com/umc/presentation/home/test.kt:14: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    snapshotFlow { offset() }.combine(events) { a, b -> a to b }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:17: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).flatMapLatest { events }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors
+            """,
+        )
+    }
+
+    @Test
+    fun `CREATED 로 내린 보호, 인수 계산 중 수집, 보호 뒤 onStart 방출은 오류`() {
+        lintWith(
+            LifecycleUnawareCollectDetector.ISSUE,
+            kotlin(
+                """
+                package com.umc.presentation.home
+
+                import androidx.compose.runtime.LaunchedEffect
+                import androidx.lifecycle.Lifecycle
+                import androidx.lifecycle.flowWithLifecycle
+                import androidx.lifecycle.repeatOnLifecycle
+                import kotlinx.coroutines.flow.Flow
+                import kotlinx.coroutines.flow.onStart
+
+                fun HomeRoute(events: Flow<String>, lifecycle: Any) {
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle, Lifecycle.State.CREATED).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        repeatOnLifecycle(Lifecycle.State.CREATED) { events.collect { } }
+                    }
+                    LaunchedEffect(Unit) {
+                        repeatOnLifecycle(run { events.collect { }; Lifecycle.State.STARTED }) { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).onStart { emit("navigate") }.collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.onStart { emit("navigate") }.flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) { events.collect { } }
+                    }
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/presentation/home/test.kt:12: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle, Lifecycle.State.CREATED).collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:15: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    repeatOnLifecycle(Lifecycle.State.CREATED) { events.collect { } }
+                                                                 ~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:18: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    repeatOnLifecycle(run { events.collect { }; Lifecycle.State.STARTED }) { }
+                                            ~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:21: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).onStart { emit("navigate") }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            4 errors
+            """,
+        )
+    }
+
+    @Test
+    fun `라벨 붙은 보호 블록과 바깥 보호가 있는 CREATED 게이트는 허용, 보호 뒤 retryWhen 방출은 오류`() {
+        lintWith(
+            LifecycleUnawareCollectDetector.ISSUE,
+            kotlin(
+                """
+                package com.umc.presentation.home
+
+                import androidx.compose.runtime.LaunchedEffect
+                import androidx.compose.runtime.snapshotFlow
+                import androidx.lifecycle.Lifecycle
+                import androidx.lifecycle.flowWithLifecycle
+                import androidx.lifecycle.repeatOnLifecycle
+                import kotlinx.coroutines.flow.Flow
+                import kotlinx.coroutines.flow.retryWhen
+
+                fun HomeRoute(events: Flow<String>, lifecycle: Any, offset: () -> Int) {
+                    LaunchedEffect(Unit) {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) events@{ events.collect { } }
+                    }
+                    LaunchedEffect(Unit) {
+                        snapshotFlow { offset() }.flowWithLifecycle(lifecycle, Lifecycle.State.CREATED).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).flowWithLifecycle(lifecycle, Lifecycle.State.CREATED).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).retryWhen { _, _ -> emit("navigate"); false }.collect { }
+                    }
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/presentation/home/test.kt:22: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).retryWhen { _, _ -> emit("navigate"); false }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 error
+            """,
+        )
     }
 }

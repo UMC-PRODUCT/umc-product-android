@@ -3,6 +3,10 @@ package com.umc.lint
 import com.android.tools.lint.detector.api.JavaContext
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.ULabeledExpression
+import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UParenthesizedExpression
 
 /**
  * 공용 컴포넌트를 구현하는 모듈(:presentation:component)의 namespace. 이 모듈에서는 원본 API를 감싸야 하므로 허용한다.
@@ -33,4 +37,11 @@ internal fun JavaContext.isOneOf(method: PsiMethod, targets: Map<String, Set<Str
 internal fun JavaContext.calls(call: UCallExpression, name: String, packageName: String): Boolean {
     val method = call.resolve() ?: return false
     return sourceName(method.name) == name && evaluator.getPackage(method)?.qualifiedName == packageName
+}
+
+/** 람다를 인수로 받은 호출. label@{ … } 나 괄호로 감싼 람다도 건너뛰어 찾는다. */
+internal fun ULambdaExpression.ownerCall(): UCallExpression? {
+    var parent: UElement? = uastParent
+    while (parent is ULabeledExpression || parent is UParenthesizedExpression) parent = parent.uastParent
+    return parent as? UCallExpression
 }

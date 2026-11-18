@@ -6,11 +6,14 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.skipParenthesizedExprDown
 
 /**
@@ -31,16 +34,24 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
         // 스크롤 위치 추적 등은 계속돼야 하므로 제외한다. events.flowWithLifecycle(lifecycle) 은 이미 수명주기를 따른다.
         // 둘 다 collect 로 값이 흘러 들어오는 수신자 체인 전체에 적용될 때만 인정한다.
         // merge(events, other.flowWithLifecycle(lifecycle)) 처럼 인수 하나에만 적용되면 나머지 Flow 는 보호되지 않는다.
-        if (chainCallsAny(context, node.receiver, STATE_OBSERVERS + LIFECYCLE_AWARE_OPERATORS)) return
+        if (isProtectedChain(context, node.receiver)) return
 
         // 이름이 아니라 해석된 선언(이름+패키지)으로 판정한다. import 별칭은 인정하고 다른 패키지의 동명 함수는 무시한다.
+        // repeatOnLifecycle 은 block 으로 넘긴 람다 본문만 보호한다. state 인수를 계산하는 코드는 그 전에 돈다.
         var inLaunchedEffect = false
         var guarded = false
         var cursor: UElement? = node.uastParent
         while (cursor != null) {
-            if (cursor is UCallExpression) {
-                if (LIFECYCLE_SCOPES.any { (name, pkg) -> context.calls(cursor, name, pkg) }) guarded = true
-                if (context.calls(cursor, "LaunchedEffect", "androidx.compose.runtime")) inLaunchedEffect = true
+            if (cursor is ULambdaExpression) {
+                val owner = cursor.ownerCall()
+                if (owner != null && context.calls(owner, "repeatOnLifecycle", "androidx.lifecycle") &&
+                    isAtLeastStarted(context, owner, "state")
+                ) {
+                    guarded = true
+                }
+            }
+            if (cursor is UCallExpression && context.calls(cursor, "LaunchedEffect", "androidx.compose.runtime")) {
+                inLaunchedEffect = true
             }
             cursor = cursor.uastParent
         }
@@ -56,12 +67,12 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
     }
 
     /**
-     * collect 의 수신자 체인(a.b().c())을 collect 쪽에서부터 거슬러 올라가며 [targets] 호출을 찾는다.
+     * collect 의 수신자 체인(a.b().c())을 collect 쪽에서부터 거슬러 올라가며 snapshotFlow·flowWithLifecycle 을 찾는다.
      * 그 사이에는 값만 바꾸는 연산자(map, filter, distinctUntilChanged …)만 허용한다. combine·zip·flatMapLatest 처럼
      * 다른 Flow 를 끌어들이는 연산자나 모르는 연산자를 먼저 만나면, 그 Flow 는 보호되지 않으므로 false.
      * 인수 안쪽(merge(x, y.flowWithLifecycle()) 의 y)도 체인이 아니므로 보지 않는다.
      */
-    private fun chainCallsAny(context: JavaContext, receiver: UExpression?, targets: Map<String, String>): Boolean {
+    private fun isProtectedChain(context: JavaContext, receiver: UExpression?): Boolean {
         var current = receiver?.skipParenthesizedExprDown()
         while (current != null) {
             val call = when (current) {
@@ -70,8 +81,13 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
                 else -> null
             }
             if (call != null) {
-                if (targets.any { (name, pkg) -> context.calls(call, name, pkg) }) return true
-                if (SINGLE_UPSTREAM_OPERATORS.none { context.calls(call, it, "kotlinx.coroutines.flow") }) return false
+                if (STATE_OBSERVERS.any { (name, pkg) -> context.calls(call, name, pkg) }) return true
+                if (context.calls(call, "flowWithLifecycle", "androidx.lifecycle")) {
+                    // STARTED 이상이면 보호된다. CREATED 처럼 낮으면 값만 흘려보내는 연산자처럼 보고 위쪽 체인을 계속 본다.
+                    if (isAtLeastStarted(context, call, "minActiveState")) return true
+                } else if (SINGLE_UPSTREAM_OPERATORS.none { context.calls(call, it, "kotlinx.coroutines.flow") }) {
+                    return false
+                }
             }
             current = when (current) {
                 is UQualifiedReferenceExpression -> current.receiver.skipParenthesizedExprDown()
@@ -82,25 +98,35 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
         return false
     }
 
+    /**
+     * 수명주기 상태 인수가 STARTED 이상인지. CREATED 등으로 내리면 화면이 멈춘 뒤에도 수집이 계속되므로 보호로 보지 않는다.
+     * 인수를 생략하면 기본값(STARTED)이고, 변수처럼 값을 알 수 없으면 보호로 본다.
+     */
+    private fun isAtLeastStarted(context: JavaContext, call: UCallExpression, parameterName: String): Boolean {
+        val method = call.resolve() ?: return true
+        val argument = context.evaluator.computeArgumentMapping(call, method)
+            .entries.firstOrNull { it.value.name == parameterName }?.key ?: return true
+        val state = ((argument.skipParenthesizedExprDown() as? UReferenceExpression)?.resolve() as? PsiField)?.name
+        return state !in BELOW_STARTED
+    }
+
     companion object {
+        private val BELOW_STARTED = setOf("DESTROYED", "INITIALIZED", "CREATED")
+
         private val STATE_OBSERVERS = mapOf(
             "snapshotFlow" to "androidx.compose.runtime",
             "derivedStateOf" to "androidx.compose.runtime",
         )
-        private val LIFECYCLE_AWARE_OPERATORS = mapOf("flowWithLifecycle" to "androidx.lifecycle")
 
-        /** 업스트림 하나의 값만 바꾸는 연산자. 보호 연산자와 collect 사이에 있어도 보호가 유지된다. */
+        /**
+         * 업스트림 하나의 값만 바꾸는 연산자. 보호 연산자와 collect 사이에 있어도 보호가 유지된다.
+         * onStart·onEmpty·onCompletion·catch·retryWhen·scan·runningFold 는 업스트림을 거치지 않고 값을 직접 내보낼 수 있어 넣지 않는다.
+         */
         private val SINGLE_UPSTREAM_OPERATORS = listOf(
             "map", "mapNotNull", "mapLatest", "filter", "filterNot", "filterIsInstance", "filterNotNull",
             "onEach", "distinctUntilChanged", "distinctUntilChangedBy", "take", "takeWhile", "drop", "dropWhile",
-            "debounce", "sample", "conflate", "buffer", "catch", "onStart", "onCompletion", "onEmpty",
-            "scan", "runningFold", "runningReduce", "withIndex", "flowOn", "cancellable", "retry", "retryWhen",
-        )
-
-        /** 이 블록 안의 수집은 화면이 보이는 동안만 돈다. */
-        private val LIFECYCLE_SCOPES = mapOf(
-            "repeatOnLifecycle" to "androidx.lifecycle",
-            "collectAsStateWithLifecycle" to "androidx.lifecycle.compose",
+            "debounce", "sample", "conflate", "buffer", "runningReduce", "withIndex", "flowOn", "cancellable",
+            "retry",
         )
 
         @JvmField
