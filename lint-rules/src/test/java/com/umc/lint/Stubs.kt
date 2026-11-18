@@ -2,6 +2,7 @@ package com.umc.lint
 
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestLintResult
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Issue
@@ -46,7 +47,10 @@ object Stubs {
         """
         package androidx.lifecycle
 
+        import kotlinx.coroutines.flow.Flow
+
         suspend fun repeatOnLifecycle(state: String, block: suspend () -> Unit) {}
+        fun <T> Flow<T>.flowWithLifecycle(lifecycle: Any): Flow<T> = this
         """,
     ).indented()
 
@@ -56,6 +60,7 @@ object Stubs {
         package kotlinx.coroutines
 
         suspend fun delay(timeMillis: Long) {}
+        suspend fun delay(duration: kotlin.time.Duration) {}
         fun <T> runBlocking(block: suspend () -> T): T = throw UnsupportedOperationException()
         """,
     ).indented()
@@ -82,7 +87,82 @@ object Stubs {
         """,
     ).indented()
 
-    val ALL: Array<TestFile> = arrayOf(material3, foundationText, runtime, lifecycle, coroutines, flow)
+    private val okhttp = kotlin(
+        "src/okhttp3/OkHttp.kt",
+        """
+        package okhttp3
+
+        class Request
+        class Response
+        class Route
+
+        fun interface Interceptor {
+            fun intercept(chain: Chain): Response
+
+            interface Chain {
+                fun request(): Request
+                fun proceed(request: Request): Response
+            }
+        }
+
+        fun interface Authenticator {
+            fun authenticate(route: Route?, response: Response): Request?
+        }
+
+        class OkHttpClient {
+            // 실제 OkHttp 처럼 함수 타입 오버로드는 JVM 이름이 "-addInterceptor" 다. 이 이름으로 해석되는 상황을 재현한다.
+            class Builder {
+                fun addInterceptor(interceptor: Interceptor): Builder = this
+                @JvmName("-addInterceptor")
+                inline fun addInterceptor(crossinline block: (chain: Interceptor.Chain) -> Response): Builder = this
+                fun addNetworkInterceptor(interceptor: Interceptor): Builder = this
+                @JvmName("-addNetworkInterceptor")
+                inline fun addNetworkInterceptor(crossinline block: (chain: Interceptor.Chain) -> Response): Builder = this
+                fun authenticator(authenticator: Authenticator): Builder = this
+            }
+        }
+        """,
+    ).indented()
+
+    private val ktor = kotlin(
+        "src/io/ktor/client/plugins/DefaultRequest.kt",
+        """
+        package io.ktor.client.plugins
+
+        class DefaultRequestBuilder {
+            fun header(key: String, value: String) {}
+        }
+
+        fun Any.defaultRequest(block: DefaultRequestBuilder.() -> Unit) {}
+        """,
+    ).indented()
+
+    /** Compose 것이 아닌 동명 함수. 이름만 보고 예외 처리하면 안 되는 경우를 만든다. */
+    private val lookalikes = kotlin(
+        "src/sample/Lookalikes.kt",
+        """
+        package sample
+
+        import kotlinx.coroutines.flow.Flow
+
+        fun snapshotFlow(): Flow<String> = throw UnsupportedOperationException()
+        fun LaunchedEffect(key1: Any?, block: suspend () -> Unit) {}
+        """,
+    ).indented()
+
+    val ALL: Array<TestFile> = arrayOf(
+        material3, foundationText, runtime, lifecycle, coroutines, flow, okhttp, ktor, lookalikes,
+    )
+
+    /** :presentation:component 모듈처럼 namespace가 com.umc.component인 모듈. */
+    val componentModuleManifest: TestFile = manifest(
+        """<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.umc.component" />""",
+    )
+
+    /** 화면 모듈. */
+    val screenModuleManifest: TestFile = manifest(
+        """<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.umc.presentation.home" />""",
+    )
 }
 
 /** [Stubs]를 함께 넣고 [issue] 하나만 검사한다. */

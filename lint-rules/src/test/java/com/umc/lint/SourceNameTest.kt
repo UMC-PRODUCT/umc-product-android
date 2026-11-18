@@ -14,4 +14,10 @@ class SourceNameTest {
         assertEquals("Text", sourceName("Text--4IGK_g"))
         assertEquals("TextField", sourceName("TextField"))
     }
+
+    @Test
+    fun `Java에서 숨기려고 앞에 -를 붙인 JVM 이름도 되돌린다`() {
+        // OkHttp: @JvmName("-addInterceptor") inline fun addInterceptor(block: (Chain) -> Response)
+        assertEquals("addInterceptor", sourceName("-addInterceptor"))
+    }
 }

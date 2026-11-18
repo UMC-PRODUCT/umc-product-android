@@ -21,7 +21,7 @@ class UseUTextFieldDetector : Detector(), Detector.UastScanner {
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (!context.isOneOf(method, TARGETS)) return
-        if (context.isInComponentPackage()) return
+        if (context.isInComponentModule()) return
 
         context.report(
             issue = ISSUE,

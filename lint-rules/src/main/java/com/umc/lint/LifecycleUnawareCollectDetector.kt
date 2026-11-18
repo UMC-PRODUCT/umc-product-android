@@ -9,8 +9,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
-import org.jetbrains.uast.UExpression
-import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /**
  * LaunchedEffect 안에서 수명주기를 고려하지 않고 이벤트 Flow를 수집하는 것을 금지한다.
@@ -28,8 +26,10 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
 
         // snapshotFlow 는 컴포지션 상태를 관찰하는 용도라 단발성 이벤트가 아니다.
         // 화면이 가려진 동안에도 스크롤 위치 추적 등은 계속돼야 하므로 대상에서 제외한다.
-        // 소스 텍스트가 아니라 실제 호출 대상을 본다. import 별칭을 쓰면 텍스트에 "snapshotFlow"가 남지 않는다.
-        if (callsAnyOf(node.receiver, STATE_OBSERVERS)) return
+        // 소스 텍스트가 아니라 해석된 호출 대상(이름+패키지)을 본다. import 별칭이나 동명 함수에 속지 않는다.
+        if (context.containsCallTo(node.receiver, STATE_OBSERVERS)) return
+        // events.flowWithLifecycle(lifecycle).collect { } 는 수신자 체인에서 이미 수명주기를 따른다.
+        if (context.containsCallTo(node.receiver, LIFECYCLE_AWARE_OPERATORS)) return
 
         var inLaunchedEffect = false
         var guarded = false
@@ -54,19 +54,12 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
         )
     }
 
-    private fun callsAnyOf(expression: UExpression?, names: Set<String>): Boolean {
-        var found = false
-        expression?.accept(object : AbstractUastVisitor() {
-            override fun visitCallExpression(node: UCallExpression): Boolean {
-                if ((node.resolve()?.name ?: node.methodName) in names) found = true
-                return found
-            }
-        })
-        return found
-    }
-
     companion object {
-        private val STATE_OBSERVERS = setOf("snapshotFlow", "derivedStateOf")
+        private val STATE_OBSERVERS = mapOf(
+            "snapshotFlow" to "androidx.compose.runtime",
+            "derivedStateOf" to "androidx.compose.runtime",
+        )
+        private val LIFECYCLE_AWARE_OPERATORS = mapOf("flowWithLifecycle" to "androidx.lifecycle")
 
         @JvmField
         val ISSUE: Issue = Issue.create(

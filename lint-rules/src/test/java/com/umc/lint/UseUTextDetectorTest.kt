@@ -42,9 +42,10 @@ class UseUTextDetectorTest {
     }
 
     @Test
-    fun `component 모듈 안에서는 허용`() {
+    fun `component 모듈에서는 허용`() {
         lintWith(
             UseUTextDetector.ISSUE,
+            Stubs.componentModuleManifest,
             kotlin(
                 """
                 package com.umc.component.component
@@ -57,6 +58,25 @@ class UseUTextDetectorTest {
                 """,
             ).indented(),
         ).expectClean()
+    }
+
+    @Test
+    fun `다른 모듈이 component 패키지를 선언해도 검사`() {
+        lintWith(
+            UseUTextDetector.ISSUE,
+            Stubs.screenModuleManifest,
+            kotlin(
+                """
+                package com.umc.component.component
+
+                import androidx.compose.material3.Text
+
+                fun HomeTitle() {
+                    Text("홈")
+                }
+                """,
+            ).indented(),
+        ).expectErrorCount(1)
     }
 
     @Test
