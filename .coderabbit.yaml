@@ -40,6 +40,8 @@ reviews:
   # ---------------------------------------------------------------- #
   path_filters:
     - "!**/build/**"
+    # 커스텀 Lint 의 기존 위반 목록이다. lint-rules/update_baseline.py 가 생성한다.
+    - "!**/lint-baseline.xml"
     # 아이콘 리소스만 212개다. 벡터/비트맵 에셋은 리뷰 가치가 거의 없다.
     - "!**/res/drawable*/**"
     - "!**/res/mipmap*/**"
@@ -95,11 +97,14 @@ reviews:
     - path: "**/*.kt"
       instructions: |
         [이미 자동 검사되는 항목 — 리뷰에서 지적하지 말 것]
-        아래 세 가지는 :lint-rules 커스텀 Lint 가 CI 에서 잡고, 위반 시 파이프라인이 막힌다.
-        중복 지적은 순수 소음이므로 언급하지 않는다.
-          - OneShotEventSharedFlow: 단발성 이벤트를 StateFlow/SharedFlow(replay>0)로 노출
-          - LifecycleUnawareEventCollect: 수명주기를 고려하지 않은 이벤트 수집
-          - BlockingCallInRequestPath: 요청 경로에서 runBlocking 사용
+        아래 규칙은 :lint-rules 커스텀 Lint 가 CI 에서 잡는다. ERROR 는 파이프라인을 막고 WARNING 은 요약에 남는다.
+        중복 지적은 순수 소음이므로 언급하지 않는다. (목록 기준: lint-rules/src/main/java/com/umc/lint/UmcIssueRegistry.kt)
+          - OneShotEventSharedFlow (ERROR): 단발성 이벤트에 인자 없는 MutableSharedFlow() 사용
+          - LifecycleUnawareEventCollect (ERROR): LaunchedEffect 안에서 수명주기를 고려하지 않은 Flow 수집
+          - BlockingCallInRequestPath (ERROR): 요청 경로(인터셉터·인증자 등)에서 runBlocking 사용
+          - UseUText (ERROR): presentation:component 밖에서 material3 Text·BasicText 사용
+          - UseUTextField (ERROR): presentation:component 밖에서 TextField·BasicTextField 계열 사용
+          - FixedDelayInLaunchedEffect (WARNING): LaunchedEffect 안의 고정 시간 delay
         ktlint/Android Lint 가 잡는 포매팅·네이밍 규칙도 지적하지 않는다.
 
         [리뷰에서 봐야 할 것]
