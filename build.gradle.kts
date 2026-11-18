@@ -24,3 +24,20 @@ subprojects {
         }
     }
 }
+
+// 커스텀 Lint(:lint-rules)의 기존 위반은 모듈별 lint-baseline.xml 에 기록해 두고, 새로 생기는 위반만 리포트에 남긴다.
+// baseline 에는 UMC 규칙 항목만 담는다(내장 규칙 경고는 지금처럼 리포트에 나온다). 파일이 없는 모듈은 빈 baseline 으로 본다.
+// 새 규칙을 추가해 기존 위반을 묶어야 할 때만 python3 lint-rules/update_baseline.py 로 다시 만든다.
+subprojects {
+    val module = this
+    plugins.withId("com.android.application") {
+        extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
+            lint { baseline = module.file("lint-baseline.xml") }
+        }
+    }
+    plugins.withId("com.android.library") {
+        extensions.configure<com.android.build.api.dsl.LibraryExtension> {
+            lint { baseline = module.file("lint-baseline.xml") }
+        }
+    }
+}
