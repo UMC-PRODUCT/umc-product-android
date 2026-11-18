@@ -30,14 +30,18 @@ subprojects {
 // 새 규칙을 추가해 기존 위반을 묶어야 할 때만 python3 lint-rules/update_baseline.py --issue-id <새 규칙 ID> 로 갱신한다.
 subprojects {
     val module = this
+    // update_baseline.py 는 -PumcLintBaselineDir=<임시 디렉터리> 로 결과를 저장소 밖에 쓰게 한 뒤, 성공했을 때만 반영한다.
+    val baselineFile = providers.gradleProperty("umcLintBaselineDir").orNull
+        ?.let { dir -> File(dir, "${module.projectDir.relativeTo(rootDir).path}/lint-baseline.xml") }
+        ?: module.file("lint-baseline.xml")
     plugins.withId("com.android.application") {
         extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
-            lint { baseline = module.file("lint-baseline.xml") }
+            lint { baseline = baselineFile }
         }
     }
     plugins.withId("com.android.library") {
         extensions.configure<com.android.build.api.dsl.LibraryExtension> {
-            lint { baseline = module.file("lint-baseline.xml") }
+            lint { baseline = baselineFile }
         }
     }
 }
