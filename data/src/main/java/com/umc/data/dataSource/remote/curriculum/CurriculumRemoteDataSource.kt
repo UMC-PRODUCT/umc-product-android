@@ -3,7 +3,7 @@ package com.umc.data.dataSource.remote.curriculum
 import com.umc.data.mapper.toFailState
 import com.umc.data.response.curriculum.CurriculumProgressResponse
 import com.umc.domain.model.base.ApiState
-import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
+import com.umc.data.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.curriculum.StudyGroup
 import com.umc.data.response.curriculum.ChallengerWorkbookResponse

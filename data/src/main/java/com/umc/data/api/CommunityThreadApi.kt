@@ -1,8 +1,9 @@
 package com.umc.data.api
 
-import com.google.gson.annotations.SerializedName
+import com.umc.data.request.community.ChangeMemberRoleRequest
 import com.umc.data.request.community.CreateCommunityThreadRequest
 import com.umc.data.request.community.InviteCommunityThreadMembersRequest
+import com.umc.data.request.community.ReportMessageRequest
 import com.umc.data.request.community.UpdateCommunityThreadRequest
 import com.umc.data.response.community.CommunityThreadDetailResponse
 import com.umc.data.response.community.CommunityThreadInvitationResponse
@@ -11,11 +12,9 @@ import com.umc.data.response.community.CommunityThreadListResponse
 import com.umc.data.response.community.CommunityThreadMemberMutationResponse
 import com.umc.data.response.community.CommunityThreadMemberPageResponse
 import com.umc.domain.model.base.ApiResponse
-import com.umc.domain.model.community.thread.CommunityMessageReportReason
 import com.umc.domain.model.community.thread.CommunityMessageReportReceipt
 import com.umc.domain.model.community.thread.CommunityThreadMemberMutation
 import com.umc.domain.model.community.thread.CommunityThreadMessagePage
-import com.umc.domain.model.community.thread.CommunityThreadRole
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -190,6 +189,3 @@ interface CommunityThreadApi {
         @Body request: ReportMessageRequest,
     ): ApiResponse<CommunityMessageReportReceipt>
 }
-
-data class ChangeMemberRoleRequest(@field:SerializedName("role") val role: CommunityThreadRole)
-data class ReportMessageRequest(@field:SerializedName("reasons") val reasons: List<CommunityMessageReportReason>)

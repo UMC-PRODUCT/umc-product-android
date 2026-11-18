@@ -1,6 +1,6 @@
 package com.umc.data.api
 
-import com.umc.data.remote.response.curriculum.ChallengerWorkbookSubmissionResponse
+import com.umc.data.response.curriculum.ChallengerWorkbookSubmissionResponse
 import com.umc.data.request.workbook.BestWorkbookRequest
 import com.umc.data.request.workbook.ReviewWorkbookRequest
 import com.umc.domain.model.base.ApiResponse

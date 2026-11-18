@@ -1,7 +1,7 @@
 package com.umc.data.mapper.curriculum
 
-import com.umc.data.remote.response.curriculum.WorkbookSubmissionItemResponse
-import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
+import com.umc.data.response.curriculum.WorkbookSubmissionItemResponse
+import com.umc.data.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.ChallengerWorkbookResponse
 import com.umc.data.response.curriculum.MissionFeedbackResponse
 import com.umc.data.response.curriculum.MissionSubmissionResponse

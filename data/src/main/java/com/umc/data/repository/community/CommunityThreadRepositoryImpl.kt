@@ -5,15 +5,15 @@ import com.google.gson.Gson
 import com.google.gson.stream.MalformedJsonException
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.HttpException
-import com.umc.data.api.ChangeMemberRoleRequest
 import com.umc.data.api.CommunityThreadApi
-import com.umc.data.api.ReportMessageRequest
 import com.umc.data.dataSource.base.NETWORK_ERROR_MESSAGE
 import com.umc.data.dataSource.base.apiCall
 import com.umc.data.mapper.community.toChatDomain
 import com.umc.data.mapper.community.toDomain
+import com.umc.data.request.community.ChangeMemberRoleRequest
 import com.umc.data.request.community.CreateCommunityThreadRequest
 import com.umc.data.request.community.InviteCommunityThreadMembersRequest
+import com.umc.data.request.community.ReportMessageRequest
 import com.umc.data.request.community.UpdateCommunityThreadRequest
 import com.umc.data.dataSource.remote.challenger.ChallengerRemoteDataSource
 import com.umc.data.repository.challenger.ChallengerSearchScope

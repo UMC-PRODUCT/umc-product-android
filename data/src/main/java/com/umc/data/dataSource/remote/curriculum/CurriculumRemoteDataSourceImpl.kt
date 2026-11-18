@@ -6,7 +6,7 @@ import com.umc.data.response.curriculum.CurriculumProgressResponse
 import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
 import com.umc.data.mapper.toFailState
-import com.umc.data.remote.response.curriculum.WorkbookSubmissionsResponse
+import com.umc.data.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.CurriculumOverviewResponse
 import com.umc.domain.model.base.FailState
 import com.umc.data.request.curriculum.CreateBestWorkbookRequest
