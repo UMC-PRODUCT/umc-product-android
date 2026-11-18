@@ -13,6 +13,7 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtBlockExpression
+import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
@@ -229,12 +230,19 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
             return false
         }
 
-        /** 이름 뒤에 ()를 붙여 부를 수 있는 선언인지. 타입을 알 수 없는 변수는 람다를 담았을 때만 그렇다고 본다. */
+        /** 이름 뒤에 ()를 붙여 부를 수 있는 선언인지. 함수이거나 함수 타입 변수·파라미터면 그렇다. */
         private fun KtNamedDeclaration.isCallable(): Boolean = when (this) {
             is KtNamedFunction -> true
-            is KtProperty -> initializer is KtLambdaExpression || typeReference?.text?.contains("->") == true
-            is KtParameter -> typeReference?.text?.contains("->") == true
+            is KtProperty, is KtParameter -> (this as KtCallableDeclaration).hasFunctionType()
             else -> false
+        }
+
+        /** 람다 초기화식이나 명시 타입으로 알 수 없으면 UAST 가 추론한 타입(val p = provider() 등)을 본다. */
+        private fun KtCallableDeclaration.hasFunctionType(): Boolean {
+            if (this is KtProperty && initializer is KtLambdaExpression) return true
+            if (typeReference?.text?.contains("->") == true) return true
+            val type = toUElementOfType<UVariable>()?.type?.canonicalText ?: return false
+            return FUNCTION_TYPE_PREFIXES.any { type.startsWith(it) }
         }
     }
 
@@ -242,6 +250,9 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
         private val REQUEST_CALLBACK_TYPES = setOf("okhttp3.Interceptor", "okhttp3.Authenticator")
         private val REQUEST_CALLBACK_METHODS = setOf("intercept", "authenticate")
         private val OKHTTP_BUILDER_CALLBACKS = listOf("addInterceptor", "addNetworkInterceptor", "authenticator")
+        private val FUNCTION_TYPE_PREFIXES = listOf(
+            "kotlin.jvm.functions.Function", "kotlin.Function", "kotlin.reflect.KFunction", "kotlin.coroutines.SuspendFunction",
+        )
 
         /** 콜백 → 보조 함수 → 보조 함수 … 를 따라가는 최대 깊이. */
         private const val MAX_HELPER_DEPTH = 4

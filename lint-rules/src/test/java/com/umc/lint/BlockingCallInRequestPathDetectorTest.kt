@@ -261,6 +261,16 @@ class BlockingCallInRequestPathDetectorTest {
                         return chain.proceed(chain.request())
                     }
                 }
+
+                class InferredShadowInterceptor(private val load: suspend () -> String) : Interceptor {
+                    private val tokenProvider: () -> String = { runBlocking { load() } }
+                    private fun cachedProvider(): () -> String = { "cached" }
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        val tokenProvider = cachedProvider()
+                        tokenProvider()
+                        return chain.proceed(chain.request())
+                    }
+                }
                 """,
             ).indented(),
         ).expect(
