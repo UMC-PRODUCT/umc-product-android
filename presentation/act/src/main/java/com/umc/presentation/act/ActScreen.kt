@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.presentation.act.admin.attendance.AttendanceRoute
-import com.umc.presentation.study.normal.UserStudyRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerRoute
 import com.umc.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.umc.presentation.act.normal.challenger.NormalChallengerRoute
@@ -49,7 +48,6 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.presentation.study.ActStudyRoute
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -66,12 +64,9 @@ private fun List<ManageTab>.indexOfStudyTab(): Int =
 fun ActManageRoute(
     vm: ActViewModel = hiltViewModel(),
     onNavigateToChallengerDetail: (Long) -> Unit = {},
-    onNavigateCreateStudyGroup: () -> Unit,
-    onNavigateAddStudySchedule: (
-        groupId: Long,
-        groupTitle: String,
-        groupPart: String,
-    ) -> Unit = { _, _, _ -> },
+    // 스터디 탭 화면. :presentation:study 를 직접 의존하지 않도록 상위(:presentation)에서 조립해 넘긴다.
+    adminStudyContent: @Composable (isActive: Boolean) -> Unit,
+    userStudyContent: @Composable (isActive: Boolean) -> Unit,
     // 마이페이지 '나의 스터디'에서 들어왔을 때 스터디 탭을 열어 달라는 일회성 요청
     openStudyTab: Boolean = false,
     onStudyTabOpened: () -> Unit = {},
@@ -86,8 +81,8 @@ fun ActManageRoute(
         uiState = uiState,
         onAdminCheckedChange = vm::setAdminMode,
         onNavigateToChallengerDetail = onNavigateToChallengerDetail,
-        onNavigateCreateStudyGroup = onNavigateCreateStudyGroup,
-        onNavigateAddStudySchedule = onNavigateAddStudySchedule,
+        adminStudyContent = adminStudyContent,
+        userStudyContent = userStudyContent,
         openStudyTab = openStudyTab,
         onStudyTabOpened = onStudyTabOpened,
     )
@@ -98,12 +93,8 @@ fun ActManageScreen(
     uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit,
     onNavigateToChallengerDetail: (Long) -> Unit = {},
-    onNavigateCreateStudyGroup: () -> Unit = {},
-    onNavigateAddStudySchedule: (
-        groupId: Long,
-        groupTitle: String,
-        groupPart: String,
-    ) -> Unit = { _, _, _ -> },
+    adminStudyContent: @Composable (isActive: Boolean) -> Unit = {},
+    userStudyContent: @Composable (isActive: Boolean) -> Unit = {},
     openStudyTab: Boolean = false,
     onStudyTabOpened: () -> Unit = {},
 ) {
@@ -112,21 +103,16 @@ fun ActManageScreen(
     val tabs = remember(
         showAdminTabs,
         onNavigateToChallengerDetail,
-        onNavigateCreateStudyGroup,
-        onNavigateAddStudySchedule,
-        ) {
+        adminStudyContent,
+        userStudyContent,
+    ) {
         if (showAdminTabs) {
             listOf(
                 ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
                     AttendanceRoute(isActive = isActive)
                 },
                 ManageTab(AppStrings.TAB_STUDY_ADMIN) { isActive ->
-                    ActStudyRoute(
-                        isAdmin = true,
-                        isActive = isActive,
-                        onNavigateCreateGroup = onNavigateCreateStudyGroup,
-                        onNavigateAddSchedule = onNavigateAddStudySchedule,
-                    )
+                    adminStudyContent(isActive)
                 },
                 ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
                     AdminChallengerRoute(
@@ -142,7 +128,7 @@ fun ActManageScreen(
                     NormalAttendanceRoute(isActive = isActive)
                 },
                 ManageTab(AppStrings.TAB_STUDY_USER) { isActive ->
-                    UserStudyRoute(isActive = isActive)
+                    userStudyContent(isActive)
                 },
                 ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive ->
                     NormalChallengerRoute(isActive = isActive)

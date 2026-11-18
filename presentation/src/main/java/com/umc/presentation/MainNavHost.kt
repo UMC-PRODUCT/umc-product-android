@@ -52,8 +52,10 @@ import com.umc.presentation.community.chatting.CommunityChattingRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
 import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
+import com.umc.presentation.study.ActStudyRoute
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateRoute
 import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRoute
+import com.umc.presentation.study.normal.UserStudyRoute
 import com.umc.component.base.CollectUiEvents
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
@@ -420,21 +422,26 @@ fun MainNavHost(
                         MainDestination.AdminChallengerDetail(challengerId)
                     )
                 },
-
-                onNavigateCreateStudyGroup = {
-                    navHostController.navigate(
-                        MainDestination.AdminStudyGroupCreate
+                adminStudyContent = { isActive ->
+                    ActStudyRoute(
+                        isAdmin = true,
+                        isActive = isActive,
+                        onNavigateCreateGroup = {
+                            navHostController.navigate(MainDestination.AdminStudyGroupCreate)
+                        },
+                        onNavigateAddSchedule = { groupId, groupTitle, groupPart ->
+                            navHostController.navigate(
+                                MainDestination.AdminStudyGroupSchedule(
+                                    groupId = groupId,
+                                    groupTitle = groupTitle,
+                                    groupPart = groupPart,
+                                )
+                            )
+                        },
                     )
                 },
-
-                onNavigateAddStudySchedule = { groupId, groupTitle, groupPart ->
-                    navHostController.navigate(
-                        MainDestination.AdminStudyGroupSchedule(
-                            groupId = groupId,
-                            groupTitle = groupTitle,
-                            groupPart = groupPart,
-                        )
-                    )
+                userStudyContent = { isActive ->
+                    UserStudyRoute(isActive = isActive)
                 },
             )
         }
