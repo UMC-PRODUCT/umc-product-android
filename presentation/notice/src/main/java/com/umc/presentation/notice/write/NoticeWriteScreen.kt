@@ -1266,6 +1266,8 @@ private fun NoticeWriteScreenFixedGisuPreview() {
             selectedCategory = WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
             boardChips = persistentListOf(BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART),
             boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,
+            // 운영진 공지는 본교 운영진 전체(SCHOOL_PART_LEADER)를 대상으로 한다.
+            isStaffSelected = true,
             availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
             targetGisuId = 12,
             authorityGisuId = 12,

@@ -185,7 +185,7 @@ class NoticeWriteTargetTest {
         )
 
         assertEquals(7, buildNoticeTargetRequest(base.copy(isAllSelected = true))?.targetSchoolId)
-        assertEquals("SCHOOL_CORE", buildNoticeTargetRequest(base.copy(isStaffSelected = true))?.targetNoticeTab)
+        assertEquals("SCHOOL_PART_LEADER", buildNoticeTargetRequest(base.copy(isStaffSelected = true))?.targetNoticeTab)
         assertNull(buildNoticeTargetRequest(base.copy(canWriteAsSchoolCore = false, isStaffSelected = true)))
         assertNull(buildNoticeTargetRequest(base.copy(
             targetGisuId = 9,
@@ -194,14 +194,18 @@ class NoticeWriteTargetTest {
     }
 
     @Test
-    fun `교내 회장단의 운영진 대상은 파트 지정에 따라 구분한다`() {
+    fun `교내 회장단의 운영진 공지는 본교 운영진 전체를 대상으로 하고 파트를 고르면 좁힌다`() {
         val base = state(NoticeWriterRole.SCHOOL_CORE, WriteCategoryType.SCHOOL_CORE)
             .copy(writerSchoolId = 7, isStaffSelected = true)
 
-        assertEquals("SCHOOL_CORE", buildNoticeTargetRequest(base)?.targetNoticeTab)
+        val staff = buildNoticeTargetRequest(base)
+        assertEquals("SCHOOL_PART_LEADER", staff?.targetNoticeTab)
+        assertEquals(7, staff?.targetSchoolId)
+        assertEquals(emptyList<String>(), staff?.targetParts)
         val partTarget = buildNoticeTargetRequest(base.copy(selectedPart = UserPart.PLAN))
         assertEquals("SCHOOL_PART_LEADER", partTarget?.targetNoticeTab)
         assertEquals(7, partTarget?.targetSchoolId)
+        assertEquals(listOf("PLAN"), partTarget?.targetParts)
     }
 
     @Test

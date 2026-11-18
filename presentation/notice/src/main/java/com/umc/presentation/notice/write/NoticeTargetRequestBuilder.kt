@@ -10,7 +10,7 @@ import com.umc.domain.model.request.notice.NoticeTargetRequest
  * 화면 선택을 서버가 허용하는 공지 대상 조합으로 변환한다. null이면 등록할 수 없다.
  * noticeTab은 CHALLENGER(일반), CENTRAL_MEMBER(중앙 운영진), SCHOOL_CORE(학교 회장단), SCHOOL_PART_LEADER(학교 파트장)를 사용한다.
  * 중앙운영진 카테고리는 중앙 운영진만 받는 CENTRAL_MEMBER 공지이며 Super Admin과 총괄단만 발행한다.
- * 교내 회장단의 운영진 공지 칩은 파트가 있으면 SCHOOL_PART_LEADER, 없으면 SCHOOL_CORE로 발행한다.
+ * 교내 회장단의 운영진 공지 칩은 본교 운영진 전체가 받는 SCHOOL_PART_LEADER로 발행하고, 파트를 고르면 그 파트로 좁힌다.
  * 작성 권한에 없는 대상이나 소속 ID가 누락된 조합은 서버 요청 전에 거절한다.
  */
 internal fun buildNoticeTargetRequest(state: NoticeWriteUiState): NoticeTargetRequest? {
@@ -132,8 +132,8 @@ private fun NoticeWriteUiState.schoolTarget(
 
     if (isStaffSelected) {
         if (role != NoticeWriterRole.SCHOOL_CORE) return null
-        val tab = if (part == null) NoticeTab.SCHOOL_CORE else NoticeTab.SCHOOL_PART_LEADER
-        return NoticeTargetRequest(gisuId, null, schoolId, listOfNotNull(part), tab.value)
+        // 운영진 공지는 본교 운영진 전체(파트장 이상)가 받는다. 파트를 고르면 그 파트로 좁힌다.
+        return NoticeTargetRequest(gisuId, null, schoolId, listOfNotNull(part), NoticeTab.SCHOOL_PART_LEADER.value)
     }
     if (!isAllSelected && part == null) return null
     // 학교 공지의 '전체'는 본인 학교 전체를 뜻하므로 schoolId를 유지한다.
