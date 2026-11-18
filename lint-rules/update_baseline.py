@@ -8,23 +8,26 @@
 
 하는 일
 1. 모든 Android 모듈에서 updateLintBaseline 을 돌린다. app 은 checkDependencies 로 의존 모듈까지 포함한다.
-   결과는 저장소 파일이 아니라 실행마다 다른 build/umc-lint-baseline-<id> 에 쓴다(-PumcLintBaselineDir).
+   결과는 저장소 파일이 아니라 실행마다 새로 만드는 시스템 임시 디렉터리에 쓴다(-PumcLintBaselineDir).
    중단된 Gradle 태스크가 데몬에서 끝까지 돌아도 저장소의 baseline 이나 다음 실행의 결과는 건드리지 못한다.
 2. --issue-id 로 지정한 규칙의 항목만 새 결과로 바꾸고, 다른 규칙의 항목은 기존 baseline 그대로 둔다.
    그래서 기존 규칙에 새로 생긴 위반이 이 기회에 baseline 으로 섞여 들어가지 않는다.
 3. 내장 규칙 항목은 남기지 않는다. 남은 항목이 없는 모듈의 baseline 파일은 지운다(없으면 빈 baseline 으로 취급된다).
-4. 모든 결과를 메모리에서 만든 뒤에야 저장소 파일을 바꾼다. 바꾸는 도중 실패하거나 중단되면 실행 전 상태로 되돌린다.
+4. 모든 결과를 메모리에서 만든 뒤에야 저장소 파일을 원자적으로 바꾼다. 바꾸기 전에 원본을 저장소 밖에 백업하고,
+   도중에 실패하거나 중단되면 원래 바이트 그대로 되돌린다.
 5. 원본을 읽기 전부터 반영이 끝날 때까지 잠가서, 동시에 두 번 실행해도 서로의 결과를 덮어쓰지 않는다.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import uuid
 import xml.etree.ElementTree as ET
 from contextlib import contextmanager
@@ -75,7 +78,7 @@ def _issue_key(issue: ET.Element) -> tuple:
     return issue.get("id"), issue.get("message"), file, issue.get("errorLine1")
 
 
-def merge(original: str | None, generated: Path | None, targets: set[str], known_ids: set[str]) -> str | None:
+def merge(original: bytes | None, generated: Path | None, targets: set[str], known_ids: set[str]) -> str | None:
     """
     대상 규칙의 항목은 generated 에서, 다른 UMC 규칙의 항목은 original 에서 가져온 XML 문자열. 항목이 없으면 None.
     기존 항목의 순서를 그대로 두고 대상 규칙 항목만 제자리에서 바꾼다. 새로 생긴 항목은 끝에 붙인다.
@@ -125,6 +128,9 @@ def generate(work: Path) -> dict[Path, Path | None]:
       빈 파일 내용이 그대로 남았으면 그 모듈은 lint 가 돌지 않은 것이다.
     """
     empty = f'<?xml version="1.0" encoding="UTF-8"?>\n<issues format="6" by="update_baseline.py {uuid.uuid4().hex}">\n</issues>\n'
+    # 결과를 모으기 전에 작업 디렉터리가 그대로인지 확인하는 표식. 지워졌으면 0건과 구분할 수 없으므로 중단한다.
+    marker = work / ".update_baseline_run"
+    marker.write_text(empty, encoding="utf-8")
     for module in module_dirs():
         target = work / module.relative_to(ROOT) / BASELINE_NAME
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -140,6 +146,8 @@ def generate(work: Path) -> dict[Path, Path | None]:
         cwd=ROOT,
         check=True,
     )
+    if not marker.exists():
+        raise RuntimeError(f"Gradle 실행 중 작업 디렉터리({work})가 지워졌습니다. 결과를 믿을 수 없어 반영하지 않습니다.")
     results: dict[Path, Path | None] = {}
     not_run: list[Path] = []
     for module in module_dirs():
@@ -159,13 +167,28 @@ def generate(work: Path) -> dict[Path, Path | None]:
     return results
 
 
-def apply(outputs: dict[Path, str | None], originals: dict[Path, str]) -> None:
+def _replace_atomically(path: Path, data: bytes) -> None:
+    """같은 디렉터리의 임시 파일에 쓴 뒤 교체한다. 읽는 쪽이 빈 파일이나 반쯤 쓴 파일을 보지 않는다."""
+    staging = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        staging.write_bytes(data)
+        os.replace(staging, path)
+    finally:
+        staging.unlink(missing_ok=True)
+
+
+def apply(outputs: dict[Path, str | None], originals: dict[Path, bytes]) -> None:
     """
-    outputs 대로 저장소 파일을 바꾼다. 도중에 실패하거나 중단되면 이번 실행이 바꾼 파일을 실행 전 상태로 되돌린다.
-    임시 파일 정리가 실패해도 복구는 계속하고, 되돌리지 못한 경로만 따로 알린다.
+    outputs 대로 저장소 파일을 바꾼다. 바꾸기 전에 원본을 저장소 밖에 백업해 두고, 도중에 실패하거나 중단되면
+    이번 실행이 바꾼 파일을 원래 바이트 그대로 되돌린다. 되돌리지 못하면 백업 위치를 알려 준다.
     """
+    backup_dir = Path(tempfile.mkdtemp(prefix="umc-lint-baseline-backup-"))
+    for path, data in originals.items():
+        target = backup_dir / path.relative_to(ROOT)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+
     touched: list[Path] = []
-    staged: list[Path] = []
     try:
         for path, text in outputs.items():
             if text is None:
@@ -173,44 +196,42 @@ def apply(outputs: dict[Path, str | None], originals: dict[Path, str]) -> None:
                     touched.append(path)
                     path.unlink()
                 continue
-            staging = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
-            staged.append(staging)
-            staging.write_text(text, encoding="utf-8")
             touched.append(path)
-            os.replace(staging, path)
+            _replace_atomically(path, text.encode("utf-8"))
     except BaseException:
         failed: list[Path] = []
-        for staging in staged:
-            try:
-                staging.unlink(missing_ok=True)
-            except OSError:
-                failed.append(staging)
         for path in touched:
             try:
                 if path in originals:
-                    path.write_text(originals[path], encoding="utf-8")
+                    _replace_atomically(path, originals[path])
                 else:
                     path.unlink(missing_ok=True)
             except OSError:
                 failed.append(path)
         if failed:
-            print("되돌리지 못한 경로가 있습니다(git status 로 확인하세요): " +
-                  ", ".join(str(p.relative_to(ROOT)) for p in failed), file=sys.stderr)
+            print("되돌리지 못한 baseline 이 있습니다: " + ", ".join(str(p.relative_to(ROOT)) for p in failed), file=sys.stderr)
+            print(f"원본 백업은 {backup_dir} 에 그대로 남겨 두었습니다. 같은 경로로 복사해 되돌리세요.", file=sys.stderr)
         else:
             print("반영 도중 실패해서 바꾼 baseline 을 실행 전 상태로 되돌렸습니다.", file=sys.stderr)
+            shutil.rmtree(backup_dir, ignore_errors=True)
         raise
+    shutil.rmtree(backup_dir, ignore_errors=True)
 
 
 @contextmanager
 def exclusive_run():
-    """두 실행이 같은 원본을 읽고 서로의 결과를 덮어쓰지 않도록, 원본을 읽기 전부터 반영이 끝날 때까지 잠근다."""
+    """
+    두 실행이 같은 원본을 읽고 서로의 결과를 덮어쓰지 않도록, 원본을 읽기 전부터 반영이 끝날 때까지 잠근다.
+    잠금 파일은 빌드 정리(./gradlew clean, git clean)가 지우지 않는 시스템 임시 디렉터리에 두고,
+    체크아웃 경로마다 다른 이름을 써서 다른 체크아웃끼리는 막지 않는다.
+    """
     try:
         import fcntl
     except ImportError:  # Windows 는 잠금 없이 실행한다.
         yield
         return
-    lock_path = ROOT / "build" / "umc-lint-baseline.lock"
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    checkout = hashlib.sha256(os.fsencode(ROOT)).hexdigest()[:16]
+    lock_path = Path(tempfile.gettempdir()) / f"umc-lint-baseline-{checkout}.lock"
     with open(lock_path, "w") as handle:
         try:
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -240,10 +261,11 @@ def main() -> int:
     print("기록할 규칙:", ", ".join(sorted(targets)))
 
     with exclusive_run():
-        originals = {path: path.read_text(encoding="utf-8") for path in baseline_files()}
-        # Gradle 은 저장소가 아니라 실행마다 다른 임시 경로에 쓴다. 중단된 이전 실행의 데몬 태스크가 늦게 써도
-        # 저장소 파일이나 이번 실행의 결과와 섞이지 않는다.
-        work = ROOT / "build" / f"umc-lint-baseline-{uuid.uuid4().hex}"
+        # 줄바꿈까지 그대로 되돌릴 수 있도록 바이트로 보관한다.
+        originals = {path: path.read_bytes() for path in baseline_files()}
+        # Gradle 은 저장소가 아니라 실행마다 새로 만드는 시스템 임시 디렉터리에 쓴다. 중단된 이전 실행의 데몬 태스크가
+        # 늦게 써도, 빌드 정리가 build 를 지워도 저장소 파일이나 이번 실행의 결과와 섞이지 않는다.
+        work = Path(tempfile.mkdtemp(prefix="umc-lint-baseline-"))
         try:
             generated = generate(work)
             outputs = {
