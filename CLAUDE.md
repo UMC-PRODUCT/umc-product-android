@@ -27,7 +27,7 @@ Compose 전환 중인 멀티모듈 앱(`:app`, `:data`, `:domain`, `:presentatio
 - 현재: AGP 8.12.3, Kotlin 2.2.21, Compose BOM 2025.09.00(foundation 1.9.2 / **material3 1.3.2**), Navigation 2.9.6, minSdk 24, targetSdk 36.
 - 새로 나왔거나 알파·베타인 API는 추측해서 쓰지 말고 릴리스 노트나 소스로 시그니처를 확인한다. 특히 material3가 1.3.2라 material3 1.4+나 Compose 1.13 알파의 API(M3 `TextFieldState` 오버로드 등)는 **이 저장소에 없다**.
 - 버전을 올릴 때는 릴리스 노트에서 `minSdk` 변경을 먼저 확인한다.
-- Kotlin을 올릴 때는 `gradle/libs.versions.toml`의 `kotlin`, `jetbrainsKotlinJvm`, `ksp` 세 ref를 한 PR에서 함께 올린다. 하나만 올리면 `:domain` 컴파일이 깨진다.
+- Kotlin을 올릴 때는 `gradle/libs.versions.toml`의 `kotlin`과 `ksp` ref를 한 PR에서 함께 올린다. Kotlin JVM 플러그인(`:domain`, `:lint-rules`)도 `kotlin` ref를 쓴다. ksp가 `<Kotlin>-<KSP>` 형식인데 접두사가 `kotlin`과 다르면 Gradle 구성 단계에서 실패한다(`gradle/module-rules.gradle.kts`).
 
 ## 보고
 
