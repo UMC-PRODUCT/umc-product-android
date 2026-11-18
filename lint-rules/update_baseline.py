@@ -8,12 +8,13 @@
 
 하는 일
 1. 모든 Android 모듈에서 updateLintBaseline 을 돌린다. app 은 checkDependencies 로 의존 모듈까지 포함한다.
-   결과는 저장소 파일이 아니라 build/umc-lint-baseline 에 쓴다(-PumcLintBaselineDir). 중단된 Gradle 태스크가
-   데몬에서 끝까지 돌아도 저장소의 baseline 은 건드리지 못한다.
+   결과는 저장소 파일이 아니라 실행마다 다른 build/umc-lint-baseline-<id> 에 쓴다(-PumcLintBaselineDir).
+   중단된 Gradle 태스크가 데몬에서 끝까지 돌아도 저장소의 baseline 이나 다음 실행의 결과는 건드리지 못한다.
 2. --issue-id 로 지정한 규칙의 항목만 새 결과로 바꾸고, 다른 규칙의 항목은 기존 baseline 그대로 둔다.
    그래서 기존 규칙에 새로 생긴 위반이 이 기회에 baseline 으로 섞여 들어가지 않는다.
 3. 내장 규칙 항목은 남기지 않는다. 남은 항목이 없는 모듈의 baseline 파일은 지운다(없으면 빈 baseline 으로 취급된다).
 4. 모든 결과를 메모리에서 만든 뒤에야 저장소 파일을 바꾼다. 바꾸는 도중 실패하거나 중단되면 실행 전 상태로 되돌린다.
+5. 원본을 읽기 전부터 반영이 끝날 때까지 잠가서, 동시에 두 번 실행해도 서로의 결과를 덮어쓰지 않는다.
 """
 from __future__ import annotations
 
@@ -26,6 +27,7 @@ import subprocess
 import sys
 import uuid
 import xml.etree.ElementTree as ET
+from contextlib import contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -67,22 +69,45 @@ def parse_args(known_ids: set[str]) -> set[str]:
     return targets
 
 
+def _issue_key(issue: ET.Element) -> tuple:
+    location = issue.find("location")
+    file = location.get("file") if location is not None else None
+    return issue.get("id"), issue.get("message"), file, issue.get("errorLine1")
+
+
 def merge(original: str | None, generated: Path | None, targets: set[str], known_ids: set[str]) -> str | None:
-    """다른 UMC 규칙의 항목은 original 에서, 대상 규칙의 항목은 generated 에서 가져온 XML 문자열. 항목이 없으면 None."""
+    """
+    대상 규칙의 항목은 generated 에서, 다른 UMC 규칙의 항목은 original 에서 가져온 XML 문자열. 항목이 없으면 None.
+    기존 항목의 순서를 그대로 두고 대상 규칙 항목만 제자리에서 바꾼다. 새로 생긴 항목은 끝에 붙인다.
+    그래서 같은 결과로 다시 실행하면 파일이 바뀌지 않는다.
+    """
     if original is None and generated is None:
         return None
+    generated_root = ET.parse(generated).getroot() if generated is not None else None
     old_root = ET.fromstring(original) if original is not None else None
-    tree = ET.parse(generated) if generated is not None else ET.ElementTree(old_root)
-    root = tree.getroot()
-    fresh = [issue for issue in root.findall("issue") if issue.get("id") in targets] if generated else []
-    kept = []
-    if old_root is not None:
-        kept = [i for i in old_root.findall("issue") if i.get("id") in known_ids and i.get("id") not in targets]
+    remaining = [i for i in generated_root.findall("issue") if i.get("id") in targets] if generated_root is not None else []
+
+    ordered: list[ET.Element] = []
+    for issue in old_root.findall("issue") if old_root is not None else []:
+        issue_id = issue.get("id")
+        if issue_id not in known_ids:
+            continue
+        if issue_id not in targets:
+            ordered.append(issue)
+            continue
+        match = next((fresh for fresh in remaining if _issue_key(fresh) == _issue_key(issue)), None)
+        if match is not None:  # 없으면 고쳐진 위반이라 뺀다.
+            remaining.remove(match)
+            ordered.append(match)
+    ordered += remaining
+    if not ordered:
+        return None
+
+    root = generated_root if generated_root is not None else old_root
     for issue in list(root.findall("issue")):
         root.remove(issue)
-    root.extend(kept + fresh)
-    if not kept and not fresh:
-        return None
+    root.extend(ordered)
+    tree = ET.ElementTree(root)
     ET.indent(tree, space="    ")
     buffer = io.BytesIO()
     tree.write(buffer, encoding="UTF-8", xml_declaration=True)
@@ -135,24 +160,66 @@ def generate(work: Path) -> dict[Path, Path | None]:
 
 
 def apply(outputs: dict[Path, str | None], originals: dict[Path, str]) -> None:
-    """outputs 대로 저장소 파일을 바꾼다. 도중에 실패하거나 중단되면 실행 전 상태로 되돌린다."""
+    """
+    outputs 대로 저장소 파일을 바꾼다. 도중에 실패하거나 중단되면 이번 실행이 바꾼 파일을 실행 전 상태로 되돌린다.
+    임시 파일 정리가 실패해도 복구는 계속하고, 되돌리지 못한 경로만 따로 알린다.
+    """
+    touched: list[Path] = []
+    staged: list[Path] = []
     try:
         for path, text in outputs.items():
             if text is None:
-                path.unlink(missing_ok=True)
+                if path.exists():
+                    touched.append(path)
+                    path.unlink()
                 continue
-            staging = path.with_name(path.name + ".tmp")
+            staging = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
+            staged.append(staging)
             staging.write_text(text, encoding="utf-8")
+            touched.append(path)
             os.replace(staging, path)
     except BaseException:
-        for path in outputs:
-            path.with_name(path.name + ".tmp").unlink(missing_ok=True)
-            if path not in originals:
-                path.unlink(missing_ok=True)
-        for path, text in originals.items():
-            path.write_text(text, encoding="utf-8")
-        print("반영 도중 실패해서 baseline 을 실행 전 상태로 되돌렸습니다.", file=sys.stderr)
+        failed: list[Path] = []
+        for staging in staged:
+            try:
+                staging.unlink(missing_ok=True)
+            except OSError:
+                failed.append(staging)
+        for path in touched:
+            try:
+                if path in originals:
+                    path.write_text(originals[path], encoding="utf-8")
+                else:
+                    path.unlink(missing_ok=True)
+            except OSError:
+                failed.append(path)
+        if failed:
+            print("되돌리지 못한 경로가 있습니다(git status 로 확인하세요): " +
+                  ", ".join(str(p.relative_to(ROOT)) for p in failed), file=sys.stderr)
+        else:
+            print("반영 도중 실패해서 바꾼 baseline 을 실행 전 상태로 되돌렸습니다.", file=sys.stderr)
         raise
+
+
+@contextmanager
+def exclusive_run():
+    """두 실행이 같은 원본을 읽고 서로의 결과를 덮어쓰지 않도록, 원본을 읽기 전부터 반영이 끝날 때까지 잠근다."""
+    try:
+        import fcntl
+    except ImportError:  # Windows 는 잠금 없이 실행한다.
+        yield
+        return
+    lock_path = ROOT / "build" / "umc-lint-baseline.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(lock_path, "w") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit("다른 update_baseline.py 가 실행 중입니다. 끝난 뒤 다시 실행하세요.")
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
 
 
 def summary(text: str | None) -> str:
@@ -172,20 +239,20 @@ def main() -> int:
     targets = parse_args(known_ids)
     print("기록할 규칙:", ", ".join(sorted(targets)))
 
-    originals = {path: path.read_text(encoding="utf-8") for path in baseline_files()}
-    # 실행과 무관한 고정 경로라서, 중단된 데몬 태스크가 나중에 써도 저장소 파일은 건드리지 않는다.
-    work = ROOT / "build" / "umc-lint-baseline"
-    shutil.rmtree(work, ignore_errors=True)
-    try:
-        generated = generate(work)
-        outputs = {
-            path: merge(originals.get(path), generated.get(path), targets, known_ids)
-            for path in sorted(set(generated) | set(originals))
-        }
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
-
-    apply(outputs, originals)
+    with exclusive_run():
+        originals = {path: path.read_text(encoding="utf-8") for path in baseline_files()}
+        # Gradle 은 저장소가 아니라 실행마다 다른 임시 경로에 쓴다. 중단된 이전 실행의 데몬 태스크가 늦게 써도
+        # 저장소 파일이나 이번 실행의 결과와 섞이지 않는다.
+        work = ROOT / "build" / f"umc-lint-baseline-{uuid.uuid4().hex}"
+        try:
+            generated = generate(work)
+            outputs = {
+                path: merge(originals.get(path), generated.get(path), targets, known_ids)
+                for path in sorted(set(generated) | set(originals))
+            }
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+        apply(outputs, originals)
     for path, text in outputs.items():
         if text is not None or path in originals:
             print(f"{path.relative_to(ROOT)}: {summary(text)}")
