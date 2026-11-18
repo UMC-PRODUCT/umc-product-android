@@ -28,6 +28,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import javax.inject.Inject
 
 // 공지 목록 조회 탭 (서버 스펙)
@@ -393,16 +395,19 @@ class NoticeViewModel @Inject constructor(
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
+        val response = getNoticeListUseCase(
+            gisuId = state.selectedGisu,
+            noticeTab = query.noticeTab,
+            chapterId = query.chapterId,
+            schoolId = query.schoolId,
+            part = query.part,
+            page = pageToFetch,
+            size = 20
+        )
+        // apiCall이 취소를 실패 응답으로 바꾸므로, 취소된 이전 조회가 새 조회의 로딩·오류 상태를 덮어쓰지 않게 한다.
+        currentCoroutineContext().ensureActive()
         resultResponse(
-            response = getNoticeListUseCase(
-                gisuId = state.selectedGisu,
-                noticeTab = query.noticeTab,
-                chapterId = query.chapterId,
-                schoolId = query.schoolId,
-                part = query.part,
-                page = pageToFetch,
-                size = 20
-            ),
+            response = response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
