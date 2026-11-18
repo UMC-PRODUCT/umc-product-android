@@ -45,6 +45,43 @@ class NoticeAccessTest {
         assertEquals(7L, user.noticeWriterSchoolId(10))
     }
 
+    @Test
+    fun `v2 응답의 지부장 역할은 학교 ID가 아니라 역할의 지부 ID를 사용한다`() {
+        // v2 매퍼는 모든 역할을 SCHOOL 소속, organizationId = 회원 학교 ID로 복원한다.
+        val user = UserInfo(
+            schoolId = 99,
+            roles = listOf(
+                role(UserChallengerRole.SCHOOL_PRESIDENT, 11).copy(organizationType = "SCHOOL", organizationId = 99, chapterId = 5),
+                role(UserChallengerRole.CHAPTER_PRESIDENT, 11).copy(organizationType = "SCHOOL", organizationId = 99, chapterId = 5),
+            ),
+        )
+
+        assertEquals(5L, user.noticeWriterChapterId(11))
+    }
+
+    @Test
+    fun `v1 응답의 지부장 역할은 CHAPTER 소속 ID를 사용한다`() {
+        val user = UserInfo(
+            roles = listOf(
+                role(UserChallengerRole.CHAPTER_PRESIDENT, 11).copy(organizationType = "CHAPTER", organizationId = 8, chapterId = 5),
+            ),
+        )
+
+        assertEquals(8L, user.noticeWriterChapterId(11))
+    }
+
+    @Test
+    fun `권한 기수에 지부장 역할이 없으면 지부 ID가 없다`() {
+        val user = UserInfo(
+            roles = listOf(
+                role(UserChallengerRole.CHAPTER_PRESIDENT, 10).copy(organizationType = "CHAPTER", organizationId = 8),
+                role(UserChallengerRole.SCHOOL_PRESIDENT, 11).copy(organizationType = "SCHOOL", organizationId = 99, chapterId = 5),
+            ),
+        )
+
+        assertNull(user.noticeWriterChapterId(11))
+    }
+
     private fun role(type: UserChallengerRole, gisuId: Long) = UserRole(
         id = 1,
         challengerId = 1,

@@ -18,6 +18,7 @@ import com.umc.domain.model.notice.NoticeImageAttachment
 import com.umc.domain.model.notice.NoticeVoteForm
 import com.umc.domain.model.notice.WriteCategory
 import com.umc.domain.model.notice.noticeRolesForGisu
+import com.umc.domain.model.notice.noticeWriterChapterId
 import com.umc.domain.model.notice.noticeWriterRole
 import com.umc.domain.model.notice.noticeWriterSchoolId
 import com.umc.domain.model.UserInfo
@@ -241,9 +242,8 @@ class NoticeWriteViewModel @Inject constructor(
                 availableGisus = knownGisus.toImmutableList(),
                 // 서버는 활성 기수의 학교 역할 소속과 대상 학교를 비교한다.
                 writerSchoolId = userInfo.noticeWriterSchoolId(activeGisuId ?: 0L)?.toInt(),
-                writerChapterId = userInfo.roles
-                    .firstOrNull { it.gisuId == activeGisuId && it.roleType == UserChallengerRole.CHAPTER_PRESIDENT.name }
-                    ?.let { it.organizationId ?: it.chapterId }?.toInt(),
+                // 서버는 지부장 역할의 담당 지부와 대상 지부를 비교한다.
+                writerChapterId = userInfo.noticeWriterChapterId(activeGisuId ?: 0L)?.toInt(),
             )
         }
         loadTargetOrganization(targetGisuId)
