@@ -368,10 +368,10 @@ class NoticeWriteViewModel @Inject constructor(
                 add(WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER))
             }
 
+            // 중앙운영진 대상(CENTRAL_MEMBER) 공지는 서버가 총괄단에게만 허용한다.
             NoticeWriterRole.CENTRAL_STAFF ->
                 listOfNotNull(
                     if (currentGeneration != null) WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU) else null,
-                    WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL),
                     WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
                     WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER),
                 )
@@ -423,9 +423,7 @@ class NoticeWriteViewModel @Inject constructor(
             when (writerRole) {
                 NoticeWriterRole.CENTRAL_CORE, NoticeWriterRole.CENTRAL_STAFF -> when (categoryType) {
                     WriteCategoryType.GISU -> listOf(BoardChipType.ALL, BoardChipType.PART) to null
-                    WriteCategoryType.CENTRAL_STAFF -> listOf(
-                        BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
-                    ) to AppStrings.NOTICE_WRITE_CLASS_HINT
+                    // 중앙운영진 카테고리는 대상 칩 없이 CENTRAL_MEMBER로 발행한다.
                     WriteCategoryType.SCHOOL_PART_LEADER -> listOf(BoardChipType.PART) to null
                     else -> emptyList<BoardChipType>() to null
                 }

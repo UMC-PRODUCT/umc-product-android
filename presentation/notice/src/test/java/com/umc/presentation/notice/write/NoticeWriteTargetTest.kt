@@ -57,52 +57,41 @@ class NoticeWriteTargetTest {
     }
 
     @Test
-    fun `총괄단은 전체 기수와 중앙 운영진 권한의 운영진 공지를 작성할 수 있다`() {
+    fun `총괄단은 전체 기수와 중앙운영진 대상 공지를 작성할 수 있다`() {
         val all = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_CORE, WriteCategoryType.ALL_GISU))
-        val central = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_CORE, WriteCategoryType.CENTRAL_STAFF)
-            .copy(isStaffSelected = true))
+        val central = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_CORE, WriteCategoryType.CENTRAL_STAFF))
 
         assertNull(all?.targetGisuId)
         assertEquals("CHALLENGER", all?.targetNoticeTab)
         assertEquals(12, central?.targetGisuId)
-        assertEquals("SCHOOL_CORE", central?.targetNoticeTab)
+        assertEquals("CENTRAL_MEMBER", central?.targetNoticeTab)
+        assertEquals(emptyList<String>(), central?.targetParts)
     }
 
     @Test
-    fun `중앙 운영진은 중앙 운영진 권한으로 일반 공지와 운영진 공지를 작성한다`() {
-        val base = state(NoticeWriterRole.CENTRAL_STAFF, WriteCategoryType.CENTRAL_STAFF)
+    fun `중앙운영진 카테고리는 대상 칩을 고르면 발행하지 않는다`() {
+        val base = state(NoticeWriterRole.CENTRAL_CORE, WriteCategoryType.CENTRAL_STAFF)
 
-        assertNull(buildNoticeTargetRequest(base))
-        assertEquals("CHALLENGER", buildNoticeTargetRequest(base.copy(isAllSelected = true))?.targetNoticeTab)
-        assertEquals(listOf("PLAN"), buildNoticeTargetRequest(base.copy(selectedPart = UserPart.PLAN))?.targetParts)
-        assertEquals("SCHOOL_CORE", buildNoticeTargetRequest(base.copy(isStaffSelected = true))?.targetNoticeTab)
-        val partStaff = buildNoticeTargetRequest(base.copy(isStaffSelected = true, selectedPart = UserPart.PLAN))
-        assertEquals("SCHOOL_PART_LEADER", partStaff?.targetNoticeTab)
-        assertEquals(listOf("PLAN"), partStaff?.targetParts)
-        assertNull(partStaff?.targetSchoolId)
+        assertNull(buildNoticeTargetRequest(base.copy(isAllSelected = true)))
+        assertNull(buildNoticeTargetRequest(base.copy(isStaffSelected = true)))
+        assertNull(buildNoticeTargetRequest(base.copy(selectedPart = UserPart.DESIGN)))
+    }
+
+    @Test
+    fun `중앙 운영국·교육국은 중앙운영진 대상 공지를 작성할 수 없고 학교 운영진 대상 공지는 작성한다`() {
+        val central = state(NoticeWriterRole.CENTRAL_STAFF, WriteCategoryType.CENTRAL_STAFF)
+
+        assertNull(buildNoticeTargetRequest(central))
+        assertNull(buildNoticeTargetRequest(central.copy(isAllSelected = true)))
 
         val schoolCore = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_STAFF, WriteCategoryType.SCHOOL_CORE))
         assertEquals("SCHOOL_CORE", schoolCore?.targetNoticeTab)
         assertNull(schoolCore?.targetSchoolId)
-    }
-
-    @Test
-    fun `총괄단도 중앙 운영진 권한의 칩 조합을 요청에 반영한다`() {
-        val base = state(NoticeWriterRole.CENTRAL_CORE, WriteCategoryType.CENTRAL_STAFF)
-
-        assertNull(buildNoticeTargetRequest(base))
-        val all = buildNoticeTargetRequest(base.copy(isAllSelected = true))
-        assertEquals("CHALLENGER", all?.targetNoticeTab)
-        assertEquals(emptyList<String>(), all?.targetParts)
-        val generalPart = buildNoticeTargetRequest(base.copy(selectedPart = UserPart.DESIGN))
-        assertEquals("CHALLENGER", generalPart?.targetNoticeTab)
-        assertEquals(listOf("DESIGN"), generalPart?.targetParts)
-        val staff = buildNoticeTargetRequest(base.copy(isStaffSelected = true))
-        assertEquals("SCHOOL_CORE", staff?.targetNoticeTab)
-        val staffPart = buildNoticeTargetRequest(base.copy(isStaffSelected = true, selectedPart = UserPart.DESIGN))
-        assertEquals("SCHOOL_PART_LEADER", staffPart?.targetNoticeTab)
-        assertEquals(listOf("DESIGN"), staffPart?.targetParts)
-        assertNull(buildNoticeTargetRequest(base.copy(isAllSelected = true, isStaffSelected = true)))
+        val partLeader = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_STAFF, WriteCategoryType.SCHOOL_PART_LEADER)
+            .copy(selectedPart = UserPart.PLAN))
+        assertEquals("SCHOOL_PART_LEADER", partLeader?.targetNoticeTab)
+        assertEquals(listOf("PLAN"), partLeader?.targetParts)
+        assertNull(partLeader?.targetSchoolId)
     }
 
     @Test
@@ -250,8 +239,7 @@ class NoticeWriteTargetTest {
         val otherGisu = GisuItem(gisuId = 9, generation = 9)
         val cases = listOf(
             state(NoticeWriterRole.SUPER_ADMIN, WriteCategoryType.SCHOOL_CORE),
-            state(NoticeWriterRole.CENTRAL_CORE, WriteCategoryType.CENTRAL_STAFF)
-                .copy(isStaffSelected = true),
+            state(NoticeWriterRole.CENTRAL_CORE, WriteCategoryType.CENTRAL_STAFF),
         )
 
         cases.forEach { current ->

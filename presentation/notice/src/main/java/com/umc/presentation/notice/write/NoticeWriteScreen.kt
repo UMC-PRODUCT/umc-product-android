@@ -1238,11 +1238,15 @@ private fun NoticeWriteScreenSpecificGisuPreview() {
     NoticeWriteScreen(
         uiState = NoticeWriteUiState(
             writerRole = NoticeWriterRole.CENTRAL_CORE,
-            selectedCategory = WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL),
-            boardChips = persistentListOf(
-                BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART,
+            availableCategories = persistentListOf(
+                WriteCategory(WriteCategoryType.ALL_GISU, AppStrings.NOTICE_WRITE_ALL_GISU),
+                WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU),
+                WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL),
+                WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
+                WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER),
             ),
-            boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,
+            // 중앙운영진 카테고리는 대상 칩 없이 CENTRAL_MEMBER로 발행한다.
+            selectedCategory = WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL),
             availableGisus = persistentListOf(
                 GisuItem(gisuId = 12, generation = 12),
                 GisuItem(gisuId = 9, generation = 9),

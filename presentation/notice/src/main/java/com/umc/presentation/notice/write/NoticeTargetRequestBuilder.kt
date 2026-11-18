@@ -9,7 +9,8 @@ import com.umc.domain.model.request.notice.NoticeTargetRequest
 /**
  * 화면 선택을 서버가 허용하는 공지 대상 조합으로 변환한다. null이면 등록할 수 없다.
  * noticeTab은 CHALLENGER(일반), CENTRAL_MEMBER(중앙 운영진), SCHOOL_CORE(학교 회장단), SCHOOL_PART_LEADER(학교 파트장)를 사용한다.
- * 운영진 공지 칩은 파트가 있으면 SCHOOL_PART_LEADER, 없으면 SCHOOL_CORE로 발행하며, Super Admin의 중앙 운영진 카테고리만 CENTRAL_MEMBER로 발행한다.
+ * 중앙운영진 카테고리는 중앙 운영진만 받는 CENTRAL_MEMBER 공지이며 Super Admin과 총괄단만 발행한다.
+ * 교내 회장단의 운영진 공지 칩은 파트가 있으면 SCHOOL_PART_LEADER, 없으면 SCHOOL_CORE로 발행한다.
  * 작성 권한에 없는 대상이나 소속 ID가 누락된 조합은 서버 요청 전에 거절한다.
  */
 internal fun buildNoticeTargetRequest(state: NoticeWriteUiState): NoticeTargetRequest? {
@@ -81,25 +82,19 @@ private fun NoticeWriteUiState.centralTarget(
     }
 }
 
-/** 중앙 운영진 카테고리를 변환한다. Super Admin의 요청만 CENTRAL_MEMBER 탭으로 발행한다. */
+/**
+ * 중앙운영진 카테고리를 CENTRAL_MEMBER 공지로 변환한다.
+ * 서버는 이 공지를 총괄단(과 Super Admin)에게만 허용하고, 대상 칩 없이 기수만 지정한다.
+ */
 private fun NoticeWriteUiState.centralStaffTarget(
     role: NoticeWriterRole,
     gisuId: Int,
     part: String?,
 ): NoticeTargetRequest? {
+    if (role != NoticeWriterRole.SUPER_ADMIN && role != NoticeWriterRole.CENTRAL_CORE) return null
     if (selectedChapter != null || selectedSchool != null) return null
-    if (role == NoticeWriterRole.SUPER_ADMIN) {
-        if (isAllSelected || isStaffSelected || part != null) return null
-        return NoticeTargetRequest(gisuId, null, null, emptyList(), NoticeTab.CENTRAL_MEMBER.value)
-    }
-    if (isAllSelected && (isStaffSelected || part != null)) return null
-    if (isStaffSelected) {
-        // 중앙 권한의 운영진 공지는 파트 유무에 따라 회장단·파트장 탭으로 발행한다.
-        val tab = if (part == null) NoticeTab.SCHOOL_CORE else NoticeTab.SCHOOL_PART_LEADER
-        return NoticeTargetRequest(gisuId, null, null, listOfNotNull(part), tab.value)
-    }
-    if (!isAllSelected && part == null) return null
-    return NoticeTargetRequest(gisuId, null, null, listOfNotNull(part), NoticeTab.CHALLENGER.value)
+    if (isAllSelected || isStaffSelected || part != null) return null
+    return NoticeTargetRequest(gisuId, null, null, emptyList(), NoticeTab.CENTRAL_MEMBER.value)
 }
 
 /** 지부장 전용 탭이 없어 본인 지부 ID를 지정한 CHALLENGER 공지로 발행한다. */
