@@ -1,6 +1,5 @@
 package com.umc.lint
 
-import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -10,7 +9,8 @@ import com.android.tools.lint.detector.api.Severity
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
-import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 /**
  * LaunchedEffect 안에서 수명주기를 고려하지 않고 이벤트 Flow를 수집하는 것을 금지한다.
@@ -28,8 +28,8 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
 
         // snapshotFlow 는 컴포지션 상태를 관찰하는 용도라 단발성 이벤트가 아니다.
         // 화면이 가려진 동안에도 스크롤 위치 추적 등은 계속돼야 하므로 대상에서 제외한다.
-        val receiverText = node.receiver?.sourcePsi?.text.orEmpty()
-        if (STATE_OBSERVERS.any { receiverText.contains(it) }) return
+        // 소스 텍스트가 아니라 실제 호출 대상을 본다. import 별칭을 쓰면 텍스트에 "snapshotFlow"가 남지 않는다.
+        if (callsAnyOf(node.receiver, STATE_OBSERVERS)) return
 
         var inLaunchedEffect = false
         var guarded = false
@@ -54,6 +54,17 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
         )
     }
 
+    private fun callsAnyOf(expression: UExpression?, names: Set<String>): Boolean {
+        var found = false
+        expression?.accept(object : AbstractUastVisitor() {
+            override fun visitCallExpression(node: UCallExpression): Boolean {
+                if ((node.resolve()?.name ?: node.methodName) in names) found = true
+                return found
+            }
+        })
+        return found
+    }
+
     companion object {
         private val STATE_OBSERVERS = setOf("snapshotFlow", "derivedStateOf")
 
@@ -69,9 +80,9 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
                 repeatOnLifecycle(Lifecycle.State.STARTED) 안에서 수집해 화면이 보이는 동안만 \
                 소비하도록 하세요.
             """.trimIndent(),
-            category = Category.CORRECTNESS,
+            category = UMC_CATEGORY,
             priority = 7,
-            severity = Severity.WARNING,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 LifecycleUnawareCollectDetector::class.java,
                 Scope.JAVA_FILE_SCOPE,

@@ -1,6 +1,5 @@
 package com.umc.lint
 
-import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -53,7 +52,7 @@ class OneShotEventFlowDetector : Detector(), Detector.UastScanner {
                 단발성 이벤트는 Channel(Channel.BUFFERED) + receiveAsFlow()로 내보내세요. \
                 버퍼에 보관됐다가 구독이 붙는 시점에 전달되고, 단일 소비라 재구독 시 중복도 없습니다.
             """.trimIndent(),
-            category = Category.CORRECTNESS,
+            category = UMC_CATEGORY,
             priority = 9,
             severity = Severity.ERROR,
             implementation = Implementation(

@@ -1,6 +1,5 @@
 package com.umc.lint
 
-import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -56,9 +55,9 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                 토큰 적재는 suspend 를 지원하는 경로(Ktor Auth 의 loadTokens 등)로 옮기거나, \
                 메모리에 캐시된 값을 사용하세요.
             """.trimIndent(),
-            category = Category.PERFORMANCE,
+            category = UMC_CATEGORY,
             priority = 8,
-            severity = Severity.WARNING,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 BlockingCallInRequestPathDetector::class.java,
                 Scope.JAVA_FILE_SCOPE,
