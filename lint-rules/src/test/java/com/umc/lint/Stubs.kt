@@ -84,6 +84,14 @@ object Stubs {
             throw UnsupportedOperationException()
 
         suspend fun <T> Flow<T>.collectLatest(action: suspend (T) -> Unit) {}
+
+        fun <T> merge(vararg flows: Flow<T>): Flow<T> = throw UnsupportedOperationException()
+        fun <T, R> Flow<T>.map(transform: suspend (T) -> R): Flow<R> = throw UnsupportedOperationException()
+        fun <T> Flow<T>.distinctUntilChanged(): Flow<T> = this
+        fun <T1, T2, R> Flow<T1>.combine(other: Flow<T2>, transform: suspend (T1, T2) -> R): Flow<R> =
+            throw UnsupportedOperationException()
+        fun <T, R> Flow<T>.flatMapLatest(transform: suspend (T) -> Flow<R>): Flow<R> =
+            throw UnsupportedOperationException()
         """,
     ).indented()
 
@@ -124,16 +132,29 @@ object Stubs {
         """,
     ).indented()
 
+    private val ktorClient = kotlin(
+        "src/io/ktor/client/HttpClientConfig.kt",
+        """
+        package io.ktor.client
+
+        class HttpClientConfig<T>
+        """,
+    ).indented()
+
     private val ktor = kotlin(
         "src/io/ktor/client/plugins/DefaultRequest.kt",
         """
         package io.ktor.client.plugins
 
-        class DefaultRequestBuilder {
-            fun header(key: String, value: String) {}
+        import io.ktor.client.HttpClientConfig
+
+        class DefaultRequest {
+            class DefaultRequestBuilder {
+                fun header(key: String, value: String) {}
+            }
         }
 
-        fun Any.defaultRequest(block: DefaultRequestBuilder.() -> Unit) {}
+        fun HttpClientConfig<*>.defaultRequest(block: DefaultRequest.DefaultRequestBuilder.() -> Unit) {}
         """,
     ).indented()
 
@@ -151,7 +172,7 @@ object Stubs {
     ).indented()
 
     val ALL: Array<TestFile> = arrayOf(
-        material3, foundationText, runtime, lifecycle, coroutines, flow, okhttp, ktor, lookalikes,
+        material3, foundationText, runtime, lifecycle, coroutines, flow, okhttp, ktorClient, ktor, lookalikes,
     )
 
     /** :presentation:component 모듈처럼 namespace가 com.umc.component인 모듈. */

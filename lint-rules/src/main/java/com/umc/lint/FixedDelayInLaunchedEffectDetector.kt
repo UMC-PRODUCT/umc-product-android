@@ -117,11 +117,14 @@ class FixedDelayInLaunchedEffectDetector : Detector(), Detector.UastScanner {
                 안정화가 끝나길 맞추면, 느린 기기·애니메이션 배율 변경·접근성 설정에서 타이밍이 어긋납니다. \
                 어긋날 때마다 숫자를 늘리는 땜질로 이어지기 쉽습니다.
 
-                기다리는 대상을 상태로 관찰하세요. 키보드는 snapshotFlow { imeBottom }.first { it > 0 }처럼 \
-                값이 바뀌길 기다리고, 배치가 끝나야 하는 작업(requestFocus() 등)은 대상의 \
-                onGloballyPositioned에서 배치 여부를 상태로 기록한 뒤 그 상태가 준비됐을 때 실행하면 됩니다. \
-                자동 닫힘 타이머처럼 시간 자체가 요구사항이라면 @Suppress("FixedDelayInLaunchedEffect")로 \
-                의도를 남기세요.
+                기다리는 대상을 상태로 관찰하세요. snapshotFlow { imeBottom }.first { it > 0 }은 키보드가 \
+                나타나기 시작하는 시점에 재개합니다. 키보드가 다 올라온 뒤의 최종 높이가 필요하면 \
+                WindowInsets.imeAnimationTarget(ExperimentalLayoutApi) 높이가 0보다 커진 뒤, 현재 \
+                WindowInsets.ime 높이가 그 값과 같아질 때까지 기다리세요. 키보드가 뜨기 전에는 둘 다 0이라 \
+                "같다"만 확인하면 바로 재개됩니다. \
+                배치가 끝나야 하는 작업(requestFocus() 등)은 대상의 onGloballyPositioned에서 배치 여부를 상태로 \
+                기록한 뒤 그 상태가 준비됐을 때 실행하면 됩니다. 자동 닫힘 타이머처럼 시간 자체가 요구사항이라면 \
+                @Suppress("FixedDelayInLaunchedEffect")로 의도를 남기세요.
             """.trimIndent(),
             category = UMC_CATEGORY,
             priority = 5,

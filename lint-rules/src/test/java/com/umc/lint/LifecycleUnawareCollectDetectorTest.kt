@@ -96,4 +96,88 @@ class LifecycleUnawareCollectDetectorTest {
             ).indented(),
         ).expectErrorCount(1)
     }
+
+    @Test
+    fun `merge의 일부 Flow만 보호하면 오류, 합친 Flow 전체를 보호하면 허용`() {
+        lintWith(
+            LifecycleUnawareCollectDetector.ISSUE,
+            kotlin(
+                """
+                package com.umc.presentation.home
+
+                import androidx.compose.runtime.LaunchedEffect
+                import androidx.compose.runtime.snapshotFlow
+                import androidx.lifecycle.flowWithLifecycle
+                import kotlinx.coroutines.flow.Flow
+                import kotlinx.coroutines.flow.merge
+
+                fun HomeRoute(events: Flow<String>, other: Flow<String>, lifecycle: Any) {
+                    LaunchedEffect(Unit) {
+                        merge(events, other.flowWithLifecycle(lifecycle)).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        merge(snapshotFlow { "scroll" }, events).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        merge(events, other).flowWithLifecycle(lifecycle).collect { }
+                    }
+                }
+                """,
+            ).indented(),
+        ).expectErrorCount(2)
+    }
+
+    @Test
+    fun `Compose가 아닌 동명 LaunchedEffect는 무시`() {
+        lintWith(
+            LifecycleUnawareCollectDetector.ISSUE,
+            kotlin(
+                """
+                package com.umc.presentation.home
+
+                import kotlinx.coroutines.flow.Flow
+                import sample.LaunchedEffect
+
+                fun Poller(events: Flow<String>) {
+                    LaunchedEffect(Unit) {
+                        events.collect { }
+                    }
+                }
+                """,
+            ).indented(),
+        ).expectClean()
+    }
+
+    @Test
+    fun `보호 연산자 뒤에 다른 Flow를 합치면 오류, 값만 바꾸는 연산자는 허용`() {
+        lintWith(
+            LifecycleUnawareCollectDetector.ISSUE,
+            kotlin(
+                """
+                package com.umc.presentation.home
+
+                import androidx.compose.runtime.LaunchedEffect
+                import androidx.compose.runtime.snapshotFlow
+                import androidx.lifecycle.flowWithLifecycle
+                import kotlinx.coroutines.flow.Flow
+                import kotlinx.coroutines.flow.combine
+                import kotlinx.coroutines.flow.distinctUntilChanged
+                import kotlinx.coroutines.flow.flatMapLatest
+                import kotlinx.coroutines.flow.map
+
+                fun HomeRoute(events: Flow<String>, lifecycle: Any, offset: () -> Int) {
+                    LaunchedEffect(Unit) {
+                        snapshotFlow { offset() }.combine(events) { a, b -> a to b }.collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).flatMapLatest { events }.collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        snapshotFlow { offset() }.map { it * 2 }.distinctUntilChanged().collect { }
+                    }
+                }
+                """,
+            ).indented(),
+        ).expectErrorCount(2)
+    }
 }
