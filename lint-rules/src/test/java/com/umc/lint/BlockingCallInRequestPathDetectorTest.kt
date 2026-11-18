@@ -381,6 +381,14 @@ class BlockingCallInRequestPathDetectorTest {
                     }
                 }
 
+                class ImplicitReceiverInterceptor(private val other: Cached, private val load: suspend () -> String) : Interceptor {
+                    private val tokenProvider: () -> String = { runBlocking { load() } }
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        with(other) { tokenProvider() }
+                        return chain.proceed(chain.request())
+                    }
+                }
+
                 class OverloadNameInterceptor(private val load: suspend () -> String) : Interceptor {
                     private val tokenProvider: () -> String = { runBlocking { load() } }
                     private fun tokenProvider(mode: Int): String = "cached"

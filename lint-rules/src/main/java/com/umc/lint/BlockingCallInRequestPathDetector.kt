@@ -14,6 +14,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
@@ -33,6 +34,8 @@ import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.UResolvable
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
@@ -194,10 +197,17 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                     val resolvedElsewhere = resolvedDeclaration is KtNamedFunction && resolvedDeclaration != calledByName
                     if (calledByName != null && !resolvedElsewhere) {
                         val call = node.sourcePsi as? KtCallExpression
-                        if (call != null && call.calleeExpression?.text == calledByName.name && !hasOtherReceiver(call) &&
-                            PsiTreeUtil.isAncestor(calledByName.parent, call, true) && !isShadowed(call, calledByName)
-                        ) {
-                            check(node, calledByName)
+                        if (call != null && call.calleeExpression?.text == calledByName.name) {
+                            // 호출 이름을 UAST 로 해석할 수 있으면 실제 선언과 비교한다(with(other) { tokenProvider() } 같은
+                            // 암시적 수신자도 구분된다). 해석되지 않을 때만 범위·수신자·가림 여부로 추정한다.
+                            val target = calleeDeclaration(call)
+                            val matches = if (target != null) {
+                                target == calledByName
+                            } else {
+                                PsiTreeUtil.isAncestor(calledByName.parent, call, true) &&
+                                    !hasOtherReceiver(call) && !isShadowed(call, calledByName)
+                            }
+                            if (matches) check(node, calledByName)
                         }
                     }
                     return found
@@ -210,6 +220,14 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                 }
             })
             return found
+        }
+
+        /** 호출 이름이 가리키는 선언. 로컬 함수는 UAST 가 감싼 변수로 해석되므로 원래 Kotlin 선언을 꺼낸다. */
+        private fun calleeDeclaration(call: KtCallExpression): PsiElement? {
+            val resolved = (call.calleeExpression?.toUElement() as? UResolvable)?.resolve() ?: return null
+            val navigation = resolved.navigationElement
+            if (navigation is KtElement) return navigation
+            return resolved.toUElement()?.sourcePsi as? KtElement
         }
 
         /** other.tokenProvider() 처럼 this 가 아닌 수신자로 부르면 다른 객체의 같은 이름 프로퍼티다. */

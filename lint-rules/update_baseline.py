@@ -221,7 +221,10 @@ def apply(outputs: dict[Path, str | None], originals: dict[Path, bytes]) -> None
 
 def _private_state_dir() -> Path:
     """현재 사용자만 쓸 수 있는 상태 디렉터리. 다른 사용자가 만들었거나 권한이 열려 있으면 쓰지 않는다."""
-    state_dir = Path.home() / ".local" / "state" / "umc-lint-baseline"
+    # HOME 환경 변수가 아니라 계정 정보의 홈 디렉터리를 써서, 같은 사용자의 실행은 항상 같은 잠금을 연다.
+    import pwd
+
+    state_dir = Path(pwd.getpwuid(os.getuid()).pw_dir) / ".local" / "state" / "umc-lint-baseline"
     state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     info = state_dir.lstat()
     if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
@@ -233,8 +236,8 @@ def _private_state_dir() -> Path:
 def exclusive_run():
     """
     두 실행이 같은 원본을 읽고 서로의 결과를 덮어쓰지 않도록, 원본을 읽기 전부터 반영이 끝날 때까지 잠근다.
-    잠금 파일은 빌드 정리(./gradlew clean, git clean)가 지우지 않고 TMPDIR 같은 환경 변수에 따라 바뀌지 않는
-    사용자 전용 디렉터리(~/.local/state/umc-lint-baseline)에 두고, 체크아웃 경로마다 다른 이름을 써서
+    잠금 파일은 빌드 정리(./gradlew clean, git clean)가 지우지 않고 TMPDIR·HOME 같은 환경 변수에 따라 바뀌지 않는
+    계정 홈의 사용자 전용 디렉터리(~/.local/state/umc-lint-baseline)에 두고, 체크아웃 경로마다 다른 이름을 써서
     다른 체크아웃끼리는 막지 않는다.
     """
     try:
