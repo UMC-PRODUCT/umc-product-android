@@ -8,13 +8,17 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.toUElement
 
 /**
  * LaunchedEffect 안에서 수명주기를 고려하지 않고 이벤트 Flow를 수집하는 것을 금지한다.
@@ -74,7 +78,15 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
      */
     private fun isProtectedChain(context: JavaContext, receiver: UExpression?): Boolean {
         var current = receiver?.skipParenthesizedExprDown()
+        var aliasHops = 0
         while (current != null) {
+            // val visible = events.flowWithLifecycle(lifecycle) 처럼 지역 val 에 담았으면 그 초기화식을 이어서 본다.
+            if (current is USimpleNameReferenceExpression) {
+                val initializer = localValInitializer(current)
+                if (initializer == null || ++aliasHops > MAX_ALIAS_HOPS) return false
+                current = initializer
+                continue
+            }
             val call = when (current) {
                 is UQualifiedReferenceExpression -> current.selector as? UCallExpression
                 is UCallExpression -> current
@@ -104,10 +116,22 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
      */
     private fun isAtLeastStarted(context: JavaContext, call: UCallExpression, parameterName: String): Boolean {
         val method = call.resolve() ?: return true
-        val argument = context.evaluator.computeArgumentMapping(call, method)
+        var argument: UExpression = context.evaluator.computeArgumentMapping(call, method)
             .entries.firstOrNull { it.value.name == parameterName }?.key ?: return true
+        // val minimum = Lifecycle.State.CREATED 처럼 지역 val 에 담아 넘겨도 초기값을 본다.
+        repeat(MAX_ALIAS_HOPS) {
+            val reference = argument.skipParenthesizedExprDown() as? USimpleNameReferenceExpression ?: return@repeat
+            argument = localValInitializer(reference) ?: return@repeat
+        }
         val state = ((argument.skipParenthesizedExprDown() as? UReferenceExpression)?.resolve() as? PsiField)?.name
         return state !in BELOW_STARTED
+    }
+
+    /** 다시 대입할 수 없는 지역 val 의 초기화식. 파라미터·프로퍼티·var 이면 null. */
+    private fun localValInitializer(reference: USimpleNameReferenceExpression): UExpression? {
+        val variable = reference.resolve().toUElement() as? ULocalVariable ?: return null
+        if ((variable.sourcePsi as? KtProperty)?.isVar != false) return null
+        return variable.uastInitializer?.skipParenthesizedExprDown()
     }
 
     companion object {
@@ -118,15 +142,18 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
             "derivedStateOf" to "androidx.compose.runtime",
         )
 
+        /** 지역 val 을 따라가는 최대 횟수. */
+        private const val MAX_ALIAS_HOPS = 3
+
         /**
-         * 업스트림 하나의 값만 바꾸는 연산자. 보호 연산자와 collect 사이에 있어도 보호가 유지된다.
-         * onStart·onEmpty·onCompletion·catch·retryWhen·scan·runningFold 는 업스트림을 거치지 않고 값을 직접 내보낼 수 있어 넣지 않는다.
+         * 업스트림 하나의 값을 그 자리에서 바꾸는 연산자. 보호 연산자와 collect 사이에 있어도 보호가 유지된다.
+         * onStart·onEmpty·onCompletion·catch·retryWhen·scan·runningFold 는 업스트림을 거치지 않고 값을 직접 내보낼 수 있고,
+         * debounce·sample·buffer·conflate·flowOn·mapLatest 는 받은 값을 붙잡아 두었다가 화면이 멈춘 뒤에 내보낼 수 있어 넣지 않는다.
          */
         private val SINGLE_UPSTREAM_OPERATORS = listOf(
-            "map", "mapNotNull", "mapLatest", "filter", "filterNot", "filterIsInstance", "filterNotNull",
+            "map", "mapNotNull", "filter", "filterNot", "filterIsInstance", "filterNotNull",
             "onEach", "distinctUntilChanged", "distinctUntilChangedBy", "take", "takeWhile", "drop", "dropWhile",
-            "debounce", "sample", "conflate", "buffer", "runningReduce", "withIndex", "flowOn", "cancellable",
-            "retry",
+            "runningReduce", "withIndex", "cancellable", "retry",
         )
 
         @JvmField

@@ -187,7 +187,10 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
             file.accept(object : AbstractUastVisitor() {
                 override fun visitCallExpression(node: UCallExpression): Boolean {
                     check(node, node.resolve())
-                    if (calledByName != null) {
+                    // 이름이 같은 다른 함수(오버로드 등)로 해석된 호출은 람다·로컬 함수 호출이 아니다.
+                    val resolvedDeclaration = node.resolve()?.navigationElement
+                    val resolvedElsewhere = resolvedDeclaration is KtNamedFunction && resolvedDeclaration != calledByName
+                    if (calledByName != null && !resolvedElsewhere) {
                         val call = node.sourcePsi as? KtCallExpression
                         if (call != null && call.calleeExpression?.text == calledByName.name &&
                             PsiTreeUtil.isAncestor(calledByName.parent, call, true) && !isShadowed(call, calledByName)
@@ -199,8 +202,8 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                 }
 
                 override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression): Boolean {
-                    // 커스텀 getter 는 프로퍼티를 읽을 때마다 돈다.
-                    check(node, node.resolve())
+                    // 커스텀 getter 는 프로퍼티를 읽을 때마다 돈다. 람다를 담은 프로퍼티는 읽기만 해서는 람다가 돌지 않는다.
+                    if (calledByName == null) check(node, node.resolve())
                     return found
                 }
             })

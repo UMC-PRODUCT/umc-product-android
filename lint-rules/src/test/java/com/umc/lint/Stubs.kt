@@ -47,14 +47,15 @@ object Stubs {
         """
         package androidx.lifecycle
 
+        import kotlinx.coroutines.CoroutineScope
         import kotlinx.coroutines.flow.Flow
 
         abstract class Lifecycle {
             enum class State { DESTROYED, INITIALIZED, CREATED, STARTED, RESUMED }
         }
 
-        suspend fun repeatOnLifecycle(state: Lifecycle.State, block: suspend () -> Unit) {}
-        fun <T> Flow<T>.flowWithLifecycle(lifecycle: Any, minActiveState: Lifecycle.State = Lifecycle.State.STARTED): Flow<T> = this
+        suspend fun Lifecycle.repeatOnLifecycle(state: Lifecycle.State, block: suspend CoroutineScope.() -> Unit) {}
+        fun <T> Flow<T>.flowWithLifecycle(lifecycle: Lifecycle, minActiveState: Lifecycle.State = Lifecycle.State.STARTED): Flow<T> = this
         """,
     ).indented()
 
@@ -62,6 +63,8 @@ object Stubs {
         "src/kotlinx/coroutines/Coroutines.kt",
         """
         package kotlinx.coroutines
+
+        interface CoroutineScope
 
         suspend fun delay(timeMillis: Long) {}
         suspend fun delay(duration: kotlin.time.Duration) {}
@@ -92,6 +95,7 @@ object Stubs {
         fun <T> merge(vararg flows: Flow<T>): Flow<T> = throw UnsupportedOperationException()
         fun <T, R> Flow<T>.map(transform: suspend (T) -> R): Flow<R> = throw UnsupportedOperationException()
         fun <T> Flow<T>.distinctUntilChanged(): Flow<T> = this
+        fun <T> Flow<T>.debounce(timeoutMillis: Long): Flow<T> = this
         fun <T> Flow<T>.onStart(action: suspend FlowCollector<T>.() -> Unit): Flow<T> = this
         fun <T> Flow<T>.retryWhen(predicate: suspend FlowCollector<T>.(cause: Throwable, attempt: Long) -> Boolean): Flow<T> = this
         fun <T1, T2, R> Flow<T1>.combine(other: Flow<T2>, transform: suspend (T1, T2) -> R): Flow<R> =

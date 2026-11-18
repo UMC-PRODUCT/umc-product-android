@@ -349,4 +349,38 @@ class BlockingCallInRequestPathDetectorTest {
             """,
         )
     }
+
+    @Test
+    fun `람다 프로퍼티를 읽기만 하거나 같은 이름의 메서드를 부르면 무시`() {
+        lintWith(
+            BlockingCallInRequestPathDetector.ISSUE,
+            kotlin(
+                "src/com/umc/product/di/ReadOnlyInterceptors.kt",
+                """
+                package com.umc.product.di
+
+                import kotlinx.coroutines.runBlocking
+                import okhttp3.Interceptor
+                import okhttp3.Response
+
+                class ReadOnlyInterceptor(private val load: suspend () -> String) : Interceptor {
+                    private val tokenProvider: () -> String = { runBlocking { load() } }
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        val callback = tokenProvider
+                        return chain.proceed(chain.request())
+                    }
+                }
+
+                class OverloadNameInterceptor(private val load: suspend () -> String) : Interceptor {
+                    private val tokenProvider: () -> String = { runBlocking { load() } }
+                    private fun tokenProvider(mode: Int): String = "cached"
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        tokenProvider(1)
+                        return chain.proceed(chain.request())
+                    }
+                }
+                """,
+            ).indented(),
+        ).expectClean()
+    }
 }

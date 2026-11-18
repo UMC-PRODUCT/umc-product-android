@@ -118,10 +118,12 @@ class FixedDelayInLaunchedEffectDetector : Detector(), Detector.UastScanner {
                 어긋날 때마다 숫자를 늘리는 땜질로 이어지기 쉽습니다.
 
                 기다리는 대상을 상태로 관찰하세요. snapshotFlow { imeBottom }.first { it > 0 }은 키보드가 \
-                나타나기 시작하는 시점에 재개합니다. 키보드가 다 올라온 뒤의 최종 높이가 필요하면 같은 snapshotFlow \
-                안에서 현재 WindowInsets.ime 높이(current)와 WindowInsets.imeAnimationTarget(ExperimentalLayoutApi) \
-                높이(target)를 함께 읽고 target > 0 && current == target 일 때 재개하세요. 목표값을 따로 저장해 두면 \
-                열기가 취소되거나 목표가 바뀔 때 대기가 끝나지 않습니다. 열기 요청이 취소되면 대기도 취소하세요. \
+                나타나기 시작하는 시점에 재개합니다. 키보드가 다 올라온 뒤의 최종 높이가 필요하면, 컴포지션에서 \
+                WindowInsets.ime 와 WindowInsets.imeAnimationTarget(ExperimentalLayoutApi) 객체를 얻어 두고 \
+                같은 snapshotFlow 안에서 두 객체의 getBottom(density)를 함께 읽어 target > 0 && current == target 일 때 \
+                재개하세요(두 getter 는 @Composable 이라 snapshotFlow 블록에서 직접 부를 수 없습니다). 높이 값을 블록 밖에 \
+                저장해 두면 이후 변화를 볼 수 없고, 열기가 취소되거나 목표가 바뀔 때 대기가 끝나지 않습니다. \
+                열기 요청이 취소되면 대기도 취소하세요. \
                 배치가 끝나야 하는 작업(requestFocus() 등)은 대상의 onGloballyPositioned에서 배치 여부를 상태로 \
                 기록한 뒤 그 상태가 준비됐을 때 실행하면 됩니다. 자동 닫힘 타이머처럼 시간 자체가 요구사항이라면 \
                 @Suppress("FixedDelayInLaunchedEffect")로 의도를 남기세요.
