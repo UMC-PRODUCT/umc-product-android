@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<issues format="6" by="lint 8.12.3" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.3)" variant="all" version="8.12.3">
+    <issue id="UseUTextField" message="BasicTextField를 화면에서 직접 쓰면 입력 동작이 화면마다 갈라집니다. com.umc.component.component.UTextField를 사용하세요." errorLine1="            BasicTextField(" errorLine2="            ~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/study/admin/group/dialog/AdminStudyGroupEditDialog.kt" />
+    </issue>
+    <issue id="UseUTextField" message="BasicTextField를 화면에서 직접 쓰면 입력 동작이 화면마다 갈라집니다. com.umc.component.component.UTextField를 사용하세요." errorLine1="    BasicTextField(" errorLine2="    ~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/study/admin/group/schedule/component/GroupScheduleMemoBox.kt" />
+    </issue>
+    <issue id="UseUTextField" message="BasicTextField를 화면에서 직접 쓰면 입력 동작이 화면마다 갈라집니다. com.umc.component.component.UTextField를 사용하세요." errorLine1="    BasicTextField(" errorLine2="    ~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/study/admin/group/schedule/component/GroupScheduleTextField.kt" />
+    </issue>
+</issues>

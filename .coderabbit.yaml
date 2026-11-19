@@ -95,11 +95,14 @@ reviews:
     - path: "**/*.kt"
       instructions: |
         [이미 자동 검사되는 항목 — 리뷰에서 지적하지 말 것]
-        아래 세 가지는 :lint-rules 커스텀 Lint 가 CI 에서 잡고, 위반 시 파이프라인이 막힌다.
-        중복 지적은 순수 소음이므로 언급하지 않는다.
-          - OneShotEventSharedFlow: 단발성 이벤트를 StateFlow/SharedFlow(replay>0)로 노출
-          - LifecycleUnawareEventCollect: 수명주기를 고려하지 않은 이벤트 수집
-          - BlockingCallInRequestPath: 요청 경로에서 runBlocking 사용
+        아래 규칙은 :lint-rules 커스텀 Lint 가 CI 에서 잡는다. ERROR 는 파이프라인을 막고 WARNING 은 요약에 남는다.
+        중복 지적은 순수 소음이므로 언급하지 않는다. (목록 기준: lint-rules/src/main/java/com/umc/lint/UmcIssueRegistry.kt)
+          - OneShotEventSharedFlow (ERROR): 단발성 이벤트에 인자 없는 MutableSharedFlow() 사용
+          - LifecycleUnawareEventCollect (ERROR): LaunchedEffect 안에서 수명주기를 고려하지 않은 Flow 수집
+          - BlockingCallInRequestPath (ERROR): 요청 경로(인터셉터·인증자 등)에서 runBlocking 사용
+          - UseUText (ERROR): presentation:component 밖에서 material3 Text·BasicText 사용
+          - UseUTextField (ERROR): presentation:component 밖에서 TextField·BasicTextField 계열 사용
+          - FixedDelayInLaunchedEffect (WARNING): LaunchedEffect 안의 고정 시간 delay
         ktlint/Android Lint 가 잡는 포매팅·네이밍 규칙도 지적하지 않는다.
 
         [리뷰에서 봐야 할 것]
@@ -164,6 +167,18 @@ reviews:
            크래시 난독화 해제(mapping.txt)에 직접 영향을 준다. issue (blocking) 으로 근거를 묻는다.
         2. 의존성 추가 시 libs.versions.toml 을 거치는지, 모듈 의존 방향을 지키는지 확인한다.
         3. signingConfig 와 시크릿 관련 변경은 특히 주의 깊게 본다.
+
+    - path: "**/lint-baseline.xml"
+      instructions: |
+        커스텀 Lint(:lint-rules)의 기존 위반 목록이다. 여기 있는 위반은 CI 게이트가 막지 않는다.
+        lint-rules/update_baseline.py --issue-id <규칙> 로 생성하며, 규칙을 새로 추가하거나 기존 규칙의 심각도·판정 범위를
+        바꿀 때만 갱신한다.
+        1. 새로 추가된 <issue> 는 위반을 숨기는 것이다. 기존 <issue> 의 id·message·location file 을 바꿔
+           다른 위반을 숨기게 되는 경우도 같다. 같은 PR 이 그 규칙을 :lint-rules 에 새로 추가했거나 심각도·판정 범위를
+           바꿨고, 그 위반 코드가 기준 브랜치에도 이미 있었던 경우에만 허용한다. 이 PR 에서 새로 생긴 위반 코드를 숨기는
+           항목은 issue (blocking) 으로 지적하고, baseline 항목을 되돌린 뒤 위반 코드를 고치도록 요청한다.
+        2. 삭제된 <issue> 는 위반을 고친 결과이므로 지적하지 않는다.
+        3. baseline 에는 UMC 규칙만 담는다. UnusedResources 같은 내장 Lint 규칙 항목이 들어 있으면 지적한다.
 
   # ---------------------------------------------------------------- #
   # 자동 리뷰 트리거

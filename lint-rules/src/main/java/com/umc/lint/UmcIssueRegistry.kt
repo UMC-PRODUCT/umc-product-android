@@ -14,6 +14,9 @@ class UmcIssueRegistry : IssueRegistry() {
         OneShotEventFlowDetector.ISSUE,
         LifecycleUnawareCollectDetector.ISSUE,
         BlockingCallInRequestPathDetector.ISSUE,
+        UseUTextDetector.ISSUE,
+        UseUTextFieldDetector.ISSUE,
+        FixedDelayInLaunchedEffectDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API
