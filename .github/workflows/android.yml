@@ -290,23 +290,29 @@ jobs:
           fi
 
       # :lint-rules 가 스스로 선언한 severity 를 그대로 신뢰한다.
-      # ERROR(OneShotEventSharedFlow) 는 파이프라인을 세우고, WARNING 은 요약에만 남긴다.
+      # ERROR 는 파이프라인을 세우고, WARNING 은 요약에만 남긴다.
+      # 커스텀 규칙은 ID 목록이 아니라 category="UMC" 로 고른다. 새 규칙도 UMC_CATEGORY 만 쓰면 대상이 된다.
+      # 기존 위반은 각 모듈의 lint-baseline.xml 에 기록돼 리포트에 나오지 않는다.
       - name: UMC 커스텀 Lint 게이트
+        env:
+          SCOPE: ${{ steps.resolve.outputs.scope }}
         run: |
           python3 - <<'PY'
           import os, sys, xml.etree.ElementTree as ET
           from pathlib import Path
 
-          UMC = {"OneShotEventSharedFlow", "LifecycleUnawareEventCollect", "BlockingCallInRequestPath"}
-          reports = sorted(Path(".").glob("**/build/reports/lint-results-debug.xml"))
+          # app 은 flavor 가 있어 리포트 이름에 variant 가 붙는다(lint-results-devDebug.xml).
+          reports = sorted(Path(".").glob("**/build/reports/lint-results-*.xml"))
           if not reports:
+              if os.environ.get("SCOPE") == "full":
+                  sys.exit("lint 리포트가 없습니다 — 배포 경로에서는 app lint 리포트가 반드시 있어야 합니다.")
               print("lint 리포트가 없습니다 — 검사 대상 모듈이 없었을 수 있습니다.")
               sys.exit(0)
 
           errors, warnings = [], []
           for report in reports:
               for issue in ET.parse(report).getroot().iter("issue"):
-                  if issue.get("id") not in UMC:
+                  if issue.get("category") != "UMC":
                       continue
                   loc = issue.find("location")
                   where = "%s:%s" % (loc.get("file", "?").split("/")[-1], loc.get("line", "?"))
@@ -364,7 +370,7 @@ jobs:
           name: reports-${{ github.run_number }}
           path: |
             **/build/reports/tests/**
-            **/build/reports/lint-results-debug.*
+            **/build/reports/lint-results-*.*
           retention-days: 7
           if-no-files-found: ignore
 

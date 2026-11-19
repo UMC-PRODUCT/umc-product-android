@@ -11,8 +11,9 @@ Compose 전환 중인 멀티모듈 앱(`:app`, `:data`, `:domain`, `:presentatio
 
 ## 검증: 초록불이 보장하지 않는 것
 
-- **테스트 소스셋이 하나도 없다.** 18개 모듈 전부 `src/main`만 있어서 `./gradlew testDebugUnitTest`와 `:lint-rules:test`는 NO-SOURCE로 **항상 통과**한다. "테스트 통과"를 완료 근거로 보고하지 않는다.
-- **`ktlintCheck`는 존재하지 않는 태스크다.** ktlint는 `gradle/libs.versions.toml`에 선언만 있고 어느 모듈에도 적용돼 있지 않다(README의 "Ktlint로 자동 점검" 설명과 실제 설정이 어긋나 있다). 정적 분석은 Android Lint와 `:lint-rules` 커스텀 규칙(`OneShotEventFlow`, `LifecycleUnawareCollect`, `BlockingCallInRequestPath`)으로만 돈다.
+- **테스트가 있는 모듈은 일부뿐이다.** 단위 테스트는 `:data`, `:domain`, `:presentation`, `:presentation:community`·`component`·`act`·`home`·`mypage`, `:lint-rules`에만 있다. `:app`과 나머지 presentation 모듈은 `testDebugUnitTest`가 NO-SOURCE로 **항상 통과**하므로, 이 모듈들을 바꿨을 때는 "테스트 통과"를 완료 근거로 보고하지 않는다.
+- **`ktlintCheck`는 존재하지 않는 태스크다.** ktlint는 `gradle/libs.versions.toml`에 선언만 있고 어느 모듈에도 적용돼 있지 않다(README의 "Ktlint로 자동 점검" 설명과 실제 설정이 어긋나 있다). 정적 분석은 Android Lint와 `:lint-rules` 커스텀 규칙으로만 돈다.
+- **lint 중에서 CI를 막는 건 커스텀 규칙의 ERROR뿐이다.** 게이트는 lint 리포트에서 category가 `UMC`인 항목만 보고, 내장 규칙은 ERROR여도 막지 않는다. 커스텀 규칙의 기존 위반은 모듈별 `lint-baseline.xml`에 묶여 있다. baseline은 규칙을 새로 추가할 때만 `python3 lint-rules/update_baseline.py --issue-id <새 규칙 ID>`로 갱신하고(다른 규칙의 항목은 그대로 둔다), 새로 생긴 위반을 숨기려고 갱신하지 않는다.
 - **DI·네트워크를 바꿨으면 실행까지 확인한다.** `app/src/main/java/com/umc/product/di/`나 `Qualifier.kt`를 건드린 변경은 컴파일 통과로 끝내지 말고, 앱을 띄워 해당 화면의 네트워크 호출을 확인한 뒤 보고한다. qualifier 7종(`@NormalRetrofit`·`@AuthRetrofit`·Kakao·RemoteConfig 등)이 뒤바뀌어도 컴파일은 통과하고, 런타임에 401이나 엉뚱한 호스트로만 드러난다.
 - **UI를 바꾸면 그 화면의 `@Preview`를 같이 갱신한다.** 스크린샷 테스트 도구(Roborazzi·Paparazzi·screenshotTest)가 아직 없어서 CI는 UI 회귀를 잡지 못한다. 여러 폭을 봐야 하는 화면에는 `@PreviewScreenSizes`를 붙인다.
 

@@ -1,16 +1,28 @@
 package com.umc.lint
 
-import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
-import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.UCallableReferenceExpression
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.visitor.AbstractUastVisitor
+import org.jetbrains.uast.toUElement
 
 /**
  * LaunchedEffect 안에서 수명주기를 고려하지 않고 이벤트 Flow를 수집하는 것을 금지한다.
@@ -26,20 +38,28 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (method.containingClass?.qualifiedName?.startsWith("kotlinx.coroutines.flow") != true) return
 
-        // snapshotFlow 는 컴포지션 상태를 관찰하는 용도라 단발성 이벤트가 아니다.
-        // 화면이 가려진 동안에도 스크롤 위치 추적 등은 계속돼야 하므로 대상에서 제외한다.
-        val receiverText = node.receiver?.sourcePsi?.text.orEmpty()
-        if (STATE_OBSERVERS.any { receiverText.contains(it) }) return
+        // snapshotFlow 는 컴포지션 상태를 관찰하는 용도라 단발성 이벤트가 아니다. 화면이 가려진 동안에도
+        // 스크롤 위치 추적 등은 계속돼야 하므로 제외한다. events.flowWithLifecycle(lifecycle) 은 이미 수명주기를 따른다.
+        // 둘 다 collect 로 값이 흘러 들어오는 수신자 체인 전체에 적용될 때만 인정한다.
+        // merge(events, other.flowWithLifecycle(lifecycle)) 처럼 인수 하나에만 적용되면 나머지 Flow 는 보호되지 않는다.
+        if (isProtectedChain(context, node.receiver)) return
 
+        // 이름이 아니라 해석된 선언(이름+패키지)으로 판정한다. import 별칭은 인정하고 다른 패키지의 동명 함수는 무시한다.
+        // repeatOnLifecycle 은 block 으로 넘긴 람다 본문만 보호한다. state 인수를 계산하는 코드는 그 전에 돈다.
         var inLaunchedEffect = false
         var guarded = false
         var cursor: UElement? = node.uastParent
         while (cursor != null) {
-            if (cursor is UCallExpression) {
-                when (cursor.methodName) {
-                    "repeatOnLifecycle", "flowWithLifecycle", "collectAsStateWithLifecycle" -> guarded = true
-                    "LaunchedEffect" -> inLaunchedEffect = true
+            if (cursor is ULambdaExpression) {
+                val owner = cursor.ownerCall()
+                if (owner != null && context.calls(owner, "repeatOnLifecycle", "androidx.lifecycle") &&
+                    isAtLeastStarted(context, owner, "state")
+                ) {
+                    guarded = true
                 }
+            }
+            if (cursor is UCallExpression && context.calls(cursor, "LaunchedEffect", "androidx.compose.runtime")) {
+                inLaunchedEffect = true
             }
             cursor = cursor.uastParent
         }
@@ -54,8 +74,145 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
         )
     }
 
+    /**
+     * collect 의 수신자 체인(a.b().c())을 collect 쪽에서부터 거슬러 올라가며 snapshotFlow·flowWithLifecycle 을 찾는다.
+     * 그 사이에는 값만 바꾸는 연산자(map, filter, distinctUntilChanged …)만 허용한다. combine·zip·flatMapLatest 처럼
+     * 다른 Flow 를 끌어들이는 연산자나 모르는 연산자를 먼저 만나면, 그 Flow 는 보호되지 않으므로 false.
+     * 인수 안쪽(merge(x, y.flowWithLifecycle()) 의 y)도 체인이 아니므로 보지 않는다.
+     */
+    private fun isProtectedChain(context: JavaContext, receiver: UExpression?): Boolean {
+        var current = receiver?.skipParenthesizedExprDown()
+        var aliasHops = 0
+        // flowWithLifecycle 은 업스트림만 멈춘다. 그 뒤의 변환이 중단(delay 등)하는 동안 화면이 멈추면, 이미 받은 값은
+        // 대기를 마친 뒤 멈춘 화면에서 수집된다. 그래서 중단하는 변환이 사이에 있으면 flowWithLifecycle 을 보호로 보지 않는다.
+        var suspendsAfterProtection = false
+        while (current != null) {
+            // val visible = events.flowWithLifecycle(lifecycle) 처럼 지역 val 에 담았으면 그 초기화식을 이어서 본다.
+            if (current is USimpleNameReferenceExpression) {
+                val initializer = localValInitializer(current)
+                if (initializer == null || ++aliasHops > MAX_ALIAS_HOPS) return false
+                current = initializer
+                continue
+            }
+            val call = when (current) {
+                is UQualifiedReferenceExpression -> current.selector as? UCallExpression
+                is UCallExpression -> current
+                else -> null
+            }
+            if (call != null) {
+                if (STATE_OBSERVERS.any { (name, pkg) -> context.calls(call, name, pkg) }) return true
+                if (context.calls(call, "flowWithLifecycle", "androidx.lifecycle")) {
+                    // STARTED 이상이면 보호된다. CREATED 처럼 낮으면 값만 흘려보내는 연산자처럼 보고 위쪽 체인을 계속 본다.
+                    if (isAtLeastStarted(context, call, "minActiveState")) return !suspendsAfterProtection
+                } else if (SINGLE_UPSTREAM_OPERATORS.none { context.calls(call, it, "kotlinx.coroutines.flow") }) {
+                    return false
+                } else if (call.methodName in VALUE_LAMBDA_OPERATORS && call.valueArguments.any(::suspends)) {
+                    suspendsAfterProtection = true
+                }
+            }
+            current = when (current) {
+                is UQualifiedReferenceExpression -> current.receiver.skipParenthesizedExprDown()
+                is UCallExpression -> current.receiver?.skipParenthesizedExprDown()
+                else -> null
+            }
+        }
+        return false
+    }
+
+    /**
+     * 수명주기 상태 인수가 STARTED 이상인지. CREATED 등으로 내리면 화면이 멈춘 뒤에도 수집이 계속되므로 보호로 보지 않는다.
+     * 인수를 생략하면 기본값(STARTED)이고, 변수처럼 값을 알 수 없으면 보호로 본다.
+     */
+    private fun isAtLeastStarted(context: JavaContext, call: UCallExpression, parameterName: String): Boolean {
+        val method = call.resolve() ?: return true
+        var argument: UExpression = context.evaluator.computeArgumentMapping(call, method)
+            .entries.firstOrNull { it.value.name == parameterName }?.key ?: return true
+        // val minimum = Lifecycle.State.CREATED 처럼 지역 val 에 담아 넘겨도 초기값을 본다.
+        repeat(MAX_ALIAS_HOPS) {
+            val reference = argument.skipParenthesizedExprDown() as? USimpleNameReferenceExpression ?: return@repeat
+            argument = localValInitializer(reference) ?: return@repeat
+        }
+        val state = ((argument.skipParenthesizedExprDown() as? UReferenceExpression)?.resolve() as? PsiField)?.name
+        return state !in BELOW_STARTED
+    }
+
+    /**
+     * 연산자에 넘긴 함수가 중단할 수 있는지. 람다는 본문에서 중단 함수를 부르는지 보고, 함수 참조는 그 함수가 suspend 인지 본다.
+     * 함수 타입 변수처럼 무엇이 넘어오는지 알 수 없는 인수는 중단할 수 있다고 본다.
+     */
+    private fun suspends(argument: UExpression): Boolean {
+        when (val function = argument.skipParenthesizedExprDown()) {
+            is ULambdaExpression -> {
+                var found = false
+                function.body.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        if (callSuspends(node)) found = true
+                        return found
+                    }
+                })
+                return found
+            }
+            is UCallableReferenceExpression -> return (function.resolve() as? PsiMethod)?.let(::isSuspend) ?: true
+            else -> return true
+        }
+    }
+
+    /**
+     * 호출이 중단할 수 있는지. 해석되지 않는 호출은 알 수 없으므로 중단한다고 본다.
+     * transform(it)·it.ext() 처럼 함수 타입 값을 부르면 FunctionN.invoke 로 해석된다. suspend 함수 타입은 Continuation 이
+     * 붙어 N 이 넘긴 인수(확장 함수 타입이면 수신 객체 포함)보다 하나 크다.
+     */
+    private fun callSuspends(call: UCallExpression): Boolean {
+        val method = call.resolve() ?: return true
+        if (isSuspend(method) || method.containingClass?.qualifiedName?.startsWith(SUSPEND_FUNCTION_TYPE) == true) return true
+        if (method.name != "invoke") return false
+        val arity = method.containingClass?.qualifiedName?.removePrefix(FUNCTION_TYPE)?.toIntOrNull() ?: return false
+        val receiverType = call.receiverType?.canonicalText
+        val extensionReceiver = if (receiverType != null && !receiverType.startsWith(FUNCTION_TYPE)) 1 else 0
+        return arity > call.valueArgumentCount + extensionReceiver
+    }
+
+    /** suspend 로 선언했거나, 컴파일된 시그니처의 마지막 파라미터가 Continuation 인 함수. */
+    private fun isSuspend(method: PsiMethod): Boolean =
+        (method.navigationElement as? KtNamedFunction)?.hasModifier(KtTokens.SUSPEND_KEYWORD) == true ||
+            method.parameterList.parameters.lastOrNull()?.type?.canonicalText?.startsWith("kotlin.coroutines.Continuation") == true
+
+    /** 다시 대입할 수 없는 지역 val 의 초기화식. 파라미터·프로퍼티·var 이면 null. */
+    private fun localValInitializer(reference: USimpleNameReferenceExpression): UExpression? {
+        val variable = reference.resolve().toUElement() as? ULocalVariable ?: return null
+        if ((variable.sourcePsi as? KtProperty)?.isVar != false) return null
+        return variable.uastInitializer?.skipParenthesizedExprDown()
+    }
+
     companion object {
-        private val STATE_OBSERVERS = setOf("snapshotFlow", "derivedStateOf")
+        private val BELOW_STARTED = setOf("DESTROYED", "INITIALIZED", "CREATED")
+
+        private val STATE_OBSERVERS = mapOf(
+            "snapshotFlow" to "androidx.compose.runtime",
+            "derivedStateOf" to "androidx.compose.runtime",
+        )
+
+        /** 지역 val 을 따라가는 최대 횟수. */
+        private const val MAX_ALIAS_HOPS = 3
+
+        /**
+         * 업스트림 하나의 값을 그 자리에서 바꾸는 연산자. 보호 연산자와 collect 사이에 있어도 보호가 유지된다.
+         * onStart·onEmpty·onCompletion·catch·retryWhen·scan·runningFold 는 업스트림을 거치지 않고 값을 직접 내보낼 수 있고,
+         * debounce·sample·buffer·conflate·flowOn·mapLatest 는 받은 값을 붙잡아 두었다가 화면이 멈춘 뒤에 내보낼 수 있어 넣지 않는다.
+         */
+        private val SINGLE_UPSTREAM_OPERATORS = listOf(
+            "map", "mapNotNull", "filter", "filterNot", "filterIsInstance", "filterNotNull",
+            "onEach", "distinctUntilChanged", "distinctUntilChangedBy", "take", "takeWhile", "drop", "dropWhile",
+            "runningReduce", "withIndex", "cancellable", "retry",
+        )
+
+        private const val SUSPEND_FUNCTION_TYPE = "kotlin.coroutines.SuspendFunction"
+        private const val FUNCTION_TYPE = "kotlin.jvm.functions.Function"
+
+        /** 값을 받아 람다로 처리하는 연산자. 람다가 중단하면 flowWithLifecycle 이 멈춘 뒤에도 값이 수집될 수 있다. */
+        private val VALUE_LAMBDA_OPERATORS = setOf(
+            "map", "mapNotNull", "filter", "filterNot", "onEach", "takeWhile", "dropWhile", "runningReduce",
+        )
 
         @JvmField
         val ISSUE: Issue = Issue.create(
@@ -69,9 +226,9 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
                 repeatOnLifecycle(Lifecycle.State.STARTED) 안에서 수집해 화면이 보이는 동안만 \
                 소비하도록 하세요.
             """.trimIndent(),
-            category = Category.CORRECTNESS,
+            category = UMC_CATEGORY,
             priority = 7,
-            severity = Severity.WARNING,
+            severity = Severity.ERROR,
             implementation = Implementation(
                 LifecycleUnawareCollectDetector::class.java,
                 Scope.JAVA_FILE_SCOPE,
