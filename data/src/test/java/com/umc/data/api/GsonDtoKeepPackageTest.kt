@@ -1,5 +1,9 @@
 package com.umc.data.api
 
+import com.umc.data.fixture.OutsideKeepDto
+import com.umc.data.response.fixture.InheritedHolder
+import com.umc.data.response.fixture.NestedHolder
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.http.Body
@@ -61,6 +65,18 @@ class GsonDtoKeepPackageTest {
         )
     }
 
+    @Test
+    fun `중첩된 타입 인자와 상위 클래스의 타입 인자도 따라간다`() {
+        // NestedEnvelope<T> 의 List<List<T>> 와, PayloadBase<OutsideKeepDto> 를 상속한 필드 payload: T 를 거쳐야 닿는다.
+        val holders = listOf(NestedHolder::class.java, InheritedHolder::class.java)
+        val found = holders.associate { holder ->
+            val violations = sortedMapOf<String, String>()
+            walk(holder, emptyMap(), holder.simpleName, mutableSetOf(), violations)
+            holder.simpleName to violations.keys.toSet()
+        }
+        assertEquals(holders.associate { it.simpleName to setOf(OutsideKeepDto::class.java.name) }, found)
+    }
+
     private fun apiInterfaces(): List<Class<*>> {
         val loader = AuthApi::class.java.classLoader
         val location = File(AuthApi::class.java.protectionDomain.codeSource.location.toURI())
@@ -89,9 +105,15 @@ class GsonDtoKeepPackageTest {
         return method.genericReturnType
     }
 
+    /**
+     * 타입 인자는 그 인자가 쓰인 곳의 바인딩과 함께 넘긴다. Envelope<T> 의 List<List<T>> 처럼 인자 안쪽에 남은 T 도,
+     * Child : Base<Dto> 의 상위 클래스 필드 payload: T 도 실제 타입까지 따라가기 위해서다.
+     */
+    private class Bound(val type: Type, val context: Map<String, Bound>)
+
     private fun walk(
         type: Type,
-        bindings: Map<String, Type>,
+        bindings: Map<String, Bound>,
         path: String,
         visited: MutableSet<String>,
         violations: MutableMap<String, String>,
@@ -99,21 +121,29 @@ class GsonDtoKeepPackageTest {
         when (type) {
             is Class<*> -> visitClass(type, emptyList(), path, visited, violations)
             is ParameterizedType -> {
-                val arguments = type.actualTypeArguments.map { resolve(it, bindings) }
+                val arguments = type.actualTypeArguments.map { Bound(it, bindings) }
                 visitClass(type.rawType as Class<*>, arguments, path, visited, violations)
             }
             is WildcardType -> (type.lowerBounds + type.upperBounds).forEach { walk(it, bindings, path, visited, violations) }
             is GenericArrayType -> walk(type.genericComponentType, bindings, path, visited, violations)
-            is TypeVariable<*> -> bindings[type.name]?.let { walk(it, bindings, path, visited, violations) }
+            is TypeVariable<*> -> bindings[type.name]?.let { walk(it.type, it.context, path, visited, violations) }
         }
     }
 
-    private fun resolve(type: Type, bindings: Map<String, Type>): Type =
-        if (type is TypeVariable<*>) bindings[type.name] ?: type else type
+    /** 바인딩을 끝까지 풀어 쓴 타입 이름. 같은 클래스를 같은 타입 인자로 두 번 보지 않으려고 쓴다. */
+    private fun describe(type: Type, bindings: Map<String, Bound>): String = when (type) {
+        is Class<*> -> type.name
+        is ParameterizedType -> (type.rawType as Class<*>).name +
+            type.actualTypeArguments.joinToString(",", "<", ">") { describe(it, bindings) }
+        is WildcardType -> (type.lowerBounds + type.upperBounds).joinToString(",", "?(", ")") { describe(it, bindings) }
+        is GenericArrayType -> describe(type.genericComponentType, bindings) + "[]"
+        is TypeVariable<*> -> bindings[type.name]?.let { describe(it.type, it.context) } ?: type.name
+        else -> type.toString()
+    }
 
     private fun visitClass(
         cls: Class<*>,
-        arguments: List<Type>,
+        arguments: List<Bound>,
         path: String,
         visited: MutableSet<String>,
         violations: MutableMap<String, String>,
@@ -121,21 +151,21 @@ class GsonDtoKeepPackageTest {
         if (cls.isArray) return walk(cls.componentType, emptyMap(), path, visited, violations)
         // 컬렉션·래퍼·외부 라이브러리 타입은 타입 인자만 따라간다. keep 대상인지는 프로젝트 클래스만 본다.
         if (!cls.name.startsWith("com.umc.")) {
-            arguments.forEach { walk(it, emptyMap(), path, visited, violations) }
+            arguments.forEach { walk(it.type, it.context, path, visited, violations) }
             return
         }
-        if (!visited.add(cls.name + arguments)) return
+        if (!visited.add(cls.name + arguments.map { describe(it.type, it.context) })) return
         if (KEEP_PACKAGES.none { cls.name.startsWith(it) }) violations.putIfAbsent(cls.name, path)
         if (cls.isEnum) return
 
         val bindings = cls.typeParameters.map { it.name }.zip(arguments).toMap()
-        generateSequence(cls) { it.superclass }.takeWhile { it != Any::class.java }.forEach { owner ->
-            owner.declaredFields
-                .filter { !Modifier.isStatic(it.modifiers) && !Modifier.isTransient(it.modifiers) && !it.isSynthetic }
-                .forEach { field ->
-                    walk(field.genericType, bindings, "$path → ${owner.simpleName}.${field.name}", visited, violations)
-                }
-        }
+        cls.declaredFields
+            .filter { !Modifier.isStatic(it.modifiers) && !Modifier.isTransient(it.modifiers) && !it.isSynthetic }
+            .forEach { field ->
+                walk(field.genericType, bindings, "$path → ${cls.simpleName}.${field.name}", visited, violations)
+            }
+        // 상위 클래스는 실제 타입 인자를 담은 genericSuperclass 로 따라간다. 상위 클래스도 필드가 직렬화되므로 keep 대상이다.
+        cls.genericSuperclass?.let { walk(it, bindings, path, visited, violations) }
     }
 
     private companion object {

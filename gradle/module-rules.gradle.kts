@@ -24,6 +24,15 @@ fun allowedDependencies(path: String, allPaths: Set<String>): Set<String>? = whe
     else -> emptySet()
 }
 
+// configure-on-demand 는 요청에 필요한 모듈만 구성하므로, 구성되지 않은 모듈의 의존 선언은 검사할 수 없다.
+// 위반을 놓친 채 통과하지 않도록 이 모드에서는 바로 실패한다.
+if (gradle.startParameter.isConfigureOnDemand) {
+    throw GradleException(
+        "모듈 의존 규칙은 모든 모듈을 구성해야 검사할 수 있습니다. configure-on-demand 를 끄고 실행하세요 " +
+            "(--no-configure-on-demand, 또는 gradle.properties 의 org.gradle.configureondemand=false). 규칙: gradle/module-rules.gradle.kts",
+    )
+}
+
 gradle.projectsEvaluated {
     val allPaths = rootProject.allprojects.map { it.path }.toSet()
     // 모든 configuration 을 본다. annotationProcessor·kapt 처럼 선언하면서 resolvable 이기도 한 것도 빠지지 않게 한다.

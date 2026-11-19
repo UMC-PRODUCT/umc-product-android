@@ -93,8 +93,9 @@ fun ActManageScreen(
     uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit,
     onNavigateToChallengerDetail: (Long) -> Unit = {},
-    adminStudyContent: @Composable (isActive: Boolean) -> Unit = {},
-    userStudyContent: @Composable (isActive: Boolean) -> Unit = {},
+    // 기본값을 두지 않는다. 빠뜨리면 스터디 탭이 빈 화면이 되므로 호출하는 쪽이 반드시 넘기게 한다.
+    adminStudyContent: @Composable (isActive: Boolean) -> Unit,
+    userStudyContent: @Composable (isActive: Boolean) -> Unit,
     openStudyTab: Boolean = false,
     onStudyTabOpened: () -> Unit = {},
 ) {
@@ -305,7 +306,9 @@ private fun AdminActScreenPreview() {
                 isAdmin = true,
                 hasAdminAccess = true
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            adminStudyContent = {},
+            userStudyContent = {},
         )
     }
 }
@@ -319,7 +322,9 @@ private fun NormalActScreenPreview() {
                 isAdmin = false,
                 hasAdminAccess = true
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            adminStudyContent = {},
+            userStudyContent = {},
         )
     }
 }
@@ -333,7 +338,9 @@ private fun NormalActScreenLargeFontPreview() {
                 isAdmin = false,
                 hasAdminAccess = true
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            adminStudyContent = {},
+            userStudyContent = {},
         )
     }
 }
