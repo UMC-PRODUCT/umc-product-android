@@ -16,6 +16,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import java.io.File
+import java.nio.file.Files
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
@@ -23,7 +24,9 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
+import java.util.jar.JarEntry
 import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
 import kotlin.coroutines.Continuation
 
 /**
@@ -77,18 +80,45 @@ class GsonDtoKeepPackageTest {
         assertEquals(holders.associate { it.simpleName to setOf(OutsideKeepDto::class.java.name) }, found)
     }
 
+    @Test
+    fun `디렉터리와 JAR 모두 API 하위 패키지까지 같은 클래스 파일을 찾는다`() {
+        val root = Files.createTempDirectory("api-classes").toFile()
+        val jar = File(root.parentFile, "${root.name}.jar")
+        val entries = listOf(
+            "$API_PATH/AuthApi.class",
+            "$API_PATH/extra/ExtraApi.class",
+            "$API_PATH/AuthApi\$Companion.class",
+            "com/umc/data/Other.class",
+        )
+        try {
+            entries.forEach { File(root, it).apply { parentFile.mkdirs() }.writeBytes(ByteArray(0)) }
+            JarOutputStream(jar.outputStream()).use { out -> entries.forEach { out.putNextEntry(JarEntry(it)); out.closeEntry() } }
+            val expected = listOf("$API_PATH/AuthApi.class", "$API_PATH/extra/ExtraApi.class")
+            assertEquals(expected, apiClassFiles(root).sorted())
+            assertEquals(expected, apiClassFiles(jar).sorted())
+        } finally {
+            root.deleteRecursively()
+            jar.delete()
+        }
+    }
+
     private fun apiInterfaces(): List<Class<*>> {
         val loader = AuthApi::class.java.classLoader
         val location = File(AuthApi::class.java.protectionDomain.codeSource.location.toURI())
-        val classNames = if (location.isDirectory) {
-            File(location, API_PATH).listFiles().orEmpty().map { "$API_PATH/${it.name}" }
+        return apiClassFiles(location)
+            .map { Class.forName(it.removeSuffix(".class").replace('/', '.'), false, loader) }
+            .filter { it.isInterface && it.declaredMethods.any(::isHttpMethod) }
+    }
+
+    /** 컴파일 결과(디렉터리 또는 JAR)에서 API 패키지와 그 하위 패키지의 최상위 클래스 파일 경로. */
+    private fun apiClassFiles(location: File): List<String> {
+        val entries = if (location.isDirectory) {
+            // JAR 쪽과 범위를 맞춰 하위 패키지까지 훑는다. 경로는 출력 루트 기준의 / 구분 경로로 만든다.
+            File(location, API_PATH).walkTopDown().filter { it.isFile }.map { it.relativeTo(location).invariantSeparatorsPath }.toList()
         } else {
             JarFile(location).use { jar -> jar.entries().toList().map { it.name }.filter { it.startsWith("$API_PATH/") } }
         }
-        return classNames
-            .filter { it.endsWith(".class") && '$' !in it.substringAfterLast('/') }
-            .map { Class.forName(it.removeSuffix(".class").replace('/', '.'), false, loader) }
-            .filter { it.isInterface && it.declaredMethods.any(::isHttpMethod) }
+        return entries.filter { it.endsWith(".class") && '$' !in it.substringAfterLast('/') }
     }
 
     private fun isHttpMethod(method: Method): Boolean =
