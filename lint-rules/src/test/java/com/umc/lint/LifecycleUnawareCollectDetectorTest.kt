@@ -374,22 +374,72 @@ class LifecycleUnawareCollectDetectorTest {
                 import kotlinx.coroutines.flow.Flow
                 import kotlinx.coroutines.flow.map
 
-                fun HomeRoute(events: Flow<String>, lifecycle: Lifecycle) {
+                suspend fun delayed(value: String): String {
+                    delay(300)
+                    return value
+                }
+
+                fun plain(value: String): Int = value.length
+
+                fun HomeRoute(
+                    events: Flow<String>,
+                    lifecycle: Lifecycle,
+                    transform: suspend (String) -> String,
+                    suspendingExt: suspend String.() -> Int,
+                    ext: String.() -> Int,
+                    plainFn: (String) -> Int,
+                ) {
                     LaunchedEffect(Unit) {
                         events.flowWithLifecycle(lifecycle).map { delay(300); it }.collect { }
                     }
                     LaunchedEffect(Unit) {
                         events.flowWithLifecycle(lifecycle).map { it.length }.collect { }
                     }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map(::delayed).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map(::plain).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map(transform).collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map { transform(it) }.collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map { transform.invoke(it) }.collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map { it.suspendingExt() }.collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map { it.ext() + plainFn(it) }.collect { }
+                    }
                 }
                 """,
             ).indented(),
         ).expect(
             """
-            src/com/umc/presentation/home/test.kt:12: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+            src/com/umc/presentation/home/test.kt:26: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
                     events.flowWithLifecycle(lifecycle).map { delay(300); it }.collect { }
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            1 error
+            src/com/umc/presentation/home/test.kt:32: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).map(::delayed).collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:38: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).map(transform).collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:41: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).map { transform(it) }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:44: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).map { transform.invoke(it) }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/home/test.kt:47: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).map { it.suspendingExt() }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            6 errors
             """,
         )
     }

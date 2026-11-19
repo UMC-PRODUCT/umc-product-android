@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
@@ -135,25 +136,46 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
         return state !in BELOW_STARTED
     }
 
-    /** 람다 본문이 중단 함수(delay 등)를 부르는지. suspend 로 선언했거나 마지막 파라미터가 Continuation 인 함수다. */
+    /**
+     * 연산자에 넘긴 함수가 중단할 수 있는지. 람다는 본문에서 중단 함수를 부르는지 보고, 함수 참조는 그 함수가 suspend 인지 본다.
+     * 함수 타입 변수처럼 무엇이 넘어오는지 알 수 없는 인수는 중단할 수 있다고 본다.
+     */
     private fun suspends(argument: UExpression): Boolean {
-        val lambda = argument.skipParenthesizedExprDown() as? ULambdaExpression ?: return false
-        var found = false
-        lambda.body.accept(object : AbstractUastVisitor() {
-            override fun visitCallExpression(node: UCallExpression): Boolean {
-                val method = node.resolve()
-                if (method != null && (
-                        (method.navigationElement as? KtNamedFunction)?.hasModifier(KtTokens.SUSPEND_KEYWORD) == true ||
-                            method.parameterList.parameters.lastOrNull()?.type?.canonicalText?.startsWith("kotlin.coroutines.Continuation") == true
-                        )
-                ) {
-                    found = true
-                }
+        when (val function = argument.skipParenthesizedExprDown()) {
+            is ULambdaExpression -> {
+                var found = false
+                function.body.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        if (callSuspends(node)) found = true
+                        return found
+                    }
+                })
                 return found
             }
-        })
-        return found
+            is UCallableReferenceExpression -> return (function.resolve() as? PsiMethod)?.let(::isSuspend) ?: true
+            else -> return true
+        }
     }
+
+    /**
+     * 호출이 중단할 수 있는지. 해석되지 않는 호출은 알 수 없으므로 중단한다고 본다.
+     * transform(it)·it.ext() 처럼 함수 타입 값을 부르면 FunctionN.invoke 로 해석된다. suspend 함수 타입은 Continuation 이
+     * 붙어 N 이 넘긴 인수(확장 함수 타입이면 수신 객체 포함)보다 하나 크다.
+     */
+    private fun callSuspends(call: UCallExpression): Boolean {
+        val method = call.resolve() ?: return true
+        if (isSuspend(method) || method.containingClass?.qualifiedName?.startsWith(SUSPEND_FUNCTION_TYPE) == true) return true
+        if (method.name != "invoke") return false
+        val arity = method.containingClass?.qualifiedName?.removePrefix(FUNCTION_TYPE)?.toIntOrNull() ?: return false
+        val receiverType = call.receiverType?.canonicalText
+        val extensionReceiver = if (receiverType != null && !receiverType.startsWith(FUNCTION_TYPE)) 1 else 0
+        return arity > call.valueArgumentCount + extensionReceiver
+    }
+
+    /** suspend 로 선언했거나, 컴파일된 시그니처의 마지막 파라미터가 Continuation 인 함수. */
+    private fun isSuspend(method: PsiMethod): Boolean =
+        (method.navigationElement as? KtNamedFunction)?.hasModifier(KtTokens.SUSPEND_KEYWORD) == true ||
+            method.parameterList.parameters.lastOrNull()?.type?.canonicalText?.startsWith("kotlin.coroutines.Continuation") == true
 
     /** 다시 대입할 수 없는 지역 val 의 초기화식. 파라미터·프로퍼티·var 이면 null. */
     private fun localValInitializer(reference: USimpleNameReferenceExpression): UExpression? {
@@ -183,6 +205,9 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
             "onEach", "distinctUntilChanged", "distinctUntilChangedBy", "take", "takeWhile", "drop", "dropWhile",
             "runningReduce", "withIndex", "cancellable", "retry",
         )
+
+        private const val SUSPEND_FUNCTION_TYPE = "kotlin.coroutines.SuspendFunction"
+        private const val FUNCTION_TYPE = "kotlin.jvm.functions.Function"
 
         /** 값을 받아 람다로 처리하는 연산자. 람다가 중단하면 flowWithLifecycle 이 멈춘 뒤에도 값이 수집될 수 있다. */
         private val VALUE_LAMBDA_OPERATORS = setOf(

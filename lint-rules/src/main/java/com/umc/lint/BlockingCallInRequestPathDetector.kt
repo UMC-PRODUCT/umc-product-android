@@ -22,6 +22,7 @@ import com.intellij.psi.util.PsiUtil
 import java.io.File
 import org.jetbrains.kotlin.asJava.toLightMethods
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.psi.KtClassOrObject
@@ -30,6 +31,7 @@ import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtIsExpression
 import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
@@ -38,6 +40,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 import org.jetbrains.kotlin.psi.KtQualifiedExpression
+import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtThisExpression
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
@@ -427,8 +430,8 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
         }
 
         /**
-         * 함수 참조를 인수로 넘겼는데, 받는 소스 함수의 본문이 그 파라미터를 전혀 쓰지 않는지.
-         * transform(request, ::attachToken) 에서 transform 이 request 만 돌려주면 attachToken 은 불리지 않는다.
+         * 함수 참조를 인수로 넘겼는데, 받는 소스 함수의 본문이 그 파라미터를 부르지 않는지.
+         * transform(request, ::attachToken) 에서 transform 이 request 만 돌려주거나 block 을 읽기만 하면 attachToken 은 불리지 않는다.
          * 받는 함수가 라이브러리이거나 본문이 없으면(인터페이스 등) 알 수 없으므로 부른다고 본다.
          */
         private fun isPassedToUnusedParameter(reference: UCallableReferenceExpression): Boolean {
@@ -442,10 +445,7 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
             if (!isSourceFile(callee.containingFile)) return false
             val name = parameter.name
             return when (callee) {
-                is KtNamedFunction -> {
-                    val body = callee.bodyExpression ?: return false
-                    PsiTreeUtil.findChildrenOfType(body, KtNameReferenceExpression::class.java).none { it.getReferencedName() == name }
-                }
+                is KtNamedFunction -> !mayInvoke(callee.bodyExpression ?: return false, name ?: return false, aliasDepth = 0)
                 is PsiMethod -> {
                     val body = callee.body ?: return false
                     PsiTreeUtil.findChildrenOfType(body, PsiReferenceExpression::class.java).none { it.referenceName == name }
@@ -453,6 +453,33 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                 else -> false
             }
         }
+
+        /**
+         * [scope] 안에서 함수 값 [name] 이 불릴 수 있는지. block(x)·block.invoke(x) 는 부르는 것이고,
+         * 다른 함수에 넘기거나 돌려주거나 프로퍼티에 담으면 나중에 불릴 수 있으므로 부른다고 본다.
+         * 지역 변수에 옮겨 담으면(val callback = block) 그 변수를 이어서 본다. 비교·타입 검사·문자열 안에서 읽기만 하면 부르지 않는다.
+         */
+        private fun mayInvoke(scope: PsiElement, name: String, aliasDepth: Int): Boolean =
+            PsiTreeUtil.findChildrenOfType(scope, KtNameReferenceExpression::class.java)
+                .filter { it.getReferencedName() == name }
+                .any { reference ->
+                    when (val parent = reference.parent) {
+                        is KtCallExpression -> true
+                        is KtQualifiedExpression -> parent.receiverExpression != reference ||
+                            (parent.selectorExpression as? KtCallExpression)?.calleeExpression?.text !in NON_INVOKING_MEMBERS
+                        is KtProperty -> {
+                            val alias = parent.name
+                            if (!parent.isLocal || parent.initializer != reference || alias == null) {
+                                true
+                            } else {
+                                aliasDepth >= MAX_HELPER_DEPTH || mayInvoke(parent.parent, alias, aliasDepth + 1)
+                            }
+                        }
+                        is KtBinaryExpression -> parent.operationToken !in COMPARISON_TOKENS
+                        is KtIsExpression, is KtStringTemplateEntry, is KtBlockExpression -> false
+                        else -> true
+                    }
+                }
 
         /** 호출 이름이 가리키는 선언. 로컬 함수는 UAST 가 감싼 변수로 해석되므로 원래 Kotlin 선언을 꺼낸다. */
         private fun calleeDeclaration(call: KtCallExpression): PsiElement? {
@@ -643,6 +670,10 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
         private val FUNCTION_TYPE_PREFIXES = listOf(
             "kotlin.jvm.functions.Function", "kotlin.Function", "kotlin.reflect.KFunction", "kotlin.coroutines.SuspendFunction",
         )
+
+        /** 함수 값에서 불러도 그 함수가 실행되지 않는 멤버. */
+        private val NON_INVOKING_MEMBERS = setOf("toString", "hashCode", "equals")
+        private val COMPARISON_TOKENS = setOf(KtTokens.EQEQ, KtTokens.EXCLEQ, KtTokens.EQEQEQ, KtTokens.EXCLEQEQEQ)
 
         /** 콜백 → 보조 함수 → 보조 함수 … 를 따라가는 최대 깊이. */
         private const val MAX_HELPER_DEPTH = 4

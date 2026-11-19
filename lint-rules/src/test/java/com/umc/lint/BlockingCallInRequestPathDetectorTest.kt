@@ -1151,6 +1151,10 @@ class BlockingCallInRequestPathDetectorTest {
                 fun attachToken(request: Request): Request = runBlocking { request }
 
                 fun signRequest(request: Request): Request = runBlocking { request }
+
+                fun keepToken(request: Request): Request = runBlocking { request }
+
+                fun aliasToken(request: Request): Request = runBlocking { request }
                 """,
             ).indented(),
             kotlin(
@@ -1165,10 +1169,22 @@ class BlockingCallInRequestPathDetectorTest {
                 class RefInterceptor : Interceptor {
                     override fun intercept(chain: Interceptor.Chain): Response {
                         val ignored = ignore(chain.request(), ::attachToken)
-                        return chain.proceed(apply(ignored, ::signRequest))
+                        val kept = keep(ignored, ::keepToken)
+                        val aliased = alias(kept, ::aliasToken)
+                        return chain.proceed(apply(aliased, ::signRequest))
                     }
 
                     private fun ignore(request: Request, block: (Request) -> Request): Request = request
+
+                    private fun keep(request: Request, block: (Request) -> Request): Request {
+                        val callback = block
+                        return request
+                    }
+
+                    private fun alias(request: Request, block: (Request) -> Request): Request {
+                        val callback = block
+                        return callback(request)
+                    }
 
                     private fun apply(request: Request, block: (Request) -> Request): Request = block(request)
                 }
@@ -1179,7 +1195,10 @@ class BlockingCallInRequestPathDetectorTest {
             src/com/umc/product/di/TokenRefs.kt:8: Error: 요청 경로(TokenRefs.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
             fun signRequest(request: Request): Request = runBlocking { request }
                                                          ~~~~~~~~~~~~~~~~~~~~~~~
-            1 error
+            src/com/umc/product/di/TokenRefs.kt:12: Error: 요청 경로(TokenRefs.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+            fun aliasToken(request: Request): Request = runBlocking { request }
+                                                        ~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors
             """,
         )
     }
