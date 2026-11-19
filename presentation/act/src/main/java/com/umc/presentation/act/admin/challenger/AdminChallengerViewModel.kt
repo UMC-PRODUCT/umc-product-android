@@ -321,7 +321,9 @@ class AdminChallengerViewModel @Inject constructor(
                     updateState { copy(sections = challengers.toSections(), loadState = AdminChallengerLoadState.SUCCESS, loadErrorMessage = null) }
                 },
                 errorCallback = { failure ->
-                    if (failure.code == "403" || failure.code.endsWith("-403")) {
+                    // HTTP 403 응답의 본문 코드가 있으면 apiCall은 상태 코드 대신 MEMBER-0015를 전달한다.
+                    // 관리자 검색의 권한 부족과 허용 범위 밖 필터를 기존 403과 동일하게 처리한다.
+                    if (failure.code == "403" || failure.code.endsWith("-403") || failure.code == "MEMBER-0015") {
                         // 서버에서 역할 변경을 감지하면 기존 선택 범위를 폐기한다. 자동 재요청은 하지 않는다.
                         initializeSearch(retryList = false, deniedMessage = failure.message)
                     } else {
