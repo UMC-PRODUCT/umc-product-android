@@ -8,6 +8,8 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
@@ -18,6 +20,7 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.skipParenthesizedExprDown
+import org.jetbrains.uast.visitor.AbstractUastVisitor
 import org.jetbrains.uast.toUElement
 
 /**
@@ -79,6 +82,9 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
     private fun isProtectedChain(context: JavaContext, receiver: UExpression?): Boolean {
         var current = receiver?.skipParenthesizedExprDown()
         var aliasHops = 0
+        // flowWithLifecycle 은 업스트림만 멈춘다. 그 뒤의 변환이 중단(delay 등)하는 동안 화면이 멈추면, 이미 받은 값은
+        // 대기를 마친 뒤 멈춘 화면에서 수집된다. 그래서 중단하는 변환이 사이에 있으면 flowWithLifecycle 을 보호로 보지 않는다.
+        var suspendsAfterProtection = false
         while (current != null) {
             // val visible = events.flowWithLifecycle(lifecycle) 처럼 지역 val 에 담았으면 그 초기화식을 이어서 본다.
             if (current is USimpleNameReferenceExpression) {
@@ -96,9 +102,11 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
                 if (STATE_OBSERVERS.any { (name, pkg) -> context.calls(call, name, pkg) }) return true
                 if (context.calls(call, "flowWithLifecycle", "androidx.lifecycle")) {
                     // STARTED 이상이면 보호된다. CREATED 처럼 낮으면 값만 흘려보내는 연산자처럼 보고 위쪽 체인을 계속 본다.
-                    if (isAtLeastStarted(context, call, "minActiveState")) return true
+                    if (isAtLeastStarted(context, call, "minActiveState")) return !suspendsAfterProtection
                 } else if (SINGLE_UPSTREAM_OPERATORS.none { context.calls(call, it, "kotlinx.coroutines.flow") }) {
                     return false
+                } else if (call.methodName in VALUE_LAMBDA_OPERATORS && call.valueArguments.any(::suspends)) {
+                    suspendsAfterProtection = true
                 }
             }
             current = when (current) {
@@ -125,6 +133,26 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
         }
         val state = ((argument.skipParenthesizedExprDown() as? UReferenceExpression)?.resolve() as? PsiField)?.name
         return state !in BELOW_STARTED
+    }
+
+    /** 람다 본문이 중단 함수(delay 등)를 부르는지. suspend 로 선언했거나 마지막 파라미터가 Continuation 인 함수다. */
+    private fun suspends(argument: UExpression): Boolean {
+        val lambda = argument.skipParenthesizedExprDown() as? ULambdaExpression ?: return false
+        var found = false
+        lambda.body.accept(object : AbstractUastVisitor() {
+            override fun visitCallExpression(node: UCallExpression): Boolean {
+                val method = node.resolve()
+                if (method != null && (
+                        (method.navigationElement as? KtNamedFunction)?.hasModifier(KtTokens.SUSPEND_KEYWORD) == true ||
+                            method.parameterList.parameters.lastOrNull()?.type?.canonicalText?.startsWith("kotlin.coroutines.Continuation") == true
+                        )
+                ) {
+                    found = true
+                }
+                return found
+            }
+        })
+        return found
     }
 
     /** 다시 대입할 수 없는 지역 val 의 초기화식. 파라미터·프로퍼티·var 이면 null. */
@@ -154,6 +182,11 @@ class LifecycleUnawareCollectDetector : Detector(), Detector.UastScanner {
             "map", "mapNotNull", "filter", "filterNot", "filterIsInstance", "filterNotNull",
             "onEach", "distinctUntilChanged", "distinctUntilChangedBy", "take", "takeWhile", "drop", "dropWhile",
             "runningReduce", "withIndex", "cancellable", "retry",
+        )
+
+        /** 값을 받아 람다로 처리하는 연산자. 람다가 중단하면 flowWithLifecycle 이 멈춘 뒤에도 값이 수집될 수 있다. */
+        private val VALUE_LAMBDA_OPERATORS = setOf(
+            "map", "mapNotNull", "filter", "filterNot", "onEach", "takeWhile", "dropWhile", "runningReduce",
         )
 
         @JvmField

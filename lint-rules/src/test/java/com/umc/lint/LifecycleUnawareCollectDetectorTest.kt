@@ -358,4 +358,39 @@ class LifecycleUnawareCollectDetectorTest {
             """,
         )
     }
+
+    @Test
+    fun `flowWithLifecycle 뒤에서 중단하는 변환은 보호되지 않는다`() {
+        lintWith(
+            LifecycleUnawareCollectDetector.ISSUE,
+            kotlin(
+                """
+                package com.umc.presentation.home
+
+                import androidx.compose.runtime.LaunchedEffect
+                import androidx.lifecycle.flowWithLifecycle
+                import androidx.lifecycle.Lifecycle
+                import kotlinx.coroutines.delay
+                import kotlinx.coroutines.flow.Flow
+                import kotlinx.coroutines.flow.map
+
+                fun HomeRoute(events: Flow<String>, lifecycle: Lifecycle) {
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map { delay(300); it }.collect { }
+                    }
+                    LaunchedEffect(Unit) {
+                        events.flowWithLifecycle(lifecycle).map { it.length }.collect { }
+                    }
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/presentation/home/test.kt:12: Error: LaunchedEffect 안의 수집은 백그라운드에서도 계속됩니다. repeatOnLifecycle(Lifecycle.State.STARTED)로 감싸세요. [LifecycleUnawareEventCollect]
+                    events.flowWithLifecycle(lifecycle).map { delay(300); it }.collect { }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 error
+            """,
+        )
+    }
 }

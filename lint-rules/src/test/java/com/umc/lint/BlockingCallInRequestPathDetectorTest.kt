@@ -1076,4 +1076,170 @@ class BlockingCallInRequestPathDetectorTest {
             """,
         )
     }
+
+    @Test
+    fun `invoke 를 직접 붙여 부른 람다 프로퍼티·지역 람다도 오류, 꺼내기만 하면 무시`() {
+        lintWith(
+            BlockingCallInRequestPathDetector.ISSUE,
+            kotlin(
+                "src/com/umc/product/di/TokenHolders.kt",
+                """
+                package com.umc.product.di
+
+                import kotlinx.coroutines.runBlocking
+
+                class ExplicitHolder(val provide: () -> String = { runBlocking { "explicit" } })
+
+                class SafeHolder(val onToken: (() -> String)? = { runBlocking { "safe" } })
+
+                class ReadHolder(val provide: () -> String = { runBlocking { "read" } })
+                """,
+            ).indented(),
+            kotlin(
+                "src/com/umc/product/di/InvokeInterceptor.kt",
+                """
+                package com.umc.product.di
+
+                import kotlinx.coroutines.runBlocking
+                import okhttp3.Interceptor
+                import okhttp3.Response
+
+                class InvokeInterceptor(
+                    private val explicit: ExplicitHolder,
+                    private val safe: SafeHolder,
+                    private val read: ReadHolder,
+                ) : Interceptor {
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        explicit.provide.invoke()
+                        safe.onToken?.invoke()
+                        val unused = read.provide
+                        val local = { runBlocking { "local" } }
+                        local.invoke()
+                        return chain.proceed(chain.request())
+                    }
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/product/di/InvokeInterceptor.kt:16: Error: 요청 경로(InvokeInterceptor.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+                    val local = { runBlocking { "local" } }
+                                  ~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/product/di/TokenHolders.kt:5: Error: 요청 경로(TokenHolders.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+            class ExplicitHolder(val provide: () -> String = { runBlocking { "explicit" } })
+                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/product/di/TokenHolders.kt:7: Error: 요청 경로(TokenHolders.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+            class SafeHolder(val onToken: (() -> String)? = { runBlocking { "safe" } })
+                                                              ~~~~~~~~~~~~~~~~~~~~~~
+            3 errors
+            """,
+        )
+    }
+
+    @Test
+    fun `함수 참조는 받은 함수가 그 인수를 쓸 때만 따라간다`() {
+        lintWith(
+            BlockingCallInRequestPathDetector.ISSUE,
+            kotlin(
+                "src/com/umc/product/di/TokenRefs.kt",
+                """
+                package com.umc.product.di
+
+                import kotlinx.coroutines.runBlocking
+                import okhttp3.Request
+
+                fun attachToken(request: Request): Request = runBlocking { request }
+
+                fun signRequest(request: Request): Request = runBlocking { request }
+                """,
+            ).indented(),
+            kotlin(
+                "src/com/umc/product/di/RefInterceptor.kt",
+                """
+                package com.umc.product.di
+
+                import okhttp3.Interceptor
+                import okhttp3.Request
+                import okhttp3.Response
+
+                class RefInterceptor : Interceptor {
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        val ignored = ignore(chain.request(), ::attachToken)
+                        return chain.proceed(apply(ignored, ::signRequest))
+                    }
+
+                    private fun ignore(request: Request, block: (Request) -> Request): Request = request
+
+                    private fun apply(request: Request, block: (Request) -> Request): Request = block(request)
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/product/di/TokenRefs.kt:8: Error: 요청 경로(TokenRefs.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+            fun signRequest(request: Request): Request = runBlocking { request }
+                                                         ~~~~~~~~~~~~~~~~~~~~~~~
+            1 error
+            """,
+        )
+    }
+
+    @Test
+    fun `복합 대입은 적용 가능한 plusAssign 이 없으면 set 을 보고, set 오버로드는 가장 구체적인 것만 본다`() {
+        lintWith(
+            BlockingCallInRequestPathDetector.ISSUE,
+            kotlin(
+                "src/com/umc/product/di/Overloads.kt",
+                """
+                package com.umc.product.di
+
+                import kotlinx.coroutines.runBlocking
+
+                class Acc2 {
+                    operator fun plusAssign(text: String) {}
+                    operator fun plus(n: Int): Acc2 = this
+                }
+
+                class AccStore(private val save: suspend (Acc2) -> Unit) {
+                    operator fun get(key: String): Acc2 = Acc2()
+                    operator fun set(key: String, value: Acc2) {
+                        runBlocking { save(value) }
+                    }
+                }
+
+                class TextStore(private val save: suspend (Any) -> Unit) {
+                    operator fun get(key: String): String = ""
+                    operator fun set(key: String, value: String) {}
+                    operator fun set(key: String, value: Any) {
+                        runBlocking { save(value) }
+                    }
+                }
+                """,
+            ).indented(),
+            kotlin(
+                "src/com/umc/product/di/OverloadInterceptor.kt",
+                """
+                package com.umc.product.di
+
+                import okhttp3.Interceptor
+                import okhttp3.Response
+
+                class OverloadInterceptor(private val accs: AccStore, private val texts: TextStore) : Interceptor {
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        accs["k"] += 1
+                        texts["k"] += "x"
+                        return chain.proceed(chain.request())
+                    }
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/product/di/Overloads.kt:13: Error: 요청 경로(Overloads.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요. [BlockingCallInRequestPath]
+                    runBlocking { save(value) }
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 error
+            """,
+        )
+    }
 }

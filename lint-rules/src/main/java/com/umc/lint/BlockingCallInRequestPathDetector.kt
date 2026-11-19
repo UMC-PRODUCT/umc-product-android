@@ -14,6 +14,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
+import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.util.PsiTreeUtil
@@ -30,6 +31,7 @@ import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtLambdaExpression
+import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtParameter
@@ -52,6 +54,8 @@ import org.jetbrains.uast.UPrefixExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UastBinaryOperator
@@ -340,6 +344,10 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                     if (calledByName == null || resolved?.navigationElement != calledByName || isInvokedRightAway(node)) {
                         check(node, resolved)
                     }
+                    // holder.provide.invoke(), onToken?.invoke() 처럼 invoke 를 직접 붙여 부르면 수신자가 그 선언인지 본다.
+                    if (calledByName != null && node.methodName == "invoke" && declarationOf(node.receiver) == calledByName) {
+                        check(node, calledByName)
+                    }
                     // 이름이 같은 다른 함수(오버로드 등)로 해석된 호출은 람다·로컬 함수 호출이 아니다.
                     val resolvedDeclaration = resolved?.navigationElement
                     val resolvedElsewhere = resolvedDeclaration is KtNamedFunction && resolvedDeclaration != calledByName
@@ -373,7 +381,11 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                     val resolved = node.resolve()
                     val target = resolved?.takeIf { it.navigationElement !is KtElement }?.toUElement()?.sourcePsi as? KtNamedFunction
                         ?: resolved
-                    if (target?.navigationElement !is KtProperty && target?.navigationElement !is KtParameter) check(node, target)
+                    if (target?.navigationElement !is KtProperty && target?.navigationElement !is KtParameter &&
+                        !isPassedToUnusedParameter(node)
+                    ) {
+                        check(node, target)
+                    }
                     return found
                 }
 
@@ -404,6 +416,42 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
                 }
             })
             return found
+        }
+
+        /** 식이 가리키는 Kotlin 선언(프로퍼티·생성자 프로퍼티·지역 변수). 지역 변수는 UAST 가 감싼 변수로 해석되므로 원래 선언을 꺼낸다. */
+        private fun declarationOf(expression: UExpression?): PsiElement? {
+            val resolved = (expression?.skipParenthesizedExprDown() as? UResolvable)?.resolve() ?: return null
+            val navigation = resolved.navigationElement
+            if (navigation is KtElement) return navigation
+            return resolved.toUElement()?.sourcePsi as? KtElement
+        }
+
+        /**
+         * 함수 참조를 인수로 넘겼는데, 받는 소스 함수의 본문이 그 파라미터를 전혀 쓰지 않는지.
+         * transform(request, ::attachToken) 에서 transform 이 request 만 돌려주면 attachToken 은 불리지 않는다.
+         * 받는 함수가 라이브러리이거나 본문이 없으면(인터페이스 등) 알 수 없으므로 부른다고 본다.
+         */
+        private fun isPassedToUnusedParameter(reference: UCallableReferenceExpression): Boolean {
+            var argument: UElement = reference
+            while (argument.uastParent is UParenthesizedExpression) argument = argument.uastParent!!
+            val call = argument.uastParent as? UCallExpression ?: return false
+            val method = call.resolve() ?: return false
+            val parameter = context.evaluator.computeArgumentMapping(call, method)
+                .entries.firstOrNull { it.key.sourcePsi == argument.sourcePsi }?.value ?: return false
+            val callee = method.navigationElement
+            if (!isSourceFile(callee.containingFile)) return false
+            val name = parameter.name
+            return when (callee) {
+                is KtNamedFunction -> {
+                    val body = callee.bodyExpression ?: return false
+                    PsiTreeUtil.findChildrenOfType(body, KtNameReferenceExpression::class.java).none { it.getReferencedName() == name }
+                }
+                is PsiMethod -> {
+                    val body = callee.body ?: return false
+                    PsiTreeUtil.findChildrenOfType(body, PsiReferenceExpression::class.java).none { it.referenceName == name }
+                }
+                else -> false
+            }
         }
 
         /** 호출 이름이 가리키는 선언. 로컬 함수는 UAST 가 감싼 변수로 해석되므로 원래 Kotlin 선언을 꺼낸다. */
@@ -449,19 +497,53 @@ class BlockingCallInRequestPathDetector : Detector(), Detector.UastScanner {
          * 확장 함수로 선언한 set 은 찾지 않는다.
          */
         private fun compoundSetTargets(node: UArrayAccessExpression, get: PsiMethod): List<PsiMethod> {
-            val user = outermostAccess(node).uastParent
-            val assignName = (user as? UBinaryExpression)?.operator?.let(ASSIGN_OPERATOR_NAMES::get)
+            val user = outermostAccess(node).uastParent as? UBinaryExpression
             val element = (get.returnType as? PsiClassType)?.resolve()
-            if (assignName != null && element != null && element.findMethodsByName(assignName, true).isNotEmpty()) return emptyList()
+            val right = user?.rightOperand?.getExpressionType()
+            var value = get.returnType
+            val operatorName = user?.operator?.let(ASSIGN_OPERATOR_NAMES::get)
+            if (operatorName != null && element != null) {
+                // 오른쪽 값을 받을 수 있는 <op>Assign 이 있으면 Kotlin 은 그것을 부르고 set 은 부르지 않는다.
+                // 이름만 같고 받을 수 없는 것(plusAssign(String) 에 Int)은 고르지 않는다.
+                if (element.findMethodsByName(operatorName, true).any { it.acceptsSingle(right) }) return emptyList()
+                // a[i] += b 는 set(i, a[i].plus(b)) 이므로 set 에 넘기는 값은 plus 의 결과다.
+                val plain = operatorName.removeSuffix("Assign")
+                element.findMethodsByName(plain, true).firstOrNull { it.acceptsSingle(right) }?.returnType?.let { value = it }
+            }
             val receiver = (node.receiver.getExpressionType() as? PsiClassType)?.resolve() ?: return emptyList()
             val indexTypes = get.parameterList.parameters.map { it.type }
-            return receiver.findMethodsByName("set", true).filter { set ->
+            val applicable = receiver.findMethodsByName("set", true).filter { set ->
                 val parameters = set.parameterList.parameters.map { it.type }
                 parameters.size == indexTypes.size + 1 &&
                     parameters.zip(indexTypes).all { (parameter, index) -> accepts(parameter, index) } &&
-                    accepts(parameters.last(), get.returnType)
+                    accepts(parameters.last(), value)
             }
+            // 재정의된 상위 메서드는 빼고(재정의한 쪽이 불린다), 남은 오버로드 중 가장 구체적인 것만 고른다.
+            val overridden = applicable.flatMap(::superMethodsOf).map { it.navigationElement }.toSet()
+            val candidates = applicable.filter { it.navigationElement !in overridden }
+            return candidates.filter { candidate -> candidates.none { other -> other !== candidate && isMoreSpecific(other, candidate) } }
         }
+
+        private fun PsiMethod.acceptsSingle(argument: PsiType?): Boolean =
+            parameterList.parametersCount == 1 && accepts(parameterList.parameters[0].type, argument)
+
+        private fun superMethodsOf(method: PsiMethod): Set<PsiMethod> {
+            val result = mutableSetOf<PsiMethod>()
+            val pending = ArrayDeque(method.findSuperMethods().toList())
+            while (pending.isNotEmpty()) {
+                val next = pending.removeFirst()
+                if (result.add(next)) pending.addAll(next.findSuperMethods())
+            }
+            return result
+        }
+
+        /** [a] 가 [b] 보다 구체적인지: a 의 파라미터를 모두 b 에 넘길 수 있고 그 반대는 아니다. */
+        private fun isMoreSpecific(a: PsiMethod, b: PsiMethod): Boolean = fitsInto(a, b) && !fitsInto(b, a)
+
+        private fun fitsInto(a: PsiMethod, b: PsiMethod): Boolean =
+            a.parameterList.parameters.zip(b.parameterList.parameters).all { (from, to) ->
+                isTypeVariable(to.type) || (!isTypeVariable(from.type) && to.type.isAssignableFrom(from.type))
+            }
 
         /** [parameter] 자리에 [value] 를 넘길 수 있는지. 제네릭 타입 변수는 대입을 알 수 없으므로 받는다고 본다. */
         private fun accepts(parameter: PsiType, value: PsiType?): Boolean {
