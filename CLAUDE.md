@@ -16,7 +16,7 @@ Compose 전환 중인 멀티모듈 앱(`:app`, `:data`, `:domain`, `:presentatio
 - **lint 중에서 CI를 막는 건 커스텀 규칙의 ERROR뿐이다.** 게이트는 lint 리포트에서 category가 `UMC`인 항목만 보고, 내장 규칙은 ERROR여도 막지 않는다. 커스텀 규칙의 기존 위반은 모듈별 `lint-baseline.xml`에 묶여 있다. baseline은 규칙을 새로 추가할 때만 `python3 lint-rules/update_baseline.py --issue-id <새 규칙 ID>`로 갱신하고(다른 규칙의 항목은 그대로 둔다), 새로 생긴 위반을 숨기려고 갱신하지 않는다.
 - **DI·네트워크를 바꿨으면 실행까지 확인한다.** `app/src/main/java/com/umc/product/di/`나 `Qualifier.kt`를 건드린 변경은 컴파일 통과로 끝내지 말고, 앱을 띄워 해당 화면의 네트워크 호출을 확인한 뒤 보고한다. qualifier 7종(`@NormalRetrofit`·`@AuthRetrofit`·Kakao·RemoteConfig 등)이 뒤바뀌어도 컴파일은 통과하고, 런타임에 401이나 엉뚱한 호스트로만 드러난다.
 - **UI를 바꾸면 그 화면의 `@Preview`를 같이 갱신한다.** 여러 폭을 봐야 하는 화면에는 `@PreviewScreenSizes`를 붙인다. 스크린샷 테스트(Compose Preview Screenshot Testing, AGP test suite)는 `:presentation:component`와 `:presentation:act`에서만 시범 운영 중이고 CI는 결과를 보고만 한다. 그 밖의 화면은 CI가 UI 회귀를 잡지 못한다.
-  - 시범 모듈의 UI를 바꾸면 `./gradlew :presentation:<모듈>:updateDebugScreenshotTestDefaultTestSuite`로 기준 이미지(`src/screenshotTestDefaultDebug/reference`)를 갱신해 함께 커밋한다. 비교는 `testDebugScreenshotTestDefaultTestSuite`, 리포트는 `build/reports/tests/testDebugScreenshotTestDefaultTestSuite/`.
+  - 시범 모듈의 UI를 바꾸면 `./gradlew :presentation:<모듈>:updateDebugScreenshotTestDefaultTestSuite`로 기준 이미지(`src/screenshotTestDefaultDebug/reference`)를 갱신해 함께 커밋한다. 비교는 `testDebugScreenshotTestDefaultTestSuite`, 리포트는 `build/reports/tests/testDebugScreenshotTestDefaultTestSuite/`. CI의 렌더링·차이 이미지는 `screenshots-<실행 번호>` artifact에 있다.
   - 테스트는 `src/screenshotTest`에 `@PreviewTest`로 쓴다. 미리보기 이름에 `.`을 넣지 않는다(파일 이름이 잘려 이미지가 덮어써진다).
 
 ## 스킬

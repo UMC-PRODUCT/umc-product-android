@@ -365,12 +365,29 @@ jobs:
 
       # 스크린샷 테스트(시범: :presentation:component, :presentation:act).
       # 기준 이미지는 src/screenshotTestDefaultDebug/reference 에 있다. macOS 에서 만든 기준 이미지와 Linux 렌더링의
-      # 차이를 지켜보는 동안에는 결과만 보고하고 막지 않는다. 차이가 나면 리포트(아래 업로드)의 이미지 비교를 본다.
+      # 차이를 지켜보는 동안에는 결과만 보고하고 막지 않는다. 차이가 나면 screenshots-<실행 번호> artifact 의
+      # rendered(이번 렌더링)·diffs(차이) 이미지를 기준 이미지와 비교한다. HTML 리포트에는 이미지 경로만 있다.
       - name: 스크린샷 테스트 (시범, 보고만)
+        id: screenshot
         continue-on-error: true
         run: |
           ./gradlew :presentation:component:testDebugScreenshotTestDefaultTestSuite \
             :presentation:act:testDebugScreenshotTestDefaultTestSuite --console=plain
+
+      - name: 스크린샷 차이 요약
+        if: steps.screenshot.outcome == 'failure'
+        run: |
+          echo "### 📸 스크린샷 테스트가 기준 이미지와 다릅니다(시범 운영이라 막지 않음)" >> "$GITHUB_STEP_SUMMARY"
+          echo "screenshots-${{ github.run_number }} artifact 의 rendered·diffs 이미지를 확인하세요." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 스크린샷 이미지 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ github.run_number }}
+          path: presentation/*/build/intermediates/test_suite_results/debug/testDebugScreenshotTestDefaultTestSuite/**
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: 리포트 업로드
         if: always()
