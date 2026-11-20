@@ -2,9 +2,7 @@ package com.umc.presentation.home.schedule.detail
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import android.content.Context
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,22 +18,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -49,25 +41,23 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.DialogType
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.yellow500
 import com.umc.component.theme.grey50
-import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
-import com.umc.component.theme.main600
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.presentation.home.schedule.ScheduleTagChipItems
-import com.umc.presentation.home.schedule.add.ScheduleAddEvent
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.collections.immutable.toImmutableList
 import java.net.URLEncoder
 import com.umc.component.base.CollectUiEvents
 
@@ -84,17 +74,20 @@ fun ScheduleDetailRoute(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    // 이 화면에는 토스트 호스트가 없어 앱 공용 토스트를 쓴다(삭제 확인 다이얼로그는 먼저 닫힌다)
+    val toast = LocalUToast.current
 
     // 일정 삭제 확인 다이얼로그 표시 여부 플래그 변수
     var showDeleteDialog by remember { mutableStateOf(false) }
 
 
     // 화면으로 재진입(ON_RESUME)할 때마다 일정 상세 정보를 재조회하는 라이프사이클 관찰자
+    // 관찰자는 붙자마자 ON_RESUME 을 받는다. 첫 조회는 ViewModel init 이 하므로 그 한 번은 ViewModel 이 건너뛴다
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.getScheduleDetail()
+                viewModel.onScreenResumed()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -116,7 +109,7 @@ fun ScheduleDetailRoute(
 
             //삭제 실패 등 서버가 내려준 안내 문구 표시
             is ScheduleDetailEvent.ShowErrorToast ->
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                toast.show(event.message, UToastState.ERROR)
 
 
             else -> {}
@@ -129,11 +122,15 @@ fun ScheduleDetailRoute(
         onMenuClick = viewModel::toggleKebabMenu,
         onEditClick = viewModel::editPlan,
         onDeleteClick = viewModel::checkDeletePlan,
-        onMapClick = { openNaverMap(context,
-            uiState.place,
-            uiState.latitude,
-            uiState.longitude
-        ) },
+        onMapClick = {
+            val opened = openNaverMap(
+                context,
+                uiState.place,
+                uiState.latitude,
+                uiState.longitude
+            )
+            if (!opened) toast.show(AppStrings.HOME_PLAN_DETAIL_MAP_ERROR, UToastState.ERROR)
+        },
         onAttendanceClick = onNavigateToAttendSchedule,
     )
 
@@ -251,7 +248,7 @@ fun ScheduleDetailScreen(
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             )
                             ScheduleTagChipItems(
-                                tags = uiState.content.tags,
+                                tags = remember(uiState.content.tags) { uiState.content.tags.toImmutableList() },
                                 maxVisible = 6,
                                 textStyle = UmcTypographyTokens.FootnoteBold,
                             )
@@ -387,7 +384,8 @@ fun ScheduleDetailTopBar(
             .padding(
                 start = 4.dp,
                 top = 8.dp,
-                end = 24.dp,
+                // 케밥 아이콘이 12dp 여백을 터치 영역으로 가지므로 그만큼 줄여 아이콘 자리를 그대로 둔다
+                end = 12.dp,
                 bottom = 8.dp
             ),
         verticalAlignment = Alignment.CenterVertically,
@@ -397,12 +395,13 @@ fun ScheduleDetailTopBar(
         //이름과 뒤로가기
         Row(verticalAlignment = Alignment.CenterVertically) {
 
+            // 여백까지 누를 수 있게 clickable 을 padding 앞에 둔다(48dp 터치 영역)
             Icon(
                 modifier = Modifier
-                    .padding(12.dp)
-                    .clickable { onBackClick() },
+                    .clickable { onBackClick() }
+                    .padding(12.dp),
                 painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = null,
+                contentDescription = AppStrings.COMMON_BACK,
                 tint = Color.Unspecified,
             )
 
@@ -415,10 +414,12 @@ fun ScheduleDetailTopBar(
         if(canEdit || canDelete) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_menu_kebab),
-                contentDescription = null,
+                contentDescription = AppStrings.HOME_PLAN_DETAIL_CD_MENU,
+                // 24dp 아이콘에 12dp 여백을 더해 48dp 터치 영역을 둔다
                 modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onMenuClick() },
+                    .clickable { onMenuClick() }
+                    .padding(12.dp)
+                    .size(24.dp),
 
                 tint = grey800()
             )
@@ -434,18 +435,21 @@ fun ScheduleDetailTopBar(
  * 네이버 지도 앱 인텐트를 호출하거나 설치되어 있지 않은 경우
  * 브라우저 지도 URL로 라우팅하는 메서드
  *
+ * 컴포저블 밖이라 토스트를 직접 띄우지 않고, 열지 못했으면 false 를 돌려 호출부가 알리게 한다.
+ *
  * @param context 안드로이드 컨텍스트
  * @param placeName 장소 이름
  * @param latitude 장소 위도
  * @param longitude 장소 경도
+ * @return 지도를 열었으면 true
  */
 private fun openNaverMap(
     context: Context,
     placeName: String, //장소 이름
     latitude: Double, //위도
     longitude: Double //경도
-) {
-    try {
+): Boolean {
+    return try {
 
         // 네이버 지도 앱에 접근을 시도해보기
         val encodedTitle = URLEncoder.encode(placeName, "UTF-8")
@@ -464,10 +468,10 @@ private fun openNaverMap(
             val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(webUrl))
             context.startActivity(webIntent)
         }
+        true
     } catch (e: Exception) {
         e.printStackTrace()
-        //UToast.createToast(requireContext(), "지도를 열 수 없습니다.", )
-        Toast.makeText(context, AppStrings.HOME_PLAN_DETAIL_MAP_ERROR, Toast.LENGTH_SHORT).show()
+        false
     }
 }
 

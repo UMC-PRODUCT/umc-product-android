@@ -7,13 +7,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -22,6 +22,9 @@ import androidx.compose.ui.window.Dialog
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.Caption1
@@ -45,6 +48,8 @@ import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
  * @param onPartChanged 파트 변경 시 호출
  * @param onConfirm 수정 완료 버튼 클릭 시 호출
  * @param onDismiss 다이얼로그를 닫을 때 호출
+ * @param toastData 다이얼로그가 열린 채로 띄울 토스트(수정 실패 등)
+ * @param onToastDismiss 토스트가 사라질 때 호출
  */
 @Composable
 fun AdminStudyGroupEditDialog(
@@ -55,6 +60,8 @@ fun AdminStudyGroupEditDialog(
     onPartChanged: (UserPart) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
+    toastData: UToastData? = null,
+    onToastDismiss: () -> Unit = {},
 ) {
     /**
      * 파트 선택 DropdownMenu 표시 여부
@@ -89,277 +96,261 @@ fun AdminStudyGroupEditDialog(
     Dialog(
         onDismissRequest = onDismiss
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = grey50(),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(
-                    horizontal = 20.dp,
-                    vertical = 20.dp
-                )
-        ) {
-            /**
-             * 다이얼로그 제목
-             */
-            UText(
-                text = AppStrings.STUDY_GROUP_EDIT_TITLE,
-                style = SubheadlineBold,
-                color = grey900(),
-                modifier = Modifier.align(
-                    Alignment.CenterHorizontally
-                )
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            /**
-             * 다이얼로그 설명
-             */
-            UText(
-                text = AppStrings.STUDY_GROUP_EDIT_DESCRIPTION,
-                style = Caption1,
-                color = grey500(),
-                modifier = Modifier.align(
-                    Alignment.CenterHorizontally
-                )
-            )
-
-            Spacer(
-                modifier = Modifier.height(22.dp)
-            )
-
-            /**
-             * 그룹 이름 입력 영역
-             */
-            UText(
-                text = AppStrings.STUDY_GROUP_NAME_LABEL,
-                style = Caption1Bold,
-                color = grey800()
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            BasicTextField(
-                value = groupName,
-                onValueChange = onGroupNameChanged,
-                textStyle = Body.copy(
-                    color = grey800()
-                ),
+        // 다이얼로그는 별도 창이라 화면 토스트가 딤 아래에 가려지므로, 열려 있는 동안의 토스트는 이 안에 띄운다.
+        Box {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
                     .background(
                         color = grey50(),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
-                    .border(
-                        width = 1.dp,
-                        color = grey300(),
-                        shape = RoundedCornerShape(8.dp)
+                    .padding(
+                        horizontal = 20.dp,
+                        vertical = 20.dp
                     )
-                    .padding(horizontal = 12.dp),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        /**
-                         * 그룹 이름이 비어있는 경우
-                         * 입력 예시를 placeholder로 표시합니다.
-                         */
-                        if (groupName.isBlank()) {
-                            UText(
-                                text = AppStrings.STUDY_GROUP_NAME_PLACEHOLDER,
-                                style = Body,
-                                color = grey400()
-                            )
-                        }
+            ) {
+                /**
+                 * 다이얼로그 제목
+                 */
+                UText(
+                    text = AppStrings.STUDY_GROUP_EDIT_TITLE,
+                    style = SubheadlineBold,
+                    color = grey900(),
+                    modifier = Modifier.align(
+                        Alignment.CenterHorizontally
+                    )
+                )
 
-                        // 실제 BasicTextField 입력 영역
-                        innerTextField()
-                    }
-                }
-            )
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
 
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
+                /**
+                 * 다이얼로그 설명
+                 */
+                UText(
+                    text = AppStrings.STUDY_GROUP_EDIT_DESCRIPTION,
+                    style = Caption1,
+                    color = grey500(),
+                    modifier = Modifier.align(
+                        Alignment.CenterHorizontally
+                    )
+                )
 
-            /**
-             * 소속 파트 선택 영역
-             */
-            UText(
-                text = AppStrings.STUDY_GROUP_AFFILIATION_PART_LABEL,
-                style = Caption1Bold,
-                color = grey800()
-            )
+                Spacer(
+                    modifier = Modifier.height(22.dp)
+                )
 
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
+                /**
+                 * 그룹 이름 입력 영역
+                 */
+                UText(
+                    text = AppStrings.STUDY_GROUP_NAME_LABEL,
+                    style = Caption1Bold,
+                    color = grey800()
+                )
 
-            /**
-             * 파트 선택 영역과 DropdownMenu를
-             * 같은 Box 안에 배치합니다.
-             */
-            Box {
-                Row(
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
+                // 기존 모양(가로 여백 12dp, 세로 여백 없음, 포커스 시 테두리 유지, 검정 커서)을 그대로 둔다.
+                // 48dp 높이에서 기본 세로 여백 14dp 를 두면 Body 한 줄이 잘리므로 세로 여백은 0 으로 둔다.
+                UTextField(
+                    value = groupName,
+                    onValueChange = onGroupNameChanged,
+                    placeholder = AppStrings.STUDY_GROUP_NAME_PLACEHOLDER,
+                    textStyle = Body,
+                    focusStrokeColor = grey300(),
+                    cursorColor = Color.Black,
+                    contentPadding = PaddingValues(horizontal = 12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .height(48.dp),
+                )
+
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+
+                /**
+                 * 소속 파트 선택 영역
+                 */
+                UText(
+                    text = AppStrings.STUDY_GROUP_AFFILIATION_PART_LABEL,
+                    style = Caption1Bold,
+                    color = grey800()
+                )
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
+                /**
+                 * 파트 선택 영역과 DropdownMenu를
+                 * 같은 Box 안에 배치합니다.
+                 */
+                Box {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+
+                            /**
+                             * 현재 파트 선택 Row의 너비 측정
+                             *
+                             * 측정된 너비를 dropdownWidth에 저장하여
+                             * 아래 DropdownMenu와 너비를 동일하게 맞춥니다.
+                             */
+                            .onGloballyPositioned { coordinates ->
+                                dropdownWidth = with(density) {
+                                    coordinates.size.width.toDp()
+                                }
+                            }
+                            .background(
+                                color = grey50(),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = grey300(),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable {
+                                expanded = true
+                            }
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        /**
+                         * 현재 선택된 파트
+                         */
+                        UText(
+                            text = selectedPart.label,
+                            style = Body,
+                            color = grey800(),
+                            modifier = Modifier.weight(1f)
+                        )
 
                         /**
-                         * 현재 파트 선택 Row의 너비 측정
-                         *
-                         * 측정된 너비를 dropdownWidth에 저장하여
-                         * 아래 DropdownMenu와 너비를 동일하게 맞춥니다.
+                         * 파트 선택 Dropdown 아이콘
                          */
-                        .onGloballyPositioned { coordinates ->
-                            dropdownWidth = with(density) {
-                                coordinates.size.width.toDp()
-                            }
-                        }
-                        .background(
-                            color = grey50(),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = grey300(),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .clickable {
-                            expanded = true
-                        }
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    /**
-                     * 현재 선택된 파트
-                     */
-                    UText(
-                        text = selectedPart.label,
-                        style = Body,
-                        color = grey800(),
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    /**
-                     * 파트 선택 Dropdown 아이콘
-                     */
-                    Icon(
-                        painter = painterResource(
-                            R.drawable.ic_dropdown_down
-                        ),
-                        contentDescription = null,
-                        tint = grey500(),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                /**
-                 * 파트 선택 DropdownMenu
-                 *
-                 * expanded가 true일 때 표시되며,
-                 * 사용자가 파트를 선택하면 onPartChanged를 호출한 뒤
-                 * DropdownMenu를 닫습니다.
-                 */
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = {
-                        expanded = false
-                    },
-                    modifier = Modifier
-                        .width(dropdownWidth)
-                        .background(grey50())
-                ) {
-                    parts.forEach { part ->
-                        DropdownMenuItem(
-                            text = {
-                                UText(
-                                    text = part.label,
-                                    style = Body,
-                                    color = grey800()
-                                )
-                            },
-                            onClick = {
-                                /**
-                                 * 선택한 파트를 상위 상태로 전달
-                                 */
-                                onPartChanged(part)
-
-                                /**
-                                 * 선택 완료 후 DropdownMenu 닫기
-                                 */
-                                expanded = false
-                            }
+                        Icon(
+                            painter = painterResource(
+                                R.drawable.ic_dropdown_down
+                            ),
+                            contentDescription = null,
+                            tint = grey500(),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
+
+                    /**
+                     * 파트 선택 DropdownMenu
+                     *
+                     * expanded가 true일 때 표시되며,
+                     * 사용자가 파트를 선택하면 onPartChanged를 호출한 뒤
+                     * DropdownMenu를 닫습니다.
+                     */
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = {
+                            expanded = false
+                        },
+                        modifier = Modifier
+                            .width(dropdownWidth)
+                            .background(grey50())
+                    ) {
+                        parts.forEach { part ->
+                            DropdownMenuItem(
+                                text = {
+                                    UText(
+                                        text = part.label,
+                                        style = Body,
+                                        color = grey800()
+                                    )
+                                },
+                                onClick = {
+                                    /**
+                                     * 선택한 파트를 상위 상태로 전달
+                                     */
+                                    onPartChanged(part)
+
+                                    /**
+                                     * 선택 완료 후 DropdownMenu 닫기
+                                     */
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
                 }
-            }
 
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-            /**
-             * 다이얼로그 하단 액션 버튼
-             *
-             * 왼쪽: 수정 취소
-             * 오른쪽: 수정 완료
-             */
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // 수정 취소
-                UButton(
-                    text = AppStrings.COMMON_CANCEL,
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp),
-                    backgroundColor = grey100(),
-                    textColor = grey700(),
-                    textStyle = SubheadlineBold,
-                    borderWidth = 0.dp,
-                    cornerRadius = 8.dp,
+                Spacer(
+                    modifier = Modifier.height(18.dp)
                 )
 
                 /**
-                 * 수정 완료
+                 * 다이얼로그 하단 액션 버튼
                  *
-                 * canConfirm이 false인 경우 버튼을 비활성화하고,
-                 * 활성/비활성 상태에 따라 버튼 색상도 변경합니다.
+                 * 왼쪽: 수정 취소
+                 * 오른쪽: 수정 완료
                  */
-                UButton(
-                    text = AppStrings.STUDY_GROUP_EDIT_COMPLETE,
-                    onClick = onConfirm,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp),
-                    enabled = canConfirm,
-                    backgroundColor = if (canConfirm) {
-                        main500()
-                    } else {
-                        grey200()
-                    },
-                    textColor = if (canConfirm) {
-                        grey50()
-                    } else {
-                        grey400()
-                    },
-                    textStyle = SubheadlineBold,
-                    cornerRadius = 8.dp,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // 수정 취소
+                    UButton(
+                        text = AppStrings.COMMON_CANCEL,
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
+                        backgroundColor = grey100(),
+                        textColor = grey700(),
+                        textStyle = SubheadlineBold,
+                        borderWidth = 0.dp,
+                        cornerRadius = 8.dp,
+                    )
+
+                    /**
+                     * 수정 완료
+                     *
+                     * canConfirm이 false인 경우 버튼을 비활성화하고,
+                     * 활성/비활성 상태에 따라 버튼 색상도 변경합니다.
+                     */
+                    UButton(
+                        text = AppStrings.STUDY_GROUP_EDIT_COMPLETE,
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
+                        enabled = canConfirm,
+                        backgroundColor = if (canConfirm) {
+                            main500()
+                        } else {
+                            grey200()
+                        },
+                        textColor = if (canConfirm) {
+                            grey50()
+                        } else {
+                            grey400()
+                        },
+                        textStyle = SubheadlineBold,
+                        cornerRadius = 8.dp,
+                    )
+                }
             }
+
+            UToastHost(
+                data = toastData,
+                onDismiss = onToastDismiss,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 6.dp, vertical = 16.dp),
+            )
         }
     }
 }

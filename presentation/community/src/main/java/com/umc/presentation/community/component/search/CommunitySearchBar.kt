@@ -2,7 +2,7 @@ package com.umc.presentation.community.component.search
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
@@ -21,12 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
@@ -65,7 +65,7 @@ fun CommunitySearchBar(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로가기",
+                    contentDescription = AppStrings.COMMON_BACK,
                     tint = grey950(),
                     modifier = Modifier.size(24.dp),
                 )
@@ -87,14 +87,21 @@ fun CommunitySearchBar(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                BasicTextField(
+                // 배경·테두리는 바깥 Surface가 그린다. 지우기 버튼은 IconButton의 터치 영역·리플을 유지하려고 입력창 밖에 따로 둔다.
+                UTextField(
                     value = query,
                     onValueChange = onQueryChanged,
-                    textStyle = UmcTypographyTokens.Body.copy(
-                        color = grey900(),
+                    placeholder = AppStrings.COMMUNITY_SEARCH_PLACEHOLD,
+                    textStyle = UmcTypographyTokens.Body,
+                    textColor = grey900(),
+                    backgroundColor = Color.Transparent,
+                    borderWidth = 0.dp,
+                    cursorColor = grey950(),
+                    contentPadding = PaddingValues(
+                        horizontal = 16.dp,
+                        vertical = 15.5.dp,
                     ),
                     singleLine = true,
-                    cursorBrush = SolidColor(grey950()),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Search,
                     ),
@@ -106,27 +113,6 @@ fun CommunitySearchBar(
                     modifier = Modifier
                         .weight(1f)
                         .focusRequester(focusRequester),
-                    decorationBox = { innerTextField ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 15.5.dp,
-                                ),
-                        ) {
-                            // 검색어가 없을 때 placeholder 표시
-                            if (query.isBlank()) {
-                                UText(
-                                    text = AppStrings.COMMUNITY_SEARCH_PLACEHOLD,
-                                    style = UmcTypographyTokens.Body,
-                                    color = grey400(),
-                                )
-                            }
-
-                            innerTextField()
-                        }
-                    },
                 )
 
                 // 입력된 검색어 전체 삭제 버튼
@@ -141,7 +127,7 @@ fun CommunitySearchBar(
                             painter = painterResource(
                                 R.drawable.ic_community_clear_filled,
                             ),
-                            contentDescription = "검색어 지우기",
+                            contentDescription = AppStrings.COMMUNITY_CD_CLEAR_SEARCH,
                             tint = grey400(),
                             modifier = Modifier.size(20.dp),
                         )

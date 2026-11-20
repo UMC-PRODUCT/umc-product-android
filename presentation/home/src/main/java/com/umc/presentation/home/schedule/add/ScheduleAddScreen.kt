@@ -1,12 +1,13 @@
 package com.umc.presentation.home.schedule.add
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,26 +21,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.component.R
-import com.umc.component.component.UButton
 import com.umc.component.theme.*
-import kotlinx.coroutines.flow.collectLatest
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UChip
 import com.umc.component.component.UDateTimePickerDialog
 import com.umc.component.component.USwitch
 import com.umc.component.component.UText
-import com.umc.component.component.UTimePickerDialog
-import com.umc.component.component.UToast
+import com.umc.component.component.UTextField
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
 import com.umc.component.component.UToastState
-import com.umc.presentation.home.home.CalendarDatePickerDialog
 import com.umc.presentation.home.schedule.dialog.LocationSearchBottomSheet
+import com.umc.presentation.home.schedule.dialog.LocationSearchEvent
+import com.umc.presentation.home.schedule.dialog.LocationSearchViewModel
 import com.umc.presentation.home.schedule.dialog.ScheduleCategoryBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddBottomSheet
 import com.umc.presentation.home.schedule.dialog.ScheduleChallengerAddDialogViewModel
@@ -47,23 +42,27 @@ import com.umc.component.base.CollectUiEvents
 
 
 
+/**
+ * 일정 등록·수정 화면.
+ *
+ * 수정할 일정 id 는 ViewModel 이 SavedStateHandle 에서 읽으므로 [scheduleId] 와 [onShowAttendanceDialog] 는 쓰지 않는다.
+ * 호출부(MainNavHost)가 아직 넘기고 있어 기본값을 두고 시그니처만 남긴다.
+ */
 @Composable
 fun ScheduleAddRoute(
-    scheduleId : Long,
+    scheduleId : Long = -1L,
     onNavigateToBack: () -> Unit,
     viewModel: ScheduleAddViewModel = hiltViewModel(),
     participantViewModel: ScheduleChallengerAddDialogViewModel = hiltViewModel(),
-    onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit
+    locationViewModel: LocationSearchViewModel = hiltViewModel(),
+    onShowAttendanceDialog: (onConfirm: () -> Unit, onReject: () -> Unit) -> Unit = { _, _ -> }
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val context = LocalContext.current
-
     val participantUiState by participantViewModel.uiState.collectAsStateWithLifecycle()
 
-    //뒤로 가기 디스패처
-    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val locationUiState by locationViewModel.uiState.collectAsStateWithLifecycle()
 
     //바텀시트 및 다이얼로그 노출 상태 제어 플래그 변수들
     var showCategoryDialog by remember { mutableStateOf(false) }
@@ -81,12 +80,15 @@ fun ScheduleAddRoute(
 
     var toastData by remember { mutableStateOf<UToastData?>(null) }
 
+    // 장소 검색 시트는 별도 창이라 화면 토스트가 가려진다. 시트 안에 그릴 토스트를 따로 둔다
+    var locationToastData by remember { mutableStateOf<UToastData?>(null) }
+
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event){
-            is ScheduleAddEvent.MoveBackPressedEvent -> onBackPressedDispatcher?.onBackPressed()
+            is ScheduleAddEvent.MoveBackPressedEvent -> onNavigateToBack()
             is ScheduleAddEvent.ShowErrorToast -> {
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                toastData = UToastData(event.message, UToastState.ERROR)
             }
             is ScheduleAddEvent.ShowCheckInAfterStartToast -> {
                 toastData = UToastData(AppStrings.HOME_PLAN_ADD_ATTENDANCE_CHECKIN_AFTER_START, UToastState.ERROR)
@@ -101,10 +103,21 @@ fun ScheduleAddRoute(
         }
     }
 
+    CollectUiEvents(locationViewModel.uiEvent) { event ->
+        // 시트가 닫힌 뒤 늦게 도착한 결과는 다음에 시트를 열 때 뜨지 않도록 버린다
+        if (!showLocationDialog) return@CollectUiEvents
+        locationToastData = when (event) {
+            is LocationSearchEvent.ShowSearchEmptyToast ->
+                UToastData(AppStrings.HOME_LOCATION_SEARCH_EMPTY, UToastState.NONE)
+            is LocationSearchEvent.ShowSearchFailedToast ->
+                UToastData(AppStrings.HOME_LOCATION_SEARCH_FAILED, UToastState.ERROR)
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         ScheduleAddScreen(
             uiState = uiState,
-            onBackClick = { onBackPressedDispatcher?.onBackPressed() },
+            onBackClick = onNavigateToBack,
             onTitleChanged = viewModel::updatePlanTitle,
             onDetailChanged = viewModel::updatePlanDetail,
             onAlldayChanged = viewModel::setAllday,
@@ -122,18 +135,16 @@ fun ScheduleAddRoute(
             onCheckInDateTimeClick = {showCheckInStartPicker = true},
             onOnDateTimeEndClick = {showOnTimeEndPicker = true},
             onLateDateTimeClick = {showLateEndPicker = true},
-            onRegisterClick = {
-                //운영진 여부 및 수정 모드에 따른 분기 로직
-                viewModel.submitPlan(uiState.isAttendanceChecked)
-
-            }
+            onRegisterClick = viewModel::submitPlan
         )
 
         UToastHost(
             data = toastData,
             onDismiss = { toastData = null },
+            // 입력 중에 등록을 눌러도 키보드에 가리지 않게 키보드 위로 올린다
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                .imePadding()
                 .padding(bottom = 56.dp),
         )
     }
@@ -151,10 +162,21 @@ fun ScheduleAddRoute(
     // 장소 검색 바텀시트 컴포저블
     if (showLocationDialog) {
         LocationSearchBottomSheet(
-            onDismissRequest = { showLocationDialog = false },
+            searchQuery = locationUiState.searchQuery,
+            recentSearchList = locationUiState.recentSearchList,
+            searchResultList = locationUiState.searchResultList,
+            toastData = locationToastData,
+            onToastDismiss = { locationToastData = null },
+            onQueryChanged = locationViewModel::onQueryChanged,
+            onSearch = locationViewModel::searchLocation,
+            onDismissRequest = {
+                showLocationDialog = false
+                locationToastData = null
+            },
             onLocationSelected = {
                 viewModel.updatePlanLocation(it)
                 showLocationDialog = false
+                locationToastData = null
             }
         )
     }
@@ -300,20 +322,14 @@ fun ScheduleAddScreen(
                 title = AppStrings.HOME_PLAN_ADD_PLAN_NAME,
                 required = true
             ) {
-                OutlinedTextField(
+                ScheduleOutlinedField(
                     value = uiState.planTitle,
                     onValueChange = onTitleChanged,
+                    placeholder = AppStrings.HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER,
+                    // 이전 OutlinedTextField 의 최소 높이(56dp)를 유지한다
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    placeholder = { Text(
-                        AppStrings.HOME_PLAN_ADD_PLAN_NAME_PLACEHOLDER,
-                        color = grey400()
-                    ) },
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = grey300(),
-                        focusedBorderColor = main500()
-                    )
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp),
                 )
             }
 
@@ -420,18 +436,13 @@ fun ScheduleAddScreen(
 
             //7. 상세 안내
             ScheduleInputSection(title = AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_INFORMATION, required = false) {
-                OutlinedTextField(
+                ScheduleOutlinedField(
                     value = uiState.planDetail,
                     onValueChange = onDetailChanged,
+                    placeholder = AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(144.dp),
-                    placeholder = { Text(AppStrings.HOME_PLAN_ADD_PLAN_DETAIL_PLACEHOLDER, color = grey400()) },
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = grey300(),
-                        focusedBorderColor = main500()
-                    )
                 )
             }
 
@@ -449,47 +460,43 @@ fun ScheduleAddScreen(
             }
 
             // 9. 출석부 생성 토글 및 출석 시간 카드 설정
-            if(true) {
-                Spacer(modifier = Modifier
-                    .height(8.dp)
+            Spacer(modifier = Modifier
+                .height(8.dp)
+            )
+            //출석부 생성 여부
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                USwitch(
+                    checked = uiState.isAttendanceChecked,
+                    onCheckedChange = onAttendanceChanged,
                 )
-                //대면 비대면 여부
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    USwitch(
-                        checked = uiState.isAttendanceChecked,
-                        onCheckedChange = onAttendanceChanged,
-                    )
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
-                    UText(
-                        text = AppStrings.HOME_PLAN_ADD_ATTENDANCE_TITLE,
-                        style = UmcTypographyTokens.Body,
-                        color = grey900()
-                    )
-
-                }
-
                 Spacer(
-                    modifier = Modifier
-                        .height(8.dp)
+                    modifier = Modifier.width(8.dp)
+                )
+                UText(
+                    text = AppStrings.HOME_PLAN_ADD_ATTENDANCE_TITLE,
+                    style = UmcTypographyTokens.Body,
+                    color = grey900()
                 )
 
-                // 출석부 생성 활성화 시 체크인/정시/지각 시간 설정 카드 노출
-                if(uiState.isAttendanceChecked){
-                    AttendanceDateCard(
-                        uiState = uiState,
-                        onCheckInStartClick = onCheckInDateTimeClick,
-                        onOnTimeEndClick = onOnDateTimeEndClick,
-                        onLateEndClick = onLateDateTimeClick
-                    )
-                }
+            }
 
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+            )
 
+            // 출석부 생성 활성화 시 체크인/정시/지각 시간 설정 카드 노출
+            if(uiState.isAttendanceChecked){
+                AttendanceDateCard(
+                    uiState = uiState,
+                    onCheckInStartClick = onCheckInDateTimeClick,
+                    onOnTimeEndClick = onOnDateTimeEndClick,
+                    onLateEndClick = onLateDateTimeClick
+                )
             }
 
             Spacer(
@@ -524,12 +531,13 @@ fun ScheduleAddTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
+        // 여백까지 누를 수 있게 clickable 을 padding 앞에 둔다(48dp 터치 영역)
         Icon(
             modifier = Modifier
-                .padding(12.dp)
-                .clickable { onBackClick() },
+                .clickable { onBackClick() }
+                .padding(12.dp),
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = null,
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 
@@ -588,6 +596,41 @@ fun ScheduleInputSection(
 
         content()
     }
+}
+
+/**
+ * 일정 제목·상세 안내 입력칸.
+ *
+ * 이전 M3 OutlinedTextField 와 같은 모양이 되도록 UTextField 를 맞춘다.
+ * 여백 16dp, 위쪽 정렬, 투명 배경, 테마의 onSurface 글자색과 primary 커서, 포커스 시 2dp 테두리다.
+ */
+@Composable
+private fun ScheduleOutlinedField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    UTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        placeholder = placeholder,
+        textStyle = UmcTypographyTokens.Body,
+        textColor = MaterialTheme.colorScheme.onSurface,
+        backgroundColor = Color.Transparent,
+        strokeColor = grey300(),
+        focusStrokeColor = main500(),
+        cornerRadius = 8.dp,
+        contentPadding = PaddingValues(16.dp),
+        cursorColor = MaterialTheme.colorScheme.primary,
+        borderWidth = if (isFocused) 2.dp else 1.dp,
+        interactionSource = interactionSource,
+        verticalAlignment = Alignment.Top,
+    )
 }
 
 /**
@@ -727,4 +770,27 @@ fun AttendanceTimeRow(
 
 
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun ScheduleAddScreenPreview() {
+    ScheduleAddScreen(
+        uiState = ScheduleAddUiState(planTitle = "UMC 정기 세션"),
+        onBackClick = {},
+        onTitleChanged = {},
+        onDetailChanged = {},
+        onAlldayChanged = {},
+        onCategoryClick = {},
+        onLocationClick = {},
+        onParticipantClick = {},
+        onStartDateTimeClick = {},
+        onEndDateTimeClick = {},
+        onCheckInDateTimeClick = {},
+        onOnDateTimeEndClick = {},
+        onLateDateTimeClick = {},
+        onOnlineChanged = {},
+        onAttendanceChanged = {},
+        onRegisterClick = {},
+    )
 }

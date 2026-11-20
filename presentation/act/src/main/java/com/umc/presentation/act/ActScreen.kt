@@ -1,7 +1,6 @@
 package com.umc.presentation.act
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +15,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,8 +33,11 @@ import com.umc.presentation.act.admin.attendance.AttendanceRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerRoute
 import com.umc.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.umc.presentation.act.normal.challenger.NormalChallengerRoute
+import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.USwitch
 import com.umc.component.component.UText
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
 import com.umc.component.theme.UmcTheme
@@ -72,9 +73,20 @@ fun ActManageRoute(
     onStudyTabOpened: () -> Unit = {},
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val toast = LocalUToast.current
 
     LaunchedEffect(vm) {
         vm.getUserInfo()
+    }
+
+    // 내 정보 조회 실패를 알린다. 수집하지 않으면 이벤트가 버퍼에 쌓이기만 하고 사용자는 실패를 모른다.
+    CollectUiEvents(vm.uiEvent) { event ->
+        when (event) {
+            is ActEvent.ShowToast -> toast.show(
+                event.message.ifBlank { AppStrings.COMMON_PROFILE_LOAD_ERROR },
+                UToastState.ERROR,
+            )
+        }
     }
 
     ActManageScreen(
@@ -207,7 +219,7 @@ fun ActManageScreen(
                         }
                     },
                     text = {
-                        Text(
+                        UText(
                             text = tab.title,
                             color = if (pagerState.currentPage == index) {
                                 grey800()
@@ -237,20 +249,6 @@ fun ActManageScreen(
 }
 
 @Composable
-private fun ComingSoonScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        UText(
-            text = AppStrings.ACTIVITY_COMING_SOON_MESSAGE,
-            style = Subheadline,
-            color = grey600()
-        )
-    }
-}
-
-@Composable
 private fun ActHeader(
     hasAdminAccess: Boolean,
     isAdmin: Boolean,
@@ -262,7 +260,7 @@ private fun ActHeader(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
+        UText(
             text = AppStrings.ACTIVITY_MANAGEMENT_TITLE,
             modifier = Modifier.weight(1f),
             color = grey800(),
@@ -270,7 +268,7 @@ private fun ActHeader(
         )
 
         if (hasAdminAccess) {
-            Text(
+            UText(
                 text = ADMIN_LABEL,
                 modifier = Modifier.padding(end = 8.dp),
                 color = grey600(),

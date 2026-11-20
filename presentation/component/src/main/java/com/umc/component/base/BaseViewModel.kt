@@ -13,15 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.text.startsWith
 
 // JWT 관련 에러 코드 접두사
 private const val JWT_ERROR_PREFIX = "JWT"
-
-// 공통 ViewModel 이벤트
-sealed interface CommonViewModelEvent {
-    data object MoveToSplash : CommonViewModelEvent
-}
 
 abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     initialPageState: STATE,
@@ -39,12 +33,10 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
     private val _uiEvent = Channel<EVENT>(Channel.BUFFERED)
     val uiEvent: Flow<EVENT> = _uiEvent.receiveAsFlow()
 
-    private val _commonEvent = Channel<CommonViewModelEvent>(Channel.BUFFERED)
-    val commonEvent: Flow<CommonViewModelEvent> = _commonEvent.receiveAsFlow()
-
-    // 로딩 상태 관리
+    // 화면에 그리는 로딩·연타 방지 상태는 각 화면 UiState가 가진다.
+    // 이 값은 어느 UI도 읽지 않으므로 외부에 열지 않는다.
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    protected val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     protected fun updateState(state: STATE.() -> STATE) {
         _uiState.update { it.state() }
@@ -56,46 +48,36 @@ abstract class BaseViewModel<STATE : UiState, EVENT : UiEvent>(
         }
     }
 
-    private fun emitCommonEvent(event: CommonViewModelEvent) {
-        viewModelScope.launch {
-            _commonEvent.send(event)
-        }
-    }
-
     protected fun <D> resultResponse(
         response: ApiState<D>,
         successCallback: (D) -> Unit,
         errorCallback: ((FailState) -> Unit)? = null,
     ) {
         // 로딩 종료
-        _isLoading.value = false
+        stopLoading()
 
         when (response) {
             is ApiState.Fail -> {
-                // JWT 관련 에러 체크: 토큰 만료/유효하지 않음 등의 JWT 에러 시 SplashFragment로 이동
-                stopLoading()
+                // 토큰 만료 등 JWT 에러는 전역 신호 하나로 알린다.
+                // NavHost 최상단이 이 신호만 관찰해 재로그인 화면으로 보낸다.
                 if (response.failState.code.startsWith(JWT_ERROR_PREFIX)) {
-                    emitCommonEvent(CommonViewModelEvent.MoveToSplash)
-                    // 화면별 commonEvent는 구독자가 없을 수 있으므로 전역 신호도 함께 보낸다.
-                    // (NavHost 최상단이 이 신호 하나만 관찰해 재로그인으로 보낸다)
                     SessionExpiryBus.notifyExpired()
                 }
                 errorCallback?.invoke(response.failState)
             }
             is ApiState.Success -> {
-                stopLoading()
                 successCallback.invoke(response.data)
             }
         }
     }
 
     // API 호출 전 로딩 시작
-    fun startLoading() {
+    protected fun startLoading() {
         _isLoading.value = true
     }
 
     // 로딩 강제 종료 (에러 등에서 사용)
-    fun stopLoading() {
+    protected fun stopLoading() {
         _isLoading.value = false
     }
 }

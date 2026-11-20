@@ -44,6 +44,35 @@ class GroupScheduleChallengerViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     /**
+     * 검색 요청 세대
+     *
+     * 디바운스만 취소되고 이미 보낸 요청은 끝까지 돌아오므로,
+     * 검색어가 바뀌거나 검색을 비운 뒤 도착한 이전 응답은 이 값으로 걸러 버린다.
+     */
+    private var searchGeneration = 0
+
+    /**
+     * 이미 초기화한 기존 선택 챌린저 목록
+     *
+     * 시트는 화면 회전·다크 모드 전환 때마다 다시 그려져 [open] 이 다시 불린다.
+     * 같은 입력이면 무시해 편집 중이던 선택과 검색을 지키고, 시트를 닫을 때 [resetAfterConfirm] 에서 비운다.
+     */
+    private var initializedFor: List<GroupScheduleChallengerUiModel>? = null
+
+    /**
+     * 바텀시트가 열릴 때 검색 상태를 비우고 기존 선택 챌린저로 한 번만 초기화합니다.
+     */
+    fun open(
+        preSelected: List<GroupScheduleChallengerUiModel>,
+    ) {
+        if (initializedFor == preSelected) return
+
+        resetAfterConfirm()
+        setSelected(preSelected)
+        initializedFor = preSelected
+    }
+
+    /**
      * 바텀시트를 열 때 기존에 선택되어 있던 챌린저를 설정합니다.
      *
      * 기존 선택 목록을 그대로 유지하고,
@@ -71,6 +100,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
         query: String,
     ) {
         searchJob?.cancel()
+        searchGeneration++
 
         if (query.isBlank()) {
             clearSearchOnly()
@@ -136,6 +166,7 @@ class GroupScheduleChallengerViewModel @Inject constructor(
      */
     fun clearSearchOnly() {
         searchJob?.cancel()
+        searchGeneration++
 
         updateState {
             copy(
@@ -156,6 +187,8 @@ class GroupScheduleChallengerViewModel @Inject constructor(
      */
     fun resetAfterConfirm() {
         searchJob?.cancel()
+        searchGeneration++
+        initializedFor = null
 
         updateState {
             copy(
@@ -178,6 +211,8 @@ class GroupScheduleChallengerViewModel @Inject constructor(
      */
     fun resetAll() {
         searchJob?.cancel()
+        searchGeneration++
+        initializedFor = null
 
         updateState {
             copy(
@@ -242,6 +277,9 @@ class GroupScheduleChallengerViewModel @Inject constructor(
             )
         }
 
+        // 응답이 돌아왔을 때 그 사이 새 검색이 시작됐는지 확인하기 위해 요청 시점의 세대를 기억한다.
+        val generation = searchGeneration
+
         viewModelScope.launch {
             val cursor = if (isNextPage) {
                 currentState.nextCursor
@@ -258,6 +296,8 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                     },
                 ),
                 successCallback = { response ->
+                    // 이전 검색어의 늦은 응답이 새 결과를 덮거나 뒤에 붙지 않게 버린다.
+                    if (generation != searchGeneration) return@resultResponse
 
                     /**
                      * 검색 API 응답을
@@ -326,6 +366,8 @@ class GroupScheduleChallengerViewModel @Inject constructor(
                     }
                 },
                 errorCallback = {
+                    if (generation != searchGeneration) return@resultResponse
+
                     updateState {
                         copy(
                             isLoading = false,

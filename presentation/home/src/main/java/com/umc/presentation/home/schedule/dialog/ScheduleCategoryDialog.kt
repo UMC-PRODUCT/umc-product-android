@@ -22,13 +22,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.theme.AppStrings
@@ -39,14 +36,14 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.main500
 import com.umc.domain.model.home.CategoryItem
-import com.umc.presentation.home.schedule.add.ScheduleAddViewModel
+import kotlinx.collections.immutable.ImmutableList
 
 /**일정 생성에서 카테고리 선택을 담당하는 다이얼로그**/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleCategoryBottomSheet(
-    categories: List<CategoryItem>, //다이얼로그에 보여줄 CategoryItem List
+    categories: ImmutableList<CategoryItem>, //다이얼로그에 보여줄 CategoryItem List
     onCategoryClick: (CategoryItem) -> Unit, //해당 카테고리 클릭 시
     onDismissRequest: () -> Unit, //종료될때
     onConfirm: () -> Unit //확인 누를 시

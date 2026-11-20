@@ -1252,4 +1252,53 @@ object AppStrings {
     const val IN_APP_UPDATE_READY_BODY = "새 버전을 내려받았어요.\n다시 시작하면 바로 적용돼요."
     const val IN_APP_UPDATE_LATER = "나중에"
     const val IN_APP_UPDATE_RESTART = "다시 시작"
+
+    // ── #392 리팩토링: 화면·ViewModel에 하드코딩돼 있던 문구와 접근성 설명 ──
+    // 공통
+    const val COMMON_LINK_OPEN_FAIL = "링크를 열 수 있는 앱이 없어요."
+    const val COMMON_REQUEST_FAILED = "요청을 처리하지 못했어요. 잠시 후 다시 시도해주세요."
+    // 하단 탭
+    const val MAIN_TAB_ACTIVITY = "활동"
+    const val MAIN_TAB_HOME = "홈"
+    const val MAIN_TAB_MY = "MY"
+    const val MAIN_TAB_NOTICE = "공지"
+    // 로그인
+    const val LOGIN_GOOGLE_BUTTON = "Google 로그인"
+    const val LOGIN_KAKAO_BUTTON = "카카오 로그인"
+    // 회원가입
+    const val SIGN_UP_TOKEN_SAVE_ERROR = "가입은 완료됐지만 로그인 정보를 저장하지 못했어요. 다시 시도해주세요."
+    // 홈·일정
+    const val HOME_CD_ADD_SCHEDULE = "일정 추가"
+    const val HOME_CD_CALENDAR_MODE = "달력으로 보기"
+    const val HOME_CD_LIST_MODE = "목록으로 보기"
+    const val HOME_CD_MORE_GISU_FORMAT = "기수 %d개 더 있음"
+    const val HOME_CD_NOTIFICATION = "알림"
+    const val HOME_CD_UMC_LOGO = "UMC 로고"
+    const val HOME_PLAN_ADD_SAVE_ERROR = "일정을 저장하지 못했어요. 다시 시도해주세요."
+    const val HOME_PLAN_DETAIL_CD_MENU = "더보기"
+    // 공지
+    const val NOTICE_DETAIL_DELETE_FAIL = "공지사항 삭제에 실패했습니다"
+    const val NOTICE_DETAIL_REMINDER_FAIL = "재알림 발송에 실패했습니다"
+    const val NOTICE_DETAIL_VOTE_FAIL = "투표에 실패했습니다"
+    const val NOTICE_VOTE_UNKNOWN_PARTICIPANT = "알 수 없는 사용자"
+    const val NOTICE_WRITE_AI_FAIL = "AI 처리에 실패했어요. 다시 시도해주세요."
+    const val NOTICE_WRITE_SUBMIT_FAIL = "공지사항 등록에 실패했습니다"
+    // 커뮤니티
+    const val COMMUNITY_CD_CLEAR_SEARCH = "검색어 지우기"
+    const val COMMUNITY_CD_FILTER = "필터"
+    const val COMMUNITY_CD_NOTIFICATION_OFF = "알림 꺼짐"
+    const val COMMUNITY_CD_PINNED_THREAD = "고정 스레드"
+    const val COMMUNITY_CD_SEARCH = "검색"
+    const val COMMUNITY_CD_SELECT_CHALLENGER = "챌린저 선택"
+    // 커뮤니티 채팅
+    const val CHAT_CD_CANCEL_EDIT = "메시지 수정 취소"
+    const val CHAT_CD_SAVE_EDIT = "메시지 수정 저장"
+    const val CHAT_IMAGE_SIZE_EXCEEDED_FORMAT = "이미지는 한 장당 최대 %dMiB까지 전송할 수 있어요."
+    const val CHAT_IMAGE_SIZE_UNREADABLE = "이미지 용량을 확인할 수 없어요. 다시 선택해주세요."
+    const val CHAT_IMAGE_TOTAL_SIZE_EXCEEDED_FORMAT = "이미지는 총합 %dMiB까지 전송할 수 있어요."
+    // 마이페이지
+    const val MYPAGE_ADDCODE_FAIL = "챌린저 기록을 추가하지 못했어요. 잠시 후 다시 시도해 주세요."
+    // 명함
+    const val MYCARD_CD_OPEN_LINK = "링크 열기"
+    const val MYCARD_CD_SEND_MAIL = "메일 보내기"
 }

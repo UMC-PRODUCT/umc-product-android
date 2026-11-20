@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.domain.model.enums.UserType
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
@@ -52,7 +53,7 @@ fun HomeTopBar(
         //UMC 로고 이미지
         Image(
             painter = painterResource(id = R.drawable.ic_logo_umc),
-            contentDescription = "UMC Logo"
+            contentDescription = AppStrings.HOME_CD_UMC_LOGO
         )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -71,7 +72,7 @@ fun HomeTopBar(
                     painter = painterResource(
                         id = if (alarmExist) R.drawable.ic_alarm_with_dot else R.drawable.ic_alarm
                     ),
-                    contentDescription = "Notification",
+                    contentDescription = AppStrings.HOME_CD_NOTIFICATION,
                     tint = grey950(),
                     modifier = Modifier
                         .size(24.dp)

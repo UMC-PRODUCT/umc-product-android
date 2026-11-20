@@ -1,5 +1,6 @@
 package com.umc.presentation.community.component.chatting
 
+import com.umc.component.component.UText
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -20,13 +21,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -150,14 +148,14 @@ internal fun CommunityChatInputBar(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                Text(
+                                UText(
                                     text = member.name,
                                     modifier = Modifier.weight(1f, fill = false),
                                     color = black(), style = UmcTypographyTokens.Callout,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 )
                                 member.part?.let { part ->
-                                    Text(
+                                    UText(
                                         text = communityChatPartTag(part).label,
                                         color = grey600(), style = UmcTypographyTokens.Footnote,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -234,7 +232,7 @@ internal fun CommunityChatInputBar(
                             contentAlignment = Alignment.CenterStart,
                         ) {
                             if (value.isEmpty() && (!isFocused || isReplying)) {
-                                Text(
+                                UText(
                                     text = if (isReplying) {
                                         AppStrings.CHAT_REPLY_PLACEHOLDER
                                     } else {
@@ -340,14 +338,14 @@ private fun ReplyTargetRow(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            Text(
+            UText(
                 text = AppStrings.CHAT_REPLY_TO_FORMAT.format(
                     message.senderName.orEmpty().ifBlank { AppStrings.CHAT_ME },
                 ),
                 color = grey950(),
                 style = UmcTypographyTokens.SubheadlineBold,
             )
-            Text(
+            UText(
                 text = if (message.type == CommunityMessageType.IMAGE) {
                     // 방금 보낸 사진은 content 에 로컬 URI 가 들어 있어 그대로 노출하지 않는다.
                     AppStrings.CHAT_MESSAGE_CONTENT

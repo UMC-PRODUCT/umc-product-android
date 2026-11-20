@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,7 +57,7 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.main500
 import com.umc.component.theme.main700
-import kotlinx.coroutines.flow.collectLatest
+import com.umc.component.util.ULog
 import kotlinx.coroutines.tasks.await
 import com.umc.component.base.CollectUiEvents
 
@@ -77,18 +78,23 @@ fun SignUpFailRoute(
         when (event) {
             SignUpFailEvent.MoveToBack -> context.findActivity()?.finish()
             SignUpFailEvent.MoveToHomePage -> {
-                val intent = Intent(Intent.ACTION_VIEW, "https://umc.it.kr".toUri())
-                context.startActivity(intent)
+                if (!context.openExternalUrl(UMC_HOMEPAGE_URL)) {
+                    toastData = UToastData(AppStrings.COMMON_LINK_OPEN_FAIL, UToastState.ERROR)
+                }
             }
             SignUpFailEvent.MoveToCode -> navigateToCode()
             SignUpFailEvent.MoveToKakaoInquiry -> {
-                runCatching {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri()))
+                if (!context.openExternalUrl(KAKAO_INQUIRY_URL)) {
+                    toastData = UToastData(AppStrings.COMMON_LINK_OPEN_FAIL, UToastState.ERROR)
                 }
             }
             SignUpFailEvent.MoveToLogin -> navigateToLogin()
             is SignUpFailEvent.ShowErrorToast ->
-                toastData = UToastData(event.message, UToastState.ERROR)
+                // 서버가 빈 메시지를 주면 빈 토스트가 뜨지 않게 공용 문구로 대신한다
+                toastData = UToastData(
+                    event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED },
+                    UToastState.ERROR,
+                )
         }
     }
 
@@ -131,14 +137,15 @@ fun SignUpFailScreen(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
+        // clickable 을 안쪽 패딩보다 먼저 둬서 아이콘 둘레 12dp 까지 눌리게 한다(터치 영역 48dp)
         Icon(
             modifier = Modifier
                 .align(Alignment.Start)
                 .padding(start = 4.dp)
-                .padding(12.dp)
-                .clickable { onClickBack() },
+                .clickable(role = Role.Button) { onClickBack() }
+                .padding(12.dp),
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = null,
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified
         )
 
@@ -216,6 +223,18 @@ fun SignUpFailScreen(
 
 /** 카카오톡 채널 문의 URL */
 internal const val KAKAO_INQUIRY_URL = "https://pf.kakao.com/_MDxhqX/chat"
+
+/** UMC 공식 홈페이지 URL */
+internal const val UMC_HOMEPAGE_URL = "https://umc.it.kr"
+
+/**
+ * 외부 링크를 연다. 브라우저가 없거나 꺼진 기기에서도 앱이 종료되지 않게 실패하면 false 를 돌려주고,
+ * 안내는 호출한 화면이 한다
+ */
+internal fun Context.openExternalUrl(url: String): Boolean =
+    runCatching { startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
+        .onFailure { ULog.d("외부 링크 열기 실패: ${it::class.simpleName}") }
+        .isSuccess
 
 /**
  * '로그아웃하기 | 회원탈퇴하기' 링크 행과 탈퇴 확인 다이얼로그.

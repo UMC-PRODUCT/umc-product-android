@@ -1,13 +1,13 @@
 package com.umc.data.repository.community
 
 import android.os.SystemClock
-import com.google.gson.Gson
 import com.google.gson.stream.MalformedJsonException
 import com.umc.domain.model.base.ApiResponse
 import retrofit2.HttpException
 import com.umc.data.api.CommunityThreadApi
 import com.umc.data.dataSource.base.NETWORK_ERROR_MESSAGE
 import com.umc.data.dataSource.base.apiCall
+import com.umc.data.mapper.parseErrorBody
 import com.umc.data.mapper.community.toChatDomain
 import com.umc.data.mapper.community.toDomain
 import com.umc.data.request.community.ChangeMemberRoleRequest
@@ -601,29 +601,13 @@ class CommunityThreadRepositoryImpl @Inject constructor(
         }
     }
 
+    // 오류 본문 해석은 apiCall·toFailState 와 같은 parseErrorBody 를 쓴다.
     private fun HttpException.getServerMessage(
         fallback: String,
     ): String {
-        return try {
-            val errorBody =
-                response()?.errorBody()?.string()
-
-            if (errorBody.isNullOrBlank()) {
-                return fallback
-            }
-
-            val errorResponse =
-                Gson().fromJson(
-                    errorBody,
-                    ApiResponse::class.java,
-                )
-
-            errorResponse.message
-                ?.takeIf { it.isNotBlank() }
-                ?: fallback
-        } catch (e: Exception) {
-            fallback
-        }
+        return parseErrorBody()?.message
+            ?.takeIf { it.isNotBlank() }
+            ?: fallback
     }
 
     private companion object {

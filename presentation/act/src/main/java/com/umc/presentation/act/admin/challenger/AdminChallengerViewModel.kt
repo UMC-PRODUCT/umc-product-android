@@ -441,7 +441,8 @@ class AdminChallengerViewModel @Inject constructor(
                     challengerId?.let(::getChallengerDetail)
                 },
                 errorCallback = {
-                    updateState { copy(isPointSubmitting = false) }
+                    // 삭제 확인 다이얼로그는 별도 창이라 열어 두면 실패 토스트가 딤 아래에 가려진다. 닫고 알린다.
+                    updateState { copy(isPointSubmitting = false, deleteTarget = null) }
                     emitEvent(AdminChallengerEvent.ShowToast(it.message))
                 }
             )

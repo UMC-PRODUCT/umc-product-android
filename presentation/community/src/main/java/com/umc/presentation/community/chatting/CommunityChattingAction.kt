@@ -6,11 +6,9 @@ import com.umc.domain.model.community.thread.CommunityThreadMessage
 sealed interface CommunityChattingAction {
     data object OnRetryBlockedMembers : CommunityChattingAction
     data object OnBackClick : CommunityChattingAction
-    data object OnMoreClick : CommunityChattingAction
     data object OnUnreadSummaryClick : CommunityChattingAction
     data object OnRetryUnreadSummary : CommunityChattingAction
     data object OnDismissUnreadSummary : CommunityChattingAction
-    data object OnCameraClick : CommunityChattingAction
     data class OnSendImages(val uris: List<String>) : CommunityChattingAction
     data object OnImageSizeExceeded : CommunityChattingAction
     data object OnImageTotalSizeExceeded : CommunityChattingAction

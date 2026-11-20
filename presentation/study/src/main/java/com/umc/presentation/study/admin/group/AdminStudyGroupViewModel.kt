@@ -6,6 +6,7 @@ import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.enums.UserPart
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
+import com.umc.component.component.UToastState
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.request.organization.UpdateStudyGroupRequest
 import com.umc.domain.usecase.GetAuthAccessUseCase
@@ -257,7 +258,8 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    AppStrings.STUDY_GROUP_EDIT_SUCCESS
+                                    AppStrings.STUDY_GROUP_EDIT_SUCCESS,
+                                    UToastState.CHECK
                                 )
                             )
                         }
@@ -268,7 +270,8 @@ class AdminStudyGroupViewModel @Inject constructor(
                         is ApiState.Fail -> {
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    AppStrings.STUDY_GROUP_EDIT_ERROR
+                                    AppStrings.STUDY_GROUP_EDIT_ERROR,
+                                    UToastState.ERROR
                                 )
                             )
                         }
@@ -344,7 +347,8 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    AppStrings.STUDY_GROUP_DELETE_SUCCESS
+                                    AppStrings.STUDY_GROUP_DELETE_SUCCESS,
+                                    UToastState.CHECK
                                 )
                             )
                         }
@@ -362,7 +366,8 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                             emitEvent(
                                 AdminStudyGroupEvent.ShowToast(
-                                    AppStrings.STUDY_GROUP_DELETE_ERROR
+                                    AppStrings.STUDY_GROUP_DELETE_ERROR,
+                                    UToastState.ERROR
                                 )
                             )
                         }
@@ -542,15 +547,19 @@ class AdminStudyGroupViewModel @Inject constructor(
                     loadManagedStudyGroups()
 
                     emitEvent(
-                        AdminStudyGroupEvent.ShowToast(
-                            if (hasFailed) {
+                        if (hasFailed) {
+                            AdminStudyGroupEvent.ShowToast(
                                 // 서버 메시지(예: 권한 없음)를 우선 안내하고, 없으면 기본 문구 표시
-                                failMessage?.takeIf { it.isNotBlank() }
-                                    ?: AppStrings.STUDY_GROUP_MEMBER_EDIT_ERROR
-                            } else {
-                                AppStrings.STUDY_GROUP_MEMBER_EDIT_SUCCESS
-                            }
-                        )
+                                message = failMessage?.takeIf { it.isNotBlank() }
+                                    ?: AppStrings.STUDY_GROUP_MEMBER_EDIT_ERROR,
+                                state = UToastState.ERROR,
+                            )
+                        } else {
+                            AdminStudyGroupEvent.ShowToast(
+                                message = AppStrings.STUDY_GROUP_MEMBER_EDIT_SUCCESS,
+                                state = UToastState.CHECK,
+                            )
+                        }
                     )
                 }
             }
@@ -625,7 +634,8 @@ class AdminStudyGroupViewModel @Inject constructor(
 
                     emitEvent(
                         AdminStudyGroupEvent.ShowToast(
-                            AppStrings.STUDY_GROUP_LIST_ERROR
+                            AppStrings.STUDY_GROUP_LIST_ERROR,
+                            UToastState.ERROR
                         )
                     )
                 }

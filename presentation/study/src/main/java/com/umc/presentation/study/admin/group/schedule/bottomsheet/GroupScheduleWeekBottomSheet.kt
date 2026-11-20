@@ -8,9 +8,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UText
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.Title3Bold
@@ -51,46 +54,60 @@ fun GroupScheduleWeekBottomSheet(
             skipPartiallyExpanded = true,
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+        // 시트는 별도 창이라 앱 토스트가 가려진다. 시트가 열린 동안 띄운 토스트를 시트 위에 그린다.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            // 주차 선택 안내 문구
-            UText(
-                text = AppStrings.STUDY_SCHEDULE_WEEK_SELECT_TITLE,
-                style = Title3Bold,
-                color = grey800(),
-                modifier = Modifier.padding(
-                    bottom = 16.dp
-                ),
-            )
-
-            // 일정 추가 시 선택 가능한 주차 목록
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp),
             ) {
-                items(weeks) { weekItem ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                // 선택된 주차 전달 후 BottomSheet 닫기
-                                onSelect(weekItem)
-                                onDismiss()
-                            }
-                            .padding(vertical = 16.dp),
-                    ) {
-                        UText(
-                            text = AppStrings.STUDY_SCHEDULE_WEEK_FORMAT.format(weekItem.week),
-                            style = Body,
-                            color = grey800(),
-                        )
+                // 주차 선택 안내 문구
+                UText(
+                    text = AppStrings.STUDY_SCHEDULE_WEEK_SELECT_TITLE,
+                    style = Title3Bold,
+                    color = grey800(),
+                    modifier = Modifier.padding(
+                        bottom = 16.dp
+                    ),
+                )
+
+                // 일정 추가 시 선택 가능한 주차 목록
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    items(weeks) { weekItem ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    // 선택된 주차 전달 후 BottomSheet 닫기
+                                    onSelect(weekItem)
+                                    onDismiss()
+                                }
+                                .padding(vertical = 16.dp),
+                        ) {
+                            UText(
+                                text = AppStrings.STUDY_SCHEDULE_WEEK_FORMAT.format(weekItem.week),
+                                style = Body,
+                                color = grey800(),
+                            )
+                        }
                     }
                 }
             }
+
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

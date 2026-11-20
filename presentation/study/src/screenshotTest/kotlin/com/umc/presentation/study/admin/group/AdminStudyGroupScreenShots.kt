@@ -20,3 +20,10 @@ fun AdminStudyGroupScreenShot() {
 fun AdminStudyGroupScreenNoPermissionShot() {
     UmcTheme { AdminStudyGroupScreenNoPermissionPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun AdminStudyGroupScreenLoadingShot() {
+    UmcTheme { AdminStudyGroupScreenLoadingPreview() }
+}

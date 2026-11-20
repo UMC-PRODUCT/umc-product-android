@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -20,15 +19,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UChip
@@ -58,27 +54,9 @@ import com.umc.component.theme.grey900
 import com.umc.domain.model.enums.PunishCategory
 import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
-import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
 import com.umc.presentation.act.admin.challenger.POINT_DESCRIPTION_MAX_LENGTH
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-
-@Composable
-fun PenaltyPointsRoute(
-    challengerId: Long = 0L,
-    viewModel: AdminChallengerViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    PenaltyPointsScreen(
-        uiState = uiState,
-        onFilterSelected = viewModel::selectPenaltyFilter,
-        onSelectPenalty = viewModel::selectPenalty,
-        onMemoChange = viewModel::onMemoChanged,
-        onSubmitClick = { viewModel.grantPenalty(challengerId) }
-    )
-}
 
 @Composable
 fun PenaltyPointsScreen(

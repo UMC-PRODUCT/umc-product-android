@@ -42,11 +42,15 @@ constructor(
     private val checkScheduleId: Long = savedStateHandle.get<Long>("scheduleId") ?: -1L
     private val checkPlusDay: Int = savedStateHandle.get<Int>("plusDay") ?: -1
 
+    // init 에서 첫 조회를 했으면 화면이 처음 RESUMED 될 때의 재조회는 건너뛴다(같은 API 를 두 번 부르지 않게)
+    private var skipNextResumeLoad = false
+
 
     init{
         // 전달받은 인자값이 유효한 경우 상세 데이터를 로드
         if(checkScheduleId != -1L && checkPlusDay != -1) {
             getScheduleDetail(checkScheduleId, checkPlusDay)
+            skipNextResumeLoad = true
         } else {
             // 인자가 누락되면 조회 자체가 불가능하므로 무한 로딩 대신 오류 상태로 둔다
             updateState { copy(isLoading = false, errorMessage = AppStrings.HOME_PLAN_DETAIL_LOAD_ERROR) }
@@ -59,9 +63,23 @@ constructor(
 
 
     /**
+     * 화면이 RESUMED 될 때(수정 화면에서 돌아올 때 등) 일정 상세를 다시 불러오는 메서드.
+     * 첫 진입은 init 에서 이미 불렀으므로 한 번 건너뛴다.
+     */
+    fun onScreenResumed() {
+        if (skipNextResumeLoad) {
+            skipNextResumeLoad = false
+            return
+        }
+        getScheduleDetail()
+    }
+
+    /**
      * SavedStateHandle에 저장된 기본 ID값으로 일정 상세 정보를 조회 및 로드하는 메서드
      */
     fun getScheduleDetail(){
+        // 인자가 없으면 -1 로 서버를 부르고 init 이 넣은 오류 문구를 덮어쓰므로 부르지 않는다
+        if (checkScheduleId == -1L || checkPlusDay == -1) return
         viewModelScope.launch {
             resultResponse(
                 response = getScheduleDetailHomeUseCase(checkScheduleId),

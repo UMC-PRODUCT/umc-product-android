@@ -10,6 +10,9 @@ import com.umc.domain.model.home.ParticipantItem
 import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -42,7 +45,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                 else -> AppStrings.HOME_SCHEDULE_PARTICIPANT_SUMMARY_FORMAT.format(list[0].name, list.size - 1)
             }
             copy(
-                selectedParticipants = list,
+                selectedParticipants = list.toImmutableList(),
                 selectedParticipantsString = summaryText
             )
         }
@@ -68,7 +71,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
         updateState {
             copy(
                 searchQuery = query,
-                searchResults = emptyList(),
+                searchResults = persistentListOf(),
                 nextCursor = null,
                 hasNext = true,
                 isSearching = query.isNotBlank(),
@@ -112,15 +115,16 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
                 successCallback = { response ->
                     // 요청 이후 새 검색이 시작됐거나 검색어가 바뀌었으면 늦게 도착한 이전 응답이므로 버린다
                     if (generation != searchGeneration || uiState.value.searchQuery != state.searchQuery) return@resultResponse
-                    Log.d("log_home", "유저검색 성공: ${response.content}")
                     updateState {
                         copy(
                             // 다음 페이지는 기존 결과 뒤에 이어 붙인다
-                            searchResults = if (isNextPage) {
-                                (searchResults + response.content).distinctBy { it.id }
-                            } else {
-                                response.content
-                            },
+                            searchResults = (
+                                if (isNextPage) {
+                                    (searchResults + response.content).distinctBy { it.id }
+                                } else {
+                                    response.content
+                                }
+                            ).toImmutableList(),
                             nextCursor = response.nextCursor,
                             hasNext = response.hasNext,
                             isLoading = false,
@@ -158,11 +162,13 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
     fun toggleParticipant(user: ParticipantItem) {
         updateState {
             val isExist = selectedParticipants.any { it.id == user.id }
-            val newList = if (isExist) {
-                selectedParticipants.filter { it.id != user.id }
-            } else {
-                selectedParticipants + user
-            }
+            val newList = (
+                if (isExist) {
+                    selectedParticipants.filter { it.id != user.id }
+                } else {
+                    selectedParticipants + user
+                }
+            ).toImmutableList()
 
             //결과 스트링 작성
             val summaryText = when {
@@ -186,7 +192,7 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
         searchGeneration++
         updateState {
             copy(
-                searchResults = emptyList(), // 혹은 초기 리스트(allChallengers)
+                searchResults = persistentListOf(), // 혹은 초기 리스트(allChallengers)
                 searchQuery = "",
                 isSearching = false,
                 // 버려지는 진행 중 요청이 로딩 상태를 풀어 주지 못하므로 여기서 해제한다
@@ -199,9 +205,9 @@ class ScheduleChallengerAddDialogViewModel @Inject constructor(
 }
 
 data class ScheduleChallengerAddDialogUiState(
-    val selectedParticipants: List<ParticipantItem> = emptyList(),
+    val selectedParticipants: ImmutableList<ParticipantItem> = persistentListOf(),
     val selectedParticipantsString: String = "",
-    val searchResults: List<ParticipantItem> = emptyList(),
+    val searchResults: ImmutableList<ParticipantItem> = persistentListOf(),
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val nextCursor: Long? = null,

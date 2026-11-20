@@ -1,25 +1,25 @@
 package com.umc.presentation.community.create
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
+import com.umc.presentation.community.bottomsheet.create.CommunityCreateMemberBottomSheet
 
 /**
  * 스레드 생성 화면의 Route
  *
  * ViewModel의 상태를 수집하고,
- * 화면 이동 및 Toast와 같은 일회성 이벤트를 처리합니다.
+ * 화면 이동 및 토스트와 같은 일회성 이벤트를 처리합니다.
+ * 챌린저 선택 시트는 hiltViewModel()로 VM을 얻으므로 Screen이 아니라 Route에서 띄운다.
  */
 @Composable
 fun CommunityCreateRoute(
@@ -29,7 +29,8 @@ fun CommunityCreateRoute(
     viewModel: CommunityCreateViewModel =
         hiltViewModel<CommunityCreateViewModel>(),
 ) {
-    val context = LocalContext.current
+    // 생성 직후 화면을 떠나도 남아야 하는 토스트용 앱 공용 토스트
+    val appToast = LocalUToast.current
 
     // 스레드 생성 화면의 UI 상태 구독
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -44,13 +45,9 @@ fun CommunityCreateRoute(
                 onNavigateBack()
             }
 
-            // 스레드 생성 성공 후 Toast 표시 및 생성 완료 처리
+            // 생성 성공 뒤 바로 화면을 떠나므로 화면의 호스트 대신 앱 공용 토스트로 알린다
             is CommunityCreateEvent.CreateSuccess -> {
-                Toast.makeText(
-                    context,
-                    AppStrings.COMMUNITY_CREATE_SUCCESS,
-                    Toast.LENGTH_SHORT,
-                ).show()
+                appToast.show(AppStrings.COMMUNITY_CREATE_SUCCESS, UToastState.CHECK)
 
                 onCreateSuccess(event.threadId)
             }
@@ -68,13 +65,12 @@ fun CommunityCreateRoute(
                 onNavigateToEmojiPicker()
             }
 
-            // 공통 안내 Toast 처리
+            // 필수값 누락 등 안내는 생성 실패와 같은 화면 호스트에 띄운다
             is CommunityCreateEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
+                toastData = UToastData(
+                    message = event.message,
+                    state = UToastState.ERROR,
+                )
             }
         }
     }
@@ -86,4 +82,24 @@ fun CommunityCreateRoute(
         toastData = toastData,
         onToastDismiss = { toastData = null },
     )
+
+    // 챌린저 선택 BottomSheet
+    if (state.showChallengerBottomSheet) {
+        CommunityCreateMemberBottomSheet(
+            preSelected = state.selectedChallengers,
+            maxCount = state.maxChallengerCount,
+            onDismissRequest = {
+                viewModel.onAction(
+                    CommunityCreateAction.OnDismissChallengerBottomSheet
+                )
+            },
+            onConfirm = { challengers ->
+                viewModel.onAction(
+                    CommunityCreateAction.OnChallengersSelected(
+                        challengers = challengers,
+                    )
+                )
+            },
+        )
+    }
 }

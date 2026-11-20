@@ -8,6 +8,15 @@ import java.io.InputStream
 
 internal const val COMMUNITY_CHAT_MAX_TOTAL_IMAGE_BYTES = 40L * 1024 * 1024
 
+private const val BYTES_PER_MIB = 1024L * 1024
+
+/** 한 장 한도를 안내 문구에 넣을 MiB 단위로 바꾼다. 한도가 바뀌면 문구도 함께 바뀐다. */
+internal val COMMUNITY_CHAT_MAX_IMAGE_MIB: Long
+    get() = UploadFileCategory.ETC.maxSizeBytes / BYTES_PER_MIB
+
+/** 총합 한도를 안내 문구에 넣을 MiB 단위로 바꾼다. */
+internal const val COMMUNITY_CHAT_MAX_TOTAL_IMAGE_MIB: Long = COMMUNITY_CHAT_MAX_TOTAL_IMAGE_BYTES / BYTES_PER_MIB
+
 internal enum class CommunityChatImageSizeError { IMAGE_TOO_LARGE, TOTAL_TOO_LARGE, UNREADABLE }
 
 internal fun validateCommunityChatImageSizes(sizes: List<Long?>): CommunityChatImageSizeError? {

@@ -41,7 +41,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -63,6 +62,7 @@ import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.domain.model.home.SearchResultItem
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * 일정 생성 및 수정에서 참여 챌린저를 검색하고 다중 선택하는 바텀시트 다이얼로그 컴포저블
@@ -91,9 +91,9 @@ fun ScheduleChallengerAddBottomSheet(
     hasNext: Boolean, //다음 유저 리스트 시 여부
     hasSearched: Boolean, //검색 응답(성공/실패)을 받았는지 여부
     isSearchFailed: Boolean, //마지막 검색 요청 실패 여부
-    selectedParticipants: List<ParticipantItem>, //선택된 챌린저 리스트
+    selectedParticipants: ImmutableList<ParticipantItem>, //선택된 챌린저 리스트
     selectedParticipantsString: String, //선택된 챌린저 이름들(UI 용도)
-    searchResults: List<ParticipantItem>, //검색 결과 리스트
+    searchResults: ImmutableList<ParticipantItem>, //검색 결과 리스트
 
     //사용자 액션 이벤트 콜백
     onQueryChanged: (String) -> Unit,
@@ -103,7 +103,6 @@ fun ScheduleChallengerAddBottomSheet(
     onDismissRequest: () -> Unit
 ){
 
-    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -248,7 +247,7 @@ fun ScheduleChallengerAddBottomSheet(
  */
 @Composable
 fun ChallengerHeader(
-    selectedParticipants: List<ParticipantItem>,
+    selectedParticipants: ImmutableList<ParticipantItem>,
     selectedParticipantsString: String,
     onConfirm: (List<ParticipantItem>, String) -> Unit,
     onDismissRequest: () -> Unit
@@ -323,7 +322,7 @@ fun EmptyParticipantContent(
  */
 @Composable
 fun SelectedParticipantList(
-    participants: List<ParticipantItem>,
+    participants: ImmutableList<ParticipantItem>,
     onRemoveClick: (ParticipantItem) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -342,8 +341,8 @@ fun SelectedParticipantList(
 @Composable
 fun SearchParticipantList(
     listState: LazyListState,
-    searchResults: List<ParticipantItem>,
-    selectedParticipants: List<ParticipantItem>,
+    searchResults: ImmutableList<ParticipantItem>,
+    selectedParticipants: ImmutableList<ParticipantItem>,
     onToggleClick: (ParticipantItem) -> Unit
 ) {
     // Recomposition이 발생해도 searchResults가 같으면 재가공하지 않도록 캐싱
@@ -392,7 +391,8 @@ fun AddedParticipantRow(
         //프로필 이미지
         AsyncImage(
             model = item.profileImage,
-            contentDescription = "Profile Image",
+            // 바로 옆 이름을 읽으므로 사진은 장식으로 두고 읽지 않는다
+            contentDescription = null,
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
@@ -464,7 +464,8 @@ fun SearchParticipantRow(
         //프로필 이미지
         AsyncImage(
             model = item.profileImage,
-            contentDescription = "Profile Image",
+            // 바로 옆 이름을 읽으므로 사진은 장식으로 두고 읽지 않는다
+            contentDescription = null,
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)

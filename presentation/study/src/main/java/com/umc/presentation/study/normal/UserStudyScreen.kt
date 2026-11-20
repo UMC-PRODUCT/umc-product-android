@@ -1,6 +1,5 @@
 package com.umc.presentation.study.normal
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,29 +7,33 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
+import com.umc.component.component.UToastState
 import com.umc.component.theme.grey100
+import com.umc.component.theme.main500
 import com.umc.domain.model.enums.UserPart
 import com.umc.presentation.study.normal.component.StudyCurriculumCard
 import com.umc.presentation.study.normal.component.StudyEmptyCard
 import com.umc.presentation.study.normal.component.StudyErrorCard
 import com.umc.presentation.study.normal.component.StudyItemRow
 import kotlinx.collections.immutable.persistentListOf
-import com.umc.component.base.CollectUiEvents
 
 /**
  * 일반 사용자 스터디 화면의 Route
  *
- * ViewModel 상태를 구독하고 Toast 이벤트를 처리한 뒤,
+ * ViewModel 상태를 구독하고 토스트 이벤트를 처리한 뒤,
  * 실제 스터디 화면에 상태와 이벤트를 전달합니다.
  */
 @Composable
@@ -38,23 +41,19 @@ fun UserStudyRoute(
     isActive: Boolean = true,
     viewModel: UserStudyViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val toast = LocalUToast.current
 
     // 탭이 활성화될 때마다 커리큘럼을 다시 조회
     LaunchedEffect(isActive) {
         if (isActive) viewModel.refresh()
     }
 
-    // ViewModel에서 발생한 일회성 Toast 이벤트 처리
+    // ViewModel에서 발생한 일회성 토스트 이벤트 처리. 이 화면의 토스트는 모두 조회 실패 안내다.
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is UserStudyEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
+                toast.show(event.message, UToastState.ERROR)
             }
         }
     }
@@ -73,7 +72,7 @@ fun UserStudyRoute(
  */
 @Composable
 fun UserStudyScreen(
-    state: UserStudyState,
+    state: UserStudyUiState,
     onRetry: () -> Unit = {},
 ) {
     Box(
@@ -85,12 +84,18 @@ fun UserStudyScreen(
                 vertical = 12.dp,
             )
     ) {
-        // 조회된 커리큘럼이 없을 경우 조회 실패면 오류 화면, 아니면 Empty 화면 표시
+        // 조회된 커리큘럼이 없을 경우 조회 실패면 오류 화면, 조회 중이면 로딩, 아니면 Empty 화면 표시
+        // 재시도 중에는 오류 화면을 그대로 두어 결과가 나오기 전에 화면이 바뀌지 않게 한다.
         if (state.items.isEmpty()) {
             if (state.isError) {
                 StudyErrorCard(
                     onRetry = onRetry,
                     modifier = Modifier.fillMaxSize(),
+                )
+            } else if (state.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = main500(),
                 )
             } else {
                 StudyEmptyCard(
@@ -132,7 +137,7 @@ fun UserStudyScreen(
 @Composable
 internal fun UserStudyScreenPreview() {
     UserStudyScreen(
-        state = UserStudyState(
+        state = UserStudyUiState(
             title = "웹 프론트엔드 기초",
             part = UserPart.WEB,
             items = persistentListOf(
@@ -168,13 +173,25 @@ internal fun UserStudyScreenPreview() {
 }
 
 /**
+ * 일반 사용자 스터디 화면 첫 조회 중 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+internal fun UserStudyScreenLoadingPreview() {
+    UserStudyScreen(
+        state = UserStudyUiState(isLoading = true),
+        onRetry = {},
+    )
+}
+
+/**
  * 일반 사용자 스터디 화면 조회 실패 Preview
  */
 @Preview(showBackground = true)
 @Composable
 internal fun UserStudyScreenErrorPreview() {
     UserStudyScreen(
-        state = UserStudyState(isError = true),
+        state = UserStudyUiState(isError = true),
         onRetry = {},
     )
 }

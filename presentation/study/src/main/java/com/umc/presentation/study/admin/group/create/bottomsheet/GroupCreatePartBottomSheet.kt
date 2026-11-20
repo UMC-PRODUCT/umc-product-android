@@ -2,11 +2,14 @@ package com.umc.presentation.study.admin.group.create.bottomsheet
 
 import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,9 +19,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UText
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey600
@@ -56,57 +62,71 @@ fun GroupCreatePartBottomSheet(
             topEnd = 28.dp,
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(420.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+        // 시트는 별도 창이라 앱 토스트가 가려진다. 시트가 열린 동안 띄운 토스트를 시트 위에 그린다.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            // 파트 선택 안내 문구
-            UText(
-                text = AppStrings.STUDY_GROUP_PART_PLACEHOLDER,
-                style = UmcTypographyTokens.Title3Bold,
-                color = grey800(),
-                modifier = Modifier.padding(top = 8.dp),
-            )
-
-            Spacer(
-                modifier = Modifier.height(20.dp),
-            )
-
-            // 선택 가능한 전체 파트 목록
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(420.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp),
             ) {
-                items(
-                    items = UserPart.selectable,
-                    key = { part ->
-                        part.name
-                    },
-                ) { part ->
-                    UText(
-                        text = part.label,
-                        style = UmcTypographyTokens.Body,
+                // 파트 선택 안내 문구
+                UText(
+                    text = AppStrings.STUDY_GROUP_PART_PLACEHOLDER,
+                    style = UmcTypographyTokens.Title3Bold,
+                    color = grey800(),
+                    modifier = Modifier.padding(top = 8.dp),
+                )
 
-                        // 현재 선택된 파트 강조
-                        color = if (
-                            selectedPart == part
-                        ) {
-                            main500()
-                        } else {
-                            grey800()
+                Spacer(
+                    modifier = Modifier.height(20.dp),
+                )
+
+                // 선택 가능한 전체 파트 목록
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    items(
+                        items = UserPart.selectable,
+                        key = { part ->
+                            part.name
                         },
+                    ) { part ->
+                        UText(
+                            text = part.label,
+                            style = UmcTypographyTokens.Body,
 
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onPartSelected(part)
-                            }
-                            .padding(vertical = 16.dp),
-                    )
+                            // 현재 선택된 파트 강조
+                            color = if (
+                                selectedPart == part
+                            ) {
+                                main500()
+                            } else {
+                                grey800()
+                            },
+
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onPartSelected(part)
+                                }
+                                .padding(vertical = 16.dp),
+                        )
+                    }
                 }
             }
+
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

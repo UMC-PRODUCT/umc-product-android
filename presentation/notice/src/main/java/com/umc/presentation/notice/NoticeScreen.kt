@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -60,7 +59,6 @@ import com.umc.domain.model.organization.GisuItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -214,12 +212,13 @@ fun NoticeScreen(
                         )
                     }
 
-                    // 마지막 아이템 노출 시 다음 페이지 로드
+                    // 마지막 아이템 노출 시 다음 페이지 로드. 실패하면 다시 시도 버튼으로 바뀐다
                     if (uiState.noticeList.isNotEmpty() && !uiState.isLastPage) {
                         item {
-                            LaunchedEffect(Unit) {
-                                onLoadNextPage()
-                            }
+                            NoticeNextPageItem(
+                                isError = uiState.isNextPageError,
+                                onLoadNextPage = onLoadNextPage,
+                            )
                         }
                     }
                 }

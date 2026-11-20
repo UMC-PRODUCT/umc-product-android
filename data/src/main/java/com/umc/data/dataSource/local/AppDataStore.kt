@@ -28,9 +28,11 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
 val Context.dataStore by preferencesDataStore(name = "user_prefs")
 
+// 저장소·리포지토리 여러 곳이 주입받으므로 앱 전체에서 한 인스턴스를 쓴다.
+// 위 확장 프로퍼티에 붙어 있던 @Singleton 은 Hilt 가 처리하지 않아 효과가 없었다.
+@Singleton
 class AppDataStore @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {

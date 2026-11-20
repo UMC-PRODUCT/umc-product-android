@@ -10,10 +10,11 @@ import com.umc.domain.model.UploadFileInfo
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
 import com.umc.domain.model.base.NETWORK_ERROR_CODE
-import com.umc.domain.model.base.map
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.repository.storage.StorageRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.ProtocolException
 import kotlin.coroutines.cancellation.CancellationException
@@ -30,7 +31,7 @@ class StorageRepositoryImpl @Inject constructor(
     : ApiState<UploadFileInfo> {
         val uri = Uri.parse(uriString)
 
-        val meta = StorageUriUtil.getMetadata(context, uri)
+        val meta = readMetadata(uri)
             ?: return ApiState.Fail(FailState(code = "LOCAL_001", message = "파일 읽기 실패"))
 
         // 추가!!! 여기서 카테고리별 파일 크기를 비교해서 reject 로직을 수행
@@ -69,7 +70,7 @@ class StorageRepositoryImpl @Inject constructor(
                 // 이 호출은 apiCall을 거치지 않아 OkHttp의 IOException(ProtocolException 등)이 그대로 던져진다.
                 // 잡지 않으면 호출한 viewModelScope 안에서 앱이 종료되므로 실패 상태로 바꿔 돌려준다
                 val requestBody = try {
-                    StorageUriUtil.toRequestBody(context, uri)
+                    StorageUriUtil.toRequestBody(context, uri, meta)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -120,6 +121,20 @@ class StorageRepositoryImpl @Inject constructor(
     //파일 삭제 API
     override suspend fun deleteFile(fileId: String): ApiState<Unit> {
         return storageRemoteDatasource.deleteFile(fileId)
+    }
+
+    // uploadFile 은 viewModelScope(Main)에서 불리므로 ContentResolver 조회(Binder·디스크 I/O)를 IO 디스패처로 옮긴다.
+    // 클라우드 제공자(구글 포토·드라이브)는 조회가 오래 걸릴 수 있다.
+    // Uri 권한이 사라진 경우(SecurityException) 등 조회 예외도 앱 종료 대신 읽기 실패(null)로 돌린다.
+    private suspend fun readMetadata(uri: Uri): StorageUriUtil.UploadFileMetadata? {
+        return try {
+            withContext(Dispatchers.IO) { StorageUriUtil.getMetadata(context, uri) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
 }

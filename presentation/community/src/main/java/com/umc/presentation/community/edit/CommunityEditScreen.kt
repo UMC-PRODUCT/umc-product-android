@@ -11,7 +11,6 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey600
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
 import com.umc.presentation.community.component.CommunityThreadEditorContent
 import com.umc.presentation.community.component.CommunityThreadEditorMode
 import com.umc.presentation.community.model.CommunityAiState
@@ -41,7 +40,6 @@ fun CommunityEditScreen(
         aiState = state.aiState,
         aiCategory = state.aiCategory,
         selectedCategory = state.selectedCategory,
-        canRequestClassification = state.canRequestClassification,
         isSubmitEnabled = state.isSaveEnabled,
         challengers = state.selectedChallengers,
         maxChallengerCount = state.maxChallengerCount,
@@ -121,26 +119,6 @@ fun CommunityEditScreen(
             onDismissRequest = {
                 onAction(
                     CommunityEditAction.OnDismissDeleteDialog
-                )
-            },
-        )
-    }
-
-    // 챌린저 추가/삭제를 위한 멤버 관리 BottomSheet
-    if (
-        state.showChallengerBottomSheet &&
-        state.threadId.isNotBlank()
-    ) {
-        CommunityMemberBottomSheet(
-            threadId = state.threadId,
-            onDismissRequest = {
-                onAction(
-                    CommunityEditAction.OnDismissChallengerBottomSheet
-                )
-            },
-            onInviteSuccess = {
-                onAction(
-                    CommunityEditAction.OnMemberInviteSuccess
                 )
             },
         )

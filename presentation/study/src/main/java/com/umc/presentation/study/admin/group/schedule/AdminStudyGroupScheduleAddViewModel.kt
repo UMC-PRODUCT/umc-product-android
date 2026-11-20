@@ -3,6 +3,7 @@ package com.umc.presentation.study.admin.group.schedule
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.home.schedule.CreateSchedule
@@ -39,6 +40,9 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
         >(
     AdminStudyGroupScheduleState()
 ) {
+
+    /** 이미 초기화한 그룹 인자. 같은 인자로 다시 불리면 무시한다. */
+    private var initializedGroup: Triple<Long, String, String>? = null
 
     /**
      * 일반 일정의 날짜 + 시간 화면 표시 형식
@@ -304,12 +308,19 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
     /**
      * 일정 등록 대상 스터디 그룹 정보 초기화
+     *
+     * Route 가 화면 회전·다크 모드 전환으로 다시 그려질 때마다 호출된다.
+     * 같은 그룹이면 이미 초기화했으므로 주차 API 를 다시 부르지 않는다.
      */
     fun initializeGroup(
         groupId: Long,
         groupTitle: String,
         groupPart: String,
     ) {
+        val group = Triple(groupId, groupTitle, groupPart)
+        if (initializedGroup == group) return
+        initializedGroup = group
+
         updateState {
             copy(
                 groupId = groupId,
@@ -380,7 +391,8 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
                         is ApiState.Fail -> {
                             emitEvent(
                                 AdminStudyGroupScheduleEvent.ShowToast(
-                                    AppStrings.STUDY_SCHEDULE_WEEK_LOAD_ERROR
+                                    AppStrings.STUDY_SCHEDULE_WEEK_LOAD_ERROR,
+                                    UToastState.ERROR,
                                 )
                             )
                         }
@@ -390,7 +402,8 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
                 is ApiState.Fail -> {
                     emitEvent(
                         AdminStudyGroupScheduleEvent.ShowToast(
-                            AppStrings.STUDY_SCHEDULE_GISU_LOAD_ERROR
+                            AppStrings.STUDY_SCHEDULE_GISU_LOAD_ERROR,
+                            UToastState.ERROR,
                         )
                     )
                 }
@@ -486,7 +499,8 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
         ) {
             emitEvent(
                 AdminStudyGroupScheduleEvent.ShowToast(
-                    AppStrings.HOME_PLAN_ADD_ATTENDANCE_CHECKIN_AFTER_START
+                    AppStrings.HOME_PLAN_ADD_ATTENDANCE_CHECKIN_AFTER_START,
+                    UToastState.ERROR,
                 )
             )
             return
@@ -553,7 +567,8 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
                     emitEvent(
                         AdminStudyGroupScheduleEvent.ShowToast(
-                            AppStrings.STUDY_SCHEDULE_CREATE_ERROR
+                            AppStrings.STUDY_SCHEDULE_CREATE_ERROR,
+                            UToastState.ERROR,
                         )
                     )
                 }
@@ -594,7 +609,8 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
                 emitEvent(
                     AdminStudyGroupScheduleEvent.ShowToast(
-                        AppStrings.STUDY_SCHEDULE_CREATE_SUCCESS
+                        AppStrings.STUDY_SCHEDULE_CREATE_SUCCESS,
+                        UToastState.CHECK,
                     )
                 )
 
@@ -612,7 +628,8 @@ class AdminStudyGroupScheduleViewModel @Inject constructor(
 
                 emitEvent(
                     AdminStudyGroupScheduleEvent.ShowToast(
-                        AppStrings.STUDY_SCHEDULE_LINK_ERROR
+                        AppStrings.STUDY_SCHEDULE_LINK_ERROR,
+                        UToastState.ERROR,
                     )
                 )
             }

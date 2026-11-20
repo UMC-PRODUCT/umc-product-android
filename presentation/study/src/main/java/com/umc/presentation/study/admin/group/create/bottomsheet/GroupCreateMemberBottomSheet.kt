@@ -30,9 +30,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.*
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateMemberUiModel
 
@@ -78,16 +80,16 @@ fun GroupCreateMemberBottomSheet(
      *
      * resolvePreSelectedFromApi가 true인 경우에는
      * 기존 멤버를 유지한 채 API에서 찾은 멤버의 정보만 다시 채웁니다.
+     * 구성 변경으로 다시 실행돼도 ViewModel 이 같은 입력은 무시해 편집 중인 상태가 남는다.
      */
     LaunchedEffect(
         preSelected,
         resolvePreSelectedFromApi,
     ) {
-        if (resolvePreSelectedFromApi) {
-            viewModel.loadSelectedMembers(preSelected)
-        } else {
-            viewModel.setSelected(preSelected)
-        }
+        viewModel.open(
+            preSelected = preSelected,
+            resolveFromApi = resolvePreSelectedFromApi,
+        )
     }
 
     ModalBottomSheet(
@@ -106,85 +108,99 @@ fun GroupCreateMemberBottomSheet(
             topEnd = 28.dp
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(620.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
+        // 시트는 별도 창이라 앱 토스트가 가려진다. 시트가 열린 동안 띄운 토스트를 시트 위에 그린다.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            // 검색 여부에 따라 제목 및 확인 버튼 표시
-            GroupCreatePickerHeader(
-                title = if (state.isSearching) {
-                    AppStrings.STUDY_MEMBER_SEARCH_TITLE
-                } else {
-                    AppStrings.STUDY_MEMBER_ADD_TITLE
-                },
-                showConfirmButton = state.isSearching,
-                isConfirmEnabled = state.isConfirmEnabled,
-                onConfirmClick = {
-                    viewModel.confirmPendingMembers()
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-            // 멤버 이름 검색창
-            UTextField(
-                value = state.query,
-                onValueChange = viewModel::searchMembers,
-                placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                prevIcon = painterResource(
-                    R.drawable.ic_search
-                ),
-                prevIconTint = grey500(),
-                prevIconSize = 24.dp,
-                backgroundColor = grey100(),
-                focusBackgroundColor = grey50(),
-                strokeColor = grey100(),
-                focusStrokeColor = grey900(),
-                cornerRadius = 8.dp,
-            )
-
-            Spacer(
-                modifier = Modifier.height(28.dp)
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .height(620.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp)
             ) {
-                if (state.isSearching) {
-                    // 검색 중에는 검색 결과 표시
-                    MemberSearchResultContent(
-                        state = state,
-                        onToggleMember = viewModel::togglePendingMember,
-                        onLoadMore = viewModel::loadMoreMembers,
-                    )
-                } else {
-                    // 검색 중이 아니면 현재 선택된 멤버 표시
-                    CurrentMemberContent(
-                        members = state.selectedMembers,
-                        onRemoveMember = viewModel::removeMember,
-                    )
-                }
+                // 검색 여부에 따라 제목 및 확인 버튼 표시
+                GroupCreatePickerHeader(
+                    title = if (state.isSearching) {
+                        AppStrings.STUDY_MEMBER_SEARCH_TITLE
+                    } else {
+                        AppStrings.STUDY_MEMBER_ADD_TITLE
+                    },
+                    showConfirmButton = state.isSearching,
+                    isConfirmEnabled = state.isConfirmEnabled,
+                    onConfirmClick = {
+                        viewModel.confirmPendingMembers()
+                    }
+                )
 
-                // API 로딩 표시
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        ),
-                        color = main500()
-                    )
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
+
+                // 멤버 이름 검색창
+                UTextField(
+                    value = state.query,
+                    onValueChange = viewModel::searchMembers,
+                    placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    prevIcon = painterResource(
+                        R.drawable.ic_search
+                    ),
+                    prevIconTint = grey500(),
+                    prevIconSize = 24.dp,
+                    backgroundColor = grey100(),
+                    focusBackgroundColor = grey50(),
+                    strokeColor = grey100(),
+                    focusStrokeColor = grey900(),
+                    cornerRadius = 8.dp,
+                )
+
+                Spacer(
+                    modifier = Modifier.height(28.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    if (state.isSearching) {
+                        // 검색 중에는 검색 결과 표시
+                        MemberSearchResultContent(
+                            state = state,
+                            onToggleMember = viewModel::togglePendingMember,
+                            onLoadMore = viewModel::loadMoreMembers,
+                        )
+                    } else {
+                        // 검색 중이 아니면 현재 선택된 멤버 표시
+                        CurrentMemberContent(
+                            members = state.selectedMembers,
+                            onRemoveMember = viewModel::removeMember,
+                        )
+                    }
+
+                    // API 로딩 표시
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(
+                                Alignment.Center
+                            ),
+                            color = main500()
+                        )
+                    }
                 }
             }
+
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,9 +39,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
@@ -92,10 +96,11 @@ fun GroupScheduleChallengerBottomSheet(
 
     /**
      * BottomSheet가 열릴 때 기존 선택 목록을 초기화합니다.
+     *
+     * 구성 변경으로 다시 실행돼도 ViewModel 이 같은 입력은 무시해 편집 중인 상태가 남는다.
      */
     LaunchedEffect(preSelected) {
-        viewModel.resetAfterConfirm()
-        viewModel.setSelected(preSelected)
+        viewModel.open(preSelected)
     }
 
     ModalBottomSheet(
@@ -114,104 +119,118 @@ fun GroupScheduleChallengerBottomSheet(
             topEnd = 28.dp
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(620.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
+        // 시트는 별도 창이라 앱 토스트가 가려진다. 시트가 열린 동안 띄운 토스트를 시트 위에 그린다.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            // 검색 여부에 따라 제목과 확인 버튼 표시
-            GroupScheduleChallengerHeader(
-                title = if (state.isSearching) {
-                    AppStrings.STUDY_SCHEDULE_INVITE_SEARCH_TITLE
-                } else {
-                    AppStrings.STUDY_SCHEDULE_INVITE_ADD_TITLE
-                },
-                showConfirmButton = state.isSearching,
-                isConfirmEnabled =
-                    state.selectedChallengers.isNotEmpty(),
-                onConfirmClick = {
-                    viewModel.clearSearchOnly()
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-            // 챌린저 검색창
-            UTextField(
-                value = state.query,
-                onValueChange =
-                    viewModel::searchChallengers,
-                placeholder = AppStrings.STUDY_SCHEDULE_MEMBER_NAME_PLACEHOLDER,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                prevIcon = painterResource(
-                    id = R.drawable.ic_search
-                ),
-                prevIconTint = grey500(),
-                prevIconSize = 24.dp,
-                backgroundColor = grey100(),
-                focusBackgroundColor = grey50(),
-                strokeColor = grey100(),
-                focusStrokeColor = grey900(),
-                cornerRadius = 8.dp
-            )
-
-            Spacer(
-                modifier = Modifier.height(28.dp)
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .height(620.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp)
             ) {
-                if (!state.isSearching) {
-
-                    // 검색 전: 현재 선택된 챌린저 표시
-                    if (state.selectedChallengers.isEmpty()) {
-                        GroupScheduleEmptyChallengerContent()
+                // 검색 여부에 따라 제목과 확인 버튼 표시
+                GroupScheduleChallengerHeader(
+                    title = if (state.isSearching) {
+                        AppStrings.STUDY_SCHEDULE_INVITE_SEARCH_TITLE
                     } else {
-                        GroupScheduleSelectedChallengerList(
-                            challengers =
+                        AppStrings.STUDY_SCHEDULE_INVITE_ADD_TITLE
+                    },
+                    showConfirmButton = state.isSearching,
+                    isConfirmEnabled =
+                        state.selectedChallengers.isNotEmpty(),
+                    onConfirmClick = {
+                        viewModel.clearSearchOnly()
+                    }
+                )
+
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
+
+                // 챌린저 검색창
+                UTextField(
+                    value = state.query,
+                    onValueChange =
+                        viewModel::searchChallengers,
+                    placeholder = AppStrings.STUDY_SCHEDULE_MEMBER_NAME_PLACEHOLDER,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    prevIcon = painterResource(
+                        id = R.drawable.ic_search
+                    ),
+                    prevIconTint = grey500(),
+                    prevIconSize = 24.dp,
+                    backgroundColor = grey100(),
+                    focusBackgroundColor = grey50(),
+                    strokeColor = grey100(),
+                    focusStrokeColor = grey900(),
+                    cornerRadius = 8.dp
+                )
+
+                Spacer(
+                    modifier = Modifier.height(28.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    if (!state.isSearching) {
+
+                        // 검색 전: 현재 선택된 챌린저 표시
+                        if (state.selectedChallengers.isEmpty()) {
+                            GroupScheduleEmptyChallengerContent()
+                        } else {
+                            GroupScheduleSelectedChallengerList(
+                                challengers =
+                                    state.selectedChallengers,
+                                onRemoveClick =
+                                    viewModel::toggleChallenger
+                            )
+                        }
+                    } else {
+
+                        // 검색 중: 검색 결과 표시
+                        GroupScheduleSearchChallengerList(
+                            searchResults =
+                                state.searchResults,
+                            selectedChallengers =
                                 state.selectedChallengers,
-                            onRemoveClick =
-                                viewModel::toggleChallenger
+                            isLoading =
+                                state.isLoading,
+                            hasNext =
+                                state.hasNext,
+                            onToggleClick =
+                                viewModel::toggleChallenger,
+                            onLoadMore =
+                                viewModel::loadMoreChallengers,
                         )
                     }
-                } else {
 
-                    // 검색 중: 검색 결과 표시
-                    GroupScheduleSearchChallengerList(
-                        searchResults =
-                            state.searchResults,
-                        selectedChallengers =
-                            state.selectedChallengers,
-                        isLoading =
-                            state.isLoading,
-                        hasNext =
-                            state.hasNext,
-                        onToggleClick =
-                            viewModel::toggleChallenger,
-                        onLoadMore =
-                            viewModel::loadMoreChallengers,
-                    )
-                }
-
-                // API 검색 로딩
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        ),
-                        color = main500()
-                    )
+                    // API 검색 로딩
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(
+                                Alignment.Center
+                            ),
+                            color = main500()
+                        )
+                    }
                 }
             }
+
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

@@ -1,18 +1,15 @@
 package com.umc.component.component
 
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,10 +95,9 @@ fun UTimePickerDialog(
                     }
 
                     //중간 콜론 (:)
-                    Text(
+                    UText(
                         text = ":",
-                        style = UmcTypographyTokens.Title1Bold, // 디자인에 맞게 큰 폰트 적용
-                        fontSize = 57.sp,
+                        style = UmcTypographyTokens.Title1Bold.copy(fontSize = 57.sp), // 디자인에 맞게 큰 폰트 적용
                         color = grey800(),
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
@@ -148,10 +144,9 @@ fun UTimePickerDialog(
                         )
                     }
 
-                    Text(
+                    UText(
                         text = ":",
-                        style = UmcTypographyTokens.Title1Bold,
-                        fontSize = 4.sp,
+                        style = UmcTypographyTokens.Title1Bold.copy(fontSize = 4.sp),
                         color = Color.Transparent, //눈에는 안 보이게 투명 처리하여 공간만 확보
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )

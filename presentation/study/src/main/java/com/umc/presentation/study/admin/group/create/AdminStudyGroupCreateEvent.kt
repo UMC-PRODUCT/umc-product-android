@@ -27,9 +27,9 @@ sealed interface AdminStudyGroupCreateEvent : UiEvent {
     data object RegisterSuccess : AdminStudyGroupCreateEvent
 
     /**
-     * 스터디 그룹 생성 실패
+     * 스터디 그룹 생성 실패(진입 시 기수 조회 실패, 기수 없이 등록을 누른 경우 포함)
      *
-     * @param message 서버 또는 API에서 전달된 실패 메시지
+     * @param message 화면에 그대로 띄울 실패 메시지. 비어 있지 않도록 ViewModel 이 기본 문구를 채운다.
      */
     data class RegisterFailure(
         val message: String,

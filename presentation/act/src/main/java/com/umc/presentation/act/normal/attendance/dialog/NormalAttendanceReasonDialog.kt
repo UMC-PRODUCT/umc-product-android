@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,6 +30,8 @@ import androidx.compose.ui.window.Dialog
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Body
@@ -53,17 +56,34 @@ fun AttendanceReasonDialog(
     onSubmit: (String) -> Unit,
     modifier: Modifier = Modifier,
     isSubmitting: Boolean = false,
+    // 다이얼로그는 별도 창이라 화면 토스트가 딤 아래에 가려진다. 열려 있는 동안의 안내는 이 안에 띄운다
+    toastData: UToastData? = null,
+    toastGeneration: Int = 0,
+    onToastDismiss: () -> Unit = {},
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
-        AttendanceReasonDialogContent(
-            reason = reason,
-            onReasonChange = onReasonChange,
-            onReasonFocusChange = onReasonFocusChange,
-            onDismissRequest = onDismissRequest,
-            onSubmit = onSubmit,
-            modifier = modifier,
-            isSubmitting = isSubmitting,
-        )
+        Box {
+            AttendanceReasonDialogContent(
+                reason = reason,
+                onReasonChange = onReasonChange,
+                onReasonFocusChange = onReasonFocusChange,
+                onDismissRequest = onDismissRequest,
+                onSubmit = onSubmit,
+                modifier = modifier,
+                isSubmitting = isSubmitting,
+            )
+
+            // 같은 문구가 연달아 와도 다시 나타나도록 세대가 바뀌면 호스트를 새로 만든다
+            key(toastGeneration) {
+                UToastHost(
+                    data = toastData,
+                    onDismiss = onToastDismiss,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp),
+                )
+            }
+        }
     }
 }
 

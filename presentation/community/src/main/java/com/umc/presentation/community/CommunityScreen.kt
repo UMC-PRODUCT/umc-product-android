@@ -69,7 +69,6 @@ fun CommunityScreen(
                 selectedCategory = state.selectedCategory,
                 onFilterClick = {
                     isFilterMenuExpanded = !isFilterMenuExpanded
-                    onAction(CommunityAction.OnFilterClick)
                 },
                 onFilterDismissRequest = {
                     isFilterMenuExpanded = false

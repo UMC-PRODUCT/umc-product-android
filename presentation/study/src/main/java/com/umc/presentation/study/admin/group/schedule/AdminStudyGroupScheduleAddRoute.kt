@@ -1,15 +1,15 @@
 package com.umc.presentation.study.admin.group.schedule
 
-import android.widget.Toast
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UDateTimePickerDialog
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleChallengerBottomSheet
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleLocationBottomSheet
 import com.umc.presentation.study.admin.group.schedule.bottomsheet.GroupScheduleWeekBottomSheet
-import kotlinx.coroutines.flow.collectLatest
-import com.umc.component.base.CollectUiEvents
 
 /**
  * 스터디 그룹 일정 등록 화면의 Route
@@ -25,12 +25,14 @@ fun AdminStudyGroupScheduleRoute(
     viewModel: AdminStudyGroupScheduleViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val context = LocalContext.current
+    val toast = LocalUToast.current
 
     /**
      * 전달받은 스터디 그룹 정보를 ViewModel에 초기화
+     *
+     * 구성 변경으로 다시 실행돼도 ViewModel 이 같은 그룹이면 무시한다.
      */
     LaunchedEffect(
         groupId,
@@ -75,7 +77,9 @@ fun AdminStudyGroupScheduleRoute(
     }
 
     // 챌린저 선택 BottomSheet
-    var showChallengerBottomSheet by remember {
+    // 시트 ViewModel 은 열려 있는 동안 한 번만 초기화하고 닫을 때 정리한다.
+    // 회전 중에 이 값을 잃으면 정리 없이 닫혀 다음에 열 때 지난 편집이 남으므로 회전에도 유지한다.
+    var showChallengerBottomSheet by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -93,12 +97,10 @@ fun AdminStudyGroupScheduleRoute(
                 onNavigateBack()
             }
 
+            // 성공 토스트 직후 NavigateBack 으로 화면을 떠나도 남도록 앱 토스트로 띄운다.
+            // 주차·장소·챌린저 시트가 열려 있으면 시트 안의 UToastOverlay 가 그린다.
             is AdminStudyGroupScheduleEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
+                toast.show(event.message, event.state)
             }
         }
     }
