@@ -25,10 +25,12 @@ Compose 전환 중인 멀티모듈 앱(`:app`, `:data`, `:domain`, `:presentatio
 
 ## 라이브러리 버전
 
-- 현재: AGP 8.12.3, Kotlin 2.2.21, Compose BOM 2025.09.00(foundation 1.9.2 / **material3 1.3.2**), Navigation 2.9.6, minSdk 24, targetSdk 36.
+- 현재: AGP 9.5.1(Gradle 9.6.0), Kotlin 2.2.21, KSP 2.3.14, Compose BOM 2025.09.00(foundation 1.9.2 / **material3 1.3.2**), Navigation 2.9.6, minSdk 24, targetSdk 36.
+- AGP 9는 Kotlin을 내장한다(built-in Kotlin). 모듈에 `org.jetbrains.kotlin.android` 플러그인이나 `android { kotlinOptions {} }`를 다시 넣지 않는다. Kotlin `jvmTarget`은 `compileOptions.targetCompatibility`를 따른다. AGP 내부 API(`com.android.build.gradle.internal.*`)는 build 스크립트에서 쓰지 않는다.
+- `:lint-rules`의 lint 버전은 AGP 버전 + 23.0.0이다(AGP 9.5.1 → lint 32.5.1). AGP를 올리면 함께 올리고 `:lint-rules:test`로 확인한다.
 - 새로 나왔거나 알파·베타인 API는 추측해서 쓰지 말고 릴리스 노트나 소스로 시그니처를 확인한다. 특히 material3가 1.3.2라 material3 1.4+나 Compose 1.13 알파의 API(M3 `TextFieldState` 오버로드 등)는 **이 저장소에 없다**.
 - 버전을 올릴 때는 릴리스 노트에서 `minSdk` 변경을 먼저 확인한다.
-- Kotlin을 올릴 때는 `gradle/libs.versions.toml`의 `kotlin`과 `ksp` ref를 한 PR에서 함께 올린다. Kotlin JVM 플러그인(`:domain`, `:lint-rules`)도 `kotlin` ref를 쓴다. ksp가 `<Kotlin>-<KSP>` 형식인데 접두사가 `kotlin`과 다르면 Gradle 구성 단계에서 실패한다(`gradle/module-rules.gradle.kts`).
+- Kotlin을 올릴 때는 `gradle/libs.versions.toml`의 `kotlin` ref를 올린다. Kotlin JVM 플러그인(`:domain`, `:lint-rules`)도 같은 ref를 쓴다. AGP가 요구하는 KGP 최소 버전(AGP 9.5는 2.2.10)보다 낮추지 않는다. KSP는 2.3부터 Kotlin 버전과 독립(`2.3.x` 형식)이라 함께 올릴 필요가 없다. 예전 `<Kotlin>-<KSP>` 형식으로 되돌리면 접두사가 `kotlin`과 다를 때 Gradle 구성 단계에서 실패한다(`gradle/module-rules.gradle.kts`).
 
 ## 보고
 
