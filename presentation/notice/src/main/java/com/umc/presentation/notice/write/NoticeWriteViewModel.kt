@@ -9,7 +9,6 @@ import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.theme.AppStrings
 import com.umc.domain.model.enums.BoardChipType
-import com.umc.domain.model.enums.NoticeTab
 import com.umc.domain.model.enums.NoticeWriterRole
 import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserChallengerRole
@@ -18,12 +17,17 @@ import com.umc.domain.model.enums.WriteCategoryType
 import com.umc.domain.model.notice.NoticeImageAttachment
 import com.umc.domain.model.notice.NoticeVoteForm
 import com.umc.domain.model.notice.WriteCategory
+import com.umc.domain.model.notice.noticeRolesForGisu
+import com.umc.domain.model.notice.noticeWriterChapterId
+import com.umc.domain.model.notice.noticeWriterRole
+import com.umc.domain.model.notice.noticeWriterSchoolId
+import com.umc.domain.model.UserInfo
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.request.notice.NoticeCreateRequest
-import com.umc.domain.model.request.notice.NoticeTargetRequest
 import com.umc.domain.model.request.notice.NoticeUpdateRequest
 import com.umc.domain.model.request.notice.NoticeVoteRequest
 import com.umc.domain.model.school.SchoolInfo
+import com.umc.domain.model.organization.GisuItem
 import com.umc.domain.usecase.ai.CheckAiFeatureStatusUseCase
 import com.umc.domain.usecase.ai.RefineNoticeMarkdownUseCase
 import com.umc.domain.usecase.ai.SummarizeNoticeMarkdownUseCase
@@ -36,8 +40,9 @@ import com.umc.domain.usecase.notice.DeleteNoticeVoteUseCase
 import com.umc.domain.usecase.notice.UpdateNoticeImagesUseCase
 import com.umc.domain.usecase.notice.GetNoticeDetailUseCase
 import com.umc.domain.usecase.notice.UpdateNoticeUseCase
-import com.umc.domain.usecase.organization.GetChapterListUseCase
-import com.umc.domain.usecase.school.GetAllSchoolUseCase
+import com.umc.domain.usecase.organization.GetChapterWithSchoolUseCase
+import com.umc.domain.usecase.organization.GetSearchGisusUseCase
+import com.umc.domain.usecase.organization.GetActiveGisuUseCase
 import com.umc.domain.usecase.storage.UploadFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
@@ -49,8 +54,9 @@ import javax.inject.Inject
 @HiltViewModel
 class NoticeWriteViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
-    private val getChapterListUseCase: GetChapterListUseCase,
-    private val getAllSchoolUseCase: GetAllSchoolUseCase,
+    private val getChapterWithSchoolUseCase: GetChapterWithSchoolUseCase,
+    private val getSearchGisusUseCase: GetSearchGisusUseCase,
+    private val getActiveGisuUseCase: GetActiveGisuUseCase,
     private val createNoticeUseCase: CreateNoticeUseCase,
     private val updateNoticeUseCase: UpdateNoticeUseCase,
     private val getNoticeDetailUseCase: GetNoticeDetailUseCase,
@@ -66,6 +72,16 @@ class NoticeWriteViewModel @Inject constructor(
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
+    private var isLoadingTargetGisus = false
+    private var hasLoadedTargetGisus = false
+    private var cachedUserInfo: UserInfo? = null
+    private var serverActiveGisu: GisuItem? = null
+    private var resolvedAuthorityGisuId: Long? = null
+    private var hasSelectedTargetGisu = false
+    private var hasSelectedCategory = false
+    private var loadingOrganizationGisuId: Int? = null
+    private var loadedOrganizationGisuId: Int? = null
+    private var organizationRequestToken = 0
 
     companion object {
         const val MAX_IMAGE_COUNT = 10
@@ -74,8 +90,7 @@ class NoticeWriteViewModel @Inject constructor(
 
     init {
         loadWriterRole()
-        loadChapterList()
-        loadSchoolList()
+        loadActiveGisu()
         checkAiAvailability()
     }
 
@@ -136,65 +151,244 @@ class NoticeWriteViewModel @Inject constructor(
         )
     }
 
-    /** 작성자 권한을 계산하고 권한별 카테고리 목록 구성. 권한에 맞는 카테고리가 기본 선택됨 */
+    /** 활성 기수의 작성 권한으로 카테고리를 구성한다. 기존 선택이 없거나 유효하지 않으면 첫 항목을 선택한다. */
     private fun loadWriterRole() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
-            // 활성 기수. 서버가 내려주는 현재 기수 정보를 우선 쓰고, 없으면 최신 챌린저 기록으로 폴백
-            val currentRecord = userInfo.challengerRecords.maxByOrNull { it.gisu }
-            val activeGisuId = userInfo.currentGisuMemberInfo?.gisuId ?: currentRecord?.gisuId
-            val activeGeneration = userInfo.currentGisuMemberInfo?.generation ?: currentRecord?.gisu
-
-            // 공지 작성 권한은 반드시 "이번 기수"의 역할로만 판단한다.
-            // roles는 전 기수 이력이 평탄화된 목록이라, 거르지 않으면 지난 기수 운영진이
-            // 이번 기수 운영진 공지를 발행할 수 있다
-            val currentRoles = userInfo.roles
-                .filter { activeGisuId == null || it.gisuId == activeGisuId }
-                .map { UserChallengerRole.from(it.roleType) }
-            val writerRole = NoticeWriterRole.from(currentRoles) ?: return@collect
-
-            val categories = createCategories(writerRole, activeGeneration)
-
-            updateState {
-                copy(
-                    writerRole = writerRole,
-                    availableCategories = categories.toImmutableList(),
-                    activeGisuId = activeGisuId?.toInt(),
-                    writerSchoolId = userInfo.schoolId.takeIf { it > 0 }?.toInt(),
-                )
-            }
-
-            // 권한에 맞는 첫 카테고리 자동 선택 (최고 관리자는 전체 기수).
-            // 유저 정보 재수집 시 사용자가 바꾼 선택을 덮어쓰지 않도록 최초 1회만
-            if (uiState.value.selectedCategory == null) {
-                categories.firstOrNull()?.let { onSelectCategory(it) }
-            }
+            cachedUserInfo = userInfo
+            applyUserInfo(userInfo)
         }
     }
 
-    /** 작성자 권한별 선택 가능한 공지 카테고리 목록 */
+    private fun loadActiveGisu() = viewModelScope.launch {
+        resultResponse(
+            response = getActiveGisuUseCase(),
+            successCallback = { gisu ->
+                serverActiveGisu = gisu.takeIf { it.gisuId > 0 }
+                cachedUserInfo?.let(::applyUserInfo)
+            },
+        )
+    }
+
+    private fun applyUserInfo(userInfo: UserInfo) {
+        // 서버 활성 기수를 우선하고, 응답이 없으면 프로필의 현재 기수 정보로 폴백한다.
+        val activeGisuId = serverActiveGisu?.gisuId?.toLong() ?: userInfo.currentGisuMemberInfo?.gisuId
+        val activeGeneration = serverActiveGisu?.generation?.toLong() ?: userInfo.currentGisuMemberInfo?.generation
+
+        // roles는 전 기수 이력이 평탄화된 목록이다. 대상 기수를 바꾸어도 작성 권한은 활성 기수 역할로 판단한다.
+        val writerRole = userInfo.noticeWriterRole(activeGisuId ?: 0L) ?: run {
+            updateState {
+                copy(
+                    writerRole = null,
+                    availableCategories = persistentListOf(),
+                    selectedCategory = null,
+                    boardChips = persistentListOf(),
+                )
+            }
+            loadTargetOrganization(null)
+            return
+        }
+
+        resolvedAuthorityGisuId = activeGisuId
+        val canWriteAsSchoolCore = userInfo.noticeRolesForGisu(activeGisuId ?: 0L).any {
+            it == UserChallengerRole.SCHOOL_PRESIDENT || it == UserChallengerRole.SCHOOL_VICE_PRESIDENT
+        }
+        val authorityGisu = serverActiveGisu ?: activeGisuId?.takeIf { it > 0 }?.let { id ->
+            GisuItem(gisuId = id.toInt(), generation = activeGeneration?.toInt() ?: 0, isActive = true)
+        }
+        val knownGisus = (listOfNotNull(authorityGisu) + uiState.value.availableGisus)
+            .filter { it.gisuId > 0 && it.generation > 0 }
+            .distinctBy { it.gisuId }
+            .sortedByDescending { it.generation }
+        val selection = resolveNoticeWriteSelection(
+            state = uiState.value,
+            writerRole = writerRole,
+            authorityGisuId = authorityGisu?.gisuId,
+            knownGisus = knownGisus,
+            hasSelectedTargetGisu = hasSelectedTargetGisu,
+            hasSelectedCategory = hasSelectedCategory,
+        )
+        if (selection.resetUserSelection) {
+            hasSelectedTargetGisu = false
+            hasSelectedCategory = false
+        }
+        val targetGisuId = selection.targetGisuId
+        val categories = createCategories(writerRole, knownGisus, targetGisuId, canWriteAsSchoolCore)
+        val previousCategory = selection.previousCategory
+        val selectedCategory = selectNoticeCategory(categories, previousCategory)
+        val categoryChanged = selection.roleChanged ||
+            uiState.value.canWriteAsSchoolCore != canWriteAsSchoolCore ||
+            uiState.value.selectedCategory?.type != selectedCategory?.type
+        val (chips, hint) = selectedCategory?.let {
+            createBoardChips(writerRole, it.type, canWriteAsSchoolCore)
+        } ?: (emptyList<BoardChipType>() to null)
+        val targetChanged = uiState.value.targetGisuId != targetGisuId
+
+        updateState {
+            copy(
+                writerRole = writerRole,
+                canWriteAsSchoolCore = canWriteAsSchoolCore,
+                availableCategories = categories.toImmutableList(),
+                selectedCategory = selectedCategory,
+                boardChips = if (categoryChanged) chips.toImmutableList() else boardChips,
+                boardHint = if (categoryChanged) hint else boardHint,
+                isAllSelected = if (categoryChanged || targetChanged) false else isAllSelected,
+                isStaffSelected = if (categoryChanged || targetChanged) false else isStaffSelected,
+                selectedPart = if (categoryChanged || targetChanged) null else selectedPart,
+                selectedChapter = if (categoryChanged || targetChanged) null else selectedChapter,
+                selectedSchool = if (categoryChanged || targetChanged) null else selectedSchool,
+                // 작성 권한은 활성 기수 역할로 계산했으며, 이 값은 공지의 대상 기수만 나타낸다.
+                targetGisuId = targetGisuId,
+                authorityGisuId = activeGisuId?.toInt(),
+                availableGisus = knownGisus.toImmutableList(),
+                // 서버는 활성 기수의 학교 역할 소속과 대상 학교를 비교한다.
+                writerSchoolId = userInfo.noticeWriterSchoolId(activeGisuId ?: 0L)?.toInt(),
+                // 서버는 지부장 역할의 담당 지부와 대상 지부를 비교한다.
+                writerChapterId = userInfo.noticeWriterChapterId(activeGisuId ?: 0L)?.toInt(),
+            )
+        }
+        loadTargetOrganization(targetGisuId)
+
+        if (writerRole == NoticeWriterRole.SUPER_ADMIN || writerRole == NoticeWriterRole.CENTRAL_CORE) {
+            loadTargetGisus(activeGisuId)
+        }
+    }
+
+    private fun loadTargetGisus(preferredGisuId: Long?) {
+        // 프로필과 활성 기수 응답이 연달아 와도 기수 목록 요청은 한 번만 시작한다.
+        if (isLoadingTargetGisus || hasLoadedTargetGisus) return
+        isLoadingTargetGisus = true
+        viewModelScope.launch {
+            resultResponse(
+                response = getSearchGisusUseCase(),
+                successCallback = { result ->
+                    val gisus = (result.gisuList + uiState.value.availableGisus)
+                        .filter { it.gisuId > 0 && it.generation > 0 }
+                        .distinctBy { it.gisuId }
+                        .sortedByDescending { it.generation }
+                    val role = uiState.value.writerRole
+                    updateState {
+                        val allowedGisus = role?.let { allowedNoticeTargetGisus(it, gisus, authorityGisuId) }.orEmpty()
+                        val targetId = targetGisuId?.takeIf { id -> allowedGisus.any { it.gisuId == id } }
+                            ?: preferredGisuId?.toInt()?.takeIf { id -> allowedGisus.any { it.gisuId == id } }
+                            ?: allowedGisus.firstOrNull()?.gisuId
+                        val categories = role?.let {
+                            createCategories(it, gisus, targetId, canWriteAsSchoolCore)
+                        }.orEmpty()
+                        val previous = selectedCategory
+                        val retainedCategory = selectNoticeCategory(categories, previous)
+                        val categoryChanged = previous?.type != retainedCategory?.type
+                        val (chips, hint) = if (role != null && retainedCategory != null) {
+                            createBoardChips(role, retainedCategory.type, canWriteAsSchoolCore)
+                        } else emptyList<BoardChipType>() to null
+                        val targetChanged = targetGisuId != targetId
+                        copy(
+                            availableGisus = gisus.toImmutableList(),
+                            availableCategories = categories.toImmutableList(),
+                            selectedCategory = retainedCategory,
+                            targetGisuId = targetId,
+                            boardChips = if (categoryChanged) chips.toImmutableList() else boardChips,
+                            boardHint = if (categoryChanged) hint else boardHint,
+                            isAllSelected = if (categoryChanged || targetChanged) false else isAllSelected,
+                            isStaffSelected = if (categoryChanged || targetChanged) false else isStaffSelected,
+                            selectedPart = if (categoryChanged || targetChanged) null else selectedPart,
+                            selectedChapter = if (categoryChanged || targetChanged) null else selectedChapter,
+                            selectedSchool = if (categoryChanged || targetChanged) null else selectedSchool,
+                        )
+                    }
+                    loadTargetOrganization(uiState.value.targetGisuId)
+                    hasLoadedTargetGisus = true
+                },
+                errorCallback = { fail -> emitEvent(NoticeWriteEvent.ShowError(fail.message)) },
+            )
+            isLoadingTargetGisus = false
+        }
+    }
+
+    /** 목록 조회가 실패했으면 선택기를 다시 열 때 재시도한다. */
+    fun onOpenCategorySelector() {
+        if (uiState.value.writerRole == NoticeWriterRole.SUPER_ADMIN ||
+            uiState.value.writerRole == NoticeWriterRole.CENTRAL_CORE) {
+            loadTargetGisus(resolvedAuthorityGisuId)
+        }
+    }
+
+    fun onSelectGisu(gisu: GisuItem) {
+        val state = uiState.value
+        val role = state.writerRole ?: return
+        if (state.isTargetLocked || gisu !in state.selectableTargetGisus) return
+        hasSelectedTargetGisu = true
+        val categories = createCategories(role, state.availableGisus, gisu.gisuId, state.canWriteAsSchoolCore)
+        val selectedCategory = selectNoticeCategory(categories, state.selectedCategory)
+        val categoryChanged = selectedCategory?.type != state.selectedCategory?.type
+        val (chips, hint) = selectedCategory?.let {
+            createBoardChips(role, it.type, state.canWriteAsSchoolCore)
+        } ?: (emptyList<BoardChipType>() to null)
+        updateState {
+            copy(
+                targetGisuId = gisu.gisuId,
+                availableCategories = categories.toImmutableList(),
+                selectedCategory = selectedCategory,
+                boardChips = if (categoryChanged) chips.toImmutableList() else boardChips,
+                boardHint = if (categoryChanged) hint else boardHint,
+                isAllSelected = false,
+                isStaffSelected = false,
+                selectedChapter = null,
+                selectedSchool = null,
+                selectedPart = null,
+            )
+        }
+        loadTargetOrganization(gisu.gisuId)
+    }
+
+    /** 카테고리는 대상 종류만 나타내며, 기수는 별도 선택값으로 관리한다. */
     private fun createCategories(
         writerRole: NoticeWriterRole,
+        gisus: List<GisuItem>,
+        targetGisuId: Int?,
+        canWriteAsSchoolCore: Boolean = false,
+    ): List<WriteCategory> {
+        val generation = gisus.firstOrNull { it.gisuId == targetGisuId }?.generation?.toLong()
+        return createCategoriesForGeneration(writerRole, generation, canWriteAsSchoolCore)
+    }
+
+    /** 작성자 권한별 공지 카테고리 목록. 선택한 대상 기수의 존재 여부로 특정 기수 항목을 제한한다. */
+    private fun createCategoriesForGeneration(
+        writerRole: NoticeWriterRole,
         currentGeneration: Long?,
+        canWriteAsSchoolCore: Boolean = false,
     ): List<WriteCategory> {
         return when (writerRole) {
-            NoticeWriterRole.SUPER_ADMIN -> buildList {
+            NoticeWriterRole.SUPER_ADMIN, NoticeWriterRole.CENTRAL_CORE -> buildList {
                 add(WriteCategory(WriteCategoryType.ALL_GISU, AppStrings.NOTICE_WRITE_ALL_GISU))
-                currentGeneration?.let {
-                    add(WriteCategory(WriteCategoryType.GISU, AppStrings.COMMON_GENERATION_FORMAT.format(it)))
+                if (currentGeneration != null) {
+                    add(WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU))
                 }
                 add(WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL))
                 add(WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE))
                 add(WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER))
             }
 
+            // 중앙운영진 대상(CENTRAL_MEMBER) 공지는 서버가 총괄단에게만 허용한다.
             NoticeWriterRole.CENTRAL_STAFF ->
-                listOf(WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL))
+                listOfNotNull(
+                    if (currentGeneration != null) WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU) else null,
+                    WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
+                    WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER),
+                )
 
-            // 지부장 보류 (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고)
-            // NoticeWriterRole.CHAPTER_PRESIDENT ->
-            //     listOf(WriteCategory(WriteCategoryType.CHAPTER_PRESIDENT, AppStrings.NOTICE_WRITE_CATEGORY_CHAPTER))
+            // 지부장 전용 카테고리·noticeTab은 없다. 본인 지부 일반 공지는 특정 기수 카테고리로 발행한다.
+            NoticeWriterRole.CHAPTER_PRESIDENT -> buildList {
+                if (currentGeneration != null) {
+                    add(WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU))
+                }
+                // 교내 회장을 겸하면 활성 기수의 학교 역할로 학교 대상 작성도 허용한다.
+                if (canWriteAsSchoolCore) add(WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE))
+            }
 
             NoticeWriterRole.SCHOOL_CORE ->
+                listOf(WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE))
+
+            NoticeWriterRole.SCHOOL_ETC_ADMIN ->
                 listOf(WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE))
 
             NoticeWriterRole.SCHOOL_PART_LEADER ->
@@ -204,40 +398,53 @@ class NoticeWriteViewModel @Inject constructor(
 
     /**
      * (작성자 권한, 카테고리) 조합별 게시판 분류 칩 구성.
-     * 최고 관리자는 카테고리에 따라, 그 외 권한은 자기 권한에 따라 분류가 달라짐
+     * Super Admin·중앙 운영진·지부장·교내 운영진별 서버 작성 범위에 맞춰 분류가 달라진다.
      */
     private fun createBoardChips(
         writerRole: NoticeWriterRole,
         categoryType: WriteCategoryType,
+        canWriteAsSchoolCore: Boolean = false,
     ): Pair<List<BoardChipType>, String?> {
         return if (writerRole == NoticeWriterRole.SUPER_ADMIN) {
             when (categoryType) {
+                WriteCategoryType.SCHOOL_CORE ->
+                    listOf(BoardChipType.SCHOOL) to null
+
                 // 기수 카테고리: 지부/학교/파트 (지부·학교 동시 선택 불가)
                 WriteCategoryType.GISU -> listOf(
-                    BoardChipType.CHAPTER, BoardChipType.SCHOOL, BoardChipType.PART
+                    BoardChipType.ALL, BoardChipType.CHAPTER, BoardChipType.SCHOOL, BoardChipType.PART
                 ) to AppStrings.NOTICE_WRITE_GISU_CLASS_HINT
 
-                WriteCategoryType.SCHOOL_PART_LEADER -> listOf(BoardChipType.PART) to null
+                WriteCategoryType.SCHOOL_PART_LEADER -> listOf(BoardChipType.SCHOOL, BoardChipType.PART) to null
 
                 else -> emptyList<BoardChipType>() to null
             }
         } else {
             when (writerRole) {
-                NoticeWriterRole.CENTRAL_STAFF -> listOf(
-                    BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.CHAPTER
-                ) to AppStrings.NOTICE_WRITE_CLASS_HINT
+                NoticeWriterRole.CENTRAL_CORE, NoticeWriterRole.CENTRAL_STAFF -> when (categoryType) {
+                    WriteCategoryType.GISU -> listOf(BoardChipType.ALL, BoardChipType.PART) to null
+                    // 중앙운영진 카테고리는 대상 칩 없이 CENTRAL_MEMBER로 발행한다.
+                    WriteCategoryType.SCHOOL_PART_LEADER -> listOf(BoardChipType.PART) to null
+                    else -> emptyList<BoardChipType>() to null
+                }
 
-                // 지부장 보류 (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고)
-                // NoticeWriterRole.CHAPTER_PRESIDENT -> listOf(
-                //     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.SCHOOL
-                // ) to AppStrings.NOTICE_WRITE_CLASS_HINT
+                NoticeWriterRole.CHAPTER_PRESIDENT -> when (categoryType) {
+                    // 지부장 대상은 본인 지부로 고정하고, 지부 전체 또는 특정 파트만 고른다.
+                    WriteCategoryType.GISU -> listOf(BoardChipType.ALL, BoardChipType.PART) to null
+                    WriteCategoryType.SCHOOL_CORE -> if (canWriteAsSchoolCore) listOf(
+                        BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
+                    ) to AppStrings.NOTICE_WRITE_CLASS_HINT else emptyList<BoardChipType>() to null
+                    else -> emptyList<BoardChipType>() to null
+                }
 
                 NoticeWriterRole.SCHOOL_CORE -> listOf(
                     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
                 ) to AppStrings.NOTICE_WRITE_CLASS_HINT
 
-                // 파트장은 자기 학교 안에서만 공지할 수 있으므로 학교 선택을 주지 않는다.
-                // 학교 목록은 전체 학교라, 칩을 열어주면 남의 학교를 대상으로 지정할 수 있다
+                NoticeWriterRole.SCHOOL_ETC_ADMIN -> listOf(BoardChipType.PART) to null
+
+                // 서버는 담당 파트와 무관하게 본인 학교의 특정 파트 작성을 허용한다.
+                // 학교 선택을 주지 않고 발행 요청에는 활성 기수 학교 역할의 소속 ID를 사용한다.
                 NoticeWriterRole.SCHOOL_PART_LEADER -> listOf(
                     BoardChipType.PART
                 ) to AppStrings.NOTICE_WRITE_CLASS_HINT
@@ -247,24 +454,58 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
-    private fun loadChapterList() = viewModelScope.launch {
-        resultResponse(
-            response = getChapterListUseCase(),
-            successCallback = { updateState { copy(chapterList = it.toImmutableList()) } }
-        )
+    /** 선택한 대상 기수에 실제 소속된 지부·학교만 칩 목록에 제공한다. */
+    private fun loadTargetOrganization(gisuId: Int?) {
+        if (gisuId == null || gisuId <= 0) {
+            organizationRequestToken++
+            loadingOrganizationGisuId = null
+            loadedOrganizationGisuId = null
+            updateState { copy(chapterList = persistentListOf(), schoolList = persistentListOf()) }
+            return
+        }
+        if (loadingOrganizationGisuId == gisuId || loadedOrganizationGisuId == gisuId) return
+
+        val requestToken = ++organizationRequestToken
+        loadingOrganizationGisuId = gisuId
+        loadedOrganizationGisuId = null
+        updateState { copy(chapterList = persistentListOf(), schoolList = persistentListOf()) }
+        viewModelScope.launch {
+            resultResponse(
+                response = getChapterWithSchoolUseCase(gisuId),
+                successCallback = { organization ->
+                    // 기수 변경 전 요청이 늦게 끝나도 현재 기수의 선택지를 덮어쓰지 않는다.
+                    if (requestToken == organizationRequestToken && uiState.value.targetGisuId == gisuId) {
+                        loadingOrganizationGisuId = null
+                        loadedOrganizationGisuId = gisuId
+                        updateState {
+                            copy(
+                                chapterList = organization.chapterList.toImmutableList(),
+                                schoolList = organization.schoolList.toImmutableList(),
+                            )
+                        }
+                    }
+                },
+                errorCallback = { fail ->
+                    if (requestToken == organizationRequestToken) {
+                        loadingOrganizationGisuId = null
+                        emitEvent(NoticeWriteEvent.ShowError(fail.message))
+                    }
+                },
+            )
+        }
     }
 
-    private fun loadSchoolList() = viewModelScope.launch {
-        resultResponse(
-            response = getAllSchoolUseCase(),
-            successCallback = { updateState { copy(schoolList = it.toImmutableList()) } }
-        )
+    /** 대상 기수의 지부·학교 목록 조회가 실패했으면 칩을 다시 열 때 재시도한다. */
+    fun onOpenOrganizationSelector() {
+        loadTargetOrganization(uiState.value.targetGisuId)
     }
 
     /** 카테고리 선택. 게시판 분류 구성을 갱신하고 기존 선택은 초기화 */
     fun onSelectCategory(category: WriteCategory) {
         val writerRole = uiState.value.writerRole ?: return
-        val (chips, hint) = createBoardChips(writerRole, category.type)
+        if (uiState.value.isTargetLocked || category !in uiState.value.availableCategories) return
+        hasSelectedCategory = true
+        val (chips, hint) = createBoardChips(writerRole, category.type, uiState.value.canWriteAsSchoolCore)
 
         updateState {
             copy(
@@ -300,6 +541,7 @@ class NoticeWriteViewModel @Inject constructor(
 
     /** 지부 선택. 기수 카테고리에서는 학교와 동시 선택 불가 */
     fun onSelectChapter(chapter: Chapter) {
+        if (uiState.value.isTargetLocked || uiState.value.chapterList.none { it.id == chapter.id }) return
         val isExclusive = uiState.value.selectedCategory?.type == WriteCategoryType.GISU
         updateState {
             copy(
@@ -312,6 +554,8 @@ class NoticeWriteViewModel @Inject constructor(
 
     /** 학교 선택. 기수 카테고리에서는 지부와 동시 선택 불가 */
     fun onSelectSchool(school: SchoolInfo) {
+        val state = uiState.value
+        if (state.isTargetLocked || state.schoolList.none { it.schoolId == school.schoolId }) return
         val isExclusive = uiState.value.selectedCategory?.type == WriteCategoryType.GISU
         updateState {
             copy(
@@ -552,7 +796,7 @@ class NoticeWriteViewModel @Inject constructor(
             return@launch
         }
 
-        val target = buildTargetRequest(state) ?: run {
+        val target = buildNoticeTargetRequest(state) ?: run {
             emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER))
             return@launch
         }
@@ -577,88 +821,6 @@ class NoticeWriteViewModel @Inject constructor(
                 updateState { copy(isSubmitting = false) }
                 emitEvent(NoticeWriteEvent.ShowError(it.message))
             }
-        )
-    }
-
-    /**
-     * 카테고리/게시판 분류 선택을 서버 수신 대상으로 매핑.
-     *
-     * noticeTab 스펙: CHALLENGER(일반) / CENTRAL_MEMBER(중앙운영진) /
-     * SCHOOL_CORE(학교 회장단) / SCHOOL_PART_LEADER(파트장).
-     * 운영진 공지 칩 선택 시 파트가 함께 선택되면 파트장 보드, 아니면 회장단 보드로 발행 (develop 정책과 동일)
-     */
-    private fun buildTargetRequest(state: NoticeWriteUiState): NoticeTargetRequest? {
-        val category = state.selectedCategory ?: return null
-
-        if (state.writerRole == NoticeWriterRole.SUPER_ADMIN) {
-            return when (category.type) {
-                WriteCategoryType.ALL_GISU -> NoticeTargetRequest(
-                    targetGisuId = null,
-                    targetChapterId = null,
-                    targetSchoolId = null,
-                    targetParts = emptyList(),
-                    targetNoticeTab = NoticeTab.CHALLENGER.value,
-                )
-
-                WriteCategoryType.GISU -> NoticeTargetRequest(
-                    targetGisuId = state.activeGisuId,
-                    targetChapterId = state.selectedChapter?.id?.toInt(),
-                    targetSchoolId = state.selectedSchool?.schoolId?.toInt(),
-                    targetParts = listOfNotNull(state.selectedPart?.name),
-                    targetNoticeTab = NoticeTab.CHALLENGER.value,
-                )
-
-                else -> NoticeTargetRequest(
-                    targetGisuId = state.activeGisuId,
-                    targetChapterId = null,
-                    targetSchoolId = null,
-                    targetParts = listOfNotNull(state.selectedPart?.name),
-                    targetNoticeTab = when (category.type) {
-                        WriteCategoryType.CENTRAL_STAFF -> NoticeTab.CENTRAL_MEMBER.value
-                        WriteCategoryType.SCHOOL_CORE -> NoticeTab.SCHOOL_CORE.value
-                        else -> NoticeTab.SCHOOL_PART_LEADER.value
-                    },
-                )
-            }
-        }
-
-        // 학교 단위 권한은 자기 학교로 대상 고정
-        val isSchoolLevelWriter = state.writerRole == NoticeWriterRole.SCHOOL_CORE ||
-                state.writerRole == NoticeWriterRole.SCHOOL_PART_LEADER
-
-        if (state.isStaffSelected) {
-            // 운영진 공지: 학교 단위 권한 또는 파트 선택 시 파트장 보드, 아니면 회장단 보드
-            val staffTab = if (isSchoolLevelWriter || state.selectedPart != null) {
-                NoticeTab.SCHOOL_PART_LEADER
-            } else {
-                NoticeTab.SCHOOL_CORE
-            }
-            // 교내 운영진 공지는 schoolId가 분류 기준이라, 비어 있으면 중앙(전 학교) 공지로
-            // 승격돼 버린다. 범위가 넓어지는 실패는 막고 발행 자체를 중단한다
-            if (isSchoolLevelWriter && state.writerSchoolId == null) return null
-
-            return NoticeTargetRequest(
-                targetGisuId = state.activeGisuId,
-                targetChapterId = null,
-                targetSchoolId = if (isSchoolLevelWriter) state.writerSchoolId else null,
-                targetParts = listOfNotNull(state.selectedPart?.name),
-                targetNoticeTab = staffTab.value,
-            )
-        }
-
-        // 일반 공지: 전체 선택 시 지부/학교/파트 필터 없이 발행
-        val useFilters = !state.isAllSelected
-        return NoticeTargetRequest(
-            targetGisuId = state.activeGisuId,
-            targetChapterId = state.selectedChapter?.id?.toInt().takeIf { useFilters },
-            targetSchoolId = when {
-                // 학교 단위 작성자는 선택값과 무관하게 항상 자기 학교
-                isSchoolLevelWriter -> state.writerSchoolId
-                useFilters -> state.selectedSchool?.schoolId?.toInt()
-                else -> null
-            },
-            targetParts = if (useFilters) listOfNotNull(state.selectedPart?.name) else emptyList(),
-            targetNoticeTab = NoticeTab.CHALLENGER.value,
         )
     }
 
@@ -753,8 +915,23 @@ class NoticeWriteViewModel @Inject constructor(
     }
 }
 
+/** 기존 선택이 유효하면 유지하고, 그렇지 않으면 첫 카테고리를 기본 선택한다. */
+internal fun selectNoticeCategory(categories: List<WriteCategory>, previous: WriteCategory?): WriteCategory? =
+    categories.firstOrNull { it.type == previous?.type } ?: categories.firstOrNull()
+
+/** Super Admin·총괄단 외에는 권한을 부여받은 기수만 작성 대상으로 허용한다. */
+internal fun allowedNoticeTargetGisus(
+    writerRole: NoticeWriterRole,
+    gisus: List<GisuItem>,
+    authorityGisuId: Int?,
+): List<GisuItem> = when (writerRole) {
+    NoticeWriterRole.SUPER_ADMIN, NoticeWriterRole.CENTRAL_CORE -> gisus
+    else -> gisus.filter { it.gisuId == authorityGisuId }
+}
+
 data class NoticeWriteUiState(
     val writerRole: NoticeWriterRole? = null,
+    val canWriteAsSchoolCore: Boolean = false,
     val availableCategories: ImmutableList<WriteCategory> = persistentListOf(),
     val selectedCategory: WriteCategory? = null,
     val boardChips: ImmutableList<BoardChipType> = persistentListOf(),
@@ -782,8 +959,13 @@ data class NoticeWriteUiState(
     val isLinkVisible: Boolean = false,
     val linkText: String = "",
     val vote: NoticeVoteForm? = null,
-    val activeGisuId: Int? = null,
+    /** 서버 활성 기수의 작성 권한과 별개로 선택한 공지 대상 기수 ID */
+    val targetGisuId: Int? = null,
+    /** 작성 권한을 부여받은 기수. Super Admin·총괄단 외에는 이 기수에만 발행한다. */
+    val authorityGisuId: Int? = null,
     val writerSchoolId: Int? = null,
+    val writerChapterId: Int? = null,
+    val availableGisus: ImmutableList<GisuItem> = persistentListOf(),
     val isSubmitting: Boolean = false,
     val isAiRefineEnabled: Boolean = false,
     val isAiProcessing: Boolean = false,
@@ -794,6 +976,17 @@ data class NoticeWriteUiState(
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
+    // 화면 선택지와 선택 처리에서 같은 권한 정책을 사용한다. 권한이 없으면 선택지를 제공하지 않는다.
+    val selectableTargetGisus: ImmutableList<GisuItem>
+        get() = writerRole?.let { role ->
+            allowedNoticeTargetGisus(role, availableGisus, authorityGisuId).toImmutableList()
+        } ?: persistentListOf()
+
+    // 전체 기수 공지는 특정 기수를 지정하지 않는다. 그 외에는 기수 간 발행 권한이 있는 역할만 선택기를 표시한다.
+    val showTargetGisuSelector: Boolean
+        get() = (writerRole == NoticeWriterRole.SUPER_ADMIN || writerRole == NoticeWriterRole.CENTRAL_CORE) &&
+                selectedCategory?.type != WriteCategoryType.ALL_GISU
+
     // 게시판 분류가 있는 카테고리에서 하나라도 선택됐는지
     val hasBoardSelection: Boolean
         get() = isAllSelected || isStaffSelected
@@ -805,7 +998,7 @@ data class NoticeWriteUiState(
 
     // 수신 대상이 잠겨 있으면 카테고리/분류 조건 제외
     val enableRegister: Boolean
-        get() = (isTargetLocked || (selectedCategory != null && (boardChips.isEmpty() || hasBoardSelection)))
+        get() = (isTargetLocked || buildNoticeTargetRequest(this) != null)
                 && title.isNotBlank()
                 && content.text.isNotBlank()
                 && !isSubmitting

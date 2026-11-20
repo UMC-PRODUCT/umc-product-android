@@ -8,12 +8,17 @@ import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
+import com.umc.domain.model.notice.noticeRolesForGisu
+import com.umc.domain.model.notice.noticeWriterRole
 import com.umc.domain.model.notice.NoticeChipState
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.model.organization.GisuItem
+import com.umc.presentation.notice.adminnotice.AdminNoticeTab
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
+import com.umc.domain.usecase.organization.GetSearchGisusUseCase
+import com.umc.domain.usecase.organization.GetActiveGisuUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -22,6 +27,9 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import javax.inject.Inject
 
 // 공지 목록 조회 탭 (서버 스펙)
@@ -30,35 +38,51 @@ private const val NOTICE_TAB_CENTRAL_MEMBER = "CENTRAL_MEMBER"
 private const val NOTICE_TAB_SCHOOL_CORE = "SCHOOL_CORE"
 private const val NOTICE_TAB_SCHOOL_PART_LEADER = "SCHOOL_PART_LEADER"
 
-// 운영진 공지 탭 계산용 role 그룹
+// 운영진 공지 탭 계산용 role 그룹. 지부장은 서버에서 SCHOOL_CORE로 매핑되므로 중앙 칩에서 제외한다.
 private val CENTRAL_STAFF_ROLES = setOf(
-    UserChallengerRole.SUPER_ADMIN,
     UserChallengerRole.CENTRAL_PRESIDENT,
     UserChallengerRole.CENTRAL_VICE_PRESIDENT,
     UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER,
     UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER,
-    UserChallengerRole.CHAPTER_PRESIDENT,
 )
 
 private val SCHOOL_CORE_ROLES = setOf(
+    UserChallengerRole.CHAPTER_PRESIDENT,
     UserChallengerRole.SCHOOL_PRESIDENT,
     UserChallengerRole.SCHOOL_VICE_PRESIDENT,
-    UserChallengerRole.SCHOOL_ETC_ADMIN,
 )
 
 @HiltViewModel
 class NoticeViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getNoticeListUseCase: GetNoticeListUseCase,
+    private val getSearchGisusUseCase: GetSearchGisusUseCase,
+    private val getActiveGisuUseCase: GetActiveGisuUseCase,
     private val appDataStoreRepository: AppDataStoreRepository,
 ) : BaseViewModel<NoticeUiState, NoticeEvent>(
     NoticeUiState(),
 ) {
     private var cachedUserInfo: UserInfo? = null
+    private var allGisus: List<GisuItem> = emptyList()
+    private var isLoadingAllGisus = false
+    private var serverActiveGisuId: Long? = null
+    private var listJob: Job? = null
 
     init {
         getMyProfile()
+        loadActiveGisu()
         collectReadNoticeIds()
+    }
+
+    /** 작성 권한은 서버 활성 기수로 판단한다. 프로필이 먼저 도착했으면 응답 후 버튼 노출을 다시 계산한다. */
+    private fun loadActiveGisu() = viewModelScope.launch {
+        resultResponse(
+            response = getActiveGisuUseCase(),
+            successCallback = { gisu ->
+                serverActiveGisuId = gisu.gisuId.takeIf { it > 0 }?.toLong()
+                cachedUserInfo?.let(::updateWritePermission)
+            },
+        )
     }
 
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
@@ -72,40 +96,70 @@ class NoticeViewModel @Inject constructor(
     private fun getMyProfile() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
             cachedUserInfo = userInfo
+            if (userInfo.isSuperAdmin && allGisus.isEmpty() && !isLoadingAllGisus) loadAllGisus()
             val dropdownList = createDropDownList(userInfo)
-
-            if (dropdownList.isNotEmpty()) {
-                val nowGisu = dropdownList.first()
-                updateState {
-                    copy(
-                        nowTitle = nowGisu.displayText,
-                        selectedGisu = nowGisu.gisuId.toLong(),
-                    )
-                }
-            }
-
-            updateWritePermission(userInfo)
-            updateState {
-                copy(
-                    dropdownList = dropdownList.toImmutableList(),
-                    chipList = createFilterChips(userInfo).toImmutableList(),
-                )
-            }
+            updateGisuOptions(userInfo, dropdownList)
             refreshNoticeList()
         }
     }
 
-    /** challengerRecords에서 중복 제거된 기수 목록 생성 (최신 기수부터) */
+    /** Super Admin은 전체 기수, 그 외에는 챌린저 기록과 역할이 있는 기수를 표시한다. */
     private fun createDropDownList(userInfo: UserInfo): List<GisuItem> {
-        return userInfo.challengerRecords.map { record ->
+        val recordGisus = userInfo.challengerRecords.map { record ->
             GisuItem(
                 gisuId = record.gisuId.toInt(),
                 generation = record.gisu.toInt(),
                 isActive = false
             )
         }
+        val roleGisus = userInfo.roles.map { role ->
+            GisuItem(gisuId = role.gisuId.toInt(), generation = role.gisu.toInt())
+        }
+        val currentGisu = userInfo.currentGisuMemberInfo?.let { current ->
+            GisuItem(gisuId = current.gisuId.toInt(), generation = current.generation.toInt())
+        }
+        return (if (userInfo.isSuperAdmin) allGisus + recordGisus + roleGisus + listOfNotNull(currentGisu)
+                else recordGisus + roleGisus + listOfNotNull(currentGisu))
+            .filter { it.gisuId > 0 && it.generation > 0 }
             .distinctBy { it.gisuId }
             .sortedByDescending { it.generation }
+    }
+
+    private fun loadAllGisus() = viewModelScope.launch {
+        isLoadingAllGisus = true
+        resultResponse(
+            response = getSearchGisusUseCase(),
+            successCallback = { result ->
+                allGisus = result.gisuList
+                cachedUserInfo?.let { updateGisuOptions(it, createDropDownList(it)) }
+                refreshNoticeList()
+            },
+            errorCallback = { fail -> updateState { copy(errorMessage = fail.message) } },
+        )
+        isLoadingAllGisus = false
+    }
+
+    private fun updateGisuOptions(userInfo: UserInfo, options: List<GisuItem>) {
+        val selected = options.firstOrNull { it.gisuId.toLong() == uiState.value.selectedGisu }
+            ?: options.firstOrNull { it.isActive }
+            ?: options.firstOrNull()
+        updateState {
+            val changedGisu = selectedGisu != selected?.gisuId?.toLong()
+            copy(
+                selectedGisu = selected?.gisuId?.toLong() ?: 0L,
+                nowTitle = selected?.displayText.orEmpty(),
+                dropdownList = options.toImmutableList(),
+                canOpenAdminNotice = userInfo.canOpenAdminNotice(selected?.gisuId?.toLong() ?: 0L),
+                selectedChipText = if (selectedGisu == selected?.gisuId?.toLong()) selectedChipText else AppStrings.COMMON_ALL,
+                noticeList = if (changedGisu) persistentListOf() else noticeList,
+                currentPage = if (changedGisu) 0 else currentPage,
+                isLastPage = if (changedGisu) false else isLastPage,
+            )
+        }
+        val chips = createFilterChips(userInfo)
+        if (chips.none { it.isClicked }) updateState { copy(selectedChipText = AppStrings.COMMON_ALL) }
+        updateState { copy(chipList = createFilterChips(userInfo).toImmutableList()) }
+        updateWritePermission(userInfo)
     }
 
     /**
@@ -129,9 +183,9 @@ class NoticeViewModel @Inject constructor(
             NoticeChipState(text = AppStrings.COMMON_ALL, isClicked = selectedText == AppStrings.COMMON_ALL)
         )
 
-        // 중앙운영사무국 공지(noticeTab=CENTRAL_MEMBER)는 중앙운영진만 조회할 수 있다.
+        // 중앙운영사무국 공지(noticeTab=CENTRAL_MEMBER) 탭은 중앙운영진과 시스템 Super Admin에게만 허용된다.
         // 자기 role보다 상위 탭을 요청하면 403이므로 권한이 있을 때만 칩을 노출한다
-        if (hasCentralStaffRole(userInfo)) {
+        if (userInfo.isSuperAdmin || userInfo.noticeRolesForGisu(selectedGisu).any { it in CENTRAL_STAFF_ROLES }) {
             chipList.add(
                 NoticeChipState(
                     text = AppStrings.NOTICE_CENTRAL_CHIP,
@@ -182,15 +236,10 @@ class NoticeViewModel @Inject constructor(
         return chipList
     }
 
-    /** 중앙운영사무국 공지(CENTRAL_MEMBER 탭)를 조회할 수 있는 권한인지 */
-    private fun hasCentralStaffRole(userInfo: UserInfo): Boolean =
-        userInfo.roles.any { UserChallengerRole.from(it.roleType) in CENTRAL_STAFF_ROLES }
-
-    /** 공지 작성 권한 확인 (MEMBER가 아닌 경우에만 권한 있음) */
+    /** 공지 작성 권한 확인. 작성은 선택한 과거 기수가 아니라 서버가 권한을 판정하는 현재 기수 역할을 사용한다. */
     private fun updateWritePermission(userInfo: UserInfo) {
-        val hasWritePermission = userInfo.roles.any { role ->
-            UserChallengerRole.from(role.roleType) != UserChallengerRole.MEMBER
-        }
+        val activeGisuId = serverActiveGisuId ?: userInfo.currentGisuMemberInfo?.gisuId ?: 0L
+        val hasWritePermission = userInfo.noticeWriterRole(activeGisuId) != null
         updateState { copy(canWriteNotice = hasWritePermission) }
     }
 
@@ -233,13 +282,22 @@ class NoticeViewModel @Inject constructor(
 
     /** 기수 드롭다운에서 기수 선택. 필터 초기화 후 목록 새로고침 */
     fun onClickGisu(item: GisuItem) {
+        if (item.gisuId.toLong() == uiState.value.selectedGisu) {
+            updateState { copy(isShowDropDown = false) }
+            return
+        }
         updateState {
             copy(
                 nowTitle = item.displayText,
                 selectedGisu = item.gisuId.toLong(),
+                canOpenAdminNotice = cachedUserInfo?.canOpenAdminNotice(item.gisuId.toLong()) == true,
                 selectedChipText = AppStrings.COMMON_ALL,
                 selectedPart = null,
                 isShowDropDown = false,
+                noticeList = persistentListOf(),
+                currentPage = 0,
+                isLastPage = false,
+                errorMessage = null,
             )
         }
         cachedUserInfo?.let { userInfo ->
@@ -270,6 +328,7 @@ class NoticeViewModel @Inject constructor(
     }
 
     fun onClickAdminNotice() {
+        if (!uiState.value.canOpenAdminNotice) return
         emitEvent(NoticeEvent.MoveToAdminNoticeEvent(uiState.value.selectedGisu))
     }
 
@@ -290,6 +349,7 @@ class NoticeViewModel @Inject constructor(
      * 칩을 바꾼 직후엔 이전 요청이 진행 중이어도 새 조건이 우선이므로 가드를 건너뛴다
      */
     private fun refreshNoticeList() {
+        if (uiState.value.selectedGisu <= 0L) return
         getNoticeList(isRefresh = true, isUserRefresh = true)
     }
 
@@ -299,6 +359,11 @@ class NoticeViewModel @Inject constructor(
      */
     fun onRefresh() {
         updateState { copy(isRefreshing = true) }
+        if (uiState.value.selectedGisu <= 0L) {
+            updateState { copy(isRefreshing = false) }
+            if (cachedUserInfo?.isSuperAdmin == true) loadAllGisus()
+            return
+        }
         getNoticeList(isRefresh = true, isUserRefresh = true)
     }
 
@@ -308,7 +373,9 @@ class NoticeViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeList(isRefresh: Boolean, isUserRefresh: Boolean = false) = viewModelScope.launch {
+    private fun getNoticeList(isRefresh: Boolean, isUserRefresh: Boolean = false) {
+        if (isRefresh) listJob?.cancel()
+        listJob = viewModelScope.launch {
         val state = uiState.value
 
         if (!isUserRefresh && (state.isPageLoading || (!isRefresh && state.isLastPage))) return@launch
@@ -328,16 +395,19 @@ class NoticeViewModel @Inject constructor(
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
+        val response = getNoticeListUseCase(
+            gisuId = state.selectedGisu,
+            noticeTab = query.noticeTab,
+            chapterId = query.chapterId,
+            schoolId = query.schoolId,
+            part = query.part,
+            page = pageToFetch,
+            size = 20
+        )
+        // apiCall이 취소를 실패 응답으로 바꾸므로, 취소된 이전 조회가 새 조회의 로딩·오류 상태를 덮어쓰지 않게 한다.
+        currentCoroutineContext().ensureActive()
         resultResponse(
-            response = getNoticeListUseCase(
-                gisuId = state.selectedGisu,
-                noticeTab = query.noticeTab,
-                chapterId = query.chapterId,
-                schoolId = query.schoolId,
-                part = query.part,
-                page = pageToFetch,
-                size = 20
-            ),
+            response = response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
@@ -360,30 +430,26 @@ class NoticeViewModel @Inject constructor(
                 }
             }
         )
+        }
     }
 
-    /**
-     * 현재 필터 상태를 서버 쿼리로 바꾼다.
-     *
-     * 소속(chapterId·schoolId) / 파트 / 운영진 탭은 **한 번에 하나만** 전달한다.
-     * 여럿을 함께 보내면 조건이 AND로 누적돼 결과가 비고, 특히 운영진 공지에서는
-     * 명세상 chapterId·part를 쓸 수 없으며 schoolId는 중앙/교내 운영진 공지를
-     * 가르는 기준이라 소속 칩 값을 그대로 실어 보내면 의미가 어긋난다
-     */
-    /** 운영진 공지 조회 시 사용자 role에 맞는 탭 계산 (서버 스펙) */
+    /** 운영진 공지 조회 시 선택 기수의 역할로 탭을 계산한다. */
     private fun computeStaffNoticeTab(): String {
-        val roles = cachedUserInfo?.roles
-            ?.map { UserChallengerRole.from(it.roleType) }
-            ?: return NOTICE_TAB_CENTRAL_MEMBER
+        val userInfo = cachedUserInfo ?: return NOTICE_TAB_CHALLENGER
+        val roles = userInfo.noticeRolesForGisu(uiState.value.selectedGisu)
 
         return when {
-            roles.any { it in CENTRAL_STAFF_ROLES } -> NOTICE_TAB_CENTRAL_MEMBER
+            userInfo.isSuperAdmin || roles.any { it in CENTRAL_STAFF_ROLES } -> NOTICE_TAB_CENTRAL_MEMBER
             roles.any { it in SCHOOL_CORE_ROLES } -> NOTICE_TAB_SCHOOL_CORE
-            roles.any { it == UserChallengerRole.SCHOOL_PART_LEADER } -> NOTICE_TAB_SCHOOL_PART_LEADER
-            else -> NOTICE_TAB_CENTRAL_MEMBER
+            roles.any { it == UserChallengerRole.SCHOOL_PART_LEADER || it == UserChallengerRole.SCHOOL_ETC_ADMIN } -> NOTICE_TAB_SCHOOL_PART_LEADER
+            else -> NOTICE_TAB_CHALLENGER
         }
     }
 }
+
+/** 운영진 공지 화면과 같은 선택 기수의 역할을 기준으로 진입 여부를 판단한다. */
+internal fun UserInfo.canOpenAdminNotice(gisuId: Long): Boolean =
+    gisuId > 0 && (isSuperAdmin || AdminNoticeTab.highestAccessibleTab(noticeRolesForGisu(gisuId)) != null)
 
 /** 공지 목록 조회 쿼리. 소속·파트·운영진 탭 중 하나만 채워진다 */
 internal data class NoticeQuery(
@@ -397,17 +463,16 @@ internal data class NoticeQuery(
  * 현재 필터 상태를 서버 쿼리로 바꾼다.
  *
  * 소속(chapterId·schoolId) / 파트 / 운영진 탭은 **한 번에 하나만** 전달한다.
- * 여럿을 함께 보내면 조건이 AND로 누적돼 결과가 비고, 특히 운영진 공지에서는
- * 명세상 chapterId·part를 쓸 수 없으며 schoolId는 중앙/교내 운영진 공지를
- * 가르는 기준이라 소속 칩 값을 그대로 실어 보내면 의미가 어긋난다
+ * 여럿을 함께 보내면 조건이 AND로 누적돼 결과가 비고, 운영진 공지에서
+ * schoolId를 지정하면 중앙 발신 공지가 제외된다. schoolId를 비우면 서버가 조회자 역할에 따라
+ * 허용된 중앙 발신·교내 공지 범위를 적용한다.
  */
 internal fun buildNoticeQuery(state: NoticeUiState, staffNoticeTab: String): NoticeQuery {
     val selected = state.chipList.firstOrNull { it.isClicked && it.text != AppStrings.COMMON_ALL }
         ?: return NoticeQuery(noticeTab = NOTICE_TAB_CHALLENGER)
 
-    // 중앙운영사무국 공지: 탭만 바꾼다.
-    // 명세상 chapterId는 쓸 수 없고, schoolId는 넣는 순간 교내 운영진 공지로 분류되므로
-    // 중앙운영사무국 공지를 보려면 schoolId를 비워야 한다
+    // 운영진 탭은 소속 칩의 chapterId·schoolId를 전달하지 않는다.
+    // schoolId를 비워야 중앙 발신 공지와 서버가 허용한 교내 공지를 함께 조회할 수 있다.
     if (selected.isStaffNoticeChip) return NoticeQuery(noticeTab = staffNoticeTab)
 
     // 그 외는 일반 공지. 칩이 가진 축 하나만 실린다
@@ -436,6 +501,7 @@ data class NoticeUiState(
     val errorMessage: String? = null,
     val isLastPage: Boolean = false,
     val canWriteNotice: Boolean = false,
+    val canOpenAdminNotice: Boolean = false,
     val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
     val currentNoticeTab: String = NOTICE_TAB_CHALLENGER,
 ) : UiState {

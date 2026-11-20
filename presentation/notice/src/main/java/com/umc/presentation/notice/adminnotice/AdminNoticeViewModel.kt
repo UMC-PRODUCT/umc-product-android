@@ -7,6 +7,7 @@ import com.umc.component.base.UiState
 import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.notice.noticeRolesForGisu
 import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
@@ -19,6 +20,8 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,11 +32,8 @@ import javax.inject.Inject
  * 서버 스펙상 noticeTab은 CHALLENGER(일반 공지) 외 CENTRAL_MEMBER / SCHOOL_CORE /
  * SCHOOL_PART_LEADER 세 가지이며, 자기 role보다 상위 tab 요청 시 403이 발생함.
  *
- * 디자인의 "지부장 공지" 탭은 서버 noticeTab에 지부 등급이 없어 보류 상태다.
- * 지부장(CHAPTER_PRESIDENT)은 읽기만 중앙 레벨로 묶어 처리하고, 발행 권한은 막아둠
- * (NoticeWriterRole.CHAPTER_PRESIDENT 주석 참고).
- * 서버에 지부 등급 tab이 추가되면 CENTRAL과 SCHOOL_CORE 사이에 항목을 넣고
- * CENTRAL.accessRoles에서 CHAPTER_PRESIDENT를 옮기면 된다
+ * 지부장 전용 noticeTab은 없다. 서버는 CHAPTER_PRESIDENT를 SCHOOL_CORE로 매핑하므로
+ * 지부장에게 학교 회장단·파트장 탭만 노출한다. CENTRAL_MEMBER 요청은 403이다.
  */
 enum class AdminNoticeTab(
     val label: String,
@@ -44,32 +44,26 @@ enum class AdminNoticeTab(
         label = AppStrings.ADMIN_NOTICE_CENTRAL,
         noticeTab = "CENTRAL_MEMBER",
         accessRoles = setOf(
-            UserChallengerRole.SUPER_ADMIN,
             UserChallengerRole.CENTRAL_PRESIDENT,
             UserChallengerRole.CENTRAL_VICE_PRESIDENT,
             UserChallengerRole.CENTRAL_OPERATING_TEAM_MEMBER,
             UserChallengerRole.CENTRAL_EDUCATION_TEAM_MEMBER,
-            UserChallengerRole.CHAPTER_PRESIDENT,
         ),
     ),
     SCHOOL_CORE(
         label = AppStrings.ADMIN_NOTICE_SCHOOL_CORE,
         noticeTab = "SCHOOL_CORE",
         accessRoles = setOf(
+            UserChallengerRole.CHAPTER_PRESIDENT,
             UserChallengerRole.SCHOOL_PRESIDENT,
             UserChallengerRole.SCHOOL_VICE_PRESIDENT,
-            UserChallengerRole.SCHOOL_ETC_ADMIN,
         ),
     ),
     PART_LEADER(
         label = AppStrings.ADMIN_NOTICE_PART_LEADER,
         noticeTab = "SCHOOL_PART_LEADER",
-        accessRoles = setOf(UserChallengerRole.SCHOOL_PART_LEADER),
+        accessRoles = setOf(UserChallengerRole.SCHOOL_PART_LEADER, UserChallengerRole.SCHOOL_ETC_ADMIN),
     );
-
-    // 학교 소속 운영진 레벨 여부 (교내 운영진 공지는 schoolId로 구분됨)
-    val isSchoolLevel: Boolean
-        get() = this == SCHOOL_CORE || this == PART_LEADER
 
     companion object {
         /** 사용자 role 중 가장 높은 운영진 레벨의 탭 반환. 운영진 권한이 없으면 null */
@@ -97,9 +91,21 @@ class AdminNoticeViewModel @Inject constructor(
 
     /** 조회 대상 기수는 공지 화면에서 nav argument로 전달받아 주입 */
     fun setGisuId(gisuId: Long) {
-        // 기수를 알 수 없으면 조회가 시작되지 않으므로, 끝없는 로딩 대신 빈 상태로 떨어지게 한다
-        updateState { copy(gisuId = gisuId, hasLoaded = hasLoaded || gisuId <= 0L) }
-        refreshIfReady()
+        if (uiState.value.gisuId == gisuId) return
+        listJob?.cancel()
+        updateState {
+            copy(
+                gisuId = gisuId,
+                noticeList = persistentListOf(),
+                currentPage = 0,
+                isLastPage = false,
+                isPageLoading = false,
+                hasLoaded = gisuId <= 0L,
+                errorMessage = null,
+                selectedTab = null,
+            )
+        }
+        cachedUserInfo?.let(::updateUserAccess)
     }
 
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
@@ -113,34 +119,38 @@ class AdminNoticeViewModel @Inject constructor(
     private fun loadUserAccess() = viewModelScope.launch {
         getUserInfoUseCase().collect { userInfo ->
             cachedUserInfo = userInfo
-            val roles = userInfo.roles.map { UserChallengerRole.from(it.roleType) }
-            val highestTab = AdminNoticeTab.highestAccessibleTab(roles)
-
-            if (highestTab == null) {
-                // 접근 권한 없음: 최하위 탭 칩만 노출하고 잠금 화면 표시
-                updateState {
-                    copy(
-                        hasAccess = false,
-                        visibleTabs = persistentListOf(AdminNoticeTab.PART_LEADER),
-                        selectedTab = AdminNoticeTab.PART_LEADER,
-                    )
-                }
-            } else {
-                updateState {
-                    copy(
-                        hasAccess = true,
-                        visibleTabs = AdminNoticeTab.entries
-                            .filter { it.ordinal >= highestTab.ordinal }
-                            .toImmutableList(),
-                        selectedTab = selectedTab ?: highestTab,
-                    )
-                }
-                refreshIfReady()
-            }
+            updateUserAccess(userInfo)
         }
     }
 
+    private fun updateUserAccess(userInfo: UserInfo) {
+        // 다른 기수의 운영진 역할로 현재 선택 기수의 탭을 열면 서버 권한 판정과 어긋난다.
+        val roles = userInfo.noticeRolesForGisu(uiState.value.gisuId)
+        val highestTab = if (userInfo.isSuperAdmin) AdminNoticeTab.CENTRAL
+        else AdminNoticeTab.highestAccessibleTab(roles)
+        val tabs = highestTab?.let { accessible ->
+            AdminNoticeTab.entries.filter { it.ordinal >= accessible.ordinal }
+        }.orEmpty()
+        val accessChanged = uiState.value.selectedTab !in tabs
+        if (accessChanged) listJob?.cancel()
+        updateState {
+            copy(
+                hasAccess = highestTab != null,
+                visibleTabs = if (tabs.isEmpty()) persistentListOf(AdminNoticeTab.PART_LEADER) else tabs.toImmutableList(),
+                selectedTab = selectedTab?.takeIf { it in tabs } ?: highestTab ?: AdminNoticeTab.PART_LEADER,
+                noticeList = if (accessChanged) persistentListOf() else noticeList,
+                currentPage = if (accessChanged) 0 else currentPage,
+                isLastPage = if (accessChanged) false else isLastPage,
+                isPageLoading = if (accessChanged) false else isPageLoading,
+                hasLoaded = if (accessChanged) false else hasLoaded,
+                errorMessage = if (accessChanged) null else errorMessage,
+            )
+        }
+        refreshIfReady()
+    }
+
     fun onClickTab(tab: AdminNoticeTab) {
+        if (!uiState.value.hasAccess || tab !in uiState.value.visibleTabs) return
         if (tab == uiState.value.selectedTab) return
         // 진행 중이던 이전 탭 조회는 버리고, 이전 탭의 목록·페이징을 비워 새 탭 제목 아래에 남지 않게 한다.
         // 비워 두면 전환 중에는 로딩이, 조회 실패 시에는 실패 안내가 새 탭 기준으로 보인다
@@ -164,13 +174,12 @@ class AdminNoticeViewModel @Inject constructor(
         val selectedTab = state.selectedTab ?: return@launch
         if (state.gisuId <= 0L) return@launch
 
-        // 운영진 공지 검색도 목록과 같은 탭·schoolId 규칙으로 조회해야 한다
-        val isSchoolStaff = state.visibleTabs.firstOrNull()?.isSchoolLevel == true
+        // 검색에서도 학교를 지정하지 않아야 중앙 발신 공지가 검색 범위에서 빠지지 않는다.
         emitEvent(
             AdminNoticeEvent.MoveToSearchEvent(
                 gisuId = state.gisuId,
                 noticeTab = selectedTab.noticeTab,
-                schoolId = if (isSchoolStaff) findUserSchoolId() else null,
+                schoolId = null,
             )
         )
     }
@@ -192,12 +201,14 @@ class AdminNoticeViewModel @Inject constructor(
     /** 기수·탭이 모두 준비된 경우에만 목록 새로고침 */
     private fun refreshIfReady() {
         val state = uiState.value
-        if (state.gisuId != 0L && state.hasAccess && state.selectedTab != null) {
+        if (state.gisuId > 0L && state.hasAccess && state.selectedTab != null) {
             getNoticeList(isRefresh = true)
         }
     }
 
     private fun getNoticeList(isRefresh: Boolean) {
+        // 프로필이 갱신돼도 진행 중인 조회의 취소 핸들을 중복 작업으로 덮어쓰지 않는다.
+        if (listJob?.isActive == true) return
         listJob = fetchNoticeList(isRefresh)
     }
 
@@ -211,19 +222,18 @@ class AdminNoticeViewModel @Inject constructor(
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
-        // 학교 소속 운영진(교내 회장단/파트장)은 schoolId를 함께 전달해 교내 운영진 공지를 조회하고,
-        // 중앙 레벨은 schoolId 미입력으로 중앙운영사무국 공지를 조회 (서버 스펙: schoolId 입력 여부로 구분)
-        val isSchoolStaff = state.visibleTabs.firstOrNull()?.isSchoolLevel == true
-        val schoolId = if (isSchoolStaff) findUserSchoolId() else null
-
+        // 학교 미지정 시 서버가 역할별 조회 범위를 적용한다. 지부장은 schoolId 지정 조회가 403이다.
+        val response = getNoticeListUseCase(
+            gisuId = state.gisuId,
+            noticeTab = selectedTab.noticeTab,
+            schoolId = null,
+            page = pageToFetch,
+            size = 20
+        )
+        // apiCall이 취소를 실패 응답으로 바꿔도 이전 조회가 새 탭의 상태를 덮어쓰지 않게 한다.
+        currentCoroutineContext().ensureActive()
         resultResponse(
-            response = getNoticeListUseCase(
-                gisuId = state.gisuId,
-                noticeTab = selectedTab.noticeTab,
-                schoolId = schoolId,
-                page = pageToFetch,
-                size = 20
-            ),
+            response = response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
@@ -248,14 +258,6 @@ class AdminNoticeViewModel @Inject constructor(
         )
     }
 
-    /** 선택된 기수 기준 사용자의 소속 학교 ID 조회 */
-    private fun findUserSchoolId(): Long? {
-        val gisuId = uiState.value.gisuId
-        return cachedUserInfo?.challengerRecords
-            ?.filter { gisuId == 0L || it.gisuId == gisuId }
-            ?.firstOrNull { it.schoolId != 0L }
-            ?.schoolId
-    }
 }
 
 data class AdminNoticeUiState(

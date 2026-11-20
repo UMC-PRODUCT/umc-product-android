@@ -604,6 +604,7 @@ object AppStrings {
     const val NOTICE_WRITE_TITLE_PLACEHOLDER = COMMON_TITLE_PLACEHOLDER
     const val NOTICE_WRITE_CONTENT_PLACEHOLDER = COMMON_CONTENT_PLACEHOLDER
     const val NOTICE_WRITE_ALL_GISU = "전체 기수"
+    const val NOTICE_WRITE_SPECIFIC_GISU = "특정 기수"
     const val NOTICE_WRITE_CATEGORY_CENTRAL = "중앙운영진"
     // const val NOTICE_WRITE_CATEGORY_CHAPTER = "지부장"  // 위와 동일 사유로 보류
     const val NOTICE_WRITE_CATEGORY_SCHOOL_CORE = "학교 회장단"
