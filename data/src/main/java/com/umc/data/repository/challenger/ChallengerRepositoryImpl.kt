@@ -23,7 +23,7 @@ class ChallengerRepositoryImpl @Inject constructor(
 ) : ChallengerRepository {
 
     // 일반 챌린저·일정 검색의 범위. 최고 관리자·현재 기수 중앙운영사무국은 전 학교를 보고,
-    // 나머지는 회원 검색에 본인 학교를 넣어 부른다(운영진 검색은 일반 챌린저에게 403).
+    // 나머지는 회원 검색에 본인 학교를 넣어 부른다.
     private suspend fun searchInScope(
         cursor: Long?,
         size: Int,
@@ -57,7 +57,7 @@ class ChallengerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAdminChallengerInfo(id: Long): ApiState<ChallengerManageDialogModel> {
-        return challengerRemoteDataSource.getChallengerDetail(id).map {
+        return challengerRemoteDataSource.getAdminChallengerDetail(id).map {
             it.toManageModel()
         }
     }
@@ -107,7 +107,7 @@ class ChallengerRepositoryImpl @Inject constructor(
         if (gisuId == null || gisuId <= 0) {
             return ApiState.Fail(FailState(code = "GISU_REQUIRED", message = "조회할 기수를 선택해 주세요."))
         }
-        // 관리 목록은 회원 검색으로 우회하지 않고 대상 기수의 권한을 검증하는 v2 API를 사용한다.
+        // 관리 목록은 회원 검색으로 우회하지 않고 대상 기수의 권한을 검증하는 관리자 API를 사용한다.
         return challengerRemoteDataSource.getAdminChallengerList(
             cursor = cursor, size = size,
             schoolId = schoolId, gisuId = gisuId,

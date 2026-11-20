@@ -8,6 +8,7 @@ import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 
 interface ChallengerRemoteDataSource {
     suspend fun getChallengerDetail(id: Long): ApiState<ChallengerResponse>
+    suspend fun getAdminChallengerDetail(id: Long): ApiState<ChallengerResponse>
     suspend fun grantChallengerPoint(id: Long, request: ChallengerPointRequest): ApiState<ChallengerResponse>
 
     suspend fun getChallengerList(
@@ -21,7 +22,7 @@ interface ChallengerRemoteDataSource {
         keyword: String? = null,
     ): ApiState<ChallengerCursorResponse>
 
-    /** 운영진 목록 전용 조회. 선택 기수와 조직 조건의 권한은 서버의 v2 검색에서 검사한다. */
+    /** 운영진 목록 전용 조회. 선택 기수와 조직 조건의 권한은 서버의 관리자 검색에서 검사한다. */
     suspend fun getAdminChallengerList(
         cursor: Long?,
         size: Int,
@@ -32,7 +33,7 @@ interface ChallengerRemoteDataSource {
         keyword: String?,
     ): ApiState<ChallengerCursorResponse>
 
-    // 학교를 반드시 지정하는 회원 검색. 운영진 전용 검색을 쓸 수 없는 사용자에게 쓴다
+    // 본인 학교 범위의 검색에 사용하며 학교를 반드시 지정한다.
     suspend fun searchMembers(
         cursor: Long?,
         size: Int,

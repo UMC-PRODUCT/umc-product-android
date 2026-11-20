@@ -18,6 +18,10 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         return apiCall { challengerApi.getChallengerDetail(id) }
     }
 
+    override suspend fun getAdminChallengerDetail(id: Long): ApiState<ChallengerResponse> {
+        return apiCall { challengerApi.getAdminChallengerDetail(id) }
+    }
+
     override suspend fun grantChallengerPoint(id: Long, request: ChallengerPointRequest): ApiState<ChallengerResponse> {
         return apiCall { challengerApi.grantChallengerPoint(id, request) }
     }
@@ -55,7 +59,7 @@ class ChallengerRemoteDataSourceImpl @Inject constructor(
         part: String?,
         keyword: String?,
     ): ApiState<ChallengerCursorResponse> = apiCall {
-        challengerApi.getChallengers(
+        challengerApi.getAdminChallengers(
             page = cursor?.toInt() ?: 0,
             size = size,
             part = part,
