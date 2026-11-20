@@ -62,7 +62,7 @@ fun MyContentRoute(
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is MyContentEvent.ClickBackPressed -> {
-                /**TODO 차후 activity단으로 */
+                /**TODO(#382) 차후 activity단으로 */
             }
             is MyContentEvent.ShowErrorToast -> {
                 //Toast.makeText(context, event.errorMessage, Toast.LENGTH_SHORT).show()

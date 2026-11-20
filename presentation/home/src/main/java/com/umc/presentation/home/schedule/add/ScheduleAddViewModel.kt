@@ -784,7 +784,7 @@ data class ScheduleAddUiState(
         CategoryItem(CategoryType.STUDY.label, R.drawable.ic_study_off, R.drawable.ic_study_on),
         CategoryItem(CategoryType.HACKATHON.label, R.drawable.ic_hackathon_off, R.drawable.ic_hackathon_on),
         CategoryItem(CategoryType.WORKSHOP.label, R.drawable.ic_workshop_off, R.drawable.ic_workshop_on),
-        /**아이콘 임시조치**/
+        /** TODO(#383): 아이콘 임시조치 **/
         CategoryItem(CategoryType.AFTER_PARTY.label, R.drawable.ic_afterparty_off, R.drawable.ic_afterparty_on)
 
     ),

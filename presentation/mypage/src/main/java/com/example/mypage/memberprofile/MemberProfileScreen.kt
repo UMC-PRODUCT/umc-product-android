@@ -323,7 +323,7 @@ private fun MemberProfileContent(uiState: MemberProfileUiState) {
                 // 회원 조회(MEMBER-101)는 비공개 링크를 null 로 내려줘 미입력과 구분되지 않고, 연락처 이메일은 내려주지 않는다.
                 // 우선 값이 없으면 모두 비공개 항목으로 안내한다.
                 // 응답의 email 은 연락처가 아니라 로그인 이메일이라, 공개 설정과 상관없이 드러나지 않게 쓰지 않는다
-                // TODO 서버가 공개 여부나 연락처를 함께 내려주면 미입력과 비공개를 나눠 보여준다
+                // TODO(#390) 서버가 공개 여부나 연락처를 함께 내려주면 미입력과 비공개를 나눠 보여준다
                 MemberProfileField(AppStrings.PROFILE_LINK_EMAIL, AppStrings.MEMBER_PROFILE_PRIVATE)
                 MemberProfileField(AppStrings.PROFILE_LINK_GITHUB, profile.github.orPrivateLabel())
                 MemberProfileField(AppStrings.PROFILE_LINK_LINKEDIN, profile.linkedIn.orPrivateLabel())

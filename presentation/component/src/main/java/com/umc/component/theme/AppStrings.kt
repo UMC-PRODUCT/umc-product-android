@@ -264,7 +264,7 @@ object AppStrings {
     const val NEARBY_FALLBACK_INFO = "Connect 실패"
     const val NEARBY_WAITING = "대기 중"
 
-    // [임시] 명함 교환 차단 안내. iOS 구현이 끝나 교환을 다시 열 때 이 두 줄과 각 차단 지점을 함께 지운다.
+    // TODO(#380): 명함 교환 차단 안내. iOS 구현이 끝나 교환을 다시 열 때 이 두 줄과 각 차단 지점을 함께 지운다.
     // 본문은 한 줄에 다 담기지 않아 끝 글자만 넘어가므로, 읽기 좋게 직접 끊어 둔다.
     const val EXCHANGE_CARD_BLOCKED_TITLE = "명함 교환은 개발 중이에요"
     const val EXCHANGE_CARD_BLOCKED_CONTENT = "지금 열심히 준비하고 있어요.\n완료되면 안내드릴게요."
@@ -945,8 +945,6 @@ object AppStrings {
     const val MEMO = "메모"
     const val REWARD_SUBMIT = "등록하기"
     const val REWARD_SUBMITTING = "등록 중..."
-    // 임시 화면
-    const val HELLO_BLANK_FRAGMENT = "Hello blank fragment"
 
     // 베스트 워크북 설정 화면
     const val ADMIN_BEST_TITLE = "베스트 워크북 설정"

@@ -80,16 +80,6 @@ class OrganizationRepositoryImpl @Inject constructor(
         }
 
 
-    override suspend fun getSchoolByKeyword(
-        keyword: String,
-        chapterId: Int,
-        page: Int,
-        size: Int,
-        sort: String
-    ): ApiState<Unit> =
-        organizationDataSource.getSchoolByKeyword(keyword, chapterId, page, size, sort)
-            .map { Unit } //임시
-
     override suspend fun getAllChapter(): ApiState<List<Chapter>> =
         organizationDataSource.getAllChapter().map { response ->
             response.chapters.map { Chapter(it.id, it.name) }
@@ -119,16 +109,7 @@ class OrganizationRepositoryImpl @Inject constructor(
     override suspend fun getSchoolDetail(schoolId: Long): ApiState<SchoolInfo> =
         organizationDataSource.getSchoolDetail(schoolId).map { dto ->
             dto.toModel()
-        } //임시
-
-    override suspend fun getMyStudyGroupList(): ApiState<Unit> =
-        organizationDataSource.getMyStudyGroupList().map { Unit } //임시
-
-    override suspend fun getUnassignedSchool(gisuId: Int): ApiState<Unit> =
-        organizationDataSource.getUnassignedSchool(gisuId).map { Unit } //임시
-
-    override suspend fun getSchoolLink(schoolId: Int): ApiState<Unit> =
-        organizationDataSource.getSchoolLink(schoolId).map { Unit }
+        }
 
     override suspend fun getAllSchool(): ApiState<List<SchoolInfo>> =
         organizationDataSource.getAllSchool().map {

@@ -383,7 +383,6 @@ fun MypageRoute(
             positiveText = AppStrings.MYPAGE_DELETE_ACCOUNT_ACTION,
             negativeText = AppStrings.COMMON_CANCEL,
             onPositive = {
-                /**TODO: 회원 탈퇴 로직 연결*/
                 showDeleteUserDialog = false
                 viewModel.deleteUser()
             },

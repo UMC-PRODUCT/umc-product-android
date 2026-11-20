@@ -115,7 +115,7 @@ fun CommunityCreateScreen(
                 )
             },
             onCsvUploadClick = {
-                // TODO CSV 파일 선택 기능 연결
+                // TODO(#382) CSV 파일 선택 기능 연결
             },
         )
     }

@@ -183,7 +183,7 @@ fun AdminNoticeScreen(
 
             uiState.isEmpty -> {
                 AdminNoticeStatusContent(
-                    // TODO: 확성기 아이콘 에셋 추가 후 교체 (임시로 ic_alarm 사용)
+                    // TODO(#383): 확성기 아이콘 에셋 추가 후 교체 (임시로 ic_alarm 사용)
                     iconRes = R.drawable.ic_speaker,
                     title = AppStrings.NOTICE_EMPTY_TITLE,
                     content = AppStrings.NOTICE_EMPTY_CONTENT,

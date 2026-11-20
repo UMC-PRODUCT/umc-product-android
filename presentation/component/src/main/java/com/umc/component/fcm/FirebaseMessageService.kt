@@ -135,7 +135,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
         }
         // 알람 빌더 생성
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_app_store_logo) //일단 UMC 로고 임시
+            .setSmallIcon(R.drawable.ic_app_store_logo) // TODO(#383): 단색 알림 아이콘이 없어 UMC 로고를 임시로 쓴다
             .setContentTitle(title)
             .setContentText(body)
             .setContentIntent(contentIntent)

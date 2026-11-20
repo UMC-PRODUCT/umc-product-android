@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
  * 일단은 리턴형으로 fileId를 조회하도록 했습니다 (Swagger 개발용)
  * 현재 이미지의 경우에는 로드 후, 유저 정보 API로 url를 얻을 수 있습니다. 후에, 조정이 필요하면, UploadFileInfo의 인자 수정 및
- * StorageRepositoryImpl 수정 (TODO 표시)
+ * StorageRepositoryImpl 을 함께 수정해야 합니다.
  * **/
 
 class UploadFileUseCase @Inject constructor(

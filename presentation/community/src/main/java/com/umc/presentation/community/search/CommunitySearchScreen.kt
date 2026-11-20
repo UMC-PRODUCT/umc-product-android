@@ -207,7 +207,7 @@ private fun CommunitySearchResultList(
         ),
     ) {
         item(key = "search_refresh") {
-            // 검색 결과 새로고침 버튼 임시 비활성화.
+            // TODO(#382): 검색 결과 새로고침 버튼 임시 비활성화.
             // TextButton(onClick = onRefresh, enabled = !state.isLoading) { UText(if (state.isLoading) "새로고침 중" else "새로고침") }
             state.errorMessage?.let { message ->
                 UText(message)

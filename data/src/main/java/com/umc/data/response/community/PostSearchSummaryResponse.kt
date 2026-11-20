@@ -40,7 +40,7 @@ data class PostSearchSummaryResponse (
                 userNickName = this.authorNickName ?: "",
                 userId = this.authorChallengerId ?: -1L,
                 userMemberId = this.authorMemberId ?: -1L,
-                writeTime = "${writeDay} ${writeTime}", // TODO: 서버 응답에 생성일자가 추가되면 파싱 로직 적용
+                writeTime = "${writeDay} ${writeTime}", // TODO(#390): 서버 응답에 생성일자가 추가되면 파싱 로직 적용
                 likes = likeCount,
                 comments = commentCount,
                 content = this.content,
