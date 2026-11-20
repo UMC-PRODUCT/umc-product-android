@@ -363,6 +363,15 @@ jobs:
           fi
           echo "### 🌐 서버 주소 \`$ACTUAL_URL\`" >> "$GITHUB_STEP_SUMMARY"
 
+      # 스크린샷 테스트(시범: :presentation:component, :presentation:act).
+      # 기준 이미지는 src/screenshotTestDefaultDebug/reference 에 있다. macOS 에서 만든 기준 이미지와 Linux 렌더링의
+      # 차이를 지켜보는 동안에는 결과만 보고하고 막지 않는다. 차이가 나면 리포트(아래 업로드)의 이미지 비교를 본다.
+      - name: 스크린샷 테스트 (시범, 보고만)
+        continue-on-error: true
+        run: |
+          ./gradlew :presentation:component:testDebugScreenshotTestDefaultTestSuite \
+            :presentation:act:testDebugScreenshotTestDefaultTestSuite --console=plain
+
       - name: 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
