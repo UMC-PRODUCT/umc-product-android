@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
+import java.time.Clock
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.pager.rememberPagerState
@@ -107,6 +108,12 @@ private val WEEK_DIVIDER_THICKNESS = 1.dp
  *
  *
  * **/
+/**
+ * 달력이 '오늘'을 정할 때 쓰는 시계. 앱에서는 시스템 시계이고, 미리보기·스크린샷 테스트는 고정 시계를 넣어
+ * 날짜가 바뀌어도 같은 그림이 나오게 한다.
+ */
+val LocalHomeClock = staticCompositionLocalOf<Clock> { Clock.systemDefaultZone() }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeCalendar(
@@ -115,13 +122,16 @@ fun HomeCalendar(
     onDateClick: (LocalDate) -> Unit, //날짜 선택 시 함수
     onMonthChange: (YearMonth) -> Unit, //월별 바꿀 시 함수
     modifier: Modifier = Modifier,
-    initialMonth: YearMonth = YearMonth.now() //처음 보여줄 달 (리스트 모드에서 돌아올 때 보던 달 유지)
+    initialMonth: YearMonth = YearMonth.now(LocalHomeClock.current) //처음 보여줄 달 (리스트 모드에서 돌아올 때 보던 달 유지)
 ) {
+    val clock = LocalHomeClock.current
+    val today = LocalDate.now(clock)
+    val thisMonth = YearMonth.from(today)
 
     // 달력 pager 상태 및 페이징 오프셋 설정
     // initialPage 는 '이번 달'의 페이지, 처음 보이는 페이지는 initialMonth 만큼 떨어진 곳
     val initialPage = 5000 // (최대 좌우 페이징 총합 5000개월 가능)
-    val startPage = initialPage + ChronoUnit.MONTHS.between(YearMonth.now(), initialMonth).toInt()
+    val startPage = initialPage + ChronoUnit.MONTHS.between(thisMonth, initialMonth).toInt()
     val pagerState = rememberPagerState(initialPage = startPage.coerceIn(0, 9999)) { 10000 }
     val coroutineScope = rememberCoroutineScope()
 
@@ -131,8 +141,7 @@ fun HomeCalendar(
     // 현재 Pager 페이지에 해당하는 YearMonth 계산
     // 이번달에서 (현재 페이지 - 초기 페이지) 값을 증가해서 바꿈
     val currentMonth = remember(pagerState.currentPage) {
-        YearMonth.from(LocalDate.now()).
-        plusMonths((pagerState.currentPage - initialPage).toLong())
+        thisMonth.plusMonths((pagerState.currentPage - initialPage).toLong())
     }
 
     //달력 DatePickerDialog 노출 (날짜 이동 지원)
@@ -145,7 +154,7 @@ fun HomeCalendar(
                 // 같은 날짜를 다시 확인해도 선택한 달로 이동하도록 직접 스크롤한다.
                 // (selectedDate 변경 감지 효과는 첫 진입/복귀 때 보던 달을 오늘 달로 되돌려서 두지 않는다)
                 coroutineScope.launch {
-                    val diff = (date.year - YearMonth.now().year) * 12 + (date.monthValue - YearMonth.now().monthValue)
+                    val diff = (date.year - thisMonth.year) * 12 + (date.monthValue - thisMonth.monthValue)
                     pagerState.animateScrollToPage(initialPage + diff)
                 }
             },
@@ -267,6 +276,8 @@ private fun CalendarBody(
     eventDates: Set<LocalDate>,
     onDateClick: (LocalDate) -> Unit
 ) {
+    val today = LocalDate.now(LocalHomeClock.current)
+    val thisMonth = YearMonth.from(today)
     Column {
         // 요일 헤더 (일~토, 일요일은 Red500 컬러 적용)
         Row(modifier = Modifier
@@ -296,7 +307,7 @@ private fun CalendarBody(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.Top
         ) { page ->
-            val pageMonth = YearMonth.from(LocalDate.now()).plusMonths((page - initialPage).toLong())
+            val pageMonth = thisMonth.plusMonths((page - initialPage).toLong())
 
             //해당 월의 날짜 리스트 생성 (시작 요일 이전 빈칸은 null로 채워짐)
             val days = remember(pageMonth) { getDaysInMonth(pageMonth) }
@@ -326,7 +337,7 @@ private fun CalendarBody(
                                 if (date != null) {
                                     DayItem(
                                         date = date,
-                                        isToday = date == LocalDate.now(),
+                                        isToday = date == today,
                                         isSelected = date == selectedDate,
                                         hasEvent = eventDates.contains(date),
                                         onClick = { onDateClick(date) }
