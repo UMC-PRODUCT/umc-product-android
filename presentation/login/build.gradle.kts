@@ -1,8 +1,7 @@
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
@@ -44,9 +43,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
     }
 
     buildFeatures {
@@ -94,5 +90,8 @@ dependencies {
 }
 
 fun getApiKey(propertyKey: String): String {
-    return gradleLocalProperties(rootDir, providers).getProperty(propertyKey) ?: ""
+    // AGP 내부 API(gradleLocalProperties) 대신 local.properties 를 직접 읽어 AGP 버전에 묶이지 않게 한다.
+    val localProperties = providers.fileContents(rootProject.layout.projectDirectory.file("local.properties")).asText.orNull
+        ?: return ""
+    return Properties().apply { load(localProperties.reader()) }.getProperty(propertyKey) ?: ""
 }
