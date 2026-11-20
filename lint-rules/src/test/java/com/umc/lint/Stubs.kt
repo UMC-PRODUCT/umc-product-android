@@ -39,6 +39,80 @@ object Stubs {
 
         fun LaunchedEffect(key1: Any?, block: suspend () -> Unit) {}
         fun <T> snapshotFlow(block: () -> T): Flow<T> = throw UnsupportedOperationException()
+
+        annotation class Composable
+        annotation class Stable
+        annotation class Immutable
+        """,
+    ).indented()
+
+    private val ui = kotlin(
+        "src/androidx/compose/ui/Modifier.kt",
+        """
+        package androidx.compose.ui
+
+        interface Modifier {
+            companion object : Modifier
+        }
+        """,
+    ).indented()
+
+    private val unit = kotlin(
+        "src/androidx/compose/ui/unit/Dp.kt",
+        """
+        package androidx.compose.ui.unit
+
+        @JvmInline
+        value class Dp(val value: Float)
+
+        val Int.dp: Dp get() = Dp(this.toFloat())
+        val Double.dp: Dp get() = Dp(this.toFloat())
+        val Float.dp: Dp get() = Dp(this)
+        """,
+    ).indented()
+
+    private val layout = kotlin(
+        "src/androidx/compose/foundation/layout/Layout.kt",
+        """
+        package androidx.compose.foundation.layout
+
+        import androidx.compose.ui.Modifier
+        import androidx.compose.ui.unit.Dp
+
+        fun Modifier.width(width: Dp): Modifier = this
+        fun Modifier.requiredWidth(width: Dp): Modifier = this
+        fun Modifier.size(size: Dp): Modifier = this
+        fun Modifier.size(width: Dp, height: Dp): Modifier = this
+        fun Modifier.requiredSize(size: Dp): Modifier = this
+        fun Modifier.widthIn(min: Dp = Dp(-1f), max: Dp = Dp(-1f)): Modifier = this
+        fun Modifier.requiredWidthIn(min: Dp = Dp(-1f), max: Dp = Dp(-1f)): Modifier = this
+        fun Modifier.sizeIn(minWidth: Dp = Dp(-1f), minHeight: Dp = Dp(-1f), maxWidth: Dp = Dp(-1f), maxHeight: Dp = Dp(-1f)): Modifier = this
+        fun Modifier.defaultMinSize(minWidth: Dp = Dp(-1f), minHeight: Dp = Dp(-1f)): Modifier = this
+        fun Modifier.fillMaxWidth(fraction: Float = 1f): Modifier = this
+        fun Modifier.fillMaxSize(fraction: Float = 1f): Modifier = this
+        fun Modifier.padding(horizontal: Dp = Dp(0f), vertical: Dp = Dp(0f)): Modifier = this
+        """,
+    ).indented()
+
+    private val preview = kotlin(
+        "src/androidx/compose/ui/tooling/preview/Preview.kt",
+        """
+        package androidx.compose.ui.tooling.preview
+
+        annotation class Preview
+        annotation class PreviewScreenSizes
+        """,
+    ).indented()
+
+    private val immutable = kotlin(
+        "src/kotlinx/collections/immutable/Immutable.kt",
+        """
+        package kotlinx.collections.immutable
+
+        interface ImmutableCollection<out E> : Collection<E>
+        interface ImmutableList<out E> : List<E>, ImmutableCollection<E>
+        interface ImmutableSet<out E> : Set<E>, ImmutableCollection<E>
+        interface ImmutableMap<K, out V> : Map<K, V>
         """,
     ).indented()
 
@@ -182,7 +256,8 @@ object Stubs {
     ).indented()
 
     val ALL: Array<TestFile> = arrayOf(
-        material3, foundationText, runtime, lifecycle, coroutines, flow, okhttp, ktorClient, ktor, lookalikes,
+        material3, foundationText, runtime, ui, unit, layout, preview, immutable,
+        lifecycle, coroutines, flow, okhttp, ktorClient, ktor, lookalikes,
     )
 
     /** :presentation:component 모듈처럼 namespace가 com.umc.component인 모듈. */
@@ -202,4 +277,12 @@ fun lintWith(issue: Issue, vararg files: TestFile): TestLintResult =
         .allowMissingSdk()
         .files(*Stubs.ALL, *files)
         .issues(issue)
+        .run()
+
+/** [Stubs]를 함께 넣고 [issues]를 함께 검사한다. */
+fun lintWithAll(issues: Array<com.android.tools.lint.detector.api.Issue>, vararg files: TestFile): TestLintResult =
+    lint()
+        .allowMissingSdk()
+        .files(*Stubs.ALL, *files)
+        .issues(*issues)
         .run()

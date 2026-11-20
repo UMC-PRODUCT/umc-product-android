@@ -15,9 +15,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
@@ -218,7 +219,11 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 HorizontalDivider(
-                    modifier = Modifier.width(350.dp),
+                    // 좁은 화면에서도 좌우 여백을 남기도록 폭은 상한으로만 건다.
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                        .widthIn(max = 350.dp)
+                        .fillMaxWidth(),
                     thickness = 1.dp,
                     color = grey200(),
                 )
@@ -227,7 +232,9 @@ fun LoginScreen(
 
                 Box(
                     modifier = Modifier
-                        .width(350.dp)
+                        .padding(horizontal = 20.dp)
+                        .widthIn(max = 350.dp)
+                        .fillMaxWidth()
                         .height(48.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(mint100())
