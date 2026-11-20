@@ -80,7 +80,16 @@ fun ActManageRoute(
     ActManageScreen(
         uiState = uiState,
         onAdminCheckedChange = vm::setAdminMode,
-        onNavigateToChallengerDetail = onNavigateToChallengerDetail,
+        adminAttendanceContent = { isActive -> AttendanceRoute(isActive = isActive) },
+        adminChallengerContent = { isActive, adminModeSession ->
+            AdminChallengerRoute(
+                isActive = isActive,
+                adminModeSession = adminModeSession,
+                onNavigateToDetail = onNavigateToChallengerDetail,
+            )
+        },
+        userAttendanceContent = { isActive -> NormalAttendanceRoute(isActive = isActive) },
+        userChallengerContent = { isActive -> NormalChallengerRoute(isActive = isActive) },
         adminStudyContent = adminStudyContent,
         userStudyContent = userStudyContent,
         openStudyTab = openStudyTab,
@@ -92,8 +101,12 @@ fun ActManageRoute(
 fun ActManageScreen(
     uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit,
-    onNavigateToChallengerDetail: (Long) -> Unit = {},
-    // 기본값을 두지 않는다. 빠뜨리면 스터디 탭이 빈 화면이 되므로 호출하는 쪽이 반드시 넘기게 한다.
+    // 탭 화면은 ViewModel 을 쓰는 Route 라 ActManageRoute 가 넘긴다. 이 화면은 상태만 받아 미리보기·스크린샷으로 그릴 수 있다.
+    // 기본값을 두지 않는다. 빠뜨리면 그 탭이 빈 화면이 되므로 호출하는 쪽이 반드시 넘기게 한다.
+    adminAttendanceContent: @Composable (isActive: Boolean) -> Unit,
+    adminChallengerContent: @Composable (isActive: Boolean, adminModeSession: Int) -> Unit,
+    userAttendanceContent: @Composable (isActive: Boolean) -> Unit,
+    userChallengerContent: @Composable (isActive: Boolean) -> Unit,
     adminStudyContent: @Composable (isActive: Boolean) -> Unit,
     userStudyContent: @Composable (isActive: Boolean) -> Unit,
     openStudyTab: Boolean = false,
@@ -101,39 +114,27 @@ fun ActManageScreen(
 ) {
     // '나의 스터디' 요청을 처리하는 동안에는 운영진 모드여도 챌린저 탭 목록을 써서 운영진 탭 화면의 조회가 먼저 돌지 않게 한다
     val showAdminTabs = uiState.isAdmin && !openStudyTab
+    val adminModeSession by rememberUpdatedState(uiState.adminModeSession)
     val tabs = remember(
         showAdminTabs,
-        onNavigateToChallengerDetail,
+        adminAttendanceContent,
+        adminChallengerContent,
+        userAttendanceContent,
+        userChallengerContent,
         adminStudyContent,
         userStudyContent,
     ) {
         if (showAdminTabs) {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
-                    AttendanceRoute(isActive = isActive)
-                },
-                ManageTab(AppStrings.TAB_STUDY_ADMIN) { isActive ->
-                    adminStudyContent(isActive)
-                },
-                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
-                    AdminChallengerRoute(
-                        isActive = isActive,
-                        adminModeSession = uiState.adminModeSession,
-                        onNavigateToDetail = onNavigateToChallengerDetail,
-                    )
-                }
+                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive -> adminAttendanceContent(isActive) },
+                ManageTab(AppStrings.TAB_STUDY_ADMIN) { isActive -> adminStudyContent(isActive) },
+                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive -> adminChallengerContent(isActive, adminModeSession) },
             )
         } else {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { isActive ->
-                    NormalAttendanceRoute(isActive = isActive)
-                },
-                ManageTab(AppStrings.TAB_STUDY_USER) { isActive ->
-                    userStudyContent(isActive)
-                },
-                ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive ->
-                    NormalChallengerRoute(isActive = isActive)
-                }
+                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { isActive -> userAttendanceContent(isActive) },
+                ManageTab(AppStrings.TAB_STUDY_USER) { isActive -> userStudyContent(isActive) },
+                ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive -> userChallengerContent(isActive) },
             )
         }
     }
@@ -299,7 +300,7 @@ fun AdminToggle(
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminActScreenPreview() {
+internal fun AdminActScreenPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
             uiState = ActUiState(
@@ -307,6 +308,10 @@ private fun AdminActScreenPreview() {
                 hasAdminAccess = true
             ),
             onAdminCheckedChange = {},
+            adminAttendanceContent = {},
+            adminChallengerContent = { _, _ -> },
+            userAttendanceContent = {},
+            userChallengerContent = {},
             adminStudyContent = {},
             userStudyContent = {},
         )
@@ -315,7 +320,7 @@ private fun AdminActScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NormalActScreenPreview() {
+internal fun NormalActScreenPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
             uiState = ActUiState(
@@ -323,6 +328,10 @@ private fun NormalActScreenPreview() {
                 hasAdminAccess = true
             ),
             onAdminCheckedChange = {},
+            adminAttendanceContent = {},
+            adminChallengerContent = { _, _ -> },
+            userAttendanceContent = {},
+            userChallengerContent = {},
             adminStudyContent = {},
             userStudyContent = {},
         )
@@ -331,7 +340,7 @@ private fun NormalActScreenPreview() {
 
 @Preview(showBackground = true, fontScale = 2f)
 @Composable
-private fun NormalActScreenLargeFontPreview() {
+internal fun NormalActScreenLargeFontPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
             uiState = ActUiState(
@@ -339,6 +348,10 @@ private fun NormalActScreenLargeFontPreview() {
                 hasAdminAccess = true
             ),
             onAdminCheckedChange = {},
+            adminAttendanceContent = {},
+            adminChallengerContent = { _, _ -> },
+            userAttendanceContent = {},
+            userChallengerContent = {},
             adminStudyContent = {},
             userStudyContent = {},
         )

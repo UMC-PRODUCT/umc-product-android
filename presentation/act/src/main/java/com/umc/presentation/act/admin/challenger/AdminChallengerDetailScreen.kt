@@ -772,7 +772,7 @@ private val previewDetail = ChallengerManageDialogModel(
 @PreviewScreenSizes
 @Preview(showBackground = true, name = "총괄단 (부여·삭제 가능)")
 @Composable
-private fun PreviewScreen() {
+internal fun PreviewScreen() {
     UmcTheme(darkTheme = false) {
         AdminChallengerDetailScreen(
             uiState = AdminChallengerUiState(
@@ -786,7 +786,7 @@ private fun PreviewScreen() {
 
 @Preview(showBackground = true, name = "총괄단 기록 수정 모드")
 @Composable
-private fun PreviewEditModeScreen() {
+internal fun PreviewEditModeScreen() {
     UmcTheme(darkTheme = false) {
         AdminChallengerDetailScreen(
             uiState = AdminChallengerUiState(
@@ -801,7 +801,7 @@ private fun PreviewEditModeScreen() {
 
 @Preview(showBackground = true, name = "중앙 운영국원·교내 회장단 (삭제 불가)")
 @Composable
-private fun PreviewGrantOnlyScreen() {
+internal fun PreviewGrantOnlyScreen() {
     UmcTheme(darkTheme = false) {
         AdminChallengerDetailScreen(
             uiState = AdminChallengerUiState(
@@ -815,7 +815,7 @@ private fun PreviewGrantOnlyScreen() {
 
 @Preview(showBackground = true, name = "Loading State")
 @Composable
-private fun PreviewLoadingScreen() {
+internal fun PreviewLoadingScreen() {
     UmcTheme(darkTheme = false) {
         AdminChallengerDetailScreen(
             uiState = AdminChallengerUiState(detailLoadState = AdminChallengerLoadState.LOADING)
@@ -825,7 +825,7 @@ private fun PreviewLoadingScreen() {
 
 @Preview(showBackground = true, name = "Error State")
 @Composable
-private fun PreviewErrorScreen() {
+internal fun PreviewErrorScreen() {
     UmcTheme(darkTheme = false) {
         AdminChallengerDetailScreen(
             uiState = AdminChallengerUiState(detailLoadState = AdminChallengerLoadState.ERROR)
@@ -835,7 +835,7 @@ private fun PreviewErrorScreen() {
 
 @Preview(showBackground = false)
 @Composable
-private fun previewDeleteDialog() {
+internal fun previewDeleteDialog() {
     UmcTheme(darkTheme = false) {
         UDialog(
             isAccept = false,

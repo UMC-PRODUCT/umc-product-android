@@ -233,7 +233,7 @@ fun DefaultScheduleItem(
 
 @Preview(showBackground = true)
 @Composable
-private fun ScheduleItemCardTagPreview() {
+internal fun ScheduleItemCardTagPreview() {
     ScheduleItemCard(
         item = SchedulePlanItem(
             id = 1L,
@@ -253,7 +253,7 @@ private fun ScheduleItemCardTagPreview() {
 
 @Preview(showBackground = true, widthDp = 320)
 @Composable
-private fun ScheduleItemCardManyTagsPreview() {
+internal fun ScheduleItemCardManyTagsPreview() {
     ScheduleItemCard(
         item = SchedulePlanItem(
             id = 2L,
@@ -273,7 +273,7 @@ private fun ScheduleItemCardManyTagsPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun ScheduleItemCardPastTagPreview() {
+internal fun ScheduleItemCardPastTagPreview() {
     ScheduleItemCard(
         item = SchedulePlanItem(
             id = 3L,

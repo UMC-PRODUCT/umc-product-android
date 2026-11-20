@@ -388,6 +388,6 @@ private fun handleSignIn(
 @PreviewScreenSizes
 @Preview(name = "좁은 폰(320dp)", widthDp = 320, heightDp = 640, showBackground = true)
 @Composable
-private fun LoginScreenPreview() {
+internal fun LoginScreenPreview() {
     LoginScreen()
 }

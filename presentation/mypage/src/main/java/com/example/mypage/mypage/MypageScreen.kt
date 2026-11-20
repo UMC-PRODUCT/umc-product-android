@@ -961,7 +961,7 @@ private fun MypageScreenPreviewContent(uiState: MypageUiState) {
 // 카카오 + Apple 연동: 구글 연동 카드가 보인다
 @Preview(showBackground = true, widthDp = 360, heightDp = 1000)
 @Composable
-private fun MypageScreenGoogleLinkCardPreview() {
+internal fun MypageScreenGoogleLinkCardPreview() {
     MypageScreenPreviewContent(
         MypageUiState(
             linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
@@ -973,7 +973,7 @@ private fun MypageScreenGoogleLinkCardPreview() {
 // 카카오 + 구글 연동: 소셜 연동 섹션이 숨겨진다
 @Preview(showBackground = true, widthDp = 360, heightDp = 1000)
 @Composable
-private fun MypageScreenAllLinkedPreview() {
+internal fun MypageScreenAllLinkedPreview() {
     MypageScreenPreviewContent(
         MypageUiState(
             linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.GOOGLE),

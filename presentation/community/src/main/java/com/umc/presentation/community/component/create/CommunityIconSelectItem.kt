@@ -105,7 +105,7 @@ fun CommunityIconSelectItem(
 @Preview(showBackground = true, widthDp = 412)
 @Preview(showBackground = true, widthDp = 320)
 @Composable
-private fun CommunityIconSelectItemPreview() {
+internal fun CommunityIconSelectItemPreview() {
     Row(
         modifier = Modifier
             .fillMaxWidth()

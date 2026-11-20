@@ -261,7 +261,7 @@ private fun HistoryItemRow(history: ChallengerInfoHistory) {
 
 @Preview(showBackground = false)
 @Composable
-private fun ChallengerInfoDialogPreview() {
+internal fun ChallengerInfoDialogPreview() {
     UmcTheme(darkTheme = false) {
         NormalChallengerInfoDialog(
             model = ChallengerInfoDialogModel(

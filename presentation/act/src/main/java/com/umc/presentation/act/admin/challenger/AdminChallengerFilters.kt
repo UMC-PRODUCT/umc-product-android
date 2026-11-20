@@ -280,7 +280,7 @@ private val AdminChallengerFilterType.title: String
 @Preview(showBackground = true, widthDp = 412, name = "필터 선택형")
 @PreviewScreenSizes
 @Composable
-private fun ChallengerSelectableFiltersPreview() {
+internal fun ChallengerSelectableFiltersPreview() {
     var filters by remember {
         mutableStateOf(
             AdminChallengerFiltersUi(
@@ -317,7 +317,7 @@ private fun ChallengerSelectableFiltersPreview() {
 
 @Preview(showBackground = true, widthDp = 412, name = "필터 고정형")
 @Composable
-private fun ChallengerFixedFiltersPreview() {
+internal fun ChallengerFixedFiltersPreview() {
     UmcTheme {
         AdminChallengerFilterBar(
             filters = AdminChallengerFiltersUi(
@@ -335,7 +335,7 @@ private fun ChallengerFixedFiltersPreview() {
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 560, name = "학교 선택")
 @Composable
-private fun ChallengerSchoolFilterPreview() {
+internal fun ChallengerSchoolFilterPreview() {
     var keyword by rememberSaveable { mutableStateOf("") }
     UmcTheme {
         AdminChallengerFilterSheetContent(
@@ -360,7 +360,7 @@ private val previewSchoolFilter = AdminChallengerFilterUi(
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 560, name = "학교 검색 결과 없음")
 @Composable
-private fun ChallengerSchoolFilterEmptyPreview() {
+internal fun ChallengerSchoolFilterEmptyPreview() {
     UmcTheme {
         AdminChallengerFilterSheetContent(
             type = AdminChallengerFilterType.SCHOOL,
@@ -374,7 +374,7 @@ private fun ChallengerSchoolFilterEmptyPreview() {
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 840, name = "학교 선택 긴 목록")
 @Composable
-private fun ChallengerLongSchoolFilterPreview() {
+internal fun ChallengerLongSchoolFilterPreview() {
     UmcTheme {
         AdminChallengerFilterBottomSheet(
             type = AdminChallengerFilterType.SCHOOL,

@@ -357,7 +357,7 @@ private fun DragHeader(
 
 @Preview(showBackground = false)
 @Composable
-private fun FixLocationPreview() {
+internal fun FixLocationPreview() {
     UmcTheme(darkTheme = false) {
         FixLocationScreen()
     }

@@ -41,7 +41,7 @@ fun communityRequiredLabel(label: String): AnnotatedString {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityRequiredLabelPreview() {
+internal fun CommunityRequiredLabelPreview() {
     Column(
         modifier = Modifier.padding(16.dp),
     ) {

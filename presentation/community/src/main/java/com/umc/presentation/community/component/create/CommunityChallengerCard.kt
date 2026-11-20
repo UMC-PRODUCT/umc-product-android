@@ -122,7 +122,7 @@ fun CommunityChallengerCard(
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityChallengerCardPreview() {
+internal fun CommunityChallengerCardPreview() {
     val challengers = persistentListOf(
         CommunityChallengerUiModel(
             memberId = 1L,

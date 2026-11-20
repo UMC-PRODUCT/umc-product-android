@@ -241,7 +241,7 @@ fun UDialog(
 
 @Preview(showBackground = true)
 @Composable
-private fun UDialogSingleButtonPreview() {
+internal fun UDialogSingleButtonPreview() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -284,7 +284,7 @@ private fun UDialogSingleButtonPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun UDialogTwoButtonPreview() {
+internal fun UDialogTwoButtonPreview() {
     Box(
         modifier = Modifier
             .fillMaxSize()

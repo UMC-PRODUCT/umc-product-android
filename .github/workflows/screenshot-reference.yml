@@ -30,12 +30,13 @@ jobs:
       - name: 기준 이미지 생성
         run: |
           chmod +x ./gradlew
-          ./gradlew :presentation:component:updateDebugScreenshotTestDefaultTestSuite \
-            :presentation:act:updateDebugScreenshotTestDefaultTestSuite --console=plain
+          ./gradlew updateDebugScreenshotTestDefaultTestSuite --console=plain
 
       - name: 기준 이미지 업로드
         uses: actions/upload-artifact@v4
         with:
           name: screenshot-reference-${{ github.run_number }}
-          path: presentation/*/src/screenshotTestDefaultDebug/reference/**
+          path: |
+            presentation/src/screenshotTestDefaultDebug/reference/**
+            presentation/*/src/screenshotTestDefaultDebug/reference/**
           retention-days: 7

@@ -1006,7 +1006,7 @@ fun HomePlanHeader(
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenPreview() {
+internal fun HomeScreenPreview() {
     // 1. 테스트용 가짜 UI 상태 생성
     val dummyUiState = HomeUiState(
         profileLoadState = HomeLoadState.SUCCESS,
@@ -1044,7 +1044,7 @@ private fun HomeScreenPreview() {
 /** 글꼴 최대 배율과 두 자리 점수에서 단위(point/Days)가 쪼개지지 않는지 확인한다. */
 @Preview(showBackground = true, fontScale = 2f)
 @Composable
-private fun HomeScreenLargeFontPreview() {
+internal fun HomeScreenLargeFontPreview() {
     HomeScreen(
         uiState = HomeUiState(
             profileLoadState = HomeLoadState.SUCCESS,
@@ -1077,7 +1077,7 @@ private fun HomeScreenLargeFontPreview() {
 /** 챌린저 기록 없이 들어온 프로덕트팀 계정(isUmcProduct): 기수 태그가 비고 활동 상태 카드가 없다. */
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenNoGisuPreview() {
+internal fun HomeScreenNoGisuPreview() {
     HomeScreen(
         uiState = HomeUiState(
             profileLoadState = HomeLoadState.SUCCESS,
@@ -1105,7 +1105,7 @@ private fun HomeScreenNoGisuPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenLoadErrorPreview() {
+internal fun HomeScreenLoadErrorPreview() {
     HomeScreen(
         uiState = HomeUiState(
             profileLoadState = HomeLoadState.ERROR,
@@ -1128,7 +1128,7 @@ private fun HomeScreenLoadErrorPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenLoadingPreview() {
+internal fun HomeScreenLoadingPreview() {
     HomeScreen(
         uiState = HomeUiState(),
         onDateClick = {},
@@ -1147,7 +1147,7 @@ private fun HomeScreenLoadingPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenListEmptyPreview() {
+internal fun HomeScreenListEmptyPreview() {
     HomeScreen(
         uiState = HomeUiState(
             profileLoadState = HomeLoadState.SUCCESS,

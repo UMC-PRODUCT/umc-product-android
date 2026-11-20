@@ -110,7 +110,7 @@ fun CommunityThreadPreview(
  */
 @Preview(showBackground = true, widthDp = 412)
 @Composable
-private fun CommunityThreadPreviewEmptyPreview() {
+internal fun CommunityThreadPreviewEmptyPreview() {
     CommunityThreadPreview(
         title = "",
         description = "",
@@ -125,7 +125,7 @@ private fun CommunityThreadPreviewEmptyPreview() {
  */
 @Preview(showBackground = true, widthDp = 412)
 @Composable
-private fun CommunityThreadPreviewFilledPreview() {
+internal fun CommunityThreadPreviewFilledPreview() {
     CommunityThreadPreview(
         title = "iOS 3주차 과제 인증방",
         description = "iOS 스터디원들끼리 3주차 과제를 인증하고 서로 코드 피드백을 주고받는 방이에요.",

@@ -361,7 +361,7 @@ private fun NoticeSearchMessage(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeSearchScreenPreview() {
+internal fun NoticeSearchScreenPreview() {
     NoticeSearchScreen(
         uiState = NoticeSearchUiState(
             recentSearchList = persistentListOf("중앙", "해커톤"),
@@ -371,7 +371,7 @@ private fun NoticeSearchScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeSearchResultScreenPreview() {
+internal fun NoticeSearchResultScreenPreview() {
     NoticeSearchResultScreen(
         uiState = NoticeSearchUiState(
             query = "중앙 해커톤",

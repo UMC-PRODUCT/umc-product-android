@@ -439,7 +439,7 @@ private fun PartSelectBottomSheetContent(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeScreenPreview() {
+internal fun NoticeScreenPreview() {
     NoticeScreen(
         uiState = NoticeUiState(
             nowTitle = "12기 공지사항",
@@ -457,7 +457,7 @@ private fun NoticeScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeScreenPartSelectedPreview() {
+internal fun NoticeScreenPartSelectedPreview() {
     NoticeScreen(
         uiState = NoticeUiState(
             nowTitle = "12기 공지사항",

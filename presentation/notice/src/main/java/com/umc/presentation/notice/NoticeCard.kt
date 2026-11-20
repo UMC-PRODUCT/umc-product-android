@@ -191,7 +191,7 @@ fun formatNoticeDate(createdAt: String): String {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeCardPreview() {
+internal fun NoticeCardPreview() {
     NoticeCard(
         notice = NoticeSummary(
             id = 1L,
@@ -215,6 +215,6 @@ private fun NoticeCardPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeTagsCentralPreview() {
+internal fun NoticeTagsCentralPreview() {
     NoticeTags(target = NoticeTarget(targetGisuId = 1))
 }

@@ -551,7 +551,7 @@ fun previewMainError() {
 
 @Preview(showBackground = true, name = "Error State (Server Message)")
 @Composable
-private fun PreviewMainServerError() {
+internal fun PreviewMainServerError() {
     UmcTheme(darkTheme = false) {
         NormalChallengerScreen(
             uiState = NormalChallengerUiState(

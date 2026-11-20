@@ -170,7 +170,7 @@ private fun VoteParticipantCell(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeVoteStatusScreenPreview() {
+internal fun NoticeVoteStatusScreenPreview() {
     NoticeVoteStatusScreen(
         sections = persistentListOf(
             VoteOptionParticipants(

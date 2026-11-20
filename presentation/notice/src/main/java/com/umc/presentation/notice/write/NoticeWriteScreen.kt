@@ -1177,7 +1177,7 @@ private fun WriteBoardChip(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeWriteScreenPreview() {
+internal fun NoticeWriteScreenPreview() {
     NoticeWriteScreen(
         uiState = NoticeWriteUiState(
             writerRole = NoticeWriterRole.CENTRAL_STAFF,
@@ -1195,7 +1195,7 @@ private fun NoticeWriteScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeWriteScreenSuperAdminPreview() {
+internal fun NoticeWriteScreenSuperAdminPreview() {
     NoticeWriteScreen(
         uiState = NoticeWriteUiState(
             writerRole = NoticeWriterRole.SUPER_ADMIN,

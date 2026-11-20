@@ -370,13 +370,13 @@ private fun FieldLabel(
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpScreenPreview() {
+internal fun SignUpScreenPreview() {
     SignUpScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpScreenCompletePreview() {
+internal fun SignUpScreenCompletePreview() {
     SignUpScreen(
         uiState = SignUpState(
             name = "홍길동",

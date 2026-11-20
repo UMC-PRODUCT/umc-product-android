@@ -294,13 +294,13 @@ private fun FieldLabel(
 
 @Preview(showBackground = true)
 @Composable
-private fun EmailLoginScreenPreview() {
+internal fun EmailLoginScreenPreview() {
     EmailLoginScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun EmailLoginScreenFailPreview() {
+internal fun EmailLoginScreenFailPreview() {
     EmailLoginScreen(
         uiState = EmailLoginState(
             email = "example@univ.ac.kr",

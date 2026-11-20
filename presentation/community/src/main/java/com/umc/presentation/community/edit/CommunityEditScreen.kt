@@ -152,7 +152,7 @@ fun CommunityEditScreen(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityEditScreenLoadingPreview() {
+internal fun CommunityEditScreenLoadingPreview() {
     UmcTheme {
         CommunityEditScreen(
             state = CommunityEditState(
@@ -168,7 +168,7 @@ private fun CommunityEditScreenLoadingPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityEditScreenLoadedPreview() {
+internal fun CommunityEditScreenLoadedPreview() {
     UmcTheme {
         CommunityEditScreen(
             state = CommunityEditState(

@@ -542,7 +542,7 @@ private fun ChallengerMemberRow(
 
 @Preview(showBackground = true)
 @Composable
-private fun preview() {
+internal fun preview() {
     UmcTheme(darkTheme = false) {
         EmptyScreen()
     }
@@ -550,7 +550,7 @@ private fun preview() {
 
 @Preview(showBackground = true, name = "Unfocused State")
 @Composable
-private fun PreviewMainUnfocused() {
+internal fun PreviewMainUnfocused() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -587,7 +587,7 @@ private fun PreviewMainUnfocused() {
 
 @Preview(showBackground = true, name = "Loading State")
 @Composable
-private fun PreviewMainLoading() {
+internal fun PreviewMainLoading() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -600,7 +600,7 @@ private fun PreviewMainLoading() {
 
 @PreviewScreenSizes
 @Composable
-private fun PreviewLoadingMoreChallengers() {
+internal fun PreviewLoadingMoreChallengers() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -619,7 +619,7 @@ private fun PreviewLoadingMoreChallengers() {
 
 @Preview(showBackground = true, name = "Error State")
 @Composable
-private fun PreviewMainError() {
+internal fun PreviewMainError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -632,7 +632,7 @@ private fun PreviewMainError() {
 
 @Preview(showBackground = true, name = "권한 확인 중")
 @Composable
-private fun PreviewMainChecking() {
+internal fun PreviewMainChecking() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(uiState = AdminChallengerUiState(manageAccess = AdminChallengerAccess.CHECKING))
     }
@@ -640,7 +640,7 @@ private fun PreviewMainChecking() {
 
 @Preview(showBackground = true, name = "권한 없음 (파트장·기타 운영진·지부장)")
 @Composable
-private fun PreviewMainNoAccess() {
+internal fun PreviewMainNoAccess() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(manageAccess = AdminChallengerAccess.DENIED)
@@ -650,7 +650,7 @@ private fun PreviewMainNoAccess() {
 
 @Preview(showBackground = true, name = "Error State (Server Message)")
 @Composable
-private fun PreviewMainServerError() {
+internal fun PreviewMainServerError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -664,7 +664,7 @@ private fun PreviewMainServerError() {
 
 @Preview(showBackground = true, name = "권한별 필터 연결")
 @Composable
-private fun PreviewConnectedSchoolFilters() {
+internal fun PreviewConnectedSchoolFilters() {
     val gisu = com.umc.domain.model.organization.GisuItem(2, 12)
     val user = com.umc.domain.model.UserInfo(
         id = 1, schoolId = 10,

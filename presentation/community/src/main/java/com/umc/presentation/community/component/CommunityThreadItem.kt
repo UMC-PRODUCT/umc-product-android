@@ -326,7 +326,7 @@ private fun categoryIconRes(
 
 @Preview(showBackground = true)
 @Composable
-private fun CommunityThreadItemPreview() {
+internal fun CommunityThreadItemPreview() {
     UmcTheme {
         Column(
             modifier = Modifier.padding(16.dp),

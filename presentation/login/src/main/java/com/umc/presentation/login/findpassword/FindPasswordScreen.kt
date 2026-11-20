@@ -456,13 +456,13 @@ private fun FieldLabel(
 
 @Preview(showBackground = true)
 @Composable
-private fun FindPasswordScreenPreview() {
+internal fun FindPasswordScreenPreview() {
     FindPasswordScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun FindPasswordScreenVerifiedPreview() {
+internal fun FindPasswordScreenVerifiedPreview() {
     FindPasswordScreen(
         uiState = FindPasswordState(
             email = "example@univ.ac.kr",
@@ -476,6 +476,6 @@ private fun FindPasswordScreenVerifiedPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun FindPasswordCompleteScreenPreview() {
+internal fun FindPasswordCompleteScreenPreview() {
     FindPasswordCompleteScreen()
 }

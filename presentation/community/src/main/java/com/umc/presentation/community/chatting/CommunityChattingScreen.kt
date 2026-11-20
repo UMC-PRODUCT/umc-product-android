@@ -2676,7 +2676,7 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 @PreviewScreenSizes
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun CommunityChattingScreenPreview() {
+internal fun CommunityChattingScreenPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(
             threadId = "1",
@@ -2729,7 +2729,7 @@ private fun CommunityChattingScreenPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun CommunityChattingScreenViewOnlyPreview() {
+internal fun CommunityChattingScreenViewOnlyPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(
             threadId = "1",
@@ -2765,7 +2765,7 @@ private fun CommunityChattingScreenViewOnlyPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun CommunityChattingScreenViewOnlyEmptyPreview() {
+internal fun CommunityChattingScreenViewOnlyEmptyPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(
             threadId = "1",
@@ -2782,7 +2782,7 @@ private fun CommunityChattingScreenViewOnlyEmptyPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun CommunityChattingScreenNoAccessPreview() {
+internal fun CommunityChattingScreenNoAccessPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(threadId = "1", isAccessDenied = true),
         onAction = {},
@@ -2794,7 +2794,7 @@ private fun CommunityChattingScreenNoAccessPreview() {
  */
 @Preview(showBackground = true, widthDp = 412, heightDp = 917)
 @Composable
-private fun CommunityChattingScreenKickedPreview() {
+internal fun CommunityChattingScreenKickedPreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(threadId = "1", isKicked = true),
         onAction = {},
@@ -2811,7 +2811,7 @@ private fun SourceNavigationStatus(
 
 @Preview(showBackground = true, widthDp = 320)
 @Composable
-private fun SourceNavigationStatusPreview() {
+internal fun SourceNavigationStatusPreview() {
     Column {
         SourceNavigationStatus("원문을 불러오지 못했어요. 다시 시도해주세요.", {})
     }
@@ -2819,7 +2819,7 @@ private fun SourceNavigationStatusPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun CommunityChattingEditFailurePreview() {
+internal fun CommunityChattingEditFailurePreview() {
     CommunityChattingScreen(
         state = CommunityChattingState(
             threadId = "1",

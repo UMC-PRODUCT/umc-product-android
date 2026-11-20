@@ -776,7 +776,7 @@ private fun CommunityMemberSheetPreviewContent(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetCurrentMembersPreview() {
+internal fun CommunityMemberSheetCurrentMembersPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -793,7 +793,7 @@ private fun CommunityMemberSheetCurrentMembersPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetEmptyPreview() {
+internal fun CommunityMemberSheetEmptyPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -809,7 +809,7 @@ private fun CommunityMemberSheetEmptyPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetLoadingPreview() {
+internal fun CommunityMemberSheetLoadingPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -826,7 +826,7 @@ private fun CommunityMemberSheetLoadingPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetSearchFocusedPreview() {
+internal fun CommunityMemberSheetSearchFocusedPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -844,7 +844,7 @@ private fun CommunityMemberSheetSearchFocusedPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetSearchPreview() {
+internal fun CommunityMemberSheetSearchPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -867,7 +867,7 @@ private fun CommunityMemberSheetSearchPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetSearchNoResultPreview() {
+internal fun CommunityMemberSheetSearchNoResultPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -888,7 +888,7 @@ private fun CommunityMemberSheetSearchNoResultPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetUpdatingPreview() {
+internal fun CommunityMemberSheetUpdatingPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -913,7 +913,7 @@ private fun CommunityMemberSheetUpdatingPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetErrorPreview() {
+internal fun CommunityMemberSheetErrorPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -933,7 +933,7 @@ private fun CommunityMemberSheetErrorPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetMaxCountToastPreview() {
+internal fun CommunityMemberSheetMaxCountToastPreview() {
     CommunityMemberSheetPreviewFrame(
         toastData = UToastData(
             message = "최대 ${DEFAULT_COMMUNITY_MAX_MEMBER_COUNT}명까지 초대할 수 있습니다.",

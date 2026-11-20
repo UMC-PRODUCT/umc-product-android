@@ -526,7 +526,7 @@ private fun ProfileLoadError(isLoading: Boolean, onRetryClick: () -> Unit) {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 1400)
 @Composable
-private fun ProfileScreenPreview() {
+internal fun ProfileScreenPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(
@@ -547,7 +547,7 @@ private fun ProfileScreenPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun ProfileScreenLoadFailedPreview() {
+internal fun ProfileScreenLoadFailedPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(isProfileLoadFailed = true),
@@ -563,7 +563,7 @@ private fun ProfileScreenLoadFailedPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 200)
 @Composable
-private fun ProfileTopbarSavingPreview() {
+internal fun ProfileTopbarSavingPreview() {
     UmcTheme {
         ProfileTopbar(onBackClick = {}, onCompleteClick = {}, isSaving = true)
     }

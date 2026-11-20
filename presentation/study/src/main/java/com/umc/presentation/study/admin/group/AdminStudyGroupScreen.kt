@@ -300,7 +300,7 @@ fun AdminStudyGroupScreen(
  */
 @Preview(showBackground = true)
 @Composable
-private fun AdminStudyGroupScreenPreview() {
+internal fun AdminStudyGroupScreenPreview() {
     AdminStudyGroupScreen(
         state = AdminStudyGroupState(
             groups = persistentListOf(
@@ -344,7 +344,7 @@ private fun AdminStudyGroupScreenPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun AdminStudyGroupScreenNoPermissionPreview() {
+internal fun AdminStudyGroupScreenNoPermissionPreview() {
     AdminStudyGroupScreen(
         state = AdminStudyGroupState(
             hasReadAccess = false,

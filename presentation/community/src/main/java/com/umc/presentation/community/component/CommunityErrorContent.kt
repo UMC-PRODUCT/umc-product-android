@@ -102,7 +102,7 @@ fun CommunityErrorContent(
 @PreviewScreenSizes
 @Preview(showBackground = true)
 @Composable
-private fun CommunityErrorContentPreview() {
+internal fun CommunityErrorContentPreview() {
     UmcTheme {
         CommunityErrorContent(
             errorMessage = "",

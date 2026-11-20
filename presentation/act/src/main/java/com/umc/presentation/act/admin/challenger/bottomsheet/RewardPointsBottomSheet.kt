@@ -289,7 +289,7 @@ private fun defaultRewardItems(): ImmutableList<RewardPointItem> =
 
 @Preview(showBackground = false)
 @Composable
-private fun RewardPointsScreenPreview() {
+internal fun RewardPointsScreenPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen()
     }
@@ -297,7 +297,7 @@ private fun RewardPointsScreenPreview() {
 
 @Preview(showBackground = false, name = "항목만 고르고 사유 없음 (등록 비활성)")
 @Composable
-private fun RewardPointsScreenNoReasonPreview() {
+internal fun RewardPointsScreenNoReasonPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen(
             uiState = AdminChallengerUiState(selectedRewardType = RewardType.BEST_WORKBOOK_V2)
@@ -307,7 +307,7 @@ private fun RewardPointsScreenNoReasonPreview() {
 
 @Preview(showBackground = false)
 @Composable
-private fun RewardPointsScreenSubmittingPreview() {
+internal fun RewardPointsScreenSubmittingPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen(
             uiState = AdminChallengerUiState(

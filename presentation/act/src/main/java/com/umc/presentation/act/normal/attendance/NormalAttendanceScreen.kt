@@ -1066,7 +1066,7 @@ private fun sampleHistorySessions(): ImmutableList<NormalHistorySessionUi> = per
 
 @Preview(showBackground = true)
 @Composable
-private fun NormalAttendanceEmptyScreenPreview() {
+internal fun NormalAttendanceEmptyScreenPreview() {
     UmcTheme(darkTheme = false) {
         NormalAttendanceScreen()
     }
@@ -1075,7 +1075,7 @@ private fun NormalAttendanceEmptyScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NormalAttendanceScreenPreview() {
+internal fun NormalAttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
         NormalAttendanceScreen(
             uiState = NormalAttendanceUiState(
@@ -1088,7 +1088,7 @@ private fun NormalAttendanceScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AvailableSessionCardCanCheckPreview() {
+internal fun AvailableSessionCardCanCheckPreview() {
     UmcTheme(darkTheme = false) {
         Box(
             modifier = Modifier
@@ -1109,7 +1109,7 @@ private fun AvailableSessionCardCanCheckPreview() {
 
 @Preview(showBackground = true, name = "Available Session Expanded")
 @Composable
-private fun AvailableSessionCardCantCheckPreview() {
+internal fun AvailableSessionCardCantCheckPreview() {
     UmcTheme(darkTheme = false) {
         Box(
             modifier = Modifier
@@ -1130,7 +1130,7 @@ private fun AvailableSessionCardCantCheckPreview() {
 
 @Preview(showBackground = true, name = "Available Session Requesting")
 @Composable
-private fun AvailableSessionCardRequestingPreview() {
+internal fun AvailableSessionCardRequestingPreview() {
     UmcTheme(darkTheme = false) {
         Box(
             modifier = Modifier

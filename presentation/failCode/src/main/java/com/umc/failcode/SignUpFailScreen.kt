@@ -310,7 +310,7 @@ internal suspend fun requestGoogleAccessToken(context: Context): String = runCat
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpFailScreenPreview() {
+internal fun SignUpFailScreenPreview() {
     SignUpFailScreen()
 }
 
