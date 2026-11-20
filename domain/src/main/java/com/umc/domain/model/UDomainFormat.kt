@@ -25,7 +25,8 @@ object UDomainFormat {
     }
 
     private fun parseServerTime(input: String): ZonedDateTime? {
-        val timeStart = input.indexOf('T')
+        // ISO 파서는 날짜·시각 구분자의 대소문자를 가리지 않으므로 소문자 t 도 찾는다.
+        val timeStart = input.indexOf('T', ignoreCase = true)
         if (timeStart < 0) return null
         val time = input.substring(timeStart + 1)
         val normalized = when {
@@ -51,8 +52,8 @@ object UDomainFormat {
     private val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
     private val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-    /** 시각 끝의 오프셋: Z, +09, +09:00, +0900, +09:00:00, 뒤에 붙는 [지역 ID]까지. */
-    private val ZONE_SUFFIX = Regex("""(Z|[+-]\d{2}(:?\d{2}){0,2})(\[[^\]]+])?$""")
+    /** 시각 끝의 오프셋: Z(z), +09, +09:00, +0900, +09:00:00, 뒤에 붙는 [지역 ID]까지. */
+    private val ZONE_SUFFIX = Regex("""([Zz]|[+-]\d{2}(:?\d{2}){0,2})(\[[^\]]+])?$""")
     private val COMPACT_OFFSET = Regex("""([+-]\d{2})(\d{2})(\d{2})?(\[[^\]]+])?$""")
     private val DATE_SHAPE = Regex("""\d{4}\.\d{2}\.\d{2}""")
     private val DATE_IN_TEXT = Regex("""(?<!\d)(\d{4})-(\d{2})-(\d{2})""")

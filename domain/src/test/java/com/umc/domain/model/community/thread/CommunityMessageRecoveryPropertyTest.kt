@@ -96,4 +96,20 @@ class CommunityMessageRecoveryPropertyTest {
             assertTrue("결과 $result", result is ApiState.Fail && result.failState.code == "RECOVERY_INCOMPLETE")
         }
     }
+
+    @Test
+    fun `앵커가 든 페이지라도 이어 받을 커서가 없으면 성공으로 끝내지 않는다`() = runBlocking<Unit> {
+        val page = listOf(CommunityThreadMessage(messageId = "anchor"))
+        listOf(null, "", " ").forEach { cursor ->
+            val pending = CommunityMessageRecovery.recover("anchor") {
+                ApiState.Success(CommunityThreadMessagePage(page, true, cursor))
+            }
+            assertTrue("hasMore=true, 커서 '$cursor' → $pending", pending is ApiState.Fail && pending.failState.code == "RECOVERY_INCOMPLETE")
+            // 마지막 페이지의 빈 커서는 정상이다.
+            val last = CommunityMessageRecovery.recover("anchor") {
+                ApiState.Success(CommunityThreadMessagePage(page, false, cursor))
+            }
+            assertTrue("hasMore=false, 커서 '$cursor' → $last", last is ApiState.Success)
+        }
+    }
 }

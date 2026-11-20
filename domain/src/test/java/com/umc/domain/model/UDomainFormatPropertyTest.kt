@@ -75,6 +75,14 @@ class UDomainFormatPropertyTest {
         assertEquals("2026.02.07" to "05:24", "2026-02-07T05:24:54+0900[Asia/Seoul]".parseDateTime(seoul))
     }
 
+    @Test
+    fun `소문자 t 구분자와 지역 ID 앞의 소문자 z 도 시각으로 읽는다`() {
+        val seoul = ZoneId.of("Asia/Seoul")
+        assertEquals("2026.02.08" to "08:24", "2026-02-07t23:24:54Z".parseDateTime(seoul))
+        assertEquals("2026.02.08" to "08:24", "2026-02-07t23:24:54".parseDateTime(seoul))
+        assertEquals("2026.02.08" to "08:24", "2026-02-07T23:24:54z[UTC]".parseDateTime(seoul))
+    }
+
     private companion object {
         val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
         val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

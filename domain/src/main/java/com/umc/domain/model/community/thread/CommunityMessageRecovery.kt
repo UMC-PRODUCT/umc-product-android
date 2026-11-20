@@ -22,6 +22,9 @@ object CommunityMessageRecovery {
                     val page = result.data
                     val known = messages.size
                     page.messages.forEach { messages.putIfAbsent(it.messageId, it) }
+                    // 이어 받을 페이지가 있다면서 커서가 없으면, 호출자가 빈 커서로 이전 메시지를 요청해 최신 페이지를 다시 받는다.
+                    // 앵커를 찾았더라도 성공으로 끝내지 않는다. 마지막 페이지(hasMore=false)의 빈 커서는 그대로 허용한다.
+                    if (page.hasMore && page.nextBefore.isNullOrBlank()) return incomplete()
                     if (!page.hasMore || (oldestDisplayedId != null && oldestDisplayedId in messages)) {
                         return ApiState.Success(page.copy(messages = messages.values.toList()))
                     }
