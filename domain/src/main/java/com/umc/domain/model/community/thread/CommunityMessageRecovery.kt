@@ -39,6 +39,6 @@ object CommunityMessageRecovery {
     private fun incomplete() =
         ApiState.Fail(FailState(code = "RECOVERY_INCOMPLETE", message = "대화 복구를 완료하지 못했어요. 다시 연결해주세요."))
 
-    /** 새 메시지가 없는 페이지를 연달아 몇 번까지 견딜지. 서버가 걸러 낸 빈 구간 정도는 넘어간다. */
+    /** 새 메시지가 없는 페이지가 연달아 이 수에 이르면 멈춘다. 그보다 짧은 빈 구간(MAX_IDLE_PAGES - 1 페이지까지)은 넘어간다. */
     private const val MAX_IDLE_PAGES = 3
 }

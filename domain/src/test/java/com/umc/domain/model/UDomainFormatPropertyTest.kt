@@ -28,7 +28,7 @@ class UDomainFormatPropertyTest {
     )
 
     /** 서버가 같은 순간을 쓸 수 있는 표기. 오프셋이 없으면 UTC 로 본다(서버 약속). */
-    private val notations = Arb.element("", "Z", "z", "+00:00", "+09:00", "-03:30")
+    private val notations = Arb.element("", "Z", "z", "+00:00", "+09:00", "-03:30", "+0000", "+0900", "-0330")
 
     @Test
     fun `같은 순간은 어떤 표기로 와도 같은 날짜와 시각으로 보인다`() = runBlocking<Unit> {
@@ -55,6 +55,8 @@ class UDomainFormatPropertyTest {
         val shaped = Arb.element(
             "2026-02-07 05:24:54", "2026-02-07", "2026-02-07T", "T05:24", "2026-02-07T05", "2026-13-40T25:61:61",
             "2026-02-07T05:24:54+0900", "2026-02-07T05:24:54[Asia/Seoul]", "  2026-02-07T05:24:54Z  ", "어제 오후 3시",
+            // ISO 파서가 받는 범위 끝의 연도. 시간대 변환에서 예외가 나거나 다섯 자리 연도가 된다.
+            "+999999999-12-31T23:59:59Z", "+10000-01-01T00:00:00Z", "-999999999-01-01T00:00:00Z",
         )
         checkAll(1000, Arb.string(0..40), shaped) { random, sample ->
             listOf(random, sample).forEach { input ->
@@ -63,6 +65,14 @@ class UDomainFormatPropertyTest {
                 assertTrue("입력 '$input' → 시각 '$time'", time.isEmpty() || TIME_SHAPE.matches(time))
             }
         }
+    }
+
+    @Test
+    fun `콜론 없는 오프셋도 그 오프셋을 따른다`() {
+        val seoul = ZoneId.of("Asia/Seoul")
+        assertEquals("2026.02.07" to "14:24", "2026-02-07T05:24:54+0000".parseDateTime(seoul))
+        assertEquals("2026.02.07" to "17:54", "2026-02-07T05:24:54-0330".parseDateTime(seoul))
+        assertEquals("2026.02.07" to "05:24", "2026-02-07T05:24:54+0900[Asia/Seoul]".parseDateTime(seoul))
     }
 
     private companion object {
