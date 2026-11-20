@@ -266,7 +266,8 @@ jobs:
         run: |
           F=${{ steps.resolve.outputs.flavor-cap }}
           # 라이브러리 모듈은 flavor 가 없어 testDebugUnitTest 그대로, :app 만 flavor 태스크.
-          ./gradlew testDebugUnitTest \
+          # JVM 모듈(:domain)에는 testDebugUnitTest 가 없으므로 :domain:test 를 따로 부른다.
+          ./gradlew testDebugUnitTest :domain:test \
             ":app:test${F}DebugUnitTest" ":app:lint${F}Debug" \
             --console=plain
 
@@ -280,7 +281,7 @@ jobs:
           set -euo pipefail
           if [ "$TASKS" = "ALL" ]; then
             F=${{ steps.resolve.outputs.flavor-cap }}
-            ./gradlew testDebugUnitTest \
+            ./gradlew testDebugUnitTest :domain:test \
               ":app:test${F}DebugUnitTest" ":app:lint${F}Debug" --console=plain
           else
             # shellcheck disable=SC2086
