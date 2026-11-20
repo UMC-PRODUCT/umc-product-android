@@ -1,110 +1,61 @@
 package com.umc.domain.model
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 object UDomainFormat {
     /**
-     * 서버의 ISO DateTime 문자열(2026-02-07T05:24:54) -> "2026.02.07" , "05:24:54"
-     * 처럼 날짜와 시간 String으로 분리하는 확장 함수
+     * 서버의 ISO 시각 문자열을 기기(또는 [zone]) 시간대의 날짜와 시각으로 나눈다.
+     * 예: "2026-02-07T05:24:54"(UTC) → 서울 기준 ("2026.02.07", "14:24")
      *
-     * TODO: 02-24 추가 : UTC 판별을 해서 시간까지 쫘악 바꿔주는 로직 추가
-
+     * - 오프셋이 없으면 서버 약속대로 UTC 로 보고, `Z`·`z`·`+09:00`·`+0900` 같은 오프셋이 있으면 그 오프셋을 따른다.
+     * - 시각으로 읽을 수 없으면 문자열에서 날짜(yyyy-MM-dd)와 시각(HH:mm)만 찾아 시간대 변환 없이 돌려준다.
+     *   찾지 못한 쪽은 빈 문자열이다. 어떤 입력에도 예외를 던지지 않는다.
      */
-    fun String.parseDateTime(): Pair<String, String> {
-        if (this.isBlank()) return Pair("", "")
+    fun String.parseDateTime(zone: ZoneId = ZoneId.systemDefault()): Pair<String, String> {
+        val input = trim()
+        if (input.isEmpty()) return "" to ""
+        val parsed = parseServerTime(input) ?: return fallback(input)
+        // 범위 끝의 연도는 시간대 변환에서 예외가 나고, 다섯 자리 연도는 yyyy.MM.dd 모양을 벗어나므로 문자열에서 찾는 쪽으로 넘긴다.
+        return runCatching { parsed.withZoneSameInstant(zone).let { it.format(DATE) to it.format(TIME) } }
+            .getOrNull()
+            ?.takeIf { (date, _) -> DATE_SHAPE.matches(date) }
+            ?: fallback(input)
+    }
 
-        return try{
-            //일단 Z로 안끝나면 붙여주기
-            val normalizedInput = if (!this.endsWith("Z")) "${this}Z" else this
-
-            //ISO_DATE_TIME 형식으로 파싱
-            val utcTime = ZonedDateTime.parse(normalizedInput)
-
-            //사용자의 현재 기기 시간대(Local)로 변환
-            val localTime = utcTime.withZoneSameInstant(ZoneId.systemDefault())
-
-            //날짜와 시간을 원하는 포맷으로 분리
-            val date = localTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-            val time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-
-            Pair(date, time)
-
-        } catch (e: Exception) {
-            // 파싱 실패 시 예외 처리 (기존 String 자르기 방식으로 폴백)
-            val date = this.split("T").getOrNull(0)?.replace("-", ".") ?: ""
-            val time = this.split("T").getOrNull(1)?.take(5) ?: ""
-            Pair(date, time)
+    private fun parseServerTime(input: String): ZonedDateTime? {
+        // ISO 파서는 날짜·시각 구분자의 대소문자를 가리지 않으므로 소문자 t 도 찾는다.
+        val timeStart = input.indexOf('T', ignoreCase = true)
+        if (timeStart < 0) return null
+        val time = input.substring(timeStart + 1)
+        val normalized = when {
+            time.endsWith("z") -> input.dropLast(1) + "Z"
+            // ISO 파서는 콜론 없는 오프셋(+0900, +090000)을 받지 않으므로 +09:00 꼴로 바꾼다.
+            ZONE_SUFFIX.containsMatchIn(time) -> input.substring(0, timeStart + 1) + time.replace(COMPACT_OFFSET) { match ->
+                val (hours, minutes, seconds, region) = match.destructured
+                "$hours:$minutes" + (if (seconds.isEmpty()) "" else ":$seconds") + region
+            }
+            else -> input + "Z"
         }
+        return runCatching { ZonedDateTime.parse(normalized) }.getOrNull()
     }
 
-    /**
-     * 날짜 문자열을 기기 로컬 시간대 00:00 기준으로 UTC ISO 문자열로 변환한다.
-     */
-    fun String.formatDateForServer(): String {
-        val localDate = parseLocalDateOrNull(this) ?: return ""
-        val localDateTime = localDate.atStartOfDay(ZoneId.systemDefault())
-        val utcInstant = localDateTime.withZoneSameInstant(ZoneOffset.UTC).toInstant()
-
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-            .withZone(ZoneOffset.UTC)
-            .format(utcInstant)
+    private fun fallback(input: String): Pair<String, String> {
+        val dateMatch = DATE_IN_TEXT.find(input)
+        val date = dateMatch?.destructured?.let { (year, month, day) -> "$year.$month.$day" } ?: ""
+        val rest = dateMatch?.let { input.substring(it.range.last + 1) } ?: input
+        val time = TIME_IN_TEXT.find(rest)?.destructured?.let { (hour, minute) -> "$hour:$minute" } ?: ""
+        return date to time
     }
 
-    /**
-     * 날짜/시간 문자열을 기기 로컬 시간대로 해석 후 UTC ISO 문자열로 변환한다.
-     * timeString 예시: "09:30", "09:30:00"
-     */
-    fun String.formatDateTimeForServer(timeString: String): String {
-        val localDate = parseLocalDateOrNull(this) ?: return ""
-        val localTime = parseLocalTimeOrNull(timeString) ?: return ""
+    private val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+    private val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-        val localDateTime = localDate.atTime(localTime).atZone(ZoneId.systemDefault())
-        val utcInstant = localDateTime.withZoneSameInstant(ZoneOffset.UTC).toInstant()
-
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-            .withZone(ZoneOffset.UTC)
-            .format(utcInstant)
-    }
-
-    private fun parseLocalDateOrNull(dateString: String): LocalDate? {
-        val input = dateString.trim()
-
-        val koreanRegex = """(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일""".toRegex()
-        val dotRegex = """(\d{4})\.(\d{1,2})\.(\d{1,2})""".toRegex()
-        val dashRegex = """(\d{4})-(\d{1,2})-(\d{1,2})""".toRegex()
-
-        return when {
-            koreanRegex.matches(input) -> {
-                val (year, month, day) = koreanRegex.find(input)!!.destructured
-                LocalDate.of(year.toInt(), month.toInt(), day.toInt())
-            }
-
-            dotRegex.matches(input) -> {
-                val (year, month, day) = dotRegex.find(input)!!.destructured
-                LocalDate.of(year.toInt(), month.toInt(), day.toInt())
-            }
-
-            dashRegex.matches(input) -> {
-                val (year, month, day) = dashRegex.find(input)!!.destructured
-                LocalDate.of(year.toInt(), month.toInt(), day.toInt())
-            }
-
-            else -> runCatching { LocalDate.parse(input) }.getOrNull()
-        }
-    }
-
-    private fun parseLocalTimeOrNull(timeString: String): LocalTime? {
-        val input = timeString.trim()
-        if (input.isBlank()) return null
-
-        return runCatching { LocalTime.parse(input, DateTimeFormatter.ofPattern("HH:mm:ss")) }.getOrNull()
-            ?: runCatching { LocalTime.parse(input, DateTimeFormatter.ofPattern("HH:mm")) }.getOrNull()
-    }
+    /** 시각 끝의 오프셋: Z(z), +09, +09:00, +0900, +09:00:00, 뒤에 붙는 [지역 ID]까지. */
+    private val ZONE_SUFFIX = Regex("""([Zz]|[+-]\d{2}(:?\d{2}){0,2})(\[[^\]]+])?$""")
+    private val COMPACT_OFFSET = Regex("""([+-]\d{2})(\d{2})(\d{2})?(\[[^\]]+])?$""")
+    private val DATE_SHAPE = Regex("""\d{4}\.\d{2}\.\d{2}""")
+    private val DATE_IN_TEXT = Regex("""(?<!\d)(\d{4})-(\d{2})-(\d{2})""")
+    private val TIME_IN_TEXT = Regex("""(?<!\d)(\d{2}):(\d{2})""")
 }
