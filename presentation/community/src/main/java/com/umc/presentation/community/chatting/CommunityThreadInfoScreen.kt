@@ -1,5 +1,6 @@
 package com.umc.presentation.community.chatting
 
+import com.umc.component.component.UText
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableSet
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -51,7 +53,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,7 +85,6 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
 import com.umc.component.theme.red100
-import com.umc.component.theme.red400
 import com.umc.component.theme.red500
 import com.umc.component.theme.white
 import com.umc.domain.model.community.thread.CommunityThreadMember
@@ -188,7 +188,7 @@ internal fun CommunityThreadInfoScreen(
                             modifier = Modifier.size(24.dp),
                         )
                     }
-                    Text(
+                    UText(
                         text = AppStrings.CHAT_THREAD_INFO,
                         modifier = Modifier.padding(start = 8.dp),
                         color = grey950(),
@@ -214,13 +214,13 @@ internal fun CommunityThreadInfoScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
+                    UText(
                         text = if (isEditing) AppStrings.CHAT_PARTICIPANT_MANAGEMENT else
                             AppStrings.CHAT_PARTICIPANT_MANAGEMENT_COUNT_FORMAT.format(
                                 if (query.isNotBlank()) displayedMembers.size.toString() else memberCount.ifBlank { members.size.toString() }),
                         color = grey950(), style = UmcTypographyTokens.HeadlineBold,
                     )
-                    if (canManage) Text(
+                    if (canManage) UText(
                         text = if (isEditing) AppStrings.CHAT_CLEAR_PARTICIPANT_SELECTION else AppStrings.CHAT_EDIT_PARTICIPANTS,
                         color = main500(), style = UmcTypographyTokens.Body,
                         modifier = Modifier.clickable(enabled = !isManagingParticipants) {
@@ -264,7 +264,7 @@ internal fun CommunityThreadInfoScreen(
                         modifier = Modifier.size(24.dp),
                         colorFilter = ColorFilter.tint(grey400()),
                     )
-                    Text(
+                    UText(
                         text = AppStrings.CHAT_OWNER_ONLY_KICK_GUIDE,
                         color = grey700(),
                         style = UmcTypographyTokens.Subheadline,
@@ -277,7 +277,9 @@ internal fun CommunityThreadInfoScreen(
     if (showManagementSheet && selectedMemberIds.isNotEmpty() && !isManagingParticipants) {
         SelectedParticipantManagementSheet(
             count = selectedMemberIds.size,
-            actions = communityParticipantBatchActions(members.filter { it.memberId in selectedMemberIds }, viewerRole, myMemberId),
+            actions = remember(members, selectedMemberIds, viewerRole, myMemberId) {
+                communityParticipantBatchActions(members.filter { it.memberId in selectedMemberIds }, viewerRole, myMemberId).toImmutableSet()
+            },
             onDismiss = { showManagementSheet = false },
             onAction = { action ->
                 showManagementSheet = false
@@ -368,7 +370,7 @@ private fun ParticipantKickDialog(
 @Composable
 private fun SelectedParticipantManagementSheet(
     count: Int,
-    actions: Set<CommunityParticipantBatchAction>,
+    actions: ImmutableSet<CommunityParticipantBatchAction>,
     onDismiss: () -> Unit,
     onAction: (CommunityParticipantBatchAction) -> Unit,
 ) {
@@ -386,10 +388,10 @@ private fun SelectedParticipantManagementSheet(
     ) {
         Column(Modifier.fillMaxWidth().heightIn(min = 168.dp).verticalScroll(rememberScrollState())
             .padding(start = 24.dp, end = 24.dp, bottom = 21.dp)) {
-            Text(AppStrings.CHAT_MANAGE_PARTICIPANTS_COUNT_FORMAT.format(count),
+            UText(AppStrings.CHAT_MANAGE_PARTICIPANTS_COUNT_FORMAT.format(count),
                 color = grey950(), style = UmcTypographyTokens.Title3Bold, modifier = Modifier.padding(bottom = 16.dp))
             CommunityParticipantBatchAction.entries.filter { it in actions }.forEach { action ->
-                Text(
+                UText(
                     text = when (action) {
                         CommunityParticipantBatchAction.ASSIGN_ADMIN -> AppStrings.CHAT_ASSIGN_SELECTED_ADMIN
                         CommunityParticipantBatchAction.REMOVE_ADMIN -> AppStrings.CHAT_REMOVE_ADMIN
@@ -436,7 +438,7 @@ private fun ParticipantRow(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text(
+                UText(
                     text = communityParticipantDisplayName(member, profile),
                     modifier = Modifier.weight(1f, fill = false),
                     color = grey950(),
@@ -455,7 +457,7 @@ private fun ParticipantRow(
             val subtitle = listOfNotNull(member.part?.label, profile?.roleLabel?.takeIf { it.isNotBlank() })
                 .joinToString(" · ")
             if (subtitle.isNotBlank()) {
-                Text(
+                UText(
                     text = subtitle,
                     color = grey600(),
                     style = UmcTypographyTokens.Footnote,
@@ -558,7 +560,7 @@ private fun ParticipantMenuItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = text, color = color, style = UmcTypographyTokens.Subheadline)
+        UText(text = text, color = color, style = UmcTypographyTokens.Subheadline)
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
@@ -570,7 +572,7 @@ private fun ParticipantMenuItem(
 
 @Composable
 private fun ParticipantBadge(text: String, background: Color, foreground: Color) {
-    Text(
+    UText(
         text = text,
         modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(background)
             .padding(horizontal = 8.dp, vertical = 4.dp),

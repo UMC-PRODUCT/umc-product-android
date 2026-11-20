@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.umc.component.util.ULog
 import com.umc.domain.model.JwtToken
 import com.umc.domain.model.enums.SignUpType
@@ -19,6 +20,9 @@ import com.umc.component.fcm.FcmTokenSynchronizer
 import com.umc.domain.usecase.school.GetAllSchoolUseCase
 import com.umc.domain.usecase.terms.GetTermsByTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -40,6 +44,13 @@ class SignUpViewModel @Inject constructor(
     /** 목록이 아직 없을 때 사용자가 학교 칸을 눌렀는지. 조회가 끝나면 이 의도에 따라 시트나 오류 안내를 띄운다 */
     private var openSheetWhenLoaded = false
 
+    /**
+     * 가입 API 가 성공해 받은 토큰. 토큰 저장만 실패했거나 권한 화면에서 돌아와 다시 누를 때
+     * 이미 만든 계정으로 가입 API 를 또 부르지 않고 저장만 다시 하려고 둔다.
+     * 상태 로그·디버그 도구에 토큰이 드러나지 않게 UiState 가 아니라 여기에 보관한다
+     */
+    private var registeredToken: JwtToken? = null
+
     init {
         getAllSchool()
     }
@@ -55,7 +66,7 @@ class SignUpViewModel @Inject constructor(
             resultResponse(
                 response = getAllSchoolUseCase(),
                 successCallback = {
-                    updateState { copy(schoolList = it) }
+                    updateState { copy(schoolList = it.toImmutableList()) }
                     if (openSheetWhenLoaded) emitEvent(SignUpEvent.ShowSchoolBottomSheet)
                     openSheetWhenLoaded = false
                 },
@@ -119,9 +130,17 @@ class SignUpViewModel @Inject constructor(
 
     /**
      * 회원 등록 진입점. PRIVACY → SERVICE 약관 ID를 순차 조회한 뒤 등록 API를 호출함.
-     * 약관 조회가 두 번의 별도 API 호출로 이루어지는 이유는 서버가 약관 ID를 동적으로 관리하기 때문
+     * 약관 조회가 두 번의 별도 API 호출로 이루어지는 이유는 서버가 약관 ID를 동적으로 관리하기 때문.
+     * 진행 중에는 다시 호출돼도 무시해 연타해도 가입 요청이 한 번만 나간다
      */
     fun register() = viewModelScope.launch {
+        if (uiState.value.isSubmitting) return@launch
+        updateState { copy(isSubmitting = true) }
+        // 가입은 이미 끝났으면 토큰 저장부터 다시 한다
+        registeredToken?.let { token ->
+            updateToken(token)
+            return@launch
+        }
         startLoading()
         fetchPrivacyTermsAndProceed()
     }
@@ -134,6 +153,7 @@ class SignUpViewModel @Inject constructor(
             },
             errorCallback = { failState ->
                 ULog.d("개인정보 약관 조회 실패")
+                updateState { copy(isSubmitting = false) }
                 emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
             }
         )
@@ -148,6 +168,7 @@ class SignUpViewModel @Inject constructor(
                 },
                 errorCallback = { failState ->
                     ULog.d("서비스 약관 조회 실패")
+                    updateState { copy(isSubmitting = false) }
                     emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
                 }
             )
@@ -191,8 +212,12 @@ class SignUpViewModel @Inject constructor(
 
             resultResponse(
                 response = response,
-                successCallback = { updateToken(it) },
+                successCallback = {
+                    registeredToken = it
+                    updateToken(it)
+                },
                 errorCallback = { failState ->
+                    updateState { copy(isSubmitting = false) }
                     emitEvent(SignUpEvent.ShowRegisterErrorDialog(failState.message))
                 }
             )
@@ -202,7 +227,13 @@ class SignUpViewModel @Inject constructor(
     private fun updateToken(token: JwtToken) = viewModelScope.launch {
         resultResponse(
             response = saveTokenUseCase(token),
-            successCallback = { registerFcmToken() }
+            successCallback = { registerFcmToken() },
+            // 저장 실패를 그냥 넘기면 화면에 멈춘 채로 남는다. 안내하고 다시 누르면 저장만 다시 한다
+            errorCallback = {
+                ULog.d("회원가입 후 토큰 저장 실패")
+                updateState { copy(isSubmitting = false) }
+                emitEvent(SignUpEvent.ShowRegisterErrorDialog(AppStrings.SIGN_UP_TOKEN_SAVE_ERROR))
+            }
         )
     }
 
@@ -212,6 +243,8 @@ class SignUpViewModel @Inject constructor(
      */
     private fun registerFcmToken() {
         tokenSynchronizer.refresh()
+        // 권한 화면에서 뒤로 돌아올 수 있어 버튼 잠금을 풀고 이동한다
+        updateState { copy(isSubmitting = false) }
         emitEvent(SignUpEvent.MoveToPermissionEvent)
     }
 }
@@ -224,10 +257,12 @@ data class SignUpState(
     val name: String = "",
     val nickname: String = "",
     val school: SchoolInfo = SchoolInfo(),
-    val schoolList: List<SchoolInfo> = emptyList()
+    val schoolList: ImmutableList<SchoolInfo> = persistentListOf(),
+    // 약관 조회부터 토큰 저장까지 진행 중인지
+    val isSubmitting: Boolean = false,
 ) : UiState {
     val enableNextButton: Boolean
-        get() = name.isNotBlank() && nickname.isNotBlank() && school.schoolId != -1
+        get() = name.isNotBlank() && nickname.isNotBlank() && school.schoolId != -1 && !isSubmitting
 }
 
 sealed interface SignUpEvent : UiEvent {

@@ -3,7 +3,6 @@ package com.umc.presentation.community.component.chatting
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,16 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey200
@@ -48,14 +45,6 @@ internal fun CommunityChatEditInputBar(
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val currentOnFocusChanged by rememberUpdatedState(onInputFocusChanged)
-    var fieldValue by remember(messageId) {
-        mutableStateOf(TextFieldValue(value, TextRange(value.length)))
-    }
-    LaunchedEffect(value) {
-        if (fieldValue.text != value) {
-            fieldValue = TextFieldValue(value, TextRange(value.length))
-        }
-    }
     LaunchedEffect(messageId) {
         withFrameNanos { }
         focusRequester.requestFocus()
@@ -94,7 +83,7 @@ internal fun CommunityChatEditInputBar(
                     IconButton(onClick = onCancel, enabled = !saving) {
                         Icon(
                             painterResource(R.drawable.ic_clear_circle),
-                            contentDescription = "메시지 수정 취소",
+                            contentDescription = AppStrings.CHAT_CD_CANCEL_EDIT,
                             tint = Color.Unspecified,
                             modifier = Modifier.size(24.dp),
                         )
@@ -105,27 +94,32 @@ internal fun CommunityChatEditInputBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    BasicTextField(
-                        value = fieldValue,
-                        onValueChange = {
-                            fieldValue = it
-                            onValueChange(it.text)
-                        },
-                        enabled = !saving,
-                        modifier = Modifier.weight(1f)
-                            .focusRequester(focusRequester)
-                            .onFocusChanged { currentOnFocusChanged(it.isFocused) },
-                        textStyle = UmcTypographyTokens.Body.copy(color = grey950()),
-                        cursorBrush = SolidColor(main500()),
-                        maxLines = 4,
-                    )
+                    // 다른 메시지를 고치기 시작하면 커서·선택 위치를 새로 만든다.
+                    // 배경·테두리·안쪽 여백은 바깥 Surface가 맡으므로 입력창 자체에는 그리지 않는다.
+                    key(messageId) {
+                        UTextField(
+                            value = value,
+                            onValueChange = onValueChange,
+                            enabled = !saving,
+                            modifier = Modifier.weight(1f)
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { currentOnFocusChanged(it.isFocused) },
+                            textStyle = UmcTypographyTokens.Body,
+                            textColor = grey950(),
+                            backgroundColor = Color.Transparent,
+                            borderWidth = 0.dp,
+                            cursorColor = main500(),
+                            contentPadding = PaddingValues(0.dp),
+                            maxLines = 4,
+                        )
+                    }
                     IconButton(onClick = onSave, enabled = canSave) {
                         if (saving) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
                             Icon(
                                 painterResource(R.drawable.ic_send),
-                                contentDescription = "메시지 수정 저장",
+                                contentDescription = AppStrings.CHAT_CD_SAVE_EDIT,
                                 tint = if (canSave) main500() else grey400(),
                                 modifier = Modifier.size(24.dp),
                             )

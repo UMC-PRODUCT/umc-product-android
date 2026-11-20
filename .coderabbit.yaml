@@ -102,6 +102,7 @@ reviews:
           - BlockingCallInRequestPath (ERROR): 요청 경로(인터셉터·인증자 등)에서 runBlocking 사용
           - UseUText (ERROR): presentation:component 밖에서 material3 Text·BasicText 사용
           - UseUTextField (ERROR): presentation:component 밖에서 TextField·BasicTextField 계열 사용
+          - UseUToast (ERROR): 시스템 android.widget.Toast 사용(LocalUToast·UToastHost 로 띄운다)
           - FixedDelayInLaunchedEffect (WARNING): LaunchedEffect 안의 고정 시간 delay
           - FixedScreenWidth (ERROR): 300dp 이상 고정 폭(width·size·widthIn(min) 등)
           - WidthInAfterFillMaxWidth (ERROR): fillMaxWidth 뒤에 있어 적용되지 않는 widthIn·sizeIn

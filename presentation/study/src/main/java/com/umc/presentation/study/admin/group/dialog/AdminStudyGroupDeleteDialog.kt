@@ -15,6 +15,8 @@ import androidx.compose.ui.window.Dialog
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
 import com.umc.component.theme.*
 import com.umc.component.theme.UmcTypographyTokens.Caption1
 import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
@@ -30,134 +32,149 @@ import com.umc.component.theme.UmcTypographyTokens.SubheadlineBold
  *
  * @param onDelete 삭제하기 버튼 클릭 시 호출
  * @param onDismiss 취소 또는 다이얼로그 외부 클릭 시 호출
+ * @param toastData 다이얼로그가 열린 채로 띄울 토스트(삭제 실패 등)
+ * @param onToastDismiss 토스트가 사라질 때 호출
  */
 @Composable
 fun AdminStudyGroupDeleteDialog(
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
+    toastData: UToastData? = null,
+    onToastDismiss: () -> Unit = {},
 ) {
     Dialog(
         onDismissRequest = onDismiss
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = grey50(),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+        // 다이얼로그는 별도 창이라 화면 토스트가 딤 아래에 가려지므로, 열려 있는 동안의 토스트는 이 안에 띄운다.
+        Box {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = grey50(),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(20.dp)
             ) {
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
-                /**
-                 * 삭제 경고 아이콘 영역
-                 *
-                 * 삭제처럼 주의가 필요한 작업임을 나타내기 위해
-                 * 빨간색 계열의 배경과 경고 아이콘을 표시합니다.
-                 */
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = red100(),
-                            shape = RoundedCornerShape(8.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        painter = painterResource(
-                            R.drawable.ic_error_filled
-                        ),
-                        contentDescription = null,
-                        tint = red500(),
-                        modifier = Modifier.size(24.dp)
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
                     )
-                }
 
-                Spacer(
-                    modifier = Modifier.height(22.dp)
-                )
-
-                /**
-                 * 삭제 확인 제목
-                 */
-                UText(
-                    text = AppStrings.STUDY_GROUP_DELETE_TITLE,
-                    style = SubheadlineBold,
-                    color = grey900(),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                )
-
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
-                /**
-                 * 삭제 시 주의사항
-                 *
-                 * 삭제된 그룹은 복구할 수 없고
-                 * 연결된 스터디 데이터 역시 삭제된다는 내용을 안내합니다.
-                 */
-                UText(
-                    text = AppStrings.STUDY_GROUP_DELETE_DESCRIPTION,
-                    style = Caption1,
-                    color = grey600(),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                )
-
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
-
-                /**
-                 * 하단 액션 버튼
-                 *
-                 * 왼쪽: 삭제 취소
-                 * 오른쪽: 실제 그룹 삭제 진행
-                 */
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // 삭제 취소 버튼
-                    UButton(
-                        text = AppStrings.COMMON_CANCEL,
-                        onClick = onDismiss,
+                    /**
+                     * 삭제 경고 아이콘 영역
+                     *
+                     * 삭제처럼 주의가 필요한 작업임을 나타내기 위해
+                     * 빨간색 계열의 배경과 경고 아이콘을 표시합니다.
+                     */
+                    Box(
                         modifier = Modifier
-                            .weight(1f)
-                            .height(40.dp),
-                        backgroundColor = grey50(),
-                        textColor = grey700(),
-                        textStyle = SubheadlineBold,
-                        borderWidth = 1.dp,
-                        borderColor = grey200(),
-                        cornerRadius = 8.dp,
+                            .size(48.dp)
+                            .background(
+                                color = red100(),
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                R.drawable.ic_error_filled
+                            ),
+                            contentDescription = null,
+                            tint = red500(),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(22.dp)
                     )
 
-                    // 그룹 삭제 버튼
-                    UButton(
-                        text = AppStrings.COMMON_DELETE_ACTION,
-                        onClick = onDelete,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(40.dp),
-                        backgroundColor = red100(),
-                        textColor = red500(),
-                        textStyle = SubheadlineBold,
-                        borderWidth = 0.dp,
-                        cornerRadius = 8.dp,
+                    /**
+                     * 삭제 확인 제목
+                     */
+                    UText(
+                        text = AppStrings.STUDY_GROUP_DELETE_TITLE,
+                        style = SubheadlineBold,
+                        color = grey900(),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
                     )
+
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+
+                    /**
+                     * 삭제 시 주의사항
+                     *
+                     * 삭제된 그룹은 복구할 수 없고
+                     * 연결된 스터디 데이터 역시 삭제된다는 내용을 안내합니다.
+                     */
+                    UText(
+                        text = AppStrings.STUDY_GROUP_DELETE_DESCRIPTION,
+                        style = Caption1,
+                        color = grey600(),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(18.dp)
+                    )
+
+                    /**
+                     * 하단 액션 버튼
+                     *
+                     * 왼쪽: 삭제 취소
+                     * 오른쪽: 실제 그룹 삭제 진행
+                     */
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // 삭제 취소 버튼
+                        UButton(
+                            text = AppStrings.COMMON_CANCEL,
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp),
+                            backgroundColor = grey50(),
+                            textColor = grey700(),
+                            textStyle = SubheadlineBold,
+                            borderWidth = 1.dp,
+                            borderColor = grey200(),
+                            cornerRadius = 8.dp,
+                        )
+
+                        // 그룹 삭제 버튼
+                        UButton(
+                            text = AppStrings.COMMON_DELETE_ACTION,
+                            onClick = onDelete,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp),
+                            backgroundColor = red100(),
+                            textColor = red500(),
+                            textStyle = SubheadlineBold,
+                            borderWidth = 0.dp,
+                            cornerRadius = 8.dp,
+                        )
+                    }
                 }
             }
+
+            UToastHost(
+                data = toastData,
+                onDismiss = onToastDismiss,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 6.dp, vertical = 16.dp),
+            )
         }
     }
 }

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,8 +56,8 @@ import com.umc.component.theme.main700
 import com.umc.component.theme.red500
 import com.umc.domain.model.enums.SignUpType
 import com.umc.domain.model.school.SchoolInfo
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
+import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,7 +90,9 @@ fun SignUpRoute(
             is SignUpEvent.MoveToBack -> navigateToBack()
             is SignUpEvent.MoveToPermissionEvent -> navigateToPermission()
             is SignUpEvent.ShowSchoolBottomSheet -> showSchoolBottomSheet = true
-            is SignUpEvent.ShowRegisterErrorDialog -> errorDialogMessage = event.message
+            // 서버가 빈 메시지를 주면 제목 없는 다이얼로그가 뜨지 않게 공용 문구로 대신한다
+            is SignUpEvent.ShowRegisterErrorDialog ->
+                errorDialogMessage = event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED }
         }
     }
 
@@ -135,7 +138,7 @@ fun SignUpRoute(
 
 @Composable
 private fun SchoolSelectBottomSheetContent(
-    schoolList: List<SchoolInfo>,
+    schoolList: ImmutableList<SchoolInfo>,
     selectedSchoolId: Long?,
     onSelectSchool: (SchoolInfo) -> Unit,
 ) {
@@ -225,13 +228,14 @@ fun SignUpScreen(
             .fillMaxSize()
             .background(grey50()),
     ) {
+        // clickable 을 안쪽 패딩보다 먼저 둬서 아이콘 둘레 12dp 까지 눌리게 한다(터치 영역 48dp)
         Icon(
             modifier = Modifier
                 .padding(start = 4.dp, top = 8.dp)
-                .padding(12.dp)
-                .clickable { onClickBack() },
+                .clickable(role = Role.Button) { onClickBack() }
+                .padding(12.dp),
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = null,
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 

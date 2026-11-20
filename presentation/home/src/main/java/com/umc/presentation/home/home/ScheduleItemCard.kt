@@ -18,6 +18,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +41,7 @@ import com.umc.component.theme.main500
 import com.umc.domain.model.enums.CategoryType
 import com.umc.domain.model.home.SchedulePlanItem
 import com.umc.presentation.home.schedule.ScheduleTagChips
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  *
@@ -122,7 +124,7 @@ fun ActiveScheduleItem(
                 )
                 //일정 태그 칩 (최대 3개 + '+N')
                 ScheduleTagChips(
-                    tags = item.tags,
+                    tags = remember(item.tags) { item.tags.toImmutableList() },
                     maxVisible = 3,
                     modifier = Modifier.padding(top = 6.dp)
                 )
@@ -215,7 +217,7 @@ fun DefaultScheduleItem(
                 )
                 //일정 태그 칩 (최대 3개 + '+N')
                 ScheduleTagChips(
-                    tags = item.tags,
+                    tags = remember(item.tags) { item.tags.toImmutableList() },
                     maxVisible = 3,
                     textColor = grey400(),
                     modifier = Modifier.padding(top = 6.dp)

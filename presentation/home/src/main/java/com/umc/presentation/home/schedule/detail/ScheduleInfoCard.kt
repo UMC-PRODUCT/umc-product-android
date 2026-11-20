@@ -60,8 +60,11 @@ fun ScheduleInfoCard(
                 content2 = todayTime
             )
 
-            HorizontalDivider(modifier = Modifier
-                .padding(vertical = 16.dp)
+            // M3 기본색(outlineVariant) 대신 카드 테두리와 같은 토큰을 쓴다
+            HorizontalDivider(
+                modifier = Modifier
+                    .padding(vertical = 16.dp),
+                color = grey300()
             )
 
             //장소

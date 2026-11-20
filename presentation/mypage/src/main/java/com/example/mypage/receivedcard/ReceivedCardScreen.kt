@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,9 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import com.example.mypage.mycard.MycardViewModel
-import com.example.mypage.nearby.NearbyViewModel
-import com.example.mypage.qrcode.QrCodeScreenTopBar
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -56,16 +52,11 @@ import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.black
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
-import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
-import com.umc.component.theme.main100
-import com.umc.component.theme.main500
 import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.mypage.UserCardPartType
 import kotlinx.collections.immutable.persistentListOf
@@ -267,7 +258,7 @@ fun ReceivedCardScreenTopBar(
                 .padding(12.dp)
                 .clickable { onBackClick() },
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = "뒤로가기",
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 

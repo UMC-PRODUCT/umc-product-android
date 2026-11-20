@@ -133,7 +133,6 @@ class HomeViewModel @Inject constructor(
             resultResponse(
                 response = getMyProfileUseCase(),
                 successCallback = { userInfo ->
-                    Log.d("log_home", "$userInfo")
                     //서버에서 로드한 정보를 바탕으로 UI에 들어갈 데이터 포멧팅
                     settingUserInfoToUI(userInfo)
 
@@ -279,7 +278,6 @@ class HomeViewModel @Inject constructor(
     private fun calculateUserPoint(userInfo: UserInfo){
         //가장 최신 기수 챌린저 정보 가져오기
         val recentChallenge = userInfo.challengerRecords.maxByOrNull { it.gisu }
-        Log.d("log_home", "$recentChallenge")
 
         //일단은 totalPoint로 계산
         //구형 베스트 워크북(-0.5) 기록이 있어 정수로 자르지 않고 더한다

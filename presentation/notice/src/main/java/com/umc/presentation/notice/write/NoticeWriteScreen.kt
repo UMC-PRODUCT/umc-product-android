@@ -2,7 +2,6 @@ package com.umc.presentation.notice.write
 
 import android.content.ClipboardManager
 import android.content.Context
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -78,10 +77,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.USelectSheetContent
 import com.umc.component.component.UText
 import com.umc.component.component.UTextActionItem
+import com.umc.component.component.UTextField
+import com.umc.component.component.UToastState
 import com.umc.component.component.uTextActionMenu
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
@@ -103,10 +105,8 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.enums.WriteCategoryType
 import com.umc.domain.model.notice.NoticeImageAttachment
 import com.umc.domain.model.notice.WriteCategory
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.collectLatest
 
 /** 공지 작성 화면 바텀시트 종류 */
 private enum class WriteSheetType { CATEGORY, CHAPTER, SCHOOL, PART, VOTE }
@@ -122,6 +122,8 @@ fun NoticeWriteRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    // 등록 성공 토스트 직후 화면을 떠나므로, 떠난 뒤에도 남는 앱 공용 토스트를 쓴다
+    val toast = LocalUToast.current
 
     var sheetType by remember { mutableStateOf<WriteSheetType?>(null) }
     var showVoteMaxDialog by remember { mutableStateOf(false) }
@@ -138,21 +140,16 @@ fun NoticeWriteRoute(
     }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
-            when (event) {
-                NoticeWriteEvent.SubmitSuccess -> {
-                    val message = if (editNoticeId > 0L) {
-                        AppStrings.NOTICE_WRITE_EDIT_SUCCESS
-                    } else {
-                        AppStrings.NOTICE_WRITE_SUCCESS
-                    }
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                    onSubmitSuccess()
-                }
-
-                is NoticeWriteEvent.ShowError -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+        when (event) {
+            is NoticeWriteEvent.SubmitSuccess -> {
+                toast.show(event.message, UToastState.CHECK)
+                onSubmitSuccess()
             }
+
+            is NoticeWriteEvent.ShowError -> {
+                toast.show(event.message, UToastState.ERROR)
+            }
+        }
     }
 
     NoticeWriteScreen(
@@ -473,26 +470,22 @@ fun NoticeWriteScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 제목 입력
-            BasicTextField(
+            // 제목 입력. 배경·테두리·여백 없이 본문 위에 바로 놓이는 한 줄 입력이다
+            UTextField(
                 value = uiState.title,
                 onValueChange = onTitleChanged,
-                textStyle = UmcTypographyTokens.Title3Bold.copy(color = grey950()),
-                cursorBrush = SolidColor(grey950()),
+                placeholder = AppStrings.NOTICE_WRITE_TITLE_PLACEHOLDER,
+                placeholderColor = grey400(),
+                textStyle = UmcTypographyTokens.Title3Bold,
+                textColor = grey950(),
+                backgroundColor = Color.Transparent,
+                strokeColor = Color.Transparent,
+                focusStrokeColor = Color.Transparent,
+                cursorColor = grey950(),
+                borderWidth = 0.dp,
+                contentPadding = PaddingValues(0.dp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (uiState.title.isEmpty()) {
-                            UText(
-                                text = AppStrings.NOTICE_WRITE_TITLE_PLACEHOLDER,
-                                style = UmcTypographyTokens.Title3Bold,
-                                color = grey400(),
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -1048,36 +1041,24 @@ private fun NoticeLinkPanel(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .background(grey50())
-                .border(1.dp, grey200(), RoundedCornerShape(10.dp))
-                .padding(horizontal = 16.dp, vertical = 15.dp),
-        ) {
-            BasicTextField(
-                value = linkText,
-                onValueChange = onLinkTextChanged,
-                textStyle = UmcTypographyTokens.Subheadline.copy(color = grey950()),
-                cursorBrush = SolidColor(grey950()),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                modifier = Modifier.fillMaxWidth(),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (linkText.isEmpty()) {
-                            UText(
-                                text = AppStrings.NOTICE_WRITE_LINK_HINT,
-                                style = UmcTypographyTokens.Subheadline,
-                                color = grey400(),
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
-            )
-        }
+        // 포커스가 와도 테두리 색이 바뀌지 않는 기존 모양을 그대로 둔다
+        UTextField(
+            value = linkText,
+            onValueChange = onLinkTextChanged,
+            placeholder = AppStrings.NOTICE_WRITE_LINK_HINT,
+            placeholderColor = grey400(),
+            textStyle = UmcTypographyTokens.Subheadline,
+            textColor = grey950(),
+            backgroundColor = grey50(),
+            strokeColor = grey200(),
+            focusStrokeColor = grey200(),
+            cursorColor = grey950(),
+            cornerRadius = 10.dp,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 15.dp),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

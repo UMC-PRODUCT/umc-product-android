@@ -41,8 +41,6 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main500
 import com.umc.presentation.community.R
-import com.umc.presentation.community.component.create.CommunityChallengerCard
-import com.umc.presentation.community.component.create.CommunityDeleteButton
 import com.umc.presentation.community.model.CommunityAiState
 import com.umc.presentation.community.model.CommunityCategory
 import com.umc.presentation.community.model.CommunityChallengerUiModel
@@ -72,7 +70,7 @@ sealed interface CommunityThreadEditorMode {
  *
  * 상단바, 미리보기, 제목/특징 입력, 아이콘 선택, 챌린저 영역, AI 카테고리 카드를 구성합니다.
  * 수정 모드에서는 상단 버튼이 "저장"으로 바뀌고 스크롤 영역 맨 아래에 삭제 버튼이 붙습니다.
- * 상태와 BottomSheet·Dialog는 각 화면(생성/수정)이 소유합니다.
+ * 상태와 Dialog는 각 화면(생성/수정)이, 챌린저 BottomSheet는 각 Route가 소유합니다.
  *
  * @param aiCategory AI가 분류해 준 카테고리. AI 카드에만 표시됩니다.
  * @param selectedCategory 실제로 선택된 카테고리. 미리보기·아이콘 선택 영역에 표시됩니다.
@@ -86,7 +84,6 @@ fun CommunityThreadEditorContent(
     aiState: CommunityAiState,
     aiCategory: CommunityCategory?,
     selectedCategory: CommunityCategory?,
-    canRequestClassification: Boolean,
     isSubmitEnabled: Boolean,
     challengers: ImmutableList<CommunityChallengerUiModel>,
     maxChallengerCount: Int,
@@ -188,7 +185,6 @@ fun CommunityThreadEditorContent(
                 CommunityAiCard(
                     aiState = aiState,
                     classifiedCategory = aiCategory,
-                    canRequestClassification = canRequestClassification,
                     onRequestClassificationClick = onRequestClassificationClick,
                     onRetryClassificationClick = onRetryClassificationClick,
                     onChangeEmojiClick = onChangeEmojiClick,

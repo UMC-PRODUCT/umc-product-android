@@ -1,10 +1,10 @@
 package com.umc.presentation.act.admin.attendance
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
@@ -49,7 +49,9 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UText
 import com.umc.component.component.DialogType
-import com.umc.component.component.UDialog
+import com.umc.component.component.LocalUToast
+import com.umc.component.component.UToastOverlay
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
@@ -63,7 +65,6 @@ import com.umc.component.theme.black
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
-import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
@@ -80,10 +81,6 @@ import com.umc.presentation.act.admin.attendance.pendinglist.PendingListRoute
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,20 +90,23 @@ fun AttendanceRoute(
     viewModel: AdminAttendanceViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val toast = LocalUToast.current
     var fixLocationScheduleId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(isActive) {
         if (isActive) viewModel.getSessions()
     }
 
+    // 삭제 확인 다이얼로그는 이벤트 전에 닫히므로 앱 공용 토스트로 띄운다. 시트가 열린 동안 온 조회 실패는 시트 안 오버레이가 보여 준다
     CollectUiEvents(viewModel.uiEvent) { event ->
-        val message = when (event) {
+        when (event) {
             AdminAttendanceEvent.DeleteSuccess ->
-                AppStrings.ADMIN_CHECK_DELETE_SESSION_SUCCESS
-            is AdminAttendanceEvent.ShowToast -> event.message
+                toast.show(AppStrings.ADMIN_CHECK_DELETE_SESSION_SUCCESS, UToastState.CHECK)
+            is AdminAttendanceEvent.ShowToast -> toast.show(
+                event.message.ifBlank { AppStrings.COMMON_NETWORK_ERROR_DESCRIPTION },
+                UToastState.ERROR,
+            )
         }
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
     AttendanceScreen(
@@ -126,13 +126,17 @@ fun AttendanceRoute(
             containerColor = Color.Transparent,
             dragHandle = null,
         ) {
-            FixLocationRoute(
-                scheduleId = scheduleId,
-                onUpdateSuccess = {
-                    fixLocationScheduleId = null
-                    viewModel.getSessions()
-                }
-            )
+            Box(Modifier.fillMaxWidth()) {
+                FixLocationRoute(
+                    scheduleId = scheduleId,
+                    onUpdateSuccess = {
+                        fixLocationScheduleId = null
+                        viewModel.getSessions()
+                    }
+                )
+                // 시트는 별도 창이라 열린 동안 온 목록 조회 실패 토스트가 가려지므로 시트 안에도 그린다
+                SheetToastOverlay()
+            }
         }
     }
 
@@ -143,13 +147,17 @@ fun AttendanceRoute(
             containerColor = Color.Transparent,
             dragHandle = null,
         ) {
-            PendingListRoute(
-                scheduleId = scheduleId,
-                initialUsers = uiState.sessions
-                    .firstOrNull { session -> session.id == scheduleId }
-                    ?.pendingUsers
-                    ?.toImmutableList(),
-            )
+            Box(Modifier.fillMaxWidth()) {
+                PendingListRoute(
+                    scheduleId = scheduleId,
+                    initialUsers = uiState.sessions
+                        .firstOrNull { session -> session.id == scheduleId }
+                        ?.pendingUsers
+                        ?.toImmutableList(),
+                )
+                // 시트는 별도 창이라 열린 동안 온 목록 조회 실패 토스트가 가려지므로 시트 안에도 그린다
+                SheetToastOverlay()
+            }
         }
     }
 
@@ -182,6 +190,19 @@ fun AttendanceRoute(
             onDismissRequest = viewModel::dismissForceDeleteSession
         )
     }
+}
+
+/** 시트 안에서 앱 공용 토스트를 시트 하단에 그린다. */
+@Composable
+private fun BoxScope.SheetToastOverlay() {
+    UToastOverlay(
+        controller = LocalUToast.current,
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(bottom = 24.dp),
+    )
 }
 
 @Composable

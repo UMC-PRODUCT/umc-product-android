@@ -44,9 +44,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.installations)
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.hilt.android)
 
     // 온디바이스 AI (ML Kit GenAI Prompt API / Gemini Nano)

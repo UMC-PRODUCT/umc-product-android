@@ -16,6 +16,7 @@ class UmcIssueRegistry : IssueRegistry() {
         BlockingCallInRequestPathDetector.ISSUE,
         UseUTextDetector.ISSUE,
         UseUTextFieldDetector.ISSUE,
+        UseUToastDetector.ISSUE,
         FixedDelayInLaunchedEffectDetector.ISSUE,
         FixedScreenWidthDetector.ISSUE,
         FixedScreenWidthDetector.ORDER_ISSUE,

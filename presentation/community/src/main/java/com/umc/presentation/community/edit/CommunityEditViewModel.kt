@@ -47,7 +47,7 @@ import kotlinx.coroutines.withContext
  * - AI 카테고리 재분류
  * - 챌린저 초대 후 목록 갱신
  * - 스레드 수정 및 삭제
- * - 화면 이동 및 Toast 이벤트 전달
+ * - 화면 이동 및 토스트 이벤트 전달
  */
 @HiltViewModel
 class CommunityEditViewModel @Inject constructor(
@@ -109,13 +109,9 @@ class CommunityEditViewModel @Inject constructor(
             }
 
             CommunityEditAction.OnMemberInviteSuccess -> {
-                // 초대 후 수정 화면의 챌린저 목록도 다시 조회
+                // 초대 후 수정 화면의 챌린저 목록도 다시 조회한다. 성공 안내는 시트 안 토스트가 맡는다.
                 loadCurrentMembers(
                     threadId = _state.value.threadId,
-                )
-
-                sendEvent(
-                    CommunityEditEvent.MemberInviteSuccess
                 )
             }
 
@@ -171,6 +167,13 @@ class CommunityEditViewModel @Inject constructor(
             return
         }
 
+        // 회전 등으로 Route의 LaunchedEffect가 다시 실행돼도 불러오는 중이거나 이미 불러온 스레드면 다시 조회하지 않는다.
+        // 다시 조회하면 사용자가 고치던 제목·특징이 서버 값으로 덮어써진다. 실패한 뒤에는 다시 들어오면 재시도한다.
+        val currentState = _state.value
+        if (currentState.threadId == threadId && (currentState.isLoading || currentState.canEdit)) {
+            return
+        }
+
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -218,7 +221,7 @@ class CommunityEditViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = throwable.message
+                        errorMessage = throwable.message?.takeIf(String::isNotBlank)
                             ?: AppStrings.COMMUNITY_EDITOR_INFO_LOAD_ERROR,
                     )
                 }
@@ -548,7 +551,7 @@ class CommunityEditViewModel @Inject constructor(
 
                 sendEvent(
                     CommunityEditEvent.ShowToast(
-                        message = throwable.message
+                        message = throwable.message?.takeIf(String::isNotBlank)
                             ?: AppStrings.COMMUNITY_EDITOR_UPDATE_ERROR,
                     )
                 )
@@ -619,7 +622,7 @@ class CommunityEditViewModel @Inject constructor(
 
                 sendEvent(
                     CommunityEditEvent.ShowToast(
-                        message = throwable.message
+                        message = throwable.message?.takeIf(String::isNotBlank)
                             ?: AppStrings.COMMUNITY_EDITOR_DELETE_ERROR,
                     )
                 )

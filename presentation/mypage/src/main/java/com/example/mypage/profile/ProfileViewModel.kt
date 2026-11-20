@@ -125,7 +125,8 @@ class ProfileViewModel @Inject constructor(
             resultResponse(
                 response = getMyOAuthUseCase(),
                 successCallback = { myOAuth ->
-                    val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
+                    // 앱이 모르는 provider(서버에 새로 생긴 값)는 건너뛴다. valueOf 예외가 잡히지 않으면 화면 진입 시 앱이 종료된다
+                    val platforms = myOAuth.mapNotNull { runCatching { LoginType.valueOf(it.provider) }.getOrNull() }
                     updateState {
                         copy(linkedPlatforms = platforms.toImmutableList())
                     }
@@ -145,11 +146,35 @@ class ProfileViewModel @Inject constructor(
 
 
     /**
+     * Photo Picker 로 고른 이미지의 형식·용량을 검사하고, 통과하면 새 프로필 사진으로 반영하는 메서드
+     *
+     * 파일 정보는 Context 가 필요해 화면이 읽어 넘기고, 업로드 가능 여부 판단은 여기서 한다.
+     *
+     * @param uri 선택한 미디어 URI
+     * @param fileSize 파일 크기(byte)
+     * @param extension 파일 확장자(jpg 등). 알 수 없으면 빈 문자열
+     */
+    fun onImagePicked(uri: Uri, fileSize: Long, extension: String) {
+        val category = UploadFileCategory.PROFILE_IMAGE
+        when {
+            // 허용되지 않은 파일 확장자
+            category.alloweType.isNotEmpty() && !category.alloweType.contains(extension.lowercase()) ->
+                emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_IMAGE_FORMAT_ERROR_FORMAT.format(category.label)))
+            // 용량 제한(MB) 초과
+            fileSize > category.maxSizeBytes -> {
+                val maxSizeMb = category.maxSizeBytes / (1024 * 1024)
+                emitEvent(ProfileEvent.MakeToast(AppStrings.PROFILE_IMAGE_SIZE_ERROR_FORMAT.format(category.label, maxSizeMb)))
+            }
+            else -> settingImage(uri)
+        }
+    }
+
+    /**
      * 사용자가 선택한 새 프로필 사진 URI를 UI State에 저장하는 메서드
      *
      * @param uri 선택한 미디어 URI
      */
-    fun settingImage(uri: Uri){
+    private fun settingImage(uri: Uri){
         updateState {
             copy(
                 userProfileImageUri = uri

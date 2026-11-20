@@ -34,17 +34,14 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main400
 import com.umc.component.theme.main500
 import com.umc.component.theme.yellow100
 import com.umc.component.theme.yellow300
 import com.umc.component.theme.yellow500
-import com.umc.component.theme.yellow600
 import com.umc.domain.model.enums.NoticeVoteStatus
 import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteOption
@@ -195,11 +192,13 @@ private fun VoteStatusBadge(status: NoticeVoteStatus) {
         )
     }
 
+    // 자르기·배경·테두리가 서로 다른 둥글기를 쓰면 모서리에서 테두리와 배경이 어긋나므로 한 모양을 함께 쓴다.
+    // 보이는 바깥 모양을 그대로 두려고 자르기에 쓰던 4dp를 기준으로 한다
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(backgroundColor)
-            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+            .clip(VoteStatusBadgeShape)
+            .background(backgroundColor, VoteStatusBadgeShape)
+            .border(1.dp, borderColor, VoteStatusBadgeShape)
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
         UText(
@@ -209,6 +208,8 @@ private fun VoteStatusBadge(status: NoticeVoteStatus) {
         )
     }
 }
+
+private val VoteStatusBadgeShape = RoundedCornerShape(4.dp)
 
 private data class VoteBadgeStyle(
     val label: String,

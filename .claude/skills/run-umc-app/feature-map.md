@@ -34,8 +34,8 @@
 | NoticeWrite | NoticeWrite | :presentation:notice | 공지 작성(noticeId가 있으면 수정) | tab:공지 > tap:공지 작성 | - | 운영진(MEMBER 외 역할) |
 | NoticeDetail | NoticeDetail | :presentation:notice | 공지 상세(투표 포함) | tab:공지 > tap:{noticeTitle} | noticeTitle: 공지 목록에 보이는 제목 | - |
 | Home | Home | :presentation:home | 홈(활동 요약, 다가오는 일정). 로그인하면 자동으로 들어온다 | start | - | - |
-| Notification | Notification | :presentation:home | 알림 보관함. 홈 오른쪽 위 종 아이콘(content-desc) | tap:Notification | - | - |
-| ScheduleAdd | ScheduleAdd | :presentation:home | 일정 생성. 다가오는 일정 옆 + 아이콘(content-desc). 기수 기록이 5개 이상이면 같은 설명의 아이콘이 위에 하나 더 있다(확인 필요) | tap:Add | - | - |
+| Notification | Notification | :presentation:home | 알림 보관함. 홈 오른쪽 위 종 아이콘(content-desc) | tap:알림 | - | - |
+| ScheduleAdd | ScheduleAdd | :presentation:home | 일정 생성. 다가오는 일정 옆 + 아이콘(content-desc). 기수 기록이 5개 이상이면 같은 설명의 아이콘이 위에 하나 더 있다(확인 필요) | tap:일정 추가 | - | - |
 | ScheduleEdit | ScheduleEdit | :presentation:home | 일정 수정(ScheduleAdd와 같은 화면). 일정 상세 케밥에 글자·설명이 없어 단계 이동 불가 | - | scheduleId: 일정 상세에서 자동 | 일정 수정 권한(서버 판정) |
 | ScheduleDetail | ScheduleDetail | :presentation:home | 일정 상세. 홈 일정 목록 항목(화면 밖이면 스크롤 필요, 확인 필요) | tap:{scheduleTitle} | scheduleTitle: 홈 다가오는 일정의 제목 | 일정이 있는 계정 |
 | Mycard | Mycard | :presentation:mypage | MY 탭의 내 명함. umc://card?memberId=숫자로 열면 타인 명함(screen_name MemberCard) | tab:MY | - | - |

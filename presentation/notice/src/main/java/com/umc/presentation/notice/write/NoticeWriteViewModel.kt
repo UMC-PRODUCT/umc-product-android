@@ -131,7 +131,7 @@ class NoticeWriteViewModel @Inject constructor(
                 }
             },
             errorCallback = {
-                emitEvent(NoticeWriteEvent.ShowError(it.message))
+                emitEvent(NoticeWriteEvent.ShowError(it.message.ifBlank { AppStrings.NOTICE_DETAIL_LOAD_FAIL }))
             },
         )
     }
@@ -371,7 +371,7 @@ class NoticeWriteViewModel @Inject constructor(
             },
             errorCallback = {
                 updateState { copy(isAiProcessing = false, aiDownloadPercent = null) }
-                emitEvent(NoticeWriteEvent.ShowError(it.message))
+                emitEvent(NoticeWriteEvent.ShowError(it.message.ifBlank { AppStrings.NOTICE_WRITE_AI_FAIL }))
             },
         )
     }
@@ -404,7 +404,7 @@ class NoticeWriteViewModel @Inject constructor(
             },
             errorCallback = {
                 updateState { copy(isAiProcessing = false, aiDownloadPercent = null) }
-                emitEvent(NoticeWriteEvent.ShowError(it.message))
+                emitEvent(NoticeWriteEvent.ShowError(it.message.ifBlank { AppStrings.NOTICE_WRITE_AI_FAIL }))
             },
         )
     }
@@ -546,7 +546,7 @@ class NoticeWriteViewModel @Inject constructor(
                 successCallback = { attachExtras(existingId, isReplace = true) },
                 errorCallback = {
                     updateState { copy(isSubmitting = false) }
-                    emitEvent(NoticeWriteEvent.ShowError(it.message))
+                    emitEvent(NoticeWriteEvent.ShowError(it.message.ifBlank { AppStrings.NOTICE_WRITE_SUBMIT_FAIL }))
                 }
             )
             return@launch
@@ -575,7 +575,7 @@ class NoticeWriteViewModel @Inject constructor(
             },
             errorCallback = {
                 updateState { copy(isSubmitting = false) }
-                emitEvent(NoticeWriteEvent.ShowError(it.message))
+                emitEvent(NoticeWriteEvent.ShowError(it.message.ifBlank { AppStrings.NOTICE_WRITE_SUBMIT_FAIL }))
             }
         )
     }
@@ -748,7 +748,13 @@ class NoticeWriteViewModel @Inject constructor(
         if (hasError) {
             emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_PARTIAL_FAIL))
         } else {
-            emitEvent(NoticeWriteEvent.SubmitSuccess)
+            // 작성과 수정은 안내 문구만 다르다. 수정 모드 여부는 ViewModel이 들고 있으므로 여기서 정한다
+            val message = if (uiState.value.isEditMode) {
+                AppStrings.NOTICE_WRITE_EDIT_SUCCESS
+            } else {
+                AppStrings.NOTICE_WRITE_SUCCESS
+            }
+            emitEvent(NoticeWriteEvent.SubmitSuccess(message))
         }
     }
 }
@@ -812,6 +818,7 @@ data class NoticeWriteUiState(
 }
 
 sealed interface NoticeWriteEvent : UiEvent {
-    data object SubmitSuccess : NoticeWriteEvent
+    /** 등록·수정 성공. [message]는 작성/수정에 맞춘 안내 문구 */
+    data class SubmitSuccess(val message: String) : NoticeWriteEvent
     data class ShowError(val message: String) : NoticeWriteEvent
 }

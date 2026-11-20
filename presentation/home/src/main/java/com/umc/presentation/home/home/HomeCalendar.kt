@@ -49,6 +49,7 @@ import com.umc.component.util.UTimeFormat.toLocalDate
 import com.umc.component.util.UTimeFormat.toMillis
 import com.umc.component.R
 import com.umc.component.theme.AppStrings
+import kotlinx.collections.immutable.ImmutableSet
 
 
 /*
@@ -111,7 +112,7 @@ private val WEEK_DIVIDER_THICKNESS = 1.dp
 @Composable
 fun HomeCalendar(
     selectedDate: LocalDate, //선택 날짜
-    eventDates: Set<LocalDate>, //일정이 있는 날짜들
+    eventDates: ImmutableSet<LocalDate>, //일정이 있는 날짜들
     onDateClick: (LocalDate) -> Unit, //날짜 선택 시 함수
     onMonthChange: (YearMonth) -> Unit, //월별 바꿀 시 함수
     modifier: Modifier = Modifier,
@@ -264,7 +265,7 @@ private fun CalendarBody(
     pagerState: PagerState,
     initialPage: Int,
     selectedDate: LocalDate,
-    eventDates: Set<LocalDate>,
+    eventDates: ImmutableSet<LocalDate>,
     onDateClick: (LocalDate) -> Unit
 ) {
     Column {

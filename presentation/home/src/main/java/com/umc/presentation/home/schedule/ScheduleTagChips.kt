@@ -24,6 +24,7 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey700
 import com.umc.domain.model.enums.CategoryType
+import kotlinx.collections.immutable.ImmutableList
 
 /** 일정 태그(카테고리) 칩. 표시 전용이라 클릭을 받지 않는다(카드의 clickable 로 터치를 그대로 전달). */
 @Composable
@@ -52,7 +53,7 @@ fun ScheduleTagChip(
  */
 @Composable
 fun FlowRowScope.ScheduleTagChipItems(
-    tags: List<CategoryType>,
+    tags: ImmutableList<CategoryType>,
     maxVisible: Int = Int.MAX_VALUE,
     textColor: Color = grey700(),
     textStyle: TextStyle = UmcTypographyTokens.Caption1Bold,
@@ -71,7 +72,7 @@ fun FlowRowScope.ScheduleTagChipItems(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScheduleTagChips(
-    tags: List<CategoryType>,
+    tags: ImmutableList<CategoryType>,
     modifier: Modifier = Modifier,
     maxVisible: Int = Int.MAX_VALUE,
     textColor: Color = grey700(),

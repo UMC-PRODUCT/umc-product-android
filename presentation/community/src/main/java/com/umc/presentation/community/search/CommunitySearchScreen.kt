@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -29,8 +30,6 @@ import com.umc.presentation.community.component.CommunityThreadItem
 import com.umc.presentation.community.component.search.CommunityRecentSearchContent
 import com.umc.presentation.community.component.search.CommunitySearchBar
 import com.umc.presentation.community.component.search.CommunitySearchEmptyContent
-import kotlinx.coroutines.delay
-import androidx.compose.runtime.rememberCoroutineScope
 import com.umc.component.theme.AppStrings
 
 /**
@@ -51,13 +50,13 @@ fun CommunitySearchScreen(
     }
 
     val keyboardController = LocalSoftwareKeyboardController.current
-    val coroutineScope = rememberCoroutineScope()
 
     // 검색 화면에 진입하면 검색창에 자동 포커스하고 키보드를 표시
     // 결과를 보던 중 스레드에 들어갔다 돌아온 경우에는 결과 위로 키보드를 다시 띄우지 않는다
     LaunchedEffect(Unit) {
         if (state.hasSearched) return@LaunchedEffect
-        delay(100L)
+        // 고정 시간 대신 첫 프레임까지 기다려 검색창이 배치된 뒤 포커스를 요청한다.
+        withFrameNanos { }
         focusRequester.requestFocus()
         keyboardController?.show()
     }

@@ -1,23 +1,27 @@
 package com.umc.data.dataSource.remote.curriculum
 
 import com.umc.data.api.CurriculumApi
+import com.umc.data.dataSource.base.apiCall
+import com.umc.data.dataSource.base.requireResult
 import com.umc.data.request.curriculum.ChallengerWorkbookSubmitRequest
 import com.umc.data.response.curriculum.CurriculumProgressResponse
 import com.umc.domain.model.base.ApiState
 import javax.inject.Inject
-import com.umc.data.mapper.toFailState
 import com.umc.data.response.curriculum.WorkbookSubmissionsResponse
 import com.umc.data.response.curriculum.CurriculumOverviewResponse
-import com.umc.domain.model.base.FailState
 import com.umc.data.request.curriculum.CreateBestWorkbookRequest
 import com.umc.data.request.curriculum.CreateMissionFeedbackRequest
 import com.umc.data.response.curriculum.ChallengerWorkbookResponse
 import com.umc.data.response.curriculum.WeeklyBestWorkbooksResponse
 import com.umc.data.response.curriculum.WorkbookSubmissionsV2Response
-import com.umc.domain.model.base.ApiResponse
+import com.umc.domain.model.base.map
 import com.umc.domain.model.curriculum.StudyGroup
 
-
+/**
+ * 모든 엔드포인트를 apiCall 로 감싸 서버 오류 본문(code·message)과 네트워크 단절을 다른 API 와 같게 분류하고,
+ * success=false 응답을 실패로, 취소는 다시 던진다.
+ * CurriculumRepositoryImpl 이 값을 바로 화면 모델로 바꾸므로 result 가 비어 온 성공 응답은 requireResult 로 실패로 돌린다.
+ */
 class CurriculumRemoteDataSourceImpl @Inject constructor(
     private val curriculumApi: CurriculumApi
 ) : CurriculumRemoteDataSource {
@@ -26,32 +30,29 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         gisuId: Long,
         part: String,
     ): ApiState<CurriculumOverviewResponse> {
-        return fetch {
+        return apiCall {
             curriculumApi.getCurriculumOverview(gisuId, part)
-        }
+        }.requireResult()
     }
 
     override suspend fun getMyCurriculumProgress(gisuId: Long): ApiState<CurriculumProgressResponse> {
-        return fetch {
+        return apiCall {
             curriculumApi.getMyCurriculumProgress(gisuId)
-        }
+        }.requireResult()
     }
 
     override suspend fun submitChallengerWorkbook(
         originalWorkbookId: Long,
         submission: String
     ): ApiState<Unit> {
-        return try {
-            val res = curriculumApi.submitChallengerWorkbook(
+        return apiCall {
+            curriculumApi.submitChallengerWorkbook(
                 body = ChallengerWorkbookSubmitRequest(
                     submission = submission,
                     originalWorkbookId = originalWorkbookId
                 )
             )
-            ApiState.Success(res.result ?: Unit)
-        } catch (e: Exception) {
-            ApiState.Fail(e.toFailState())
-        }
+        }.map { }
     }
 
     override suspend fun getWorkbookSubmissions(
@@ -60,14 +61,14 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         cursor: Long?,
         size: Int
     ): ApiState<WorkbookSubmissionsResponse> {
-        return fetch {
+        return apiCall {
             curriculumApi.getWorkbookSubmissions(
                 weekNo = weekNo,
                 studyGroupId = studyGroupId,
                 cursor = cursor,
                 size = size
             )
-        }
+        }.requireResult()
     }
 
     // 운영진 - 스터디원 제출 현황 조회
@@ -77,25 +78,25 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         cursor: Long?,
         size: Int,
     ): ApiState<WorkbookSubmissionsV2Response> {
-        return fetch {
+        return apiCall {
             curriculumApi.getWorkbookSubmissionsV2(
                 studyGroupId = studyGroupId,
                 weekNos = weekNos,
                 cursor = cursor,
                 size = size,
             )
-        }
+        }.requireResult()
     }
 
     // 운영진 - 제출 현황 조회 가능 주차 목록
     override suspend fun getWorkbookSubmissionWeeks(
         studyGroupId: Long?,
     ): ApiState<List<Long>> {
-        return fetch {
+        return apiCall {
             curriculumApi.getWorkbookSubmissionWeeks(
                 studyGroupId = studyGroupId,
             )
-        }
+        }.requireResult()
     }
 
     // 운영진 - 베스트 워크북 조회
@@ -108,7 +109,7 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         page: Int,
         size: Int,
     ): ApiState<WeeklyBestWorkbooksResponse> {
-        return fetch {
+        return apiCall {
             curriculumApi.getWeeklyBestWorkbooks(
                 gisuId = gisuId,
                 schoolIds = schoolIds,
@@ -118,7 +119,7 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
                 page = page,
                 size = size,
             )
-        }
+        }.requireResult()
     }
 
 
@@ -126,31 +127,25 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         schoolId: Long,
         part: String
     ): ApiState<List<StudyGroup>> {
-        return try {
-            val response = curriculumApi.getStudyGroups(schoolId, part)
-            ApiState.Success(response.result?.map { it.toDomain() } ?: emptyList())
-        } catch (e: Exception) {
-            ApiState.Fail(e.toFailState())
-        }
+        // result 가 비어 오면 빈 목록으로 본다
+        return apiCall { curriculumApi.getStudyGroups(schoolId, part) }
+            .mapNullable { groups -> groups?.map { it.toDomain() } ?: emptyList() }
     }
 
     override suspend fun getAvailableWeeks(): ApiState<List<Int>> {
-        return try {
-            val response = curriculumApi.getAvailableWeeks()
-            ApiState.Success(response.result?.weeks ?: emptyList())
-        } catch (e: Exception) {
-            ApiState.Fail(e.toFailState())
-        }
+        // result 가 비어 오면 빈 목록으로 본다
+        return apiCall { curriculumApi.getAvailableWeeks() }
+            .mapNullable { response -> response?.weeks ?: emptyList() }
     }
 
     override suspend fun getChallengerWorkbookDetail(
         challengerWorkbookId: Long,
     ): ApiState<ChallengerWorkbookResponse> {
-        return fetch {
+        return apiCall {
             curriculumApi.getChallengerWorkbookDetail(
                 challengerWorkbookId = challengerWorkbookId,
             )
-        }
+        }.requireResult()
     }
 
     override suspend fun createWeeklyBestWorkbook(
@@ -159,7 +154,7 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         studyGroupId: Long,
         reason: String,
     ): ApiState<Unit> {
-        return fetchUnit {
+        return apiCall {
             curriculumApi.createWeeklyBestWorkbook(
                 body = CreateBestWorkbookRequest(
                     bestMemberId = bestMemberId,
@@ -168,29 +163,29 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
                     reason = reason,
                 ),
             )
-        }
+        }.map { }
     }
 
     override suspend fun updateWeeklyBestWorkbook(
         weeklyBestWorkbookId: Long,
         reason: String,
     ): ApiState<Unit> {
-        return fetchUnit {
+        return apiCall {
             curriculumApi.updateWeeklyBestWorkbook(
                 weeklyBestWorkbookId = weeklyBestWorkbookId,
                 reason = reason,
             )
-        }
+        }.map { }
     }
 
     override suspend fun deleteWeeklyBestWorkbook(
         weeklyBestWorkbookId: Long,
     ): ApiState<Unit> {
-        return fetchUnit {
+        return apiCall {
             curriculumApi.deleteWeeklyBestWorkbook(
                 weeklyBestWorkbookId = weeklyBestWorkbookId,
             )
-        }
+        }.map { }
     }
 
     override suspend fun createMissionFeedback(
@@ -198,7 +193,7 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
         content: String,
         result: String,
     ): ApiState<Unit> {
-        return fetchUnit {
+        return apiCall {
             curriculumApi.createMissionFeedback(
                 body = CreateMissionFeedbackRequest(
                     missionSubmissionId = missionSubmissionId,
@@ -206,59 +201,26 @@ class CurriculumRemoteDataSourceImpl @Inject constructor(
                     result = result,
                 ),
             )
-        }
+        }.map { }
     }
 
     override suspend fun updateMissionFeedback(
         missionFeedbackId: Long,
         content: String,
     ): ApiState<Unit> {
-        return fetchUnit {
+        return apiCall {
             curriculumApi.updateMissionFeedback(
                 missionFeedbackId = missionFeedbackId,
                 content = content,
             )
-        }
+        }.map { }
     }
 
-    private suspend fun <T> fetch(call: suspend () -> ApiResponse<T>): ApiState<T> {
-        return try {
-            val response = call()
-            if (response.success) {
-                ApiState.Success(response.result ?: error("Data is null"))
-            } else {
-                ApiState.Fail(FailState(false, response.code, response.message))
-            }
-        } catch (e: Exception) {
-            ApiState.Fail(FailState(false, "UNKNOWN", e.message ?: "알 수 없는 오류"))
-        }
-    }
-
-    private suspend fun fetchUnit(
-        call: suspend () -> ApiResponse<Unit>,
-    ): ApiState<Unit> {
-        return try {
-            val response = call()
-
-            if (response.success) {
-                ApiState.Success(Unit)
-            } else {
-                ApiState.Fail(
-                    FailState(
-                        false,
-                        response.code,
-                        response.message,
-                    ),
-                )
-            }
-        } catch (e: Exception) {
-            ApiState.Fail(
-                FailState(
-                    false,
-                    "UNKNOWN",
-                    e.message ?: "알 수 없는 오류",
-                ),
-            )
+    // result 가 null 일 수 있는 응답을 기본값으로 바꿀 때 쓴다. map 은 null 을 받는 쪽을 가정하지 않는다.
+    private fun <T, R> ApiState<T>.mapNullable(transform: (T?) -> R): ApiState<R> {
+        return when (this) {
+            is ApiState.Success -> ApiState.Success(transform(data))
+            is ApiState.Fail -> this
         }
     }
 }

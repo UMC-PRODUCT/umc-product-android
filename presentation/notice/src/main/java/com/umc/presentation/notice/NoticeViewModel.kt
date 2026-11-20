@@ -21,6 +21,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -55,6 +56,9 @@ class NoticeViewModel @Inject constructor(
     NoticeUiState(),
 ) {
     private var cachedUserInfo: UserInfo? = null
+
+    // 진행 중인 목록 요청. 필터를 바꾸면 취소해 이전 조건의 응답이 새 목록에 섞이지 않게 한다
+    private var listJob: Job? = null
 
     init {
         getMyProfile()
@@ -308,11 +312,18 @@ class NoticeViewModel @Inject constructor(
         }
     }
 
-    private fun getNoticeList(isRefresh: Boolean, isUserRefresh: Boolean = false) = viewModelScope.launch {
+    private fun getNoticeList(isRefresh: Boolean, isUserRefresh: Boolean = false) {
         val state = uiState.value
 
-        if (!isUserRefresh && (state.isPageLoading || (!isRefresh && state.isLastPage))) return@launch
+        // 가드를 launch 밖에서 확인한다. 걸린 호출이 listJob을 덮어쓰면 진행 중인 요청을 더는 취소할 수 없다
+        if (!isUserRefresh && (state.isPageLoading || (!isRefresh && state.isLastPage))) return
 
+        // 늦게 끝난 이전 필터의 요청(특히 다음 페이지)이 새 목록에 결과나 실패 표시를 남기지 않게 먼저 취소한다
+        listJob?.cancel()
+        listJob = fetchNoticeList(state, isRefresh)
+    }
+
+    private fun fetchNoticeList(state: NoticeUiState, isRefresh: Boolean) = viewModelScope.launch {
         val query = buildNoticeQuery(state, computeStaffNoticeTab())
 
         // 새로고침이면 페이징 상태도 함께 되돌린다.
@@ -323,6 +334,7 @@ class NoticeViewModel @Inject constructor(
                 currentNoticeTab = query.noticeTab,
                 isLastPage = if (isRefresh) false else isLastPage,
                 errorMessage = null,
+                isNextPageError = false,
             )
         }
 
@@ -350,13 +362,20 @@ class NoticeViewModel @Inject constructor(
                         isPageLoading = false,
                         isRefreshing = false,
                         isLastPage = !noticeSearch.hasNext,
+                        isNextPageError = false,
                     )
                 }
             },
             errorCallback = { fail ->
                 // 실패를 삼키면 "0건"과 구분되지 않아 원인 파악이 불가능하다
+                // 다음 페이지 실패는 목록 끝에 다시 시도 버튼을 띄워 당겨서 새로고침 없이도 다시 부를 수 있게 한다
                 updateState {
-                    copy(isPageLoading = false, isRefreshing = false, errorMessage = fail.message)
+                    copy(
+                        isPageLoading = false,
+                        isRefreshing = false,
+                        errorMessage = fail.message,
+                        isNextPageError = !isRefresh,
+                    )
                 }
             }
         )
@@ -435,6 +454,8 @@ data class NoticeUiState(
     /** 조회 실패 사유. null이면 정상(결과가 0건일 수 있음) */
     val errorMessage: String? = null,
     val isLastPage: Boolean = false,
+    /** 다음 페이지 요청이 실패했는지. true면 목록 끝에 다시 시도 버튼을 보인다 */
+    val isNextPageError: Boolean = false,
     val canWriteNotice: Boolean = false,
     val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
     val currentNoticeTab: String = NOTICE_TAB_CHALLENGER,

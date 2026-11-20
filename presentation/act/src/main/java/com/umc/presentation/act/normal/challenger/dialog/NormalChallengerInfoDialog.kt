@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -25,10 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UInfoChip
 import com.umc.component.component.UInfraChip
 import com.umc.component.component.UInfoChipType
 import com.umc.component.component.UText
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Callout
@@ -61,131 +65,142 @@ fun NormalChallengerInfoDialog(
     modifier: Modifier = Modifier
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(grey50())
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Box(Modifier.fillMaxWidth()) {
+            Column(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(grey50())
+                    .padding(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .border(1.dp, grey200(), CircleShape)
-                        .background(grey50()),
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_person),
-                        contentDescription = null,
-                        tint = grey400(),
-                        modifier = Modifier.size(39.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(48.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_close_big),
-                        contentDescription = null,
-                        tint = grey600(),
+                    Box(
                         modifier = Modifier
-                            .size(24.dp)
-                            .clickable(onClick = onDismissRequest)
-                    )
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .border(1.dp, grey200(), CircleShape)
+                            .background(grey50()),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_person),
+                            contentDescription = null,
+                            tint = grey400(),
+                            modifier = Modifier.size(39.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_close_big),
+                            contentDescription = null,
+                            tint = grey600(),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable(onClick = onDismissRequest)
+                        )
+                    }
                 }
-            }
 
-            Spacer(Modifier.height(16.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                UText(
-                    text = model.name,
-                    modifier = Modifier.weight(1f, fill = false),
-                    style = Title3Bold,
-                    color = grey800(),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                UInfoChip(
-                    text = model.university,
-                    type = UInfoChipType.SCHOOL
-                )
-                UInfoChip(part = model.part)
-                // 인프라를 겸하면 파트 칩 옆에 인프라 칩을 함께 보여준다.
-                if (model.infra) {
-                    UInfraChip()
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                InfoStatCard(
-                    modifier = Modifier.weight(1f),
-                    title = AppStrings.CHALLENGER_INFO_GENERATION_LABEL,
-                    value = if (model.generation > 0) AppStrings.CHALLENGER_INFO_FORMAT_GENERATION.format(model.generation) else "-"
-                )
-
-                InfoStatCard(
-                    modifier = Modifier.weight(1f),
-                    title = AppStrings.CHALLENGER_INFO_TOTAL_SCORE_LABEL,
-                    value = model.totalPoints.toPointText()
-                )
-            }
-
-            if (model.history.isNotEmpty()) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(16.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_history),
-                        contentDescription = null,
-                        tint = grey600(),
-                        modifier = Modifier.size(24.dp)
-                    )
                     UText(
-                        text = AppStrings.CHALLENGER_INFO_HISTORY_LABEL,
-                        style = HeadlineBold,
-                        color = grey900()
+                        text = model.name,
+                        modifier = Modifier.weight(1f, fill = false),
+                        style = Title3Bold,
+                        color = grey800(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    UInfoChip(
+                        text = model.university,
+                        type = UInfoChipType.SCHOOL
+                    )
+                    UInfoChip(part = model.part)
+                    // 인프라를 겸하면 파트 칩 옆에 인프라 칩을 함께 보여준다.
+                    if (model.infra) {
+                        UInfraChip()
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    InfoStatCard(
+                        modifier = Modifier.weight(1f),
+                        title = AppStrings.CHALLENGER_INFO_GENERATION_LABEL,
+                        value = if (model.generation > 0) AppStrings.CHALLENGER_INFO_FORMAT_GENERATION.format(model.generation) else "-"
+                    )
+
+                    InfoStatCard(
+                        modifier = Modifier.weight(1f),
+                        title = AppStrings.CHALLENGER_INFO_TOTAL_SCORE_LABEL,
+                        value = model.totalPoints.toPointText()
                     )
                 }
 
-                Spacer(Modifier.height(8.dp))
+                if (model.history.isNotEmpty()) {
+                    Spacer(Modifier.height(24.dp))
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, grey200(), RoundedCornerShape(12.dp))
-                        .background(grey50())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    model.history.forEach { history ->
-                        HistoryItemRow(history = history)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_history),
+                            contentDescription = null,
+                            tint = grey600(),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        UText(
+                            text = AppStrings.CHALLENGER_INFO_HISTORY_LABEL,
+                            style = HeadlineBold,
+                            color = grey900()
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
+                            .background(grey50())
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        model.history.forEach { history ->
+                            HistoryItemRow(history = history)
+                        }
                     }
                 }
             }
+            // 다이얼로그는 별도 창이라 열린 동안 조용한 목록 갱신이 실패하면 앱 토스트가 가려지므로 다이얼로그 안에도 그린다
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

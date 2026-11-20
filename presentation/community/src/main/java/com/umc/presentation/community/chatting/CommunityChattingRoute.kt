@@ -1,6 +1,5 @@
 package com.umc.presentation.community.chatting
 
-import android.widget.Toast
 import android.net.ConnectivityManager
 import android.net.Network
 import androidx.core.content.getSystemService
@@ -15,10 +14,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastState
 import com.umc.presentation.community.bottomsheet.edit.CommunityMemberBottomSheet
@@ -31,9 +32,6 @@ fun CommunityChattingRoute(
     onThreadDeleted: () -> Unit = onBack,
     // 강퇴 확인 후 목록에서 빠지므로 삭제와 같이 목록을 갱신하며 돌아간다
     onKickAcknowledged: () -> Unit = onThreadDeleted,
-    onMore: () -> Unit = {},
-    onUnreadSummary: () -> Unit = {},
-    onCamera: () -> Unit = {},
     onEditThread: () -> Unit = {},
     onViewMemberProfile: (String) -> Unit = {},
     shouldRefresh: Boolean = false,
@@ -41,11 +39,13 @@ fun CommunityChattingRoute(
     viewModel: CommunityChattingViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val appToast = LocalUToast.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     var toastData by remember { mutableStateOf<UToastData?>(null) }
     var toastGeneration by remember { mutableIntStateOf(0) }
     fun showToast(data: UToastData) { toastGeneration++; toastData = data }
-    var showInviteMemberSheet by remember { mutableStateOf(false) }
+    // 회전 뒤에도 초대 시트를 다시 띄운다. 시트는 같은 세션으로 복원되어 검색어와 고른 멤버를 유지한다.
+    var showInviteMemberSheet by rememberSaveable { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, state.threadId) {
@@ -89,14 +89,11 @@ fun CommunityChattingRoute(
             CommunityChattingEvent.ThreadUnavailable,
                 -> onBack()
             CommunityChattingEvent.ThreadDeleted -> {
-                // 채팅 화면의 토스트는 화면과 함께 사라지므로 시스템 토스트로 알린다(목록에서 나갈 때와 같은 방식).
-                Toast.makeText(context, AppStrings.CHAT_LEAVE_SUCCESS, Toast.LENGTH_SHORT).show()
+                // 채팅 화면의 토스트는 화면과 함께 사라지므로, 화면을 떠나도 남는 앱 공용 토스트로 알린다.
+                appToast.show(AppStrings.CHAT_LEAVE_SUCCESS, UToastState.CHECK)
                 onThreadDeleted()
             }
             CommunityChattingEvent.KickAcknowledged -> onKickAcknowledged()
-            CommunityChattingEvent.OpenMore -> onMore()
-            CommunityChattingEvent.OpenUnreadSummary -> onUnreadSummary()
-            CommunityChattingEvent.OpenCamera -> onCamera()
             CommunityChattingEvent.OpenInviteParticipants -> {
                 showInviteMemberSheet = true
             }

@@ -1,10 +1,5 @@
 package com.umc.presentation.home.schedule.dialog
 
-import com.umc.component.theme.AppStrings
-import android.content.Context
-import android.location.Geocoder
-import android.os.Build
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -14,16 +9,21 @@ import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchPlaceUseCase
 import com.umc.domain.usecase.appDataStore.recent.UpdateRecentSearchPlaceUseCase
 import com.umc.domain.usecase.kakao.GetSearchLocationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 
+/**
+ * 일정 등록의 장소 검색 바텀시트 상태. 카카오 키워드 검색과 최근 검색어를 다룬다.
+ *
+ * 네이버 지도 이동·역지오코딩으로 고르던 방식은 기획 변경으로 철회되어 지웠다.
+ * 지도 기반 선택이 다시 필요하면 study 모듈의 GroupScheduleLocationBottomSheet 구현을 참고한다.
+ */
 @HiltViewModel
 class LocationSearchViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val getRecentSearchPlaceUseCase: GetRecentSearchPlaceUseCase,
     private val updateRecentSearchPlaceUseCase: UpdateRecentSearchPlaceUseCase,
     private val getSearchLocationUseCase: GetSearchLocationUseCase
@@ -32,35 +32,9 @@ class LocationSearchViewModel @Inject constructor(
         LocationSearchUiState()
     ){
 
-    // 위치 좌표 기반 주소명을 추출하기 위한 Geocoder 객체 (기획 변경으로 사용 X)
-    private val geocoder = Geocoder(context, Locale.KOREAN)
-
     init{
         // 최근 장소 검색 기록 조회 실행
         loadRecentPlaces()
-
-        // 기본 좌표 초기화 (현재 사용 X)
-        setInitialLocation(37.3943, 126.6388)
-    }
-
-
-    /**
-     * 화면 진입 시 초기 지도에 보여줄 대표 좌표 설정 및 안내 텍스트를 UI State에 설정하는 메서드
-     *
-     * @param lat 초기 위도
-     * @param lng 초기 경도
-     */
-    private fun setInitialLocation(lat: Double, lng: Double) {
-        updateState {
-            copy(
-                selectedPlace = LocationItem(
-                    title = AppStrings.HOME_LOCATION_CURRENT_TITLE,
-                    address = AppStrings.HOME_LOCATION_MOVE_MAP_GUIDE,
-                    latitude = lat,
-                    longitude = lng
-                )
-            )
-        }
     }
 
     /**
@@ -69,7 +43,7 @@ class LocationSearchViewModel @Inject constructor(
     private fun loadRecentPlaces() {
         viewModelScope.launch {
             getRecentSearchPlaceUseCase().collect { places ->
-                updateState { copy(recentSearchList = places) }
+                updateState { copy(recentSearchList = places.toImmutableList()) }
             }
         }
     }
@@ -98,12 +72,12 @@ class LocationSearchViewModel @Inject constructor(
                 successCallback = { locationList ->
                     updateState {
                         copy(
-                            searchResultList = locationList,
+                            searchResultList = locationList.toImmutableList(),
                             isSearching = false
                         )
                     }
                     if (locationList.isEmpty()) {
-                        emitEvent(LocationSearchEvent.ShowToast(AppStrings.HOME_LOCATION_SEARCH_EMPTY))
+                        emitEvent(LocationSearchEvent.ShowSearchEmptyToast)
                     } else {
                         //최근 검색어 저장 트리거
                         saveRecentPlace(query)
@@ -111,90 +85,10 @@ class LocationSearchViewModel @Inject constructor(
                 },
                 errorCallback = {
                     updateState { copy(isSearching = false) }
-                    emitEvent(LocationSearchEvent.ShowToast(AppStrings.HOME_LOCATION_SEARCH_FAILED))
+                    emitEvent(LocationSearchEvent.ShowSearchFailedToast)
                 }
             )
         }
-    }
-
-    /**
-     * 지도의 위도/경도 좌표를 받아 Geocoder를 이용해 주소 및 지명 텍스트로 역지오코딩하는 메서드
-     * [주의] 
-     * 현재 사용 안해요
-     * 
-     * @param lat 선택 지점 위도
-     * @param lng 선택 지점 경도
-     */
-    fun updateLocationFromCoordinates(lat: Double, lng: Double) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    // Android 13(API 33) 이상 비동기 콜백 Geocoder 사용
-                    geocoder.getFromLocation(lat, lng, 1) { addresses ->
-                        if (addresses.isNotEmpty()) {
-                            val addr = addresses[0]
-                            updateState {
-                                copy(
-                                    selectedPlace = LocationItem(
-                                        title = addr.featureName ?: AppStrings.HOME_LOCATION_UNSPECIFIED_TITLE,
-                                        address = addr.getAddressLine(0) ?: "",
-                                        latitude = lat,
-                                        longitude = lng
-                                    )
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    // Android 12 이하 동기 Geocoder 사용
-                    @Suppress("DEPRECATION")
-                    val addresses = geocoder.getFromLocation(lat, lng, 1)
-                    if (!addresses.isNullOrEmpty()) {
-                        val addr = addresses[0]
-                        updateState {
-                            copy(
-                                selectedPlace = LocationItem(
-                                    title = addr.featureName ?: AppStrings.HOME_LOCATION_UNSPECIFIED_TITLE,
-                                    address = addr.getAddressLine(0) ?: "",
-                                    latitude = lat,
-                                    longitude = lng
-                                )
-                            )
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                // 네트워크 에러 시 좌표 정보라도 유지하여 선택 가능하게 보정
-                updateState {
-                    copy(
-                        selectedPlace = LocationItem(
-                            title = AppStrings.HOME_LOCATION_SELECTED_POINT_TITLE,
-                            address = AppStrings.HOME_LOCATION_ADDRESS_UNAVAILABLE,
-                            latitude = lat,
-                            longitude = lng
-                        )
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * 장소 검색 결과 목록 중 특정 항목을 클릭했을 때 포커스를 이동시키고 UI 상태를 갱신하는 메서드
-     * [주의]
-     * 현재 사용 안해요
-     *
-     * @param place 선택한 장소 아이템
-     */
-    fun selectSearchResult(place: LocationItem) {
-        updateState {
-            copy(
-                selectedPlace = place,
-                searchResultList = emptyList(), // 리스트 닫기
-                searchQuery = place.title
-            )
-        }
-        emitEvent(LocationSearchEvent.MoveCameraTo(place.latitude, place.longitude))
     }
 
     /**
@@ -207,30 +101,19 @@ class LocationSearchViewModel @Inject constructor(
             updateRecentSearchPlaceUseCase(place)
         }
     }
-
-    /**
-     * 선택된 최종 장소 정보를 상위 스크린으로 넘겨주기 위한 확정 이벤트를 발행하는 메서드
-     * [주의]
-     * 현재 사용 안해요
-     */
-    fun confirmSelection() {
-        emitEvent(LocationSearchEvent.LocationConfirmed(uiState.value.selectedPlace))
-    }
-
-
-    }
+}
 
 data class LocationSearchUiState(
     val searchQuery: String = "",
     val isSearching: Boolean = false,
-    val selectedPlace: LocationItem = LocationItem("", "", 0.0, 0.0),
-    val recentSearchList: List<String> = emptyList(),
-    val searchResultList: List<LocationItem> = emptyList()
+    val recentSearchList: ImmutableList<String> = persistentListOf(),
+    val searchResultList: ImmutableList<LocationItem> = persistentListOf()
 ) : UiState
 
+/** 토스트 문구와 모양(아이콘)은 화면이 정한다. ViewModel 은 무슨 일이 있었는지만 알린다. */
 sealed interface LocationSearchEvent : UiEvent {
-    data class ShowToast(val message: String) : LocationSearchEvent
-    data class MoveCameraTo(val lat: Double, val lng: Double) : LocationSearchEvent
-    data class LocationConfirmed(val placeInfo: LocationItem) : LocationSearchEvent
-
+    /** 검색은 성공했지만 결과가 없을 때 */
+    object ShowSearchEmptyToast : LocationSearchEvent
+    /** 장소 검색 요청이 실패했을 때 */
+    object ShowSearchFailedToast : LocationSearchEvent
 }

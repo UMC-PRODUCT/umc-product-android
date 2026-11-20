@@ -366,7 +366,7 @@ private fun MemberProfileTopBar(
                 .padding(12.dp)
                 .clickable { onBackClick() },
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = "뒤로가기",
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 

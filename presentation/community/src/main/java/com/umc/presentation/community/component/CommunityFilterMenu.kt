@@ -1,6 +1,7 @@
 package com.umc.presentation.community.component
 
 import androidx.compose.foundation.background
+import com.umc.component.theme.AppStrings
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -29,7 +30,6 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main500
 import com.umc.presentation.community.model.CommunityCategory
@@ -198,7 +198,7 @@ private fun CommunityFilterMenuItem(
                 painter = painterResource(
                     id = R.drawable.ic_main_check,
                 ),
-                contentDescription = "선택됨",
+                contentDescription = AppStrings.COMMUNITY_CREATE_MEMBER_CD_CHECKED,
                 tint = main500(),
                 modifier = Modifier
                     .align(Alignment.CenterEnd)

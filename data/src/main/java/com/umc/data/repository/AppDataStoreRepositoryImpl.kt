@@ -12,6 +12,7 @@ import com.umc.domain.model.mypage.UserOutLink
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 //Impl = data 와 domain을 연결!
 
@@ -82,6 +83,9 @@ class AppDataStoreRepositoryImpl @Inject constructor(
         return try {
             appDataStore.saveTokens(accessToken, refreshToken, newSession)
             ApiState.Success(Unit)
+        } catch (e: CancellationException) {
+            // 취소는 저장 실패가 아니므로 다시 던진다
+            throw e
         } catch (e: Exception) {
             ApiState.Fail(
                 FailState(

@@ -2,12 +2,8 @@ package com.example.mypage.qrcode
 
 import com.umc.component.theme.AppStrings
 import android.app.Application
-import android.os.Build
-import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.viewModelScope
-import com.example.mypage.nearby.NearbyManager
-import com.example.mypage.nearby.NearbyManagerEvent
 import com.example.mypage.qrcode.QrCodeUtils
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
@@ -16,7 +12,6 @@ import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.getGisuSummaryList
-import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.usecase.member.GetMyProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -47,7 +42,7 @@ class QrCodeViewModel @Inject constructor(
                     settingUserInfoToUI(userInfo)
                 },
                 errorCallback = {
-                    emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_PROFILE_LOAD_ERROR))
+                    emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_PROFILE_LOAD_ERROR, isSuccess = false))
                     generateMyUserCardQr(null)
                 }
             )
@@ -141,9 +136,9 @@ class QrCodeViewModel @Inject constructor(
         if (bitmap == null) return
         val success = QrCodeUtils.saveImageToGallery(application, bitmap, "MyUserCard_QR")
         if (success) {
-            emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_SAVE_SUCCESS))
+            emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_SAVE_SUCCESS, isSuccess = true))
         } else {
-            emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_SAVE_ERROR))
+            emitEvent(QrCodeEvent.ShowToast(AppStrings.QRCODE_SAVE_ERROR, isSuccess = false))
         }
     }
 
@@ -170,5 +165,6 @@ data class QrCodeUiState(
 sealed interface QrCodeEvent : UiEvent {
     object NavigateBack : QrCodeEvent
     object ShareQrCode : QrCodeEvent
-    data class ShowToast(val message: String) : QrCodeEvent
+    // isSuccess 로 토스트 아이콘(성공·실패)을 고른다
+    data class ShowToast(val message: String, val isSuccess: Boolean) : QrCodeEvent
 }

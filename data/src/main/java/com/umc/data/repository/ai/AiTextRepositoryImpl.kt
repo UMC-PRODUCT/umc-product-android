@@ -10,6 +10,8 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
 import com.umc.domain.model.enums.AiFeatureStatus
 import com.umc.domain.repository.ai.AiTextRepository
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -34,6 +36,8 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
             Log.d(TAG, "checkStatus raw=$rawStatus mapped=$featureStatus")
             featureStatus
         }.getOrElse { error ->
+            // 호출한 코루틴이 취소됐으면 미지원으로 바꾸지 않고 취소를 이어 간다
+            if (error is CancellationException) currentCoroutineContext().ensureActive()
             Log.e(TAG, "checkStatus failed", error)
             AiFeatureStatus.UNAVAILABLE
         }
@@ -59,8 +63,10 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
                 }
             }
         }.getOrElse { error ->
-            // 입력이 바뀌어 호출부가 취소한 경우는 실패가 아니므로 에러 로그를 남기지 않는다
-            if (error !is CancellationException) Log.e(TAG, "generate failed", error)
+            // 입력이 바뀌어 호출부가 취소한 경우는 실패가 아니므로 Fail 로 바꾸지 않고 취소를 이어 간다.
+            // 코루틴은 살아 있는데 ML Kit 안에서 난 취소 예외는 실패로 돌려 호출부의 '생성 중' 상태가 남지 않게 한다
+            if (error is CancellationException) currentCoroutineContext().ensureActive()
+            Log.e(TAG, "generate failed", error)
             fail(error)
         }
     }

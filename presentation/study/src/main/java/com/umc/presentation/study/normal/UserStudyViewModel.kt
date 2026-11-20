@@ -26,12 +26,15 @@ import javax.inject.Inject
  *
  * 커리큘럼 제목, 파트, 주차별 항목을 관리합니다.
  */
-data class UserStudyState(
+data class UserStudyUiState(
     val title: String = "",
     val part: UserPart = UserPart.UNKNOWN,
     val items: ImmutableList<NormalStudyItemUiModel> = persistentListOf(),
     // 커리큘럼 조회 실패 여부. 목록이 비어 있을 때만 오류 화면으로 표시한다.
     val isError: Boolean = false,
+    // 커리큘럼 조회 중 여부. 첫 조회가 끝나기 전에 빈 상태 카드가 먼저 보이지 않게 구분한다.
+    // 조회는 탭이 활성화된 뒤 시작되므로, 그 전 첫 프레임도 조회 중으로 보도록 true 에서 시작한다.
+    val isLoading: Boolean = true,
 ) : UiState
 
 /**
@@ -39,7 +42,7 @@ data class UserStudyState(
  */
 sealed interface UserStudyEvent : UiEvent {
 
-    /** 사용자에게 Toast 메시지 표시 */
+    /** 조회 실패를 알리는 오류 토스트 표시 */
     data class ShowToast(
         val message: String,
     ) : UserStudyEvent
@@ -52,14 +55,14 @@ sealed interface UserStudyEvent : UiEvent {
  * - 현재 사용자 프로필 조회
  * - 현재 활성 기수 및 파트 확인
  * - 개인 커리큘럼(주차별) 조회
- * - 로딩 및 Toast 이벤트 처리
+ * - 로딩 및 토스트 이벤트 처리
  */
 @HiltViewModel
 class UserStudyViewModel @Inject constructor(
     private val getMyProfileUseCase: GetMyProfileUseCase,
     private val getMyCurriculumProgressUseCase: GetMyCurriculumProgressUseCase,
-) : BaseViewModel<UserStudyState, UserStudyEvent>(
-    UserStudyState(),
+) : BaseViewModel<UserStudyUiState, UserStudyEvent>(
+    UserStudyUiState(),
 ) {
 
     // 겹치는 재조회 요청을 막기 위해 진행 중인 조회를 추적한다.
@@ -74,6 +77,7 @@ class UserStudyViewModel @Inject constructor(
     fun refresh() {
         loadJob?.cancel()
         startLoading()
+        updateState { copy(isLoading = true) }
 
         loadJob = viewModelScope.launch {
             // isError 는 조회 결과가 확정될 때 갱신한다. 재시도 중에 빈 상태 문구가 잠깐 보이지 않게 하기 위함이다.
@@ -88,7 +92,7 @@ class UserStudyViewModel @Inject constructor(
 
                     if (userInfo == null) {
                         stopLoading()
-                        updateState { copy(isError = true) }
+                        updateState { copy(isError = true, isLoading = false) }
 
                         emitEvent(
                             UserStudyEvent.ShowToast(
@@ -116,7 +120,7 @@ class UserStudyViewModel @Inject constructor(
                     // 챌린저 기록이 없는 계정은 네트워크 오류가 아니므로 오류 카드 대신 빈 상태로 보여준다.
                     if (currentRecord == null) {
                         stopLoading()
-                        updateState { copy(isError = false) }
+                        updateState { copy(isError = false, isLoading = false) }
                         return@launch
                     }
 
@@ -131,11 +135,14 @@ class UserStudyViewModel @Inject constructor(
 
                 is ApiState.Fail -> {
                     stopLoading()
-                    updateState { copy(isError = true) }
+                    updateState { copy(isError = true, isLoading = false) }
 
                     emitEvent(
                         UserStudyEvent.ShowToast(
-                            message = profileResult.failState.message,
+                            // 서버 메시지가 비면 토스트가 뜨지 않으므로 기본 문구로 채운다.
+                            message = profileResult.failState.message.ifBlank {
+                                AppStrings.COMMON_PROFILE_LOAD_ERROR
+                            },
                         )
                     )
                 }
@@ -166,7 +173,7 @@ class UserStudyViewModel @Inject constructor(
 
                 if (data == null) {
                     stopLoading()
-                    updateState { copy(isError = true) }
+                    updateState { copy(isError = true, isLoading = false) }
 
                     emitEvent(
                         UserStudyEvent.ShowToast(
@@ -202,6 +209,7 @@ class UserStudyViewModel @Inject constructor(
                         part = resolvedPart,
                         items = items.toImmutableList(),
                         isError = false,
+                        isLoading = false,
                     )
                 }
 
@@ -213,15 +221,18 @@ class UserStudyViewModel @Inject constructor(
 
                 // 기본 트랙이 없는 운영진은 서버가 실패로 내려주지만 오류가 아니라 빈 상태로 보여준다.
                 if (result.failState.code == NO_DEFAULT_TRACK_CODE) {
-                    updateState { copy(isError = false) }
+                    updateState { copy(isError = false, isLoading = false) }
                     return
                 }
 
-                updateState { copy(isError = true) }
+                updateState { copy(isError = true, isLoading = false) }
 
                 emitEvent(
                     UserStudyEvent.ShowToast(
-                        message = result.failState.message,
+                        // 서버 메시지가 비면 토스트가 뜨지 않으므로 기본 문구로 채운다.
+                        message = result.failState.message.ifBlank {
+                            AppStrings.STUDY_LOAD_ERROR_TITLE
+                        },
                     )
                 )
             }

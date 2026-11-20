@@ -28,8 +28,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -55,14 +60,32 @@ class NoticeDetailViewModel @Inject constructor(
     // 투표 등으로 loadDetail이 다시 불려도 읽음 등록은 상세 진입당 한 번만 보낸다
     private var hasMarkedRead = false
 
+    // 상세를 한 번이라도 받아 왔는지. 회전·다크 모드 전환으로 Route가 다시 그려질 때 다시 받지 않기 위해 둔다
+    private var hasLoadedDetail = false
+
+    // 수정 화면에 다녀오면 바뀐 내용을 반영해야 하므로 돌아왔을 때 한 번 더 받는다
+    private var reloadOnReturn = false
+
     fun load(noticeId: Long) {
+        // 같은 공지를 이미 받았으면 스크롤 위치·선택 중인 투표 항목을 지키기 위해 다시 받지 않는다
+        if (noticeId == this.noticeId && hasLoadedDetail) return
         this.noticeId = noticeId
+        loadDetail()
+    }
+
+    /**
+     * 화면이 RESUMED가 될 때 부른다. 수정 화면에서 실제로 돌아왔을 때만 다시 받는다.
+     * 컴포지션에 들어올 때 확인하면 취소될 수 있는 예측 뒤로 가기 미리보기에서 플래그가 소비돼 실제 복귀 때 갱신이 빠진다
+     */
+    fun onResumed() {
+        if (!reloadOnReturn) return
+        reloadOnReturn = false
         loadDetail()
     }
 
     private fun loadDetail() = viewModelScope.launch {
         if (noticeId <= 0L) {
-            emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL))
+            emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL, isSuccess = false))
             emitEvent(NoticeDetailEvent.MoveBack)
             return@launch
         }
@@ -72,6 +95,7 @@ class NoticeDetailViewModel @Inject constructor(
         resultResponse(
             response = getNoticeDetailUseCase(noticeId),
             successCallback = { detail ->
+                hasLoadedDetail = true
                 updateState {
                     copy(
                         detail = detail,
@@ -89,7 +113,7 @@ class NoticeDetailViewModel @Inject constructor(
             },
             errorCallback = {
                 updateState { copy(isLoading = false) }
-                emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL))
+                emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL, isSuccess = false))
             },
         )
     }
@@ -226,14 +250,20 @@ class NoticeDetailViewModel @Inject constructor(
                 emitEvent(
                     NoticeDetailEvent.ShowToast(
                         if (isRevote) AppStrings.NOTICE_DETAIL_VOTE_EDIT_SUCCESS
-                        else AppStrings.NOTICE_DETAIL_VOTE_SUCCESS
+                        else AppStrings.NOTICE_DETAIL_VOTE_SUCCESS,
+                        isSuccess = true,
                     )
                 )
                 loadDetail()
             },
             errorCallback = {
                 updateState { copy(isSubmittingVote = false) }
-                emitEvent(NoticeDetailEvent.ShowToast(it.message))
+                emitEvent(
+                    NoticeDetailEvent.ShowToast(
+                        it.message.ifBlank { AppStrings.NOTICE_DETAIL_VOTE_FAIL },
+                        isSuccess = false,
+                    )
+                )
             },
         )
     }
@@ -246,16 +276,31 @@ class NoticeDetailViewModel @Inject constructor(
         updateState { copy(isLoadingVoteParticipants = true) }
 
         val memberIds = vote.options.flatMap { it.selectedMemberIds }.distinct()
+        // 참여자마다 순서대로 부르면 인원에 비례해 늦어지므로 함께 부른다.
+        // 다만 한꺼번에 몰리지 않도록 동시에 보내는 요청 수는 제한한다
+        val semaphore = Semaphore(VOTE_PARTICIPANT_FETCH_CONCURRENCY)
+        val responses = coroutineScope {
+            memberIds.map { memberId ->
+                async { semaphore.withPermit { memberId to getMemberProfileUseCase(memberId) } }
+            }.awaitAll()
+        }
         val profiles = mutableMapOf<Long, NoticeVoteParticipant>()
-        memberIds.forEach { memberId ->
+        responses.forEach { (memberId, response) ->
             resultResponse(
-                response = getMemberProfileUseCase(memberId),
+                response = response,
                 successCallback = { member ->
                     profiles[memberId] = NoticeVoteParticipant(
                         memberId = member.id,
                         nickname = member.nickname,
                         name = member.name,
                         profileImageUrl = member.profileImageLink,
+                    )
+                },
+                // 프로필을 못 받은 참여자를 빼면 참여 인원이 실제보다 적게 보이므로 이름 대신 안내 문구로 남긴다
+                errorCallback = {
+                    profiles[memberId] = NoticeVoteParticipant(
+                        memberId = memberId,
+                        name = AppStrings.NOTICE_VOTE_UNKNOWN_PARTICIPANT,
                     )
                 },
             )
@@ -363,11 +408,16 @@ class NoticeDetailViewModel @Inject constructor(
             response = sendNoticeReminderUseCase(noticeId, targetIds),
             successCallback = {
                 updateState { copy(isSendingReminder = false, isReminderSent = true) }
-                emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_REMINDER_SUCCESS))
+                emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_REMINDER_SUCCESS, isSuccess = true))
             },
             errorCallback = {
                 updateState { copy(isSendingReminder = false) }
-                emitEvent(NoticeDetailEvent.ShowToast(it.message))
+                emitEvent(
+                    NoticeDetailEvent.ShowToast(
+                        it.message.ifBlank { AppStrings.NOTICE_DETAIL_REMINDER_FAIL },
+                        isSuccess = false,
+                    )
+                )
             },
         )
     }
@@ -377,6 +427,7 @@ class NoticeDetailViewModel @Inject constructor(
     // ---------------------------------------------------------------
 
     fun onClickEdit() {
+        reloadOnReturn = true
         emitEvent(NoticeDetailEvent.MoveToEdit(noticeId))
     }
 
@@ -384,16 +435,25 @@ class NoticeDetailViewModel @Inject constructor(
         resultResponse(
             response = deleteNoticeUseCase(noticeId),
             successCallback = {
-                emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_DELETE_SUCCESS))
+                emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_DELETE_SUCCESS, isSuccess = true))
                 // 목록이 삭제를 반영하도록 단순 뒤로가기와 구분해 알린다
                 emitEvent(NoticeDetailEvent.Deleted)
             },
             errorCallback = {
-                emitEvent(NoticeDetailEvent.ShowToast(it.message))
+                emitEvent(
+                    NoticeDetailEvent.ShowToast(
+                        it.message.ifBlank { AppStrings.NOTICE_DETAIL_DELETE_FAIL },
+                        isSuccess = false,
+                    )
+                )
             },
         )
     }
 
+    private companion object {
+        /** 투표 참여자 프로필을 동시에 요청하는 최대 개수 */
+        const val VOTE_PARTICIPANT_FETCH_CONCURRENCY = 4
+    }
 }
 
 data class NoticeDetailUiState(
@@ -439,7 +499,8 @@ sealed interface NoticeDetailEvent : UiEvent {
     data object MoveBack : NoticeDetailEvent
     data object Deleted : NoticeDetailEvent
     data class MoveToEdit(val noticeId: Long) : NoticeDetailEvent
-    data class ShowToast(val message: String) : NoticeDetailEvent
+    /** [isSuccess]가 true면 성공 아이콘, false면 실패 아이콘으로 띄운다 */
+    data class ShowToast(val message: String, val isSuccess: Boolean) : NoticeDetailEvent
 }
 
 /** 투표 현황 시트에 표시할 옵션별 참여자 묶음 */

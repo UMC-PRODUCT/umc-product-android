@@ -1,6 +1,5 @@
 package com.example.mypage.dialog
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +12,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,11 +36,12 @@ import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey200
-import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
@@ -77,6 +79,8 @@ enum class ExchangeStep {
 @Composable
 fun CardExchangeBottomSheet(
     sheetState: SheetState,
+    toastData: UToastData?, // 시트가 열린 동안 띄울 토스트 (시트 창 아래에 가리지 않게 시트 안에 그린다)
+    onDismissToast: () -> Unit,
     currentStep: ExchangeStep,
     discoveredDevices: ImmutableList<Pair<String, NearbyUserInfo>>, // (endpointId, userInfo) 형태로 찾은 리스트들
     selectedTargetUser: Pair<String, NearbyUserInfo>?, // 선택한 유저 정보
@@ -93,129 +97,138 @@ fun CardExchangeBottomSheet(
         containerColor = grey50(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
-        ) {
-            /*
-            // 명함 교환 방식 선택 단계 (기능 정책 단순화로 현재 미사용 및 주석 보존 처리)
-            when (currentStep) {
-                /**1. 방법 선택일 경우 (선택 모습 띄우기)**/
-                ExchangeStep.SELECT_METHOD -> {
-                    UText(
-                        text = AppStrings.EXCHANGE_CARD_TITLE,
-                        style = UmcTypographyTokens.Title3Bold,
-                        color = grey950()
-                    )
+        Box {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp)
+            ) {
+                /*
+                // 명함 교환 방식 선택 단계 (기능 정책 단순화로 현재 미사용 및 주석 보존 처리)
+                when (currentStep) {
+                    /**1. 방법 선택일 경우 (선택 모습 띄우기)**/
+                    ExchangeStep.SELECT_METHOD -> {
+                        UText(
+                            text = AppStrings.EXCHANGE_CARD_TITLE,
+                            style = UmcTypographyTokens.Title3Bold,
+                            color = grey950()
+                        )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                    UText(
-                        text = AppStrings.EXCHANGE_CARD_CONTENT,
-                        style = UmcTypographyTokens.Subheadline,
-                        color = grey600()
-                    )
+                        UText(
+                            text = AppStrings.EXCHANGE_CARD_CONTENT,
+                            style = UmcTypographyTokens.Subheadline,
+                            color = grey600()
+                        )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    //Wi-Fi Aware 고속 교환
-                    ExchangeOptionCard(
-                        iconRes = R.drawable.ic_wifi_send,
-                        title = AppStrings.EXCHANGE_CARD_WIFI_TITLE,
-                        subtitle = AppStrings.EXCHANGE_CARD_WIFI_CONTENT,
-                        onClick = onWifiAwareClick
-                    )
+                        //Wi-Fi Aware 고속 교환
+                        ExchangeOptionCard(
+                            iconRes = R.drawable.ic_wifi_send,
+                            title = AppStrings.EXCHANGE_CARD_WIFI_TITLE,
+                            subtitle = AppStrings.EXCHANGE_CARD_WIFI_CONTENT,
+                            onClick = onWifiAwareClick
+                        )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    // QR 코드
-                    ExchangeOptionCard(
-                        iconRes = R.drawable.ic_qrcode,
-                        iconColor = grey950(),
-                        title = AppStrings.EXCHANGE_CARD_QR_TITLE,
-                        subtitle = AppStrings.EXCHANGE_CARD_QR_CONTENT,
-                        onClick = onQrCodeClick
-                    )
+                        // QR 코드
+                        ExchangeOptionCard(
+                            iconRes = R.drawable.ic_qrcode,
+                            iconColor = grey950(),
+                            title = AppStrings.EXCHANGE_CARD_QR_TITLE,
+                            subtitle = AppStrings.EXCHANGE_CARD_QR_CONTENT,
+                            onClick = onQrCodeClick
+                        )
 
 
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                    //취소하기 버튼
-                    UButton(
-                        text = AppStrings.EXCHANGE_CARD_CANCEL,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        backgroundColor = grey800(),
-                        textColor = grey50(),
-                        textStyle = UmcTypographyTokens.HeadlineBold,
-                        cornerRadius = 12.dp,
-                        onClick = onDismissRequest
-                    )
-                }
-
-             */
-
-            // 2. Nearby Connections 기반 주변 유저 탐색 단계 (현재 단일 진입점으로 활성화)
-                //ExchangeStep.DISCOVER_USERS -> {
-                    UText(
-                        text = AppStrings.EXCHANGE_CARD_WIFI_USER_TITLE,
-                        style = UmcTypographyTokens.Title3Bold,
-                        color = grey950()
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    /**유저가 없을 경우**/
-                    if (discoveredDevices.isEmpty()) {
-                        Box(
+                        //취소하기 버튼
+                        UButton(
+                            text = AppStrings.EXCHANGE_CARD_CANCEL,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            UText(
-                                text = AppStrings.EXCHANGE_CARD_WIFI_USER_SEARCH,
-                                style = UmcTypographyTokens.Body,
-                                color = grey400()
-                            )
-                        }
+                                .height(52.dp),
+                            backgroundColor = grey800(),
+                            textColor = grey50(),
+                            textStyle = UmcTypographyTokens.HeadlineBold,
+                            cornerRadius = 12.dp,
+                            onClick = onDismissRequest
+                        )
                     }
-                    /**유저를 탐색한 경우**/
-                    else {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.height(300.dp)
-                        ) {
-                            //1번째는 string은 고유 주소 - 2번째는 nearUserInfo
-                            items(discoveredDevices, key = { it.first }) { item ->
-                                NearbyUserListItem(
-                                    userInfo = item.second,
-                                    onClick = { onUserSelect(item) }
+
+                 */
+
+                // 2. Nearby Connections 기반 주변 유저 탐색 단계 (현재 단일 진입점으로 활성화)
+                    //ExchangeStep.DISCOVER_USERS -> {
+                        UText(
+                            text = AppStrings.EXCHANGE_CARD_WIFI_USER_TITLE,
+                            style = UmcTypographyTokens.Title3Bold,
+                            color = grey950()
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        /**유저가 없을 경우**/
+                        if (discoveredDevices.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                UText(
+                                    text = AppStrings.EXCHANGE_CARD_WIFI_USER_SEARCH,
+                                    style = UmcTypographyTokens.Body,
+                                    color = grey400()
                                 )
                             }
                         }
-                    }
+                        /**유저를 탐색한 경우**/
+                        else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.height(300.dp)
+                            ) {
+                                //1번째는 string은 고유 주소 - 2번째는 nearUserInfo
+                                items(discoveredDevices, key = { it.first }) { item ->
+                                    NearbyUserListItem(
+                                        userInfo = item.second,
+                                        onClick = { onUserSelect(item) }
+                                    )
+                                }
+                            }
+                        }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    UButton(
-                        text = AppStrings.EXCHANGE_CARD_WIFI_USER_SEARCH_PAUSE,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        backgroundColor = grey800(),
-                        textColor = white(),
-                        textStyle = UmcTypographyTokens.HeadlineBold,
-                        cornerRadius = 12.dp,
-                        onClick = onDismissRequest
-                    )
-                //}
+                        UButton(
+                            text = AppStrings.EXCHANGE_CARD_WIFI_USER_SEARCH_PAUSE,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            backgroundColor = grey800(),
+                            textColor = white(),
+                            textStyle = UmcTypographyTokens.HeadlineBold,
+                            cornerRadius = 12.dp,
+                            onClick = onDismissRequest
+                        )
+                    //}
             }
+            // 시트는 별도 창이라 앱 공용 토스트가 가려지므로 시트 안에 호스트를 둔다
+            UToastHost(
+                data = toastData,
+                onDismiss = onDismissToast,
+                modifier = Modifier.align(Alignment.BottomCenter).imePadding()
+                    .navigationBarsPadding().padding(horizontal = 16.dp, vertical = 24.dp),
+            )
         }
+    }
     //}
 
     // 목록에서 대상 유저 클릭 시 노출되는 명함 전송 확인 다이얼로그

@@ -25,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.umc.component.component.UText
 import androidx.compose.foundation.rememberScrollState
@@ -94,7 +93,7 @@ fun ConversationSummaryBottomSheet(
                     tint = main500(),
                     modifier = Modifier.size(22.dp),
                 )
-                Text(
+                UText(
                     text = AppStrings.CHAT_AI_SHEET_TITLE,
                     modifier = Modifier
                         .weight(1f)
@@ -138,7 +137,7 @@ fun ConversationSummaryBottomSheet(
 
 @Composable
 private fun SummaryLoadingContent(downloadPercent: Int?) {
-    Text(
+    UText(
         text = downloadPercent
             ?.let { AppStrings.AI_MODEL_DOWNLOADING.format(it) }
             ?: AppStrings.CHAT_AI_SUMMARIZING_DESCRIPTION,
@@ -257,13 +256,13 @@ private fun SummaryErrorContent(message: String) {
             modifier = Modifier.size(32.dp),
         )
         Spacer(Modifier.height(14.dp))
-        Text(
+        UText(
             text = AppStrings.CHAT_AI_SUMMARY_FAILED,
             color = grey600(),
             style = UmcTypographyTokens.HeadlineBold,
         )
         Spacer(Modifier.height(6.dp))
-        Text(
+        UText(
             text = message.ifBlank { AppStrings.CHAT_AI_SUMMARY_RETRY_DESCRIPTION },
             color = grey400(),
             style = UmcTypographyTokens.Subheadline,
@@ -273,7 +272,7 @@ private fun SummaryErrorContent(message: String) {
 
 @Composable
 private fun SummarySuccessContent(summary: String, messageCount: Int) {
-    Text(
+    UText(
         text = AppStrings.CHAT_AI_SUMMARY_COUNT_FORMAT.format(messageCount),
         color = grey500(),
         style = UmcTypographyTokens.Subheadline,
@@ -294,7 +293,7 @@ private fun SummarySuccessContent(summary: String, messageCount: Int) {
                     modifier = Modifier.size(10.dp),
                     colorFilter = ColorFilter.tint(main500()),
                 )
-                Text(
+                UText(
                     text = line,
                     modifier = Modifier.padding(start = 8.dp),
                     color = grey800(),

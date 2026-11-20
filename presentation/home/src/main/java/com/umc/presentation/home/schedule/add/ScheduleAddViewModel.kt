@@ -2,15 +2,12 @@ package com.umc.presentation.home.schedule.add
 
 import com.umc.component.theme.AppStrings
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.component.R
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.component.component.UToast
-import com.umc.component.component.UToastState
 import com.umc.component.util.UTimeFormat
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.CategoryType
@@ -18,21 +15,22 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.home.CategoryItem
 import com.umc.domain.model.home.LocationItem
 import com.umc.domain.model.home.ParticipantItem
+import com.umc.domain.model.home.ParticipantMember
 import com.umc.domain.model.home.PlanDetailItem
 import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.home.schedule.CreateSchedule
 import com.umc.domain.model.home.schedule.UpdateSchedule
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
-import com.umc.domain.usecase.challenger.SearchChallengerScheduleUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
 import com.umc.domain.usecase.schedule.CreateScheduleUseCase
 import com.umc.domain.usecase.schedule.GetScheduleDetailHomeUseCase
 import com.umc.domain.usecase.schedule.UpdateScheduleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -40,8 +38,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
-import kotlin.plus
-import kotlin.text.isEmpty
 
 @HiltViewModel
 class ScheduleAddViewModel @Inject
@@ -123,48 +119,56 @@ constructor(
             resultResponse(
                 response = getScheduleDetailHomeUseCase(scheduleId),
                 successCallback = { detail ->
-
-                    val users = detail.participantMembers
-                    val usersIdList = users.map { it ->
-                        it.memberId
-                    }
-
                     // 참석자 회원들의 프로필 정보를 병렬로 비동기 로드한 뒤 UI에 적용
-                    loadParticipantsProfiles(usersIdList) { participants ->
+                    loadParticipantsProfiles(detail.participantMembers) { participants ->
                         // 받아온 데이터를 UI 상태에 맞게 가공 및 반영
                         applyScheduleDetail(detail, participants)
                     }
                 },
-                errorCallback = {}
+                errorCallback = { error ->
+                    // 빈 폼을 그대로 저장하면 기존 일정을 덮어쓰므로 저장을 막고 실패를 알린다
+                    updateState { copy(isDetailLoadFailed = true) }
+                    emitEvent(
+                        ScheduleAddEvent.ShowErrorToast(
+                            error.message.ifBlank { AppStrings.HOME_PLAN_DETAIL_LOAD_ERROR }
+                        )
+                    )
+                }
             )
         }
     }
 
     /**
-     * 참석자 ID 리스트를 받아 각 회원의 상세 프로필 정보를 병렬로 불러와 ParticipantItem 목록으로 가공하는 메서드
+     * 일정 상세의 참석자 목록을 받아 각 회원의 프로필로 기수·파트를 보강해 ParticipantItem 목록으로 가공하는 메서드
      *
-     * @param memberIds 참석자 회원 ID 리스트
+     * 수정 저장은 이 목록으로 참석자 전체를 다시 보내므로, 프로필 조회에 실패한 회원도 빼지 않고
+     * 일정 상세가 준 이름·학교·사진만으로 남긴다.
+     *
+     * @param members 일정 상세의 참석자 목록
      * @param onComplete 가공이 완료된 ParticipantItem 리스트를 전달받는 콜백
      */
     private fun loadParticipantsProfiles(
-        memberIds: List<Long>,
+        members: List<ParticipantMember>,
         onComplete: (List<ParticipantItem>) -> Unit
     ) {
         viewModelScope.launch {
             /**코루틴 async를 이용해 각 회원의 프로필 조회를 동시 병렬 요청**/
 
             //각 유저들의 memberId로 정보들 불러오기
-            val tasks = memberIds.map { id -> async { getMemberProfileUseCase(id) } }
+            val tasks = members.map { member -> async { getMemberProfileUseCase(member.memberId) } }
             val responses = tasks.awaitAll()
 
             //각 유저들에 대한 ParticipantItem 만들기
-            val participants = responses.mapNotNull { res ->
-                var item: ParticipantItem? = null
+            val participants = members.zip(responses) { member, res ->
+                var item = member.toParticipantItem()
                 resultResponse(
                     response = res,
                     successCallback = { profile ->
                         //최신 기수 정보 가져오기
                         val gisuSummary = profile.getGisuSummaryList().maxByOrNull { it.gisu }
+                        // 운영진 역할만 있는 기수는 챌린저 기록이 비어 있으므로 역할의 담당 파트로 대신한다
+                        val partRecord = gisuSummary?.fromRecords?.firstOrNull()
+                            ?: gisuSummary?.fromRoles?.firstOrNull()
                         item = ParticipantItem(
                             id = profile.id,
                             name = profile.name,
@@ -172,16 +176,25 @@ constructor(
                             school = profile.schoolName,
                             profileImage = profile.profileImageLink,
                             gisu = gisuSummary?.gisu ?: 0L,
-                            userPart = UserPart.from(gisuSummary?.fromRecords?.get(0)?.responsiblePart)
+                            userPart = UserPart.from(partRecord?.responsiblePart)
                         )
                     })
-                    item
+                item
             }
 
             //UI 작업 함수 핸들링
             onComplete(participants)
         }
     }
+
+    /** 프로필 조회 전(또는 실패 시) 일정 상세가 준 정보만으로 만든 참석자. 기수·파트는 모르므로 기본값이다. */
+    private fun ParticipantMember.toParticipantItem() = ParticipantItem(
+        id = memberId,
+        name = name.orEmpty(),
+        nickname = nickname.orEmpty(),
+        school = schoolName.orEmpty(),
+        profileImage = profileImageUrl.orEmpty(),
+    )
 
     /**
      * 서버에서 가져온 일정 상세 도메인 데이터(PlanDetailItem)를 ViewModel UI 상태에 파싱 및 적용하는 메서드
@@ -224,7 +237,7 @@ constructor(
             //6. 카테고리 매칭
             val updatedCategories = categories.map { item ->
                 item.copy(isChecked = detail.tags.any { it.label == item.name })
-            }
+            }.toImmutableList()
             val selectedOnes = updatedCategories.filter { it.isChecked }
             val summaryText = when {
                 selectedOnes.isEmpty() -> ""
@@ -338,13 +351,15 @@ constructor(
 
     /**
      * 입력을 완료한 일정 데이터를 서버로 생성 또는 수정하여
-     * 전송하는 메서드
-     *
-     * @param isAttendance 출석부 정책 생성 여부 플래그
+     * 전송하는 메서드. 출석부 생성 여부는 화면 상태(isAttendanceChecked)를 그대로 쓴다.
      */
-    fun submitPlan(isAttendance: Boolean){
+    fun submitPlan(){
         val state = uiState.value
+        val isAttendance = state.isAttendanceChecked
         val isEditMode = state.updateScheduleId != -1L
+
+        // 수정할 일정을 불러오지 못했으면 빈 값으로 기존 일정을 덮어쓰지 않도록 보내지 않는다
+        if (state.isDetailLoadFailed) return
 
         // 미선택 상태는 Calendar 기본값(현재 시각)이라 값으로는 구분할 수 없고, 표시 텍스트가 비어 있는지로 판단한다.
         // 비어 있는 채로 보내면 '현재 시각' 일정이 만들어지거나 서버가 일반 오류로만 거절한다.
@@ -427,8 +442,12 @@ constructor(
                         emitEvent(ScheduleAddEvent.MoveBackPressedEvent)
                     },
                     errorCallback = { error ->
-                        emitEvent(ScheduleAddEvent.ShowErrorToast(error.message))
-                    /* 에러 처리 */ }
+                        emitEvent(
+                            ScheduleAddEvent.ShowErrorToast(
+                                error.message.ifBlank { AppStrings.HOME_PLAN_ADD_SAVE_ERROR }
+                            )
+                        )
+                    }
                 )
             } else {
 
@@ -456,7 +475,12 @@ constructor(
                         emitEvent(ScheduleAddEvent.MoveBackPressedEvent)
                     },
                     errorCallback = { error ->
-                        emitEvent(ScheduleAddEvent.ShowErrorToast(error.message))}
+                        emitEvent(
+                            ScheduleAddEvent.ShowErrorToast(
+                                error.message.ifBlank { AppStrings.HOME_PLAN_ADD_SAVE_ERROR }
+                            )
+                        )
+                    }
                 )
             }
         }
@@ -690,7 +714,7 @@ constructor(
                 )
             }
 
-            copy(categories = selectedCategories,
+            copy(categories = selectedCategories.toImmutableList(),
                 isSelectedCategory = isSelected,
                 selectedCategoriesString = summaryText
             )
@@ -721,6 +745,8 @@ data class ScheduleAddUiState(
     ////스케쥴 수정용 id
     val updateScheduleId : Long = -1L,
     val editMode : Boolean = false,
+    //수정 모드에서 기존 일정 조회 실패 여부 (true 면 저장을 막는다)
+    val isDetailLoadFailed: Boolean = false,
 
 
     //운영진 여부 판단
@@ -769,7 +795,7 @@ data class ScheduleAddUiState(
 
 
     //카테고리 리스트
-    val categories: List<CategoryItem> = listOf(
+    val categories: ImmutableList<CategoryItem> = persistentListOf(
         CategoryItem(CategoryType.NETWORKING.label, R.drawable.ic_networking_off, R.drawable.ic_networking_on),
         CategoryItem(CategoryType.PROJECT.label, R.drawable.ic_project_off, R.drawable.ic_project_on),
         CategoryItem(CategoryType.DUES.label, R.drawable.ic_fees_off, R.drawable.ic_fees_on),
@@ -800,7 +826,8 @@ data class ScheduleAddUiState(
 
 
     // 필수 입력 조건(제목, 카테고리, 대면 장소) 통과 여부를 실시간으로 연산하여 등록 버튼 활성화 상태를 반환하는 프로퍼티
-    val isRegisterOk: Boolean get() = planTitle.isNotBlank() && isSelectedCategory && (isOnlineChecked || planLocation.isNotEmpty())
+    // 수정할 일정을 불러오지 못했으면 빈 폼으로 덮어쓰지 않도록 비활성화한다
+    val isRegisterOk: Boolean get() = !isDetailLoadFailed && planTitle.isNotBlank() && isSelectedCategory && (isOnlineChecked || planLocation.isNotEmpty())
 }
 
 sealed interface ScheduleAddEvent : UiEvent {

@@ -54,6 +54,42 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
     private var selectedLoadJob: Job? = null
 
     /**
+     * 검색 요청 세대
+     *
+     * 디바운스만 취소되고 이미 보낸 요청은 끝까지 돌아오므로,
+     * 검색어가 바뀌거나 검색을 비운 뒤 도착한 이전 응답은 이 값으로 걸러 버린다.
+     */
+    private var searchGeneration = 0
+
+    /**
+     * 이미 초기화한 시트 입력(기존 선택 멤버, API 재조회 여부)
+     *
+     * 시트는 화면 회전·다크 모드 전환 때마다 다시 그려져 [open] 이 다시 불린다.
+     * 같은 입력이면 무시해 편집 중이던 선택과 검색을 지키고, 시트를 닫을 때 [resetAfterDismiss] 에서 비운다.
+     */
+    private var initializedFor: Pair<List<AdminStudyGroupCreateMemberUiModel>, Boolean>? = null
+
+    /**
+     * 바텀시트가 열릴 때 기존 선택 멤버로 한 번만 초기화합니다.
+     *
+     * @param resolveFromApi true 이면 기존 멤버를 유지한 채 API 에서 찾은 멤버 정보만 다시 채운다.
+     */
+    fun open(
+        preSelected: List<AdminStudyGroupCreateMemberUiModel>,
+        resolveFromApi: Boolean = false,
+    ) {
+        val input = preSelected to resolveFromApi
+        if (initializedFor == input) return
+        initializedFor = input
+
+        if (resolveFromApi) {
+            loadSelectedMembers(preSelected)
+        } else {
+            setSelected(preSelected)
+        }
+    }
+
+    /**
      * 바텀시트를 처음 열 때 현재 선택된 멤버 목록을 설정합니다.
      *
      * 생성 화면에서 이미 선택되어 있던 스터디원이나
@@ -64,6 +100,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
     ) {
         searchJob?.cancel()
         selectedLoadJob?.cancel()
+        searchGeneration++
 
         updateState {
             copy(
@@ -93,6 +130,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
         query: String,
     ) {
         searchJob?.cancel()
+        searchGeneration++
 
         if (query.isBlank()) {
             clearSearchOnly()
@@ -147,6 +185,9 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
             )
         }
 
+        // 응답이 돌아왔을 때 그 사이 새 검색이 시작됐는지 확인하기 위해 요청 시점의 세대를 기억한다.
+        val generation = searchGeneration
+
         viewModelScope.launch {
             val cursor = if (isNextPage) {
                 currentState.nextCursor
@@ -163,6 +204,8 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                     },
                 ),
                 successCallback = { response ->
+                    // 이전 검색어의 늦은 응답이 새 결과를 덮거나 뒤에 붙지 않게 버린다.
+                    if (generation != searchGeneration) return@resultResponse
 
                     // API 응답을 스터디 그룹 멤버 UI 모델로 변환
                     val mappedMembers = response.content.map { participant ->
@@ -200,6 +243,8 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
                     }
                 },
                 errorCallback = {
+                    if (generation != searchGeneration) return@resultResponse
+
                     updateState {
                         copy(
                             isLoading = false,
@@ -226,6 +271,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
     ) {
         searchJob?.cancel()
         selectedLoadJob?.cancel()
+        searchGeneration++
 
         if (preSelected.isEmpty()) {
             setSelected(
@@ -415,6 +461,9 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
      * 현재 선택 멤버 목록 화면으로 돌아갑니다.
      */
     fun confirmPendingMembers() {
+        searchJob?.cancel()
+        searchGeneration++
+
         updateState {
             copy(
                 selectedMembers = (
@@ -459,6 +508,7 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
      */
     fun clearSearchOnly() {
         searchJob?.cancel()
+        searchGeneration++
 
         updateState {
             copy(
@@ -481,6 +531,8 @@ class GroupCreateMemberPickerViewModel @Inject constructor(
     fun resetAfterDismiss() {
         searchJob?.cancel()
         selectedLoadJob?.cancel()
+        searchGeneration++
+        initializedFor = null
 
         updateState {
             GroupCreateMemberPickerState()

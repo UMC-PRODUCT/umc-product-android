@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
+import com.umc.component.theme.AppStrings
 import com.example.mypage.mypage.CODE_ALREADY_USED
 import com.umc.domain.model.mypage.UserActiveItem
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
@@ -108,7 +109,8 @@ class ActivityHistoryViewModel @Inject constructor(
                         // 이미 사용된 코드는 다시 입력해도 소용없으므로 입력을 비우고 문의 채널을 안내한다
                         updateState { copy(isUsedCodeDialogOpen = true, code = "") }
                     } else {
-                        emitEvent(ActivityHistoryEvent.ShowToast(failState.message))
+                        // 표준 응답이 아닌 실패는 message 가 비어 올 수 있어 기본 문구로 보정한다
+                        emitEvent(ActivityHistoryEvent.ShowToast(failState.message.ifBlank { AppStrings.MYPAGE_ADDCODE_FAIL }))
                     }
                 }
             )

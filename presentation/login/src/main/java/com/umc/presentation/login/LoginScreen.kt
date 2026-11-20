@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
@@ -51,6 +52,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.kakao.sdk.common.model.AuthError
+import com.kakao.sdk.common.model.AuthErrorCause
+import com.kakao.sdk.common.model.ClientError
+import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
 import com.umc.component.component.UText
 import com.umc.component.component.UToastData
@@ -68,7 +73,6 @@ import com.umc.component.theme.teal600
 import com.umc.component.util.ULog
 import com.umc.domain.model.enums.LoginType
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import com.umc.component.R
 
@@ -94,7 +98,11 @@ fun LoginRoute(
                 is LoginEvent.MoveToMainEvent -> navigateToMain()
                 is LoginEvent.MoveToInputCodeEvent -> navigateToInputCode()
                 is LoginEvent.ShowErrorToast ->
-                    toastData = UToastData(event.message, UToastState.ERROR)
+                    // 서버가 빈 메시지를 주면 빈 토스트가 뜨지 않게 공용 문구로 대신한다
+                    toastData = UToastData(
+                        event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED },
+                        UToastState.ERROR,
+                    )
             }
     }
 
@@ -103,7 +111,8 @@ fun LoginRoute(
             onClickKakaoLogin = {
                 signInKakao(
                     context = context,
-                    onLoginSuccess = { token -> viewModel.login(token, LoginType.KAKAO) }
+                    onLoginSuccess = { token -> viewModel.login(token, LoginType.KAKAO) },
+                    onFailure = { message -> toastData = UToastData(message, UToastState.ERROR) }
                 )
             },
             onClickGoogleLogin = {
@@ -116,8 +125,8 @@ fun LoginRoute(
             },
             onClickEmailLogin = navigateToEmailLogin,
             onClickHelpCenter = {
-                runCatching {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri()))
+                if (!context.openExternalUrl(KAKAO_INQUIRY_URL)) {
+                    toastData = UToastData(AppStrings.COMMON_LINK_OPEN_FAIL, UToastState.ERROR)
                 }
             },
         )
@@ -199,10 +208,11 @@ fun LoginScreen(
             ) {
                 Spacer(modifier = Modifier.height(104.dp))
 
+                // 버튼 문구가 이미지 안에 그려져 있어 스크린리더용 설명과 버튼 역할을 따로 붙인다
                 Image(
                     painter = painterResource(id = R.drawable.ic_kakao_login),
-                    contentDescription = null,
-                    modifier = Modifier.clickable {
+                    contentDescription = AppStrings.LOGIN_KAKAO_BUTTON,
+                    modifier = Modifier.clickable(role = Role.Button) {
                         onClickKakaoLogin()
                     },
                 )
@@ -211,8 +221,8 @@ fun LoginScreen(
 
                 Image(
                     painter = painterResource(id = R.drawable.ic_google_login),
-                    contentDescription = null,
-                    modifier = Modifier.clickable {
+                    contentDescription = AppStrings.LOGIN_GOOGLE_BUTTON,
+                    modifier = Modifier.clickable(role = Role.Button) {
                         onClickGoogleLogin()
                     },
                 )
@@ -289,23 +299,39 @@ fun LoginScreen(
 
 private fun signInKakao(
     context : Context,
-    onLoginSuccess : (String) -> Unit
+    onLoginSuccess : (String) -> Unit,
+    onFailure : (String) -> Unit
 ) {
     if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-        signInKakaoApp(context, onLoginSuccess)
+        signInKakaoApp(context, onLoginSuccess, onFailure)
     } else {
-        signInKakaoEmail(context, onLoginSuccess)
+        signInKakaoEmail(context, onLoginSuccess, onFailure)
     }
 }
+
+// 사용자가 로그인을 직접 취소한 경우인지 판별한다.
+// 동의 화면에서 취소를 누르면 ClientError 가 아니라 AuthError(AccessDenied)로 오므로 함께 본다
+private fun Throwable.isKakaoCancelled(): Boolean =
+    (this is ClientError && reason == ClientErrorCause.Cancelled) ||
+        (this is AuthError && reason == AuthErrorCause.AccessDenied)
 
 // 카카오 로그인(앱으로)
 private fun signInKakaoApp(
     context : Context,
-    onLoginSuccess : (String) -> Unit
+    onLoginSuccess : (String) -> Unit,
+    onFailure : (String) -> Unit
 ) {
     UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
-        token?.let {
-            onLoginSuccess(token.accessToken)
+        when {
+            token != null -> onLoginSuccess(token.accessToken)
+            error == null -> Unit
+            // 사용자가 직접 취소한 경우는 안내도, 카카오계정 로그인 전환도 하지 않는다
+            error.isKakaoCancelled() -> Unit
+            // 카카오톡이 로그인되지 않았거나 연결에 실패하면 카카오계정 로그인으로 넘어간다(카카오 SDK 권장 흐름)
+            else -> {
+                ULog.d("카카오톡 로그인 실패: ${error::class.simpleName} ${error.message}")
+                signInKakaoEmail(context, onLoginSuccess, onFailure)
+            }
         }
     }
 }
@@ -313,14 +339,30 @@ private fun signInKakaoApp(
 // 카카오 로그인(웹으로)
 private fun signInKakaoEmail(
     context : Context,
-    onLoginSuccess : (String) -> Unit
+    onLoginSuccess : (String) -> Unit,
+    onFailure : (String) -> Unit
 ) {
     UserApiClient.instance.loginWithKakaoAccount(context) { token, error ->
-        token?.let {
-            onLoginSuccess(token.accessToken)
+        when {
+            token != null -> onLoginSuccess(token.accessToken)
+            error == null -> Unit
+            error.isKakaoCancelled() -> Unit
+            else -> {
+                ULog.d("카카오계정 로그인 실패: ${error::class.simpleName} ${error.message}")
+                onFailure(AppStrings.LOGIN_KAKAO_FAILED)
+            }
         }
     }
 }
+
+/**
+ * 외부 링크를 연다. 링크를 열 앱(브라우저 등)이 없으면 앱이 종료되지 않게 false 를 돌려주고,
+ * 안내는 호출한 화면이 한다
+ */
+private fun Context.openExternalUrl(url: String): Boolean =
+    runCatching { startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
+        .onFailure { ULog.d("외부 링크 열기 실패: ${it::class.simpleName}") }
+        .isSuccess
 
 // 구글 로그인
 private fun signInGoogle(

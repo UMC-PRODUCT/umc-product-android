@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,8 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -51,26 +48,7 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.green500
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
-import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
 import com.umc.presentation.act.admin.challenger.POINT_DESCRIPTION_MAX_LENGTH
-
-@Composable
-fun OtherPointsRoute(
-    challengerId: Long = 0L,
-    viewModel: AdminChallengerViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    OtherPointsScreen(
-        uiState = uiState,
-        onRewardMinusClick = viewModel::decreaseRewardScore,
-        onRewardPlusClick = viewModel::increaseRewardScore,
-        onPunishMinusClick = viewModel::decreasePunishScore,
-        onPunishPlusClick = viewModel::increasePunishScore,
-        onReasonChange = viewModel::onCustomReasonChanged,
-        onSubmitClick = { viewModel.grantCustomPoint(challengerId) }
-    )
-}
 
 @Composable
 fun OtherPointsScreen(

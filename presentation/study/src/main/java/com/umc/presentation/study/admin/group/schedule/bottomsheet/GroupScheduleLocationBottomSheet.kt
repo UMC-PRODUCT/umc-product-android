@@ -2,7 +2,6 @@ package com.umc.presentation.study.admin.group.schedule.bottomsheet
 
 import com.umc.component.theme.AppStrings
 import android.view.MotionEvent
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -30,12 +28,13 @@ import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.compose.*
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.*
 import com.umc.domain.model.home.LocationItem
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 /**
@@ -62,8 +61,8 @@ fun GroupScheduleLocationBottomSheet(
     // ViewModel의 현재 장소 선택 상태 구독
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Toast 출력에 사용할 Context
-    val context = LocalContext.current
+    // 시트 안 토스트도 앱 토스트로 띄워, 일정 화면의 토스트와 한자리에서 하나씩만 보이게 한다.
+    val toast = LocalUToast.current
 
     // 장소 검색 후 키보드 포커스 해제에 사용
     val focusManager = LocalFocusManager.current
@@ -113,7 +112,7 @@ fun GroupScheduleLocationBottomSheet(
     /**
      * ViewModel에서 발생하는 일회성 이벤트 처리
      *
-     * - Toast 출력
+     * - 토스트 출력
      * - 지도 카메라 이동
      * - 장소 선택 완료
      */
@@ -123,11 +122,7 @@ fun GroupScheduleLocationBottomSheet(
              * 검색 실패 등의 안내 메시지 표시
              */
             is GroupScheduleLocationEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT
-                ).show()
+                toast.show(event.message, event.state)
             }
 
             /**
@@ -202,118 +197,132 @@ fun GroupScheduleLocationBottomSheet(
             topEnd = 28.dp
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(760.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            /**
-             * 장소 검색 영역
-             *
-             * 장소명 또는 주소를 입력하고
-             * 검색 버튼 또는 키보드 Search 버튼으로 검색합니다.
-             */
-            GroupScheduleLocationHeaderAndSearchBar(
-                searchQuery = state.searchQuery,
-                onQueryChanged = viewModel::onQueryChanged,
-                onSearchClick = {
-                    viewModel.searchLocation(
-                        state.searchQuery
-                    )
-
-                    focusManager.clearFocus()
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
-
-            /**
-             * 네이버 지도 영역
-             *
-             * 지도 중심에는 고정 마커를 표시하며
-             * 지도를 움직여 직접 장소를 지정할 수 있습니다.
-             */
-            GroupScheduleLocationNaverMapContent(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp),
-                cameraPositionState =
-                    cameraPositionState
-            )
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
-
-            /**
-             * 현재 선택된 장소 정보
-             *
-             * 장소명과 주소를 확인하고
-             * 선택 버튼을 눌러 최종 확정합니다.
-             */
-            GroupScheduleSelectedLocationCard(
-                selectedPlace =
-                    state.selectedPlace,
-                onConfirmClick =
-                    viewModel::confirmSelection
-            )
-
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
-
-            /**
-             * 검색어 상태에 따른 하단 목록
-             *
-             * 검색어가 없을 때
-             * -> 최근 검색어
-             *
-             * 검색어가 있을 때
-             * -> 장소 검색 결과
-             */
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .height(760.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp)
             ) {
-                if (state.searchQuery.isEmpty()) {
-                    GroupScheduleRecentSearchList(
-                        recentSearchList =
-                            state.recentSearchList,
+                /**
+                 * 장소 검색 영역
+                 *
+                 * 장소명 또는 주소를 입력하고
+                 * 검색 버튼 또는 키보드 Search 버튼으로 검색합니다.
+                 */
+                GroupScheduleLocationHeaderAndSearchBar(
+                    searchQuery = state.searchQuery,
+                    onQueryChanged = viewModel::onQueryChanged,
+                    onSearchClick = {
+                        viewModel.searchLocation(
+                            state.searchQuery
+                        )
 
-                        onItemClick = { recentText ->
-                            // 최근 검색어를 검색창에 적용
-                            viewModel.onQueryChanged(
-                                recentText
-                            )
+                        focusManager.clearFocus()
+                    }
+                )
 
-                            // 해당 검색어로 장소 검색
-                            viewModel.searchLocation(
-                                recentText
-                            )
-                        }
-                    )
-                } else {
-                    GroupScheduleSearchResultList(
-                        searchResultList =
-                            state.searchResultList,
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
 
-                        onItemClick = { placeItem ->
-                            // 검색 결과 장소 선택
-                            viewModel.selectSearchResult(
-                                placeItem
-                            )
+                /**
+                 * 네이버 지도 영역
+                 *
+                 * 지도 중심에는 고정 마커를 표시하며
+                 * 지도를 움직여 직접 장소를 지정할 수 있습니다.
+                 */
+                GroupScheduleLocationNaverMapContent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp),
+                    cameraPositionState =
+                        cameraPositionState
+                )
 
-                            // 키보드 포커스 해제
-                            focusManager.clearFocus()
-                        }
-                    )
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+
+                /**
+                 * 현재 선택된 장소 정보
+                 *
+                 * 장소명과 주소를 확인하고
+                 * 선택 버튼을 눌러 최종 확정합니다.
+                 */
+                GroupScheduleSelectedLocationCard(
+                    selectedPlace =
+                        state.selectedPlace,
+                    onConfirmClick =
+                        viewModel::confirmSelection
+                )
+
+                Spacer(
+                    modifier = Modifier.height(24.dp)
+                )
+
+                /**
+                 * 검색어 상태에 따른 하단 목록
+                 *
+                 * 검색어가 없을 때
+                 * -> 최근 검색어
+                 *
+                 * 검색어가 있을 때
+                 * -> 장소 검색 결과
+                 */
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    if (state.searchQuery.isEmpty()) {
+                        GroupScheduleRecentSearchList(
+                            recentSearchList =
+                                state.recentSearchList,
+
+                            onItemClick = { recentText ->
+                                // 최근 검색어를 검색창에 적용
+                                viewModel.onQueryChanged(
+                                    recentText
+                                )
+
+                                // 해당 검색어로 장소 검색
+                                viewModel.searchLocation(
+                                    recentText
+                                )
+                            }
+                        )
+                    } else {
+                        GroupScheduleSearchResultList(
+                            searchResultList =
+                                state.searchResultList,
+
+                            onItemClick = { placeItem ->
+                                // 검색 결과 장소 선택
+                                viewModel.selectSearchResult(
+                                    placeItem
+                                )
+
+                                // 키보드 포커스 해제
+                                focusManager.clearFocus()
+                            }
+                        )
+                    }
                 }
             }
+
+            // 시트는 별도 창이라 앱 토스트가 가려진다. 시트가 열린 동안 띄운 토스트를 시트 위에 그린다.
+            UToastOverlay(
+                controller = toast,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

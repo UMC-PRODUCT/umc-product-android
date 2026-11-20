@@ -27,8 +27,6 @@ import com.umc.domain.model.request.member.RegisterEmailRequest
 import com.umc.domain.model.request.member.RegisterRequest
 import com.umc.domain.model.request.member.UpdateLinkRequest
 import com.umc.domain.repository.member.MemberRepository
-import com.umc.domain.usecase.appDataStore.ClearTokensUseCase
-import com.umc.domain.usecase.appDataStore.UpdateUserInfoUseCase
 import javax.inject.Inject
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
@@ -38,8 +36,6 @@ import kotlinx.coroutines.CancellationException
 class MemberRepositoryImpl @Inject constructor(
     private val appDataStore: AppDataStore,
     private val memberRemoteDataSource: MemberRemoteDataSource,
-    private val updateUserInfoUseCase: UpdateUserInfoUseCase,
-    private val clearTokensUseCase: ClearTokensUseCase,
 ) : MemberRepository {
 
     //내 정보 가져오기 + dataStore에 저장하기

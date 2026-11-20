@@ -3,11 +3,8 @@ package com.example.mypage.qrcode
 import android.Manifest
 import android.content.Intent
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,30 +30,25 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import com.example.mypage.mycard.CardExchangeSuccessOverlay
-import com.example.mypage.mycard.MycardUiState
 import com.example.mypage.qrcode.QrCodeUtils
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
-import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
@@ -64,16 +56,11 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
 import com.umc.component.theme.grey500
-import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
-import com.umc.component.theme.grey800
-import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main400
 import com.umc.component.theme.main500
 import com.umc.component.theme.white
-import com.umc.domain.model.mypage.UserCard
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -83,13 +70,15 @@ fun QrCodeRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    // 화면에 머무는 안내라 앱 공용 토스트로 띄운다
+    val toast = LocalUToast.current
 
     //권한 요청
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         if (!permissions.values.all { it }) {
-            Toast.makeText(context, AppStrings.QRCODE_PERMISSION_REQUIRED, Toast.LENGTH_SHORT).show()
+            toast.show(AppStrings.QRCODE_PERMISSION_REQUIRED, UToastState.ERROR)
         }
     }
 
@@ -102,7 +91,7 @@ fun QrCodeRoute(
         when (event) {
             is QrCodeEvent.NavigateBack -> onNavigateToBack()
             is QrCodeEvent.ShowToast -> {
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                toast.show(event.message, if (event.isSuccess) UToastState.CHECK else UToastState.ERROR)
             }
             is QrCodeEvent.ShareQrCode -> {
                 // 1. UI State 또는 스냅샷에서 보유 중인 ImageBitmap 가져오기
@@ -122,10 +111,10 @@ fun QrCodeRoute(
 
                         context.startActivity(Intent.createChooser(shareIntent, AppStrings.QRCODE_SHARE_CHOOSER_TITLE))
                     } else {
-                        Toast.makeText(context, AppStrings.QRCODE_IMAGE_CREATE_ERROR, Toast.LENGTH_SHORT).show()
+                        toast.show(AppStrings.QRCODE_IMAGE_CREATE_ERROR, UToastState.ERROR)
                     }
                 } else {
-                    Toast.makeText(context, AppStrings.QRCODE_IMAGE_MISSING_ERROR, Toast.LENGTH_SHORT).show()
+                    toast.show(AppStrings.QRCODE_IMAGE_MISSING_ERROR, UToastState.ERROR)
                 }
             }
         }

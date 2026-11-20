@@ -82,6 +82,9 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      */
     private var loadJob: Job? = null
     private var sessionGeneration = 0
+
+    /** 마지막으로 초기화한 시트 세션. 같은 세션의 재호출(회전)은 상태를 유지한다. */
+    private var initializedSessionKey: String? = null
     private val profileRequests = Semaphore(4)
 
     /**
@@ -122,7 +125,12 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      */
     fun initialize(
         threadId: String,
+        session: String? = null,
     ) {
+        // 시트가 열린 채로 회전하면 같은 세션 키로 다시 불린다. 검색어와 새로 고른 멤버를 지우지 않도록 건너뛴다.
+        val sessionKey = session?.let { "$it:$threadId" }
+        if (sessionKey != null && sessionKey == initializedSessionKey) return
+        initializedSessionKey = sessionKey
         sessionGeneration++
         if (threadId.isBlank()) {
             emitEvent(
@@ -640,6 +648,7 @@ class CommunityMemberBottomSheetViewModel @Inject constructor(
      * 진행 중인 검색 Job도 함께 취소합니다.
      */
     fun resetAfterDismiss() {
+        initializedSessionKey = null
         sessionGeneration++
         searchJob?.cancel()
         loadJob?.cancel()

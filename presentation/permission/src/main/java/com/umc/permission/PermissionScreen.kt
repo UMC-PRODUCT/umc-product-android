@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
@@ -49,15 +49,11 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
-import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
-import com.umc.component.theme.main600
 import com.umc.component.theme.main700
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -112,7 +108,11 @@ fun PermissionRoute(
             PermissionEvent.MoveToMainEvent -> navigateToMain()
             PermissionEvent.MoveToFailEvent -> navigateToFail()
             is PermissionEvent.ShowErrorToast ->
-                toastData = UToastData(event.message, UToastState.ERROR)
+                // 서버가 빈 메시지를 주면 빈 토스트가 뜨지 않게 공용 문구로 대신한다
+                toastData = UToastData(
+                    event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED },
+                    UToastState.ERROR,
+                )
         }
     }
 
@@ -158,13 +158,14 @@ fun PermissionScreen(
             modifier = Modifier
                 .weight(1f)
         ) {
+            // clickable 을 안쪽 패딩보다 먼저 둬서 아이콘 둘레 12dp 까지 눌리게 한다(터치 영역 48dp)
             Icon(
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .padding(12.dp)
-                    .clickable { onClickBack() },
+                    .clickable(role = Role.Button) { onClickBack() }
+                    .padding(12.dp),
                 painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = null,
+                contentDescription = AppStrings.COMMON_BACK,
                 tint = Color.Unspecified
             )
 

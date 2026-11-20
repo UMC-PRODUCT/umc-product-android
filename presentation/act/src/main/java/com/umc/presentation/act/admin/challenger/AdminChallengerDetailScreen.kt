@@ -1,6 +1,5 @@
 package com.umc.presentation.act.admin.challenger
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,13 +29,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +50,10 @@ import com.umc.component.component.UInfoChip
 import com.umc.component.component.UInfraChip
 import com.umc.component.component.UInfoChipType
 import com.umc.component.component.UText
+import com.umc.component.component.LocalUToast
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Body
@@ -85,9 +90,7 @@ import com.umc.presentation.act.admin.challenger.bottomsheet.OtherPointsScreen
 import com.umc.presentation.act.admin.challenger.bottomsheet.PenaltyPointsScreen
 import com.umc.presentation.act.admin.challenger.bottomsheet.RewardPointsScreen
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 private enum class PointGrantSheet {
@@ -104,8 +107,13 @@ fun AdminChallengerDetailRoute(
     viewModel: AdminChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val toast = LocalUToast.current
     var pointGrantSheet by remember { mutableStateOf<PointGrantSheet?>(null) }
+    // 상벌점 시트는 별도 창이라 앱 공용 토스트가 시트에 가려진다. 시트가 열려 있을 때는 시트 안 호스트로 띄운다.
+    // 시트를 바꾸거나 닫으면 지워, 다음에 시트를 열 때 지난 토스트가 다시 보이지 않게 한다.
+    var sheetToastData by remember(pointGrantSheet) { mutableStateOf<UToastData?>(null) }
+    // 같은 실패 문구가 연달아 와도 다시 나타나도록 띄울 때마다 올린다
+    var sheetToastGeneration by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(challengerId) {
         viewModel.getChallengerDetail(challengerId)
@@ -114,8 +122,15 @@ fun AdminChallengerDetailRoute(
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             AdminChallengerEvent.PointGranted -> pointGrantSheet = null
-            is AdminChallengerEvent.ShowToast ->
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            is AdminChallengerEvent.ShowToast -> {
+                val message = event.message.ifBlank { AppStrings.COMMON_NETWORK_ERROR_DESCRIPTION }
+                if (pointGrantSheet != null) {
+                    sheetToastData = UToastData(message, UToastState.ERROR)
+                    sheetToastGeneration++
+                } else {
+                    toast.show(message, UToastState.ERROR)
+                }
+            }
         }
     }
 
@@ -151,31 +166,44 @@ fun AdminChallengerDetailRoute(
             containerColor = Color.Transparent,
             dragHandle = null,
         ) {
-            when (sheet) {
-                PointGrantSheet.PENALTY -> PenaltyPointsScreen(
-                    uiState = uiState,
-                    onFilterSelected = viewModel::selectPenaltyFilter,
-                    onSelectPenalty = viewModel::selectPenalty,
-                    onMemoChange = viewModel::onMemoChanged,
-                    onSubmitClick = { viewModel.grantPenalty(challengerId) },
-                )
+            Box {
+                when (sheet) {
+                    PointGrantSheet.PENALTY -> PenaltyPointsScreen(
+                        uiState = uiState,
+                        onFilterSelected = viewModel::selectPenaltyFilter,
+                        onSelectPenalty = viewModel::selectPenalty,
+                        onMemoChange = viewModel::onMemoChanged,
+                        onSubmitClick = { viewModel.grantPenalty(challengerId) },
+                    )
 
-                PointGrantSheet.REWARD -> RewardPointsScreen(
-                    uiState = uiState,
-                    onSelectReward = viewModel::selectReward,
-                    onMemoChange = viewModel::onMemoChanged,
-                    onSubmitClick = { viewModel.grantReward(challengerId) },
-                )
+                    PointGrantSheet.REWARD -> RewardPointsScreen(
+                        uiState = uiState,
+                        onSelectReward = viewModel::selectReward,
+                        onMemoChange = viewModel::onMemoChanged,
+                        onSubmitClick = { viewModel.grantReward(challengerId) },
+                    )
 
-                PointGrantSheet.OTHER -> OtherPointsScreen(
-                    uiState = uiState,
-                    onRewardMinusClick = viewModel::decreaseRewardScore,
-                    onRewardPlusClick = viewModel::increaseRewardScore,
-                    onPunishMinusClick = viewModel::decreasePunishScore,
-                    onPunishPlusClick = viewModel::increasePunishScore,
-                    onReasonChange = viewModel::onCustomReasonChanged,
-                    onSubmitClick = { viewModel.grantCustomPoint(challengerId) },
-                )
+                    PointGrantSheet.OTHER -> OtherPointsScreen(
+                        uiState = uiState,
+                        onRewardMinusClick = viewModel::decreaseRewardScore,
+                        onRewardPlusClick = viewModel::increaseRewardScore,
+                        onPunishMinusClick = viewModel::decreasePunishScore,
+                        onPunishPlusClick = viewModel::increasePunishScore,
+                        onReasonChange = viewModel::onCustomReasonChanged,
+                        onSubmitClick = { viewModel.grantCustomPoint(challengerId) },
+                    )
+                }
+
+                key(sheetToastGeneration) {
+                    UToastHost(
+                        data = sheetToastData,
+                        onDismiss = { sheetToastData = null },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .imePadding()
+                            .padding(horizontal = 16.dp, vertical = 24.dp),
+                    )
+                }
             }
         }
     }
@@ -217,7 +245,8 @@ fun AdminChallengerDetailScreen(
             return@Column
         }
 
-        val ui = detail.toDetailUi()
+        // 메모 입력처럼 다른 상태가 바뀔 때마다 상세 UI 모델을 다시 만들지 않도록 상세가 바뀔 때만 변환한다
+        val ui = remember(detail) { detail.toDetailUi() }
         val permission = uiState.pointPermission
 
         LazyColumn(
