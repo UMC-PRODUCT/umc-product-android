@@ -388,7 +388,7 @@ Android 공식 Kotlin 스타일 가이드를 따릅니다. 포매팅 자동 검�
 
 - 화면은 `Route`(상태·네비게이션)와 `Screen`(순수 UI)으로 분리하고, `Screen`은 Preview가 가능하도록 상태를 파라미터로 받습니다.
 - 색상·타이포는 하드코딩하지 않고 `presentation:component`의 디자인 토큰을 사용합니다.
-- 미뤄 둔 작업은 이슈를 만들고 `TODO(#이슈번호)`로 남깁니다. 번호 없는 TODO·FIXME·`[임시]` 주석은 lint가 막습니다.
+- 미뤄 둔 작업은 이슈를 만들고 `TODO(#이슈번호)`로 남깁니다. 번호 없는 TODO·FIXME·`[임시]` 주석은 lint가 막습니다(`:domain`은 Android Lint 대상이 아니라 리뷰에서 확인합니다).
 
 </details>
 

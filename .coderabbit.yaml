@@ -107,7 +107,7 @@ reviews:
           - WidthInAfterFillMaxWidth (ERROR): fillMaxWidth 뒤에 있어 적용되지 않는 widthIn·sizeIn
           - LockedScreenOrientation (ERROR): 매니페스트의 screenOrientation 고정, resizeableActivity="false"
           - UnstableCollectionParameter (WARNING): @Composable 파라미터의 List·Set·Map
-          - UntrackedTodo (ERROR): 이슈 번호 없는 TODO·FIXME·[임시] 주석(TODO(#123) 형식만 허용)
+          - UntrackedTodo (ERROR): 이슈 번호 없는 TODO·FIXME·[임시] 주석(TODO(#123) 형식만 허용). domain/** 은 lint 대상이 아니므로 여기서는 지적한다
         이 목록은 UmcIssueRegistryTest 가 레지스트리와 비교한다. 규칙을 바꾸면 여기도 함께 바꾼다.
         모듈 의존 방향은 gradle/module-rules.gradle.kts 가 Gradle 구성 단계에서 막으므로 지적하지 않는다.
         포매팅 자동 검사(ktlint 등)는 적용돼 있지 않다. 포매팅·네이밍 지적은 nitpick (non-blocking) 으로만 남긴다.

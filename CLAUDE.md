@@ -7,7 +7,7 @@ Compose 전환 중인 멀티모듈 앱(`:app`, `:data`, `:domain`, `:presentatio
 
 - 텍스트는 `UText`, 입력은 `UTextField`(`com.umc.component.component`)를 쓴다(lint가 막는다). 입력 동작을 바꿀 일은 호출부가 아니라 `UTextField`에서 한다.
 - 레이아웃은 기기 종류가 아니라 창 크기를 기준으로 생각하고, 폭은 `widthIn(max = …)`로 제한한다. 고정 폭과 매니페스트의 방향·크기 고정은 lint가 막는다.
-- 미뤄 둔 일은 이슈를 만들고 `TODO(#이슈번호)`로 남긴다. 번호 없는 TODO·FIXME·`[임시]`는 lint가 막는다.
+- 미뤄 둔 일은 이슈를 만들고 `TODO(#이슈번호)`로 남긴다. 번호 없는 TODO·FIXME·`[임시]`는 lint가 막는다. 단, `:domain`은 Android Lint 대상이 아니라 막히지 않으니 직접 지킨다.
 
 ## 검증: 초록불이 보장하지 않는 것
 
