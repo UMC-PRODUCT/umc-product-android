@@ -11,6 +11,9 @@ plugins {
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.kotlin.compose) apply false
 }
+
+// 모듈 의존 방향·Kotlin/KSP 버전 규칙. 어기면 구성 단계에서 실패한다.
+apply(from = "gradle/module-rules.gradle.kts")
 // Compose 컴파일러 계측 — 어떤 Composable이 skippable인지, 어떤 파라미터가 unstable인지 리포트로 뽑는다.
 subprojects {
     plugins.withId("org.jetbrains.kotlin.plugin.compose") {

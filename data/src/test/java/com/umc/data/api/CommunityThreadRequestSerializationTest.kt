@@ -2,6 +2,8 @@ package com.umc.data.api
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.umc.data.request.community.ChangeMemberRoleRequest
+import com.umc.data.request.community.ReportMessageRequest
 import com.umc.domain.model.community.thread.CommunityMessageReportReason
 import com.umc.domain.model.community.thread.CommunityThreadRole
 import org.junit.Assert.assertEquals

@@ -1,4 +1,4 @@
-package com.umc.data.remote.response.curriculum
+package com.umc.data.response.curriculum
 
 import com.umc.domain.model.curriculum.ChallengerWorkbookSubmission
 
