@@ -129,7 +129,7 @@ fun MycardRoute(
         mutableStateOf(false)
     }
 
-    // [임시] 명함 교환 차단 — iOS 구현 전까지 교환으로 가는 모든 입구에서 안내 다이얼로그만 띄운다.
+    // 명함 교환 차단 — iOS 구현 전까지 교환으로 가는 모든 입구에서 안내 다이얼로그만 띄운다.
     // 차단 지점: 홈 배너 진입(openExchangeDialog), 명함 교환 버튼, 내 QR 코드, QR 딥링크 수신.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
@@ -154,7 +154,7 @@ fun MycardRoute(
     // QR 딥링크로 전달된 상대방 회원 ID 존재 시 회원 조회 수행
     LaunchedEffect(targetMemberId) {
         if (!viewProfileOnly && !targetMemberId.isNullOrEmpty()) {
-            // [임시] 명함 교환 차단 — 원래 동작: viewModel.searchUser(targetMemberId.toLong())
+            // 명함 교환 차단 — 원래 동작: viewModel.searchUser(targetMemberId.toLong())
             showExchangeBlockedDialog = true
         }
     }
@@ -162,7 +162,7 @@ fun MycardRoute(
     // 홈 화면 등 외부에서 명함 교환 요청 플래그를 가지고 진입 시 다이얼로그 즉시 오픈
     LaunchedEffect(openExchangeDialog) {
         if (!viewProfileOnly && openExchangeDialog && !hasOpenedExchangeDialog) {
-            // [임시] 명함 교환 차단 — 원래 동작: nearbyViewModel.openBottomSheet()
+            // 명함 교환 차단 — 원래 동작: nearbyViewModel.openBottomSheet()
             showExchangeBlockedDialog = true
             hasOpenedExchangeDialog = true //오픈 후 즉시 처리 완료 상태로 변경!
         }
@@ -216,18 +216,18 @@ fun MycardRoute(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onNavigateToMypage = onNavigateToMypage,
-        // [임시] 명함 교환 차단 — 원래 동작: onNavigateToMyqrCode (QR 공유도 교환 경로라 함께 막는다)
+        // 명함 교환 차단 — 원래 동작: onNavigateToMyqrCode (QR 공유도 교환 경로라 함께 막는다)
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
         onNavigateToMyStudy = onNavigateToMyStudy,
         onNavigateToActivityHistory = onNavigateToActivityHistory,
         onRetryProfile = viewModel::getUserInfo,
-        // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
+        // 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
         onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
     )
 
-    // [임시] 명함 교환 차단 안내
+    // 명함 교환 차단 안내
     if (showExchangeBlockedDialog) {
         UDialog(
             title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
@@ -647,7 +647,7 @@ private fun CardFrontContent(
                 }
             }
 
-            // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+            // 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
             // Spacer(modifier = Modifier.height(24.dp))
             // if (!uiState.isViewingMemberProfile) CardBottomButtons(
             //     onExchangeCardClick = onExchangeCardClick,
@@ -711,7 +711,7 @@ private fun CardBackContent(
             }
         }
 
-        // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+        // 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
         // Spacer(modifier = Modifier.height(24.dp))
         // if (!uiState.isViewingMemberProfile) CardBottomButtons(
         //     onExchangeCardClick = onExchangeCardClick,

@@ -39,7 +39,6 @@ data class ScheduleDetailResponse(
             val resolvedLongitude = location?.longitude ?: longitude ?: 0.0
 
             return UserCheckAvailable(
-                /**TODO: 후에 Long 마이그레이션 시 해당 부분 교체 요망**/
                 id = scheduleId,
                 title = name,
                 tags = tags?.filterNotNull(),

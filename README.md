@@ -90,16 +90,18 @@ Gemini Nano로 공지 요약·
 
 | 구분 | 사용 기술 |
 | :---: | :--- |
-| 🧩 **언어 / UI** | Kotlin 2.2.21 · Jetpack Compose (BOM 2025.02.00) · Navigation Compose (Type-safe) |
+| 🧩 **언어 / UI** | Kotlin · Jetpack Compose · Navigation Compose (Type-safe) |
 | 🏗️ **아키텍처** | Clean Architecture (data / domain / presentation) + 멀티 모듈 |
-| 💉 **DI** | Hilt 2.57.2 |
-| 🌐 **네트워크** | Retrofit 3.0.0 · OkHttp · Gson |
-| ⚡ **비동기** | Coroutines 1.10.2 · Flow |
-| 💾 **로컬 저장소** | DataStore 1.2.1 |
-| 🖼️ **이미지** | Coil 2.6.0 |
-| 🔐 **인증** | Kakao SDK 2.23.2 · 이메일 로그인 |
+| 💉 **DI** | Hilt |
+| 🌐 **네트워크** | Retrofit · OkHttp · Gson |
+| ⚡ **비동기** | Coroutines · Flow |
+| 💾 **로컬 저장소** | DataStore |
+| 🖼️ **이미지** | Coil |
+| 🔐 **인증** | Kakao SDK · 이메일 로그인 |
 | 🤖 **AI** | ML Kit GenAI Prompt API (Gemini Nano · 온디바이스) |
 | 🔔 **기타** | Firebase (FCM, Analytics) · ZXing (QR) |
+
+버전은 [`gradle/libs.versions.toml`](gradle/libs.versions.toml)을 기준으로 합니다.
 
 </div>
 
@@ -211,8 +213,10 @@ Gemini Nano로 공지 요약·
 umc-product-android
 ├── 📱 app                  # 애플리케이션 진입점, DI 설정, 매니페스트
 ├── 💾 data                 # Data Layer — API, DTO, DataSource, Repository 구현
-├── 🧠 domain               # Domain Layer — Model, Repository Interface, UseCase
-└── 🎨 presentation         # Presentation Layer — Compose UI
+├── 🧠 domain               # Domain Layer — Model, Repository Interface, UseCase (순수 Kotlin)
+├── 🔍 lint-rules           # 커스텀 Android Lint 규칙 (ERROR 는 CI 를 막음)
+├── ⏱️ benchmark            # Macrobenchmark 성능 측정 (홈 스크롤)
+└── 🎨 presentation         # Presentation Layer — 화면 조립 (MainNavHost)
     ├── component           # 디자인 시스템 (색상·타이포·공통 컴포넌트), Base 클래스
     ├── splash              # 스플래시 · 자동 로그인
     ├── login               # 로그인 (카카오 / 이메일)
@@ -233,12 +237,13 @@ umc-product-android
 <br/>
 
 ```
-presentation  ──▶  domain  ──▶  data
+presentation  ──▶  domain  ◀──  data
 ```
 
-- `presentation` → `domain` → `data` 방향으로만 의존합니다.
+- `domain`은 다른 모듈에 의존하지 않습니다. `data`는 `domain`의 Repository 인터페이스를 구현하고, `app`이 DI로 둘을 연결합니다.
 - `presentation`은 `data`를 직접 참조하지 않고, `domain`의 UseCase를 통해 접근합니다.
-- 화면 모듈끼리는 서로 의존하지 않으며, 공통 요소는 `presentation:component`에 둡니다.
+- 화면 모듈끼리는 서로 의존하지 않으며, 공통 요소는 `presentation:component`에 둡니다. 화면 조립은 `presentation`(MainNavHost)이 맡습니다.
+- 이 규칙은 [`gradle/module-rules.gradle.kts`](gradle/module-rules.gradle.kts)가 Gradle 구성 단계에서 검사해, 어기면 빌드가 실패합니다.
 
 </details>
 
@@ -250,7 +255,7 @@ presentation  ──▶  domain  ──▶  data
 git clone https://github.com/UMC-PRODUCT/umc-product-android.git
 ```
 
-1. Android Studio에서 프로젝트를 엽니다. (JDK 11 · AGP 8.12.3)
+1. Android Studio에서 프로젝트를 엽니다. (JDK 17 이상)
 2. 아래 [시크릿 설정](#-시크릿-설정)을 완료합니다.
 3. `app` 구성으로 실행합니다. (minSdk 24 / targetSdk 36)
 
@@ -364,7 +369,7 @@ PR 작성 시 템플릿 형태가 주어지며, 아래 내용을 작성합니다
 
 <br/>
 
-**Ktlint**를 통해 Android 공식 스타일 가이드를 준수하며, 자동 점검합니다.
+Android 공식 Kotlin 스타일 가이드를 따릅니다. 포매팅 자동 검사(ktlint)는 적용돼 있지 않고, 정적 분석은 Android Lint와 `:lint-rules` 커스텀 규칙이 맡습니다. 커스텀 규칙의 ERROR는 CI를 막습니다.
 
 **Kotlin 네이밍**
 
@@ -383,6 +388,7 @@ PR 작성 시 템플릿 형태가 주어지며, 아래 내용을 작성합니다
 
 - 화면은 `Route`(상태·네비게이션)와 `Screen`(순수 UI)으로 분리하고, `Screen`은 Preview가 가능하도록 상태를 파라미터로 받습니다.
 - 색상·타이포는 하드코딩하지 않고 `presentation:component`의 디자인 토큰을 사용합니다.
+- 미뤄 둔 작업은 이슈를 만들고 `TODO(#이슈번호)`로 남깁니다. 번호 없는 TODO·FIXME·`[임시]` 주석은 lint가 막습니다(`:domain`은 Android Lint 대상이 아니라 리뷰에서 확인합니다).
 
 </details>
 

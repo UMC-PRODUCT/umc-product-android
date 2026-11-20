@@ -21,6 +21,7 @@ class UmcIssueRegistry : IssueRegistry() {
         FixedScreenWidthDetector.ORDER_ISSUE,
         LockedScreenOrientationDetector.ISSUE,
         UnstableCollectionParameterDetector.ISSUE,
+        UntrackedTodoDetector.ISSUE,
     )
 
     override val api: Int = CURRENT_API

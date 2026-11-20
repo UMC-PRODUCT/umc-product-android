@@ -88,7 +88,7 @@ import com.umc.component.util.UPointFormat.toPointText
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * [임시] 명함 교환 차단 — 교환이 막혀 있는 동안 홈 배너로 권하지 않는다.
+ * 명함 교환 차단 — 교환이 막혀 있는 동안 홈 배너로 권하지 않는다.
  *
  * `isBannerVisible` 은 기본값이 true 라 일정 조회가 끝나기 전에도 배너가 잠깐 보인다.
  * 상태가 아니라 그리는 자리에서 막아야 그 깜빡임까지 함께 사라진다.
@@ -111,7 +111,7 @@ fun HomeRoute(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // [임시] 명함 교환 차단 — iOS 구현 전까지 안내 다이얼로그만 띄운다.
+    // 명함 교환 차단 — iOS 구현 전까지 안내 다이얼로그만 띄운다.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 MoveShareCardEvent 를 다시 onNavigateToCardShare() 로 연결한다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
 
@@ -129,13 +129,13 @@ fun HomeRoute(
             is HomeEvent.MoveScheduleDetailEvent -> onNavigateToScheduleDetail(event.plan)
             //일정 추가 이동
             is HomeEvent.MoveScheduleAddEvent -> onNavigateToScheduleAdd()
-            //카드 공유 이동 ([임시] 차단 중이라 이동 대신 안내)
+            // 카드 공유 이동. 차단 중이라 이동 대신 안내한다
             is HomeEvent.MoveShareCardEvent -> showExchangeBlockedDialog = true
             else -> {}
         }
     }
 
-    // [임시] 명함 교환 차단 안내
+    // 명함 교환 차단 안내
     if (showExchangeBlockedDialog) {
         UDialog(
             title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
@@ -207,7 +207,7 @@ fun HomeScreen(
                     .height(16.dp)
                 )
 
-                //카드 교환 배너 ([임시] 명함 교환 차단 중이라 숨긴다)
+                // 카드 교환 배너. 명함 교환 차단 중이라 숨긴다
                 if(!HIDE_CARD_EXCHANGE_BANNER && uiState.isBannerVisible){
                     HomeShareCardsRow(
                         uiState = uiState,

@@ -300,7 +300,7 @@ fun LocationNaverMapContent(
     //현재 컴포지블이 그려지는 있는 안드로이드 뷰
     val localView = LocalView.current
 
-    /**TODO: ModalDialog랑 지도 상의 터치(스와이프) 이벤트 중복 어떻게 해결할까....**/
+    // 바텀시트(ModalDialog)가 지도 스와이프를 가로채지 않도록, 터치하는 동안 부모의 가로채기를 막고 이벤트는 지도로 그대로 넘긴다.
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))

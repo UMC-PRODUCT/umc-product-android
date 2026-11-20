@@ -45,14 +45,6 @@ interface OrganizationRepository {
     // GET
     suspend fun getMyStudyGroup(cursor: Long?, size: Int): ApiState<StudyGroupPage>
 
-    suspend fun getSchoolByKeyword(
-        keyword: String,
-        chapterId: Int,
-        page: Int,
-        size: Int,
-        sort: String
-    ): ApiState<Unit> // SchoolPageResponse
-
     suspend fun getAllChapter(): ApiState<List<Chapter>>
 
     suspend fun getChapterDetail(chapterId: Long): ApiState<Chapter>
@@ -67,12 +59,6 @@ interface OrganizationRepository {
     suspend fun getStudyGroupDetail(groupId: Long): ApiState<StudyGroupDetail>
 
     suspend fun getSchoolDetail(schoolId: Long): ApiState<SchoolInfo> //SchoolDetailResponse -> 기존에 작성한 SchoolInfo 사용
-
-    suspend fun getMyStudyGroupList(): ApiState<Unit> //MyStudyGroupListResponse
-
-    suspend fun getUnassignedSchool(gisuId: Int): ApiState<Unit> //SchoolListResponse
-
-    suspend fun getSchoolLink(schoolId: Int): ApiState<Unit> //SchoolLinksResponse
 
     suspend fun getAllSchool(): ApiState<List<SchoolInfo>>
 

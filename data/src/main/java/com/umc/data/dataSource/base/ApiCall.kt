@@ -29,7 +29,6 @@ suspend inline fun <reified T> apiCall(
         }
 
     } catch (e: HttpException) {
-        //TODO 공통 에러
         val errorBodyStr = e.response()?.errorBody()?.string()
         // 오류 응답의 result 타입은 성공 응답의 T와 다를 수 있으므로
         // 메시지 파싱이 실패하지 않도록 Any?로 분리해서 읽는다.
