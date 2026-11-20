@@ -18,7 +18,7 @@ class UntrackedTodoDetectorTest {
 
                 // TODO 공통 에러 처리
                 // TODO: 서버 응답이 바뀌면 교체
-                // TODO(#380): 명함 교환 차단을 한곳으로 모은다
+                // TODO(#123): 명함 교환 차단을 한곳으로 모은다
                 // FIXME(#12) 경계값
                 // [임시] 명함 교환 차단
                 // TODOS, MY_TODO_LIST, FIXMEs 는 표시가 아니다
@@ -39,7 +39,7 @@ class UntrackedTodoDetectorTest {
                 package test.pkg;
 
                 class Legacy {
-                    // TODO(#382) 이동 연결
+                    // TODO(#123) 이동 연결
                     // TODO 이동 연결
                     void run() {}
                 }
@@ -80,7 +80,7 @@ class UntrackedTodoDetectorTest {
                 <resources>
                     <!-- TODO: Remove or change this placeholder text -->
                     <string name="hello">Hello</string>
-                    <!-- TODO(#382) 이모지 문구 -->
+                    <!-- TODO(#123) 이모지 문구 -->
                     <string name="emoji">이모지</string>
                 </resources>
                 """,

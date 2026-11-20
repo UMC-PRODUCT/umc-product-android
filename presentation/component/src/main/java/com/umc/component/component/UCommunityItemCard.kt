@@ -41,7 +41,7 @@ import com.umc.domain.model.enums.UserPart
  *
  * 재사용해야 해서, Component에 정의합니다.
  *
- * TODO(#390): 게시글 태그에 따라 UBUTTON 색깔 변경
+ * 게시글 태그에 따라 UBUTTON 색깔 변경
  * **/
 
 @Composable

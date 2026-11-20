@@ -81,7 +81,7 @@ fun AdminStudyGroupCreateScreen(
             },
 
             onNotificationClick = {
-                // TODO(#382) 알림 버튼 클릭 시 동작 연결
+                // 알림 버튼 클릭 시 동작 연결
             }
         )
 

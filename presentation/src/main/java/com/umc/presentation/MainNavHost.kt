@@ -537,7 +537,7 @@ fun MainNavHost(
             ScheduleDetailRoute(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
-                    /**TODO(#382) 일정 출석 페이지로 이동하기**/
+                    /** 일정 출석 페이지로 이동하기**/
                     // 하단 탭 이동과 같은 스택([Home, Act])을 만들어 뒤로가기가 홈으로 돌아오게 한다
                     navHostController.navigate(MainDestination.Act){
                         popUpTo<MainDestination.Home>{
@@ -645,7 +645,7 @@ fun MainNavHost(
         composable<MainDestination.MyContent> {
             MyContentRoute(
                 onNavigateToPostDetail = { id ->
-                    /**TODO(#382) id를 줘서 커뮤니티 게시글 상세 페이지로 이동*/
+                    /** id를 줘서 커뮤니티 게시글 상세 페이지로 이동*/
                 }
             )
         }
@@ -728,7 +728,7 @@ fun MainNavHost(
                     navHostController.popBackStack()
                 },
                 onNavigateToEmojiPicker = {
-                    // TODO(#382): 이모지 선택 화면 또는 다이얼로그 연결
+                    // 이모지 선택 화면 또는 다이얼로그 연결
                 },
                 onCreateSuccess = {
                     navHostController.previousBackStackEntry
@@ -754,7 +754,7 @@ fun MainNavHost(
                     navHostController.popBackStack()
                 },
                 onNavigateToEmojiPicker = {
-                    // TODO(#382): 이모지 선택 화면 또는 다이얼로그 연결
+                    // 이모지 선택 화면 또는 다이얼로그 연결
                 },
                 onEditSuccess = {
                     navHostController.previousBackStackEntry
