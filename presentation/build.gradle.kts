@@ -138,3 +138,7 @@ fun getApiKey(propertyKey: String): String {
     return Properties().apply { load(localProperties.reader()) }.getProperty(propertyKey) ?: ""
 }
 
+// FeatureMapTest 가 읽는 표만 바꿨을 때도 테스트가 다시 돌도록 입력으로 등록한다.
+tasks.withType<Test>().configureEach {
+    inputs.file(rootProject.file(".claude/skills/run-umc-app/feature-map.md")).withPathSensitivity(PathSensitivity.RELATIVE)
+}
