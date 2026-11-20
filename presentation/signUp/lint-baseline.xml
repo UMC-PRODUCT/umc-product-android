@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<issues format="6" by="lint 8.12.3" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.3)" variant="all" version="8.12.3">
+    <issue id="UnstableCollectionParameter" message="schoolList: List&lt;SchoolInfo&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    schoolList: List&lt;SchoolInfo&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/signup/SignUpScreen.kt" />
+    </issue>
+</issues>

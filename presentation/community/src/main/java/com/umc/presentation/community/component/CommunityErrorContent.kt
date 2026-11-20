@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UButton
@@ -85,18 +87,19 @@ fun CommunityErrorContent(
             onClick = onRetryClick,
             modifier = Modifier
                 .padding(top = 24.dp)
-                .size(
-                    width = 364.dp,
-                    height = 52.dp,
-                ),
+                // 부모 Column 의 좌우 여백 안에서 폭은 상한으로만 건다.
+                .widthIn(max = 364.dp)
+                .fillMaxWidth()
+                .height(52.dp),
             backgroundColor = main500(),
         )
     }
 }
 
 /**
- * 스레드 조회 에러 화면 Preview
+ * 스레드 조회 에러 화면 Preview. 다시 시도 버튼 폭이 화면 폭에 맞춰 줄어드는지 여러 크기로 본다.
  */
+@PreviewScreenSizes
 @Preview(showBackground = true)
 @Composable
 private fun CommunityErrorContentPreview() {

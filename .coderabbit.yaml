@@ -103,6 +103,10 @@ reviews:
           - UseUText (ERROR): presentation:component 밖에서 material3 Text·BasicText 사용
           - UseUTextField (ERROR): presentation:component 밖에서 TextField·BasicTextField 계열 사용
           - FixedDelayInLaunchedEffect (WARNING): LaunchedEffect 안의 고정 시간 delay
+          - FixedScreenWidth (ERROR): 300dp 이상 고정 폭(width·size·widthIn(min) 등)
+          - WidthInAfterFillMaxWidth (ERROR): fillMaxWidth 뒤에 있어 적용되지 않는 widthIn·sizeIn
+          - LockedScreenOrientation (ERROR): 매니페스트의 screenOrientation 고정, resizeableActivity="false"
+          - UnstableCollectionParameter (WARNING): @Composable 파라미터의 List·Set·Map
         ktlint/Android Lint 가 잡는 포매팅·네이밍 규칙도 지적하지 않는다.
 
         [리뷰에서 봐야 할 것]
@@ -135,12 +139,10 @@ reviews:
 
     - path: "presentation/**"
       instructions: |
-        1. Compose 안정성: 파라미터로 넘기는 컬렉션은 ImmutableList/ImmutableSet 을 쓴다.
-           List/Set 을 그대로 넘기면 불필요한 리컴포지션이 생긴다.
-           https://developer.android.com/develop/ui/compose/performance/stability
-        2. 상태는 ViewModel 이 단일 소유한다. Composable 안에서 비즈니스 분기를 만들지 않는다.
-        3. 네비게이션 인자, 뒤로가기, 화면 회전/프로세스 종료 후 복원 경로를 확인한다.
-        4. 잎 모듈(home, notice, study ...)은 서로 의존하지 않는다. 공통은 presentation:component.
+        1. 상태는 ViewModel 이 단일 소유한다. Composable 안에서 비즈니스 분기를 만들지 않는다.
+        2. 네비게이션 인자, 뒤로가기, 화면 회전/프로세스 종료 후 복원 경로를 확인한다.
+        3. 잎 모듈(home, notice, study ...)은 서로 의존하지 않는다. 공통은 presentation:component.
+        (컬렉션 파라미터의 ImmutableList 사용은 UnstableCollectionParameter 가 검사하므로 지적하지 않는다.)
 
     - path: "app/**"
       instructions: |

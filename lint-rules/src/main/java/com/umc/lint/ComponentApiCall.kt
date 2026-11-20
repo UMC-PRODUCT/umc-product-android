@@ -6,6 +6,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULabeledExpression
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 
 /**
@@ -44,4 +45,16 @@ internal fun ULambdaExpression.ownerCall(): UCallExpression? {
     var parent: UElement? = uastParent
     while (parent is ULabeledExpression || parent is UParenthesizedExpression) parent = parent.uastParent
     return parent as? UCallExpression
+}
+
+private const val PREVIEW_PACKAGE = "androidx.compose.ui.tooling.preview"
+
+/**
+ * @Preview 가 붙은 함수인지. @PreviewScreenSizes 같은 제공 애너테이션과, @Preview 를 여러 개 붙여 만든
+ * 팀 애너테이션(@DevicePreviews 등, multipreview)도 미리보기로 본다.
+ */
+internal fun UMethod.isPreview(): Boolean = uAnnotations.any { annotation ->
+    val name = annotation.qualifiedName ?: return@any false
+    if (name.startsWith(PREVIEW_PACKAGE) || "Preview" in name.substringAfterLast('.')) return@any true
+    annotation.resolve()?.annotations?.any { it.qualifiedName?.startsWith(PREVIEW_PACKAGE) == true } == true
 }
