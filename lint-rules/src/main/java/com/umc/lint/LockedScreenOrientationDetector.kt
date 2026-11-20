@@ -22,7 +22,7 @@ class LockedScreenOrientationDetector : Detector(), XmlScanner {
 
     override fun visitElement(context: XmlContext, element: Element) {
         element.getAttributeNodeNS(ANDROID_URI, "screenOrientation")?.let { attribute ->
-            if (attribute.value !in FREE_ORIENTATIONS) {
+            if (attribute.value.trim() !in FREE_ORIENTATIONS) {
                 context.report(
                     issue = ISSUE,
                     scope = attribute,
@@ -32,12 +32,14 @@ class LockedScreenOrientationDetector : Detector(), XmlScanner {
             }
         }
         element.getAttributeNodeNS(ANDROID_URI, "resizeableActivity")?.let { attribute ->
-            if (attribute.value.trim() == "false") {
+            // @bool/… 나 ${'$'}{…} 처럼 값을 알 수 없으면 false 일 수 있으므로 함께 막는다.
+            val value = attribute.value.trim()
+            if (value.equals("false", ignoreCase = true) || value.startsWith("@") || value.startsWith("${'$'}{")) {
                 context.report(
                     issue = ISSUE,
                     scope = attribute,
                     location = context.getLocation(attribute),
-                    message = "resizeableActivity=\"false\"는 분할 화면·자유 창에서 크기 조절을 막습니다. 속성을 지우세요.",
+                    message = "resizeableActivity=\"${attribute.value}\"는 분할 화면·자유 창에서 크기 조절을 막을 수 있습니다. 속성을 지우세요.",
                 )
             }
         }

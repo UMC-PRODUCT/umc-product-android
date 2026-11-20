@@ -30,7 +30,7 @@ class UnstableCollectionParameterDetector : Detector(), Detector.UastScanner {
         override fun visitMethod(node: UMethod) {
             val annotations = node.uAnnotations.mapNotNull { it.qualifiedName }
             if (COMPOSABLE !in annotations) return
-            if (annotations.any { it.startsWith(PREVIEW_PACKAGE) || it.substringAfterLast('.').endsWith("Preview") }) return
+            if (node.isPreview()) return
 
             node.uastParameters.forEach { parameter ->
                 val type = parameter.type as? PsiClassType ?: return@forEach
@@ -62,7 +62,6 @@ class UnstableCollectionParameterDetector : Detector(), Detector.UastScanner {
 
     companion object {
         private const val COMPOSABLE = "androidx.compose.runtime.Composable"
-        private const val PREVIEW_PACKAGE = "androidx.compose.ui.tooling.preview"
         private const val IMMUTABLE_PACKAGE = "kotlinx.collections.immutable."
         private val STABILITY_ANNOTATIONS = setOf("androidx.compose.runtime.Stable", "androidx.compose.runtime.Immutable")
         private val COLLECTION_ROOTS = listOf("java.util.Collection", "java.util.Map")

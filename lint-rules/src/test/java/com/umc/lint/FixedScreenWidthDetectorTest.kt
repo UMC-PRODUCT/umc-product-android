@@ -99,4 +99,81 @@ class FixedScreenWidthDetectorTest {
             """,
         )
     }
+
+    @Test
+    fun `DpSize 폭도 보고, 팀 multipreview 함수는 무시`() {
+        lintWithAll(
+            issues,
+            kotlin(
+                "src/com/umc/presentation/home/Sized.kt",
+                """
+                package com.umc.presentation.home
+
+                import androidx.compose.foundation.layout.size
+                import androidx.compose.foundation.layout.width
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.tooling.preview.Preview
+                import androidx.compose.ui.unit.DpSize
+                import androidx.compose.ui.unit.dp
+
+                @Preview
+                annotation class DevicePreviews
+
+                fun Banner() {
+                    Modifier.size(DpSize(360.dp, 48.dp))
+                }
+
+                @DevicePreviews
+                fun BannerPreview() {
+                    Modifier.width(400.dp)
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/presentation/home/Sized.kt:14: Error: 360dp 고정 폭은 좁은 화면에서 좌우 여백을 없앱니다. padding(horizontal = …).widthIn(max = 360.dp).fillMaxWidth() 처럼 상한으로 바꾸세요. [FixedScreenWidth]
+                Modifier.size(DpSize(360.dp, 48.dp))
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 error
+            """,
+        )
+    }
+
+    @Test
+    fun `높이만 거는 sizeIn 과 wrapContentWidth 뒤의 widthIn 은 무시, then 과 val 로 나눈 체인은 보고`() {
+        lintWithAll(
+            issues,
+            kotlin(
+                "src/com/umc/presentation/community/Chains.kt",
+                """
+                package com.umc.presentation.community
+
+                import androidx.compose.foundation.layout.fillMaxWidth
+                import androidx.compose.foundation.layout.sizeIn
+                import androidx.compose.foundation.layout.widthIn
+                import androidx.compose.foundation.layout.wrapContentWidth
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.unit.dp
+
+                fun Chains() {
+                    Modifier.fillMaxWidth().sizeIn(minHeight = 48.dp)
+                    Modifier.fillMaxWidth().wrapContentWidth().widthIn(max = 600.dp)
+                    Modifier.fillMaxWidth().then(Modifier.widthIn(max = 600.dp))
+                    val base = Modifier.fillMaxWidth()
+                    base.widthIn(max = 370.dp)
+                }
+                """,
+            ).indented(),
+        ).expect(
+            """
+            src/com/umc/presentation/community/Chains.kt:13: Error: fillMaxWidth() 가 폭을 먼저 고정해 widthIn 의 상한이 적용되지 않습니다. widthIn 을 fillMaxWidth() 앞에 두세요. [WidthInAfterFillMaxWidth]
+                Modifier.fillMaxWidth().then(Modifier.widthIn(max = 600.dp))
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/com/umc/presentation/community/Chains.kt:15: Error: fillMaxWidth() 가 폭을 먼저 고정해 widthIn 의 상한이 적용되지 않습니다. widthIn 을 fillMaxWidth() 앞에 두세요. [WidthInAfterFillMaxWidth]
+                base.widthIn(max = 370.dp)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            2 errors
+            """,
+        )
+    }
 }

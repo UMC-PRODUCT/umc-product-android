@@ -52,6 +52,8 @@ object Stubs {
         package androidx.compose.ui
 
         interface Modifier {
+            infix fun then(other: Modifier): Modifier = other
+
             companion object : Modifier
         }
         """,
@@ -68,6 +70,11 @@ object Stubs {
         val Int.dp: Dp get() = Dp(this.toFloat())
         val Double.dp: Dp get() = Dp(this.toFloat())
         val Float.dp: Dp get() = Dp(this)
+
+        @JvmInline
+        value class DpSize(val packed: Long)
+
+        fun DpSize(width: Dp, height: Dp): DpSize = DpSize(0L)
         """,
     ).indented()
 
@@ -78,8 +85,11 @@ object Stubs {
 
         import androidx.compose.ui.Modifier
         import androidx.compose.ui.unit.Dp
+        import androidx.compose.ui.unit.DpSize
 
         fun Modifier.width(width: Dp): Modifier = this
+        fun Modifier.size(size: DpSize): Modifier = this
+        fun Modifier.wrapContentWidth(): Modifier = this
         fun Modifier.requiredWidth(width: Dp): Modifier = this
         fun Modifier.size(size: Dp): Modifier = this
         fun Modifier.size(width: Dp, height: Dp): Modifier = this

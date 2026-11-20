@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -219,9 +220,8 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 HorizontalDivider(
-                    // 좁은 화면에서도 좌우 여백을 남기도록 폭은 상한으로만 건다.
+                    // 위 카카오·구글 버튼(폭 350dp 벡터 이미지)과 같은 폭 규칙을 따른다. 창이 더 좁으면 창 폭에 맞춰 줄어든다.
                     modifier = Modifier
-                        .padding(horizontal = 20.dp)
                         .widthIn(max = 350.dp)
                         .fillMaxWidth(),
                     thickness = 1.dp,
@@ -232,7 +232,6 @@ fun LoginScreen(
 
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp)
                         .widthIn(max = 350.dp)
                         .fillMaxWidth()
                         .height(48.dp)
@@ -385,7 +384,9 @@ private fun handleSignIn(
     }
 }
 
+// 버튼 넷이 같은 폭으로 줄어드는지 350dp 보다 좁은 창에서도 본다.
 @PreviewScreenSizes
+@Preview(name = "좁은 폰(320dp)", widthDp = 320, heightDp = 640, showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
     LoginScreen()
