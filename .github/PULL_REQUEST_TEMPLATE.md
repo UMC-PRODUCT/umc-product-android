@@ -7,6 +7,8 @@
 > 이번 PR에서 작업한 내용을 간략히 요약해주세요.
 
 ## 📸 스크린샷 (선택 사항)
+> 스크린샷 테스트 기준 이미지(`src/screenshotTestDefaultDebug/reference`)를 갱신했다면 Files changed의 이미지 비교로 갈음할 수 있습니다.
+
 | 설명 | 이미지 |
 | :---: | :---: |
 |  |  |

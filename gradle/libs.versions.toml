@@ -3,6 +3,8 @@ agp = "9.5.1"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
+# Compose Preview 스크린샷 테스트 엔진·검증 API(AGP test suite 의 engineVersion 과 같게 둔다)
+screenshot = "0.0.1-alpha17"
 # 속성 기반 테스트(:domain 테스트 전용). kotlin-stdlib 버전이 위 kotlin 과 같아야 한다.
 kotestProperty = "6.2.7"
 coroutinesTest = "1.9.0"
@@ -65,6 +67,7 @@ zxing = "3.5.3"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+screenshot-validation-api = { module = "com.android.tools.screenshot:screenshot-validation-api", version.ref = "screenshot" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotestProperty" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
