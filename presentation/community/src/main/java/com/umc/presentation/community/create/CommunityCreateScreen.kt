@@ -126,7 +126,7 @@ fun CommunityCreateScreen(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenPreview() {
+internal fun CommunityCreateScreenPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(),
         onAction = {},
@@ -138,7 +138,7 @@ private fun CommunityCreateScreenPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenFilledPreview() {
+internal fun CommunityCreateScreenFilledPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(
             title = "안드로이드 스터디",
@@ -167,7 +167,7 @@ private fun CommunityCreateScreenFilledPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenErrorToastPreview() {
+internal fun CommunityCreateScreenErrorToastPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(),
         onAction = {},
@@ -183,7 +183,7 @@ private fun CommunityCreateScreenErrorToastPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenManualCategoryPreview() {
+internal fun CommunityCreateScreenManualCategoryPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(
             title = "안드로이드 스터디",

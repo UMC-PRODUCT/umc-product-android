@@ -178,13 +178,13 @@ private fun CommunityThreadMenuItem(
 @PreviewScreenSizes
 @Preview(name = "방장·관리자 (편집 메뉴 있음)", showBackground = true)
 @Composable
-private fun CommunityThreadMenuDialogEditablePreview() {
+internal fun CommunityThreadMenuDialogEditablePreview() {
     CommunityThreadMenuContentPreview(canEdit = true)
 }
 
 @Preview(name = "일반 멤버 (편집 메뉴 없음)", showBackground = true)
 @Composable
-private fun CommunityThreadMenuDialogMemberPreview() {
+internal fun CommunityThreadMenuDialogMemberPreview() {
     CommunityThreadMenuContentPreview(canEdit = false)
 }
 

@@ -1027,7 +1027,7 @@ fun MycardListItem(
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CardBackEmptyPreview() {
+internal fun CardBackEmptyPreview() {
     UmcTheme {
         Box(
             modifier = Modifier
@@ -1047,7 +1047,7 @@ private fun CardBackEmptyPreview() {
 
 @PreviewScreenSizes
 @Composable
-private fun MycardScreenPreview() {
+internal fun MycardScreenPreview() {
     UmcTheme {
         MycardScreen(
             uiState = MycardUiState(
@@ -1091,7 +1091,7 @@ private fun MycardScreenPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun MycardScreenProfileLoadFailedPreview() {
+internal fun MycardScreenProfileLoadFailedPreview() {
     UmcTheme {
         MycardScreen(
             uiState = MycardUiState(isProfileLoadFailed = true),

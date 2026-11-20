@@ -71,7 +71,7 @@ fun CommunityDeleteButton(
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityDeleteButtonPreview() {
+internal fun CommunityDeleteButtonPreview() {
     CommunityDeleteButton(
         onClick = {},
         modifier = Modifier.padding(16.dp),

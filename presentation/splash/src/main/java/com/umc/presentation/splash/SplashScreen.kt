@@ -127,12 +127,12 @@ fun SplashScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun SplashScreenPreview() {
+internal fun SplashScreenPreview() {
     SplashScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SplashScreenNetworkErrorPreview() {
+internal fun SplashScreenNetworkErrorPreview() {
     SplashScreen(isNetworkError = true)
 }

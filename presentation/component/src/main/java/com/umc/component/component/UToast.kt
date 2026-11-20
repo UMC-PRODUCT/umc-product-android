@@ -138,18 +138,18 @@ fun UToastHost(
 
 @Preview(showBackground = true, backgroundColor = 0xFF888888)
 @Composable
-private fun UToastCheckPreview() {
+internal fun UToastCheckPreview() {
     UToast(message = "인증 코드가 발송되었습니다.", state = UToastState.CHECK)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF888888)
 @Composable
-private fun UToastErrorPreview() {
+internal fun UToastErrorPreview() {
     UToast(message = "이메일 형식이 올바르지 않습니다.", state = UToastState.ERROR)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF888888)
 @Composable
-private fun UToastNonePreview() {
+internal fun UToastNonePreview() {
     UToast(message = "알림 메세지입니다.", state = UToastState.NONE)
 }

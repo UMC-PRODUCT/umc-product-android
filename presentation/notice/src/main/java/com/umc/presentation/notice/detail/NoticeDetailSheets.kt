@@ -315,7 +315,7 @@ internal fun ProfileImage(url: String, size: Int) {
 
 @Preview(showBackground = true)
 @Composable
-private fun ReadStatusSheetPreview() {
+internal fun ReadStatusSheetPreview() {
     NoticeReadStatusSheetContent(
         statistics = NoticeReadStatistics(totalCount = 15, readCount = 10, unreadCount = 5, readRate = 66.7),
         unreadList = List(4) {

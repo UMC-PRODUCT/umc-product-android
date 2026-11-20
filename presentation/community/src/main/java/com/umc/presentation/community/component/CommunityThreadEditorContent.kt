@@ -362,7 +362,7 @@ private fun CommunityCategory.previewIconRes(): Int {
 
 @Preview(showBackground = true)
 @Composable
-private fun CommunityThreadEditorFieldsCreatePreview() {
+internal fun CommunityThreadEditorFieldsCreatePreview() {
     UmcTheme {
         CommunityThreadEditorFields(
             mode = CommunityThreadEditorMode.Create,
@@ -393,7 +393,7 @@ private fun CommunityThreadEditorFieldsCreatePreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun CommunityThreadEditorFieldsEditPreview() {
+internal fun CommunityThreadEditorFieldsEditPreview() {
     UmcTheme {
         CommunityThreadEditorFields(
             mode = CommunityThreadEditorMode.Edit(canDelete = true),

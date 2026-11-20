@@ -69,7 +69,7 @@ fun CommunityFloatingButton(
 
 @Preview(showBackground = true)
 @Composable
-private fun CommunityFloatingButtonPreview() {
+internal fun CommunityFloatingButtonPreview() {
     UmcTheme {
         CommunityFloatingButton(
             onClick = {},

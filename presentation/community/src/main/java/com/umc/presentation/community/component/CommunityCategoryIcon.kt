@@ -53,7 +53,7 @@ fun CommunityCategoryIcon(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCategoryIconPreview() {
+internal fun CommunityCategoryIconPreview() {
     CommunityCategoryIcon(
         iconRes = R.drawable.ic_category_study,
         modifier = Modifier.padding(16.dp),

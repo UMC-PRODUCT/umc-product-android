@@ -286,7 +286,7 @@ private fun CommunitySectionTitle(
 
 @Preview(name = "커뮤니티 기본 목록 · Figma 1:3825", widthDp = 412, heightDp = 734, showBackground = true)
 @Composable
-private fun CommunityListPreview() {
+internal fun CommunityListPreview() {
     val titles = listOf(
         "iOS 3주차 과제 인증방",
         "정기 모임 일정 안내",
@@ -327,7 +327,7 @@ private fun CommunityListPreview() {
  */
 @Preview(name = "커뮤니티 빈 화면 · 낮은 높이", widthDp = 412, heightDp = 480, showBackground = true)
 @Composable
-private fun CommunityEmptyPreview() {
+internal fun CommunityEmptyPreview() {
     UmcTheme(darkTheme = false) {
         CommunityScreen(
             state = CommunityState(

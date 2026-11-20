@@ -338,13 +338,13 @@ private fun PermissionItem(
 
 @PreviewScreenSizes
 @Composable
-private fun PermissionScreenPreview() {
+internal fun PermissionScreenPreview() {
     PermissionScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PermissionScreenAllCheckedPreview() {
+internal fun PermissionScreenAllCheckedPreview() {
     PermissionScreen(
         uiState = PermissionUiState(
             isAlarmCheck = true,
@@ -356,7 +356,7 @@ private fun PermissionScreenAllCheckedPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun PermissionScreenAlarmOnlyPreview() {
+internal fun PermissionScreenAlarmOnlyPreview() {
     PermissionScreen(
         uiState = PermissionUiState(isAlarmCheck = true)
     )

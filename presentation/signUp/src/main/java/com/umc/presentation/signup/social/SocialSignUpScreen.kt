@@ -336,13 +336,13 @@ private fun FieldLabel(
 
 @PreviewScreenSizes
 @Composable
-private fun SocialSignUpScreenPreview() {
+internal fun SocialSignUpScreenPreview() {
     SocialSignUpScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SocialSignUpScreenRequestPreview() {
+internal fun SocialSignUpScreenRequestPreview() {
     SocialSignUpScreen(
         uiState = SocialSignUpState(
             email = "example@univ.ac.kr",

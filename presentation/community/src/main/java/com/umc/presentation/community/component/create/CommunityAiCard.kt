@@ -551,7 +551,7 @@ private fun categoryIconRes(
  */
 @Preview
 @Composable
-private fun CommunityAiGuidePreview() {
+internal fun CommunityAiGuidePreview() {
     CommunityAiCard(
         aiState = CommunityAiState.GUIDE,
         classifiedCategory = null,
@@ -568,7 +568,7 @@ private fun CommunityAiGuidePreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityAiFailedPreview() {
+internal fun CommunityAiFailedPreview() {
     CommunityAiCard(
         aiState = CommunityAiState.FAILED,
         classifiedCategory = CommunityCategory.FREE,

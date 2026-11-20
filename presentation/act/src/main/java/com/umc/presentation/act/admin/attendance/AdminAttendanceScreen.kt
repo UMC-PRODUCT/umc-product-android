@@ -415,7 +415,7 @@ private fun EmptyScreen() {
 
 @Preview(showBackground = true)
 @Composable
-private fun EmptyScreenPreview() {
+internal fun EmptyScreenPreview() {
     UmcTheme(darkTheme = false) {
         EmptyScreen()
     }
@@ -570,7 +570,7 @@ private fun sampleSessions(): ImmutableList<AdminSessionCheck> = persistentListO
 
 @Preview(showBackground = true, widthDp = 324, heightDp = 477)
 @Composable
-private fun AttendanceScreenPreview() {
+internal fun AttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
         AttendanceScreen(
             uiState = AdminAttendanceUiState(sessions = sampleSessions())

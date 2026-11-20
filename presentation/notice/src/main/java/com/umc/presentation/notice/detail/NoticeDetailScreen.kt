@@ -588,7 +588,7 @@ private fun NoticeReadStatusBar(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeDetailScreenPreview() {
+internal fun NoticeDetailScreenPreview() {
     NoticeDetailScreen(
         uiState = NoticeDetailUiState(
             detail = NoticeDetail(

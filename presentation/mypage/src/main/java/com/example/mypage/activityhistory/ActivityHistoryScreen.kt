@@ -412,7 +412,7 @@ private fun ActivityHistoryLoadError(isLoading: Boolean, onRetryClick: () -> Uni
 
 @PreviewScreenSizes
 @Composable
-private fun ActivityHistoryScreenPreview() {
+internal fun ActivityHistoryScreenPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(
@@ -434,7 +434,7 @@ private fun ActivityHistoryScreenPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 400)
 @Composable
-private fun ActivityHistoryScreenEmptyPreview() {
+internal fun ActivityHistoryScreenEmptyPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(),
@@ -446,7 +446,7 @@ private fun ActivityHistoryScreenEmptyPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 400)
 @Composable
-private fun ActivityHistoryScreenLoadingPreview() {
+internal fun ActivityHistoryScreenLoadingPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(isLoading = true),
@@ -458,7 +458,7 @@ private fun ActivityHistoryScreenLoadingPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 600)
 @Composable
-private fun ActivityHistoryScreenLoadFailedPreview() {
+internal fun ActivityHistoryScreenLoadFailedPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(isLoadFailed = true),

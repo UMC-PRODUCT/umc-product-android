@@ -100,7 +100,7 @@ fun CommunityEmptyContent(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityEmptyContentPreview() {
+internal fun CommunityEmptyContentPreview() {
     UmcTheme {
         CommunityEmptyContent(
             onCreateThreadClick = {},

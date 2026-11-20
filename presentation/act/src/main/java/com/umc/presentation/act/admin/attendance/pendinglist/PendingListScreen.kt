@@ -461,7 +461,7 @@ private fun sampleList(): ImmutableList<AdminPendingUser> = persistentListOf(
 
 @Preview(showBackground = false)
 @Composable
-private fun PendingListScreenPreview() {
+internal fun PendingListScreenPreview() {
     UmcTheme(darkTheme = false) {
         PendingListScreen(users = sampleList())
     }
@@ -469,7 +469,7 @@ private fun PendingListScreenPreview() {
 
 @Preview(showBackground = false)
 @Composable
-private fun ReasonDialog() {
+internal fun ReasonDialog() {
     UmcTheme(darkTheme = false) {
         UReasonDialog (
             title = AppStrings.ADMIN_REASON_CHECK_TITLE,
@@ -486,7 +486,7 @@ private fun ReasonDialog() {
 
 @Preview(showBackground = false)
 @Composable
-private fun AcceptDialog() {
+internal fun AcceptDialog() {
     UmcTheme(darkTheme = false) {
         UDialog (
             isAccept = true,
@@ -504,7 +504,7 @@ private fun AcceptDialog() {
 
 @Preview(showBackground = false)
 @Composable
-private fun RejectDialog() {
+internal fun RejectDialog() {
     UmcTheme(darkTheme = false) {
         UDialog (
             isAccept = false,

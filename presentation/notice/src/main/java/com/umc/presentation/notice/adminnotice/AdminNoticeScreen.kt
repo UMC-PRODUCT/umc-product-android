@@ -284,7 +284,7 @@ private fun AdminNoticeStatusContent(
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenPreview() {
+internal fun AdminNoticeScreenPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),
@@ -296,7 +296,7 @@ private fun AdminNoticeScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenNoAccessPreview() {
+internal fun AdminNoticeScreenNoAccessPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             hasAccess = false,
@@ -308,7 +308,7 @@ private fun AdminNoticeScreenNoAccessPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenLoadingPreview() {
+internal fun AdminNoticeScreenLoadingPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),
@@ -320,7 +320,7 @@ private fun AdminNoticeScreenLoadingPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenErrorPreview() {
+internal fun AdminNoticeScreenErrorPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),

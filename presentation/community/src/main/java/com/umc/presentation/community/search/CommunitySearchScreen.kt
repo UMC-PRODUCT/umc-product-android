@@ -249,7 +249,7 @@ private fun CommunitySearchResultList(
 @PreviewScreenSizes
 @Preview(showBackground = true)
 @Composable
-private fun CommunitySearchScreenLoadingPreview() {
+internal fun CommunitySearchScreenLoadingPreview() {
     UmcTheme {
         CommunitySearchScreen(
             state = CommunitySearchState(
@@ -267,7 +267,7 @@ private fun CommunitySearchScreenLoadingPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunitySearchScreenErrorPreview() {
+internal fun CommunitySearchScreenErrorPreview() {
     UmcTheme {
         CommunitySearchScreen(
             state = CommunitySearchState(
@@ -282,7 +282,7 @@ private fun CommunitySearchScreenErrorPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun CommunitySearchScreenTypingPreview() {
+internal fun CommunitySearchScreenTypingPreview() {
     UmcTheme {
         CommunitySearchScreen(
             state = CommunitySearchState(query = "스터디", hasSearched = false),

@@ -33,7 +33,7 @@ internal fun InAppUpdateReadyDialog(
 
 @Preview(showBackground = true)
 @Composable
-private fun InAppUpdateReadyDialogPreview() {
+internal fun InAppUpdateReadyDialogPreview() {
     UmcTheme {
         InAppUpdateReadyDialog(onRestart = {}, onLater = {})
     }
@@ -41,7 +41,7 @@ private fun InAppUpdateReadyDialogPreview() {
 
 @Preview(showBackground = true, fontScale = 2f)
 @Composable
-private fun InAppUpdateReadyDialogLargeFontPreview() {
+internal fun InAppUpdateReadyDialogLargeFontPreview() {
     UmcTheme {
         InAppUpdateReadyDialog(onRestart = {}, onLater = {})
     }

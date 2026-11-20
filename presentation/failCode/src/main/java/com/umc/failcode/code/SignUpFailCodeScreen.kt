@@ -223,18 +223,18 @@ fun SignUpFailCodeScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpFailCodeScreenPreview() {
+internal fun SignUpFailCodeScreenPreview() {
     SignUpFailCodeScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpFailCodeScreenFilledPreview() {
+internal fun SignUpFailCodeScreenFilledPreview() {
     SignUpFailCodeScreen(uiState = SignUpFailCodeState(code = "123456"))
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpFailCodeScreenSubmittingPreview() {
+internal fun SignUpFailCodeScreenSubmittingPreview() {
     SignUpFailCodeScreen(uiState = SignUpFailCodeState(code = "123456", isSubmitting = true))
 }

@@ -326,7 +326,7 @@ private fun VoteOptionCard(
 
 @Preview(showBackground = true)
 @Composable
-private fun VoteSectionInProgressPreview() {
+internal fun VoteSectionInProgressPreview() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // 진행중 · 미투표 (하나 선택)
         NoticeDetailVoteSection(
@@ -366,7 +366,7 @@ private fun VoteSectionInProgressPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun VoteSectionClosedPreview() {
+internal fun VoteSectionClosedPreview() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // 마감 · 투표함
         NoticeDetailVoteSection(

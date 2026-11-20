@@ -130,7 +130,7 @@ fun UserStudyScreen(
  */
 @PreviewScreenSizes
 @Composable
-private fun UserStudyScreenPreview() {
+internal fun UserStudyScreenPreview() {
     UserStudyScreen(
         state = UserStudyState(
             title = "웹 프론트엔드 기초",
@@ -172,7 +172,7 @@ private fun UserStudyScreenPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun UserStudyScreenErrorPreview() {
+internal fun UserStudyScreenErrorPreview() {
     UserStudyScreen(
         state = UserStudyState(isError = true),
         onRetry = {},

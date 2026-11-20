@@ -385,7 +385,7 @@ private fun ReceivedCardItem(
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
-private fun ReceivedCardScreenPreview() {
+internal fun ReceivedCardScreenPreview() {
     val cards = persistentListOf(
         UserCard(name = "김유엠", nickname = "유엠", university = "중앙대학교", part = "ANDROID", generation = "11", memberNo = "1"),
         UserCard(name = "이유엠", nickname = "이엠", university = "숙명여자대학교", part = "WEB_PRODUCT_ENGINEER", generation = "11", memberNo = "2"),

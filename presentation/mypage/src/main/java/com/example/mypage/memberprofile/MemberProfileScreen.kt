@@ -804,7 +804,7 @@ private val previewUserInfo = UserInfo(
 
 @PreviewScreenSizes
 @Composable
-private fun MemberProfileScreenPreview() {
+internal fun MemberProfileScreenPreview() {
     UmcTheme {
         MemberProfileScreen(
             uiState = MemberProfileUiState(
@@ -830,7 +830,7 @@ private fun MemberProfileScreenPreview() {
 /** 시안 12: 값이 없는(비공개) 항목은 '비공개 항목이에요.' */
 @Preview(showBackground = true, widthDp = 412, heightDp = 1500)
 @Composable
-private fun MemberProfileScreenPrivatePreview() {
+internal fun MemberProfileScreenPrivatePreview() {
     UmcTheme {
         MemberProfileScreen(
             uiState = MemberProfileUiState(
@@ -854,7 +854,7 @@ private fun MemberProfileScreenPrivatePreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 760)
 @Composable
-private fun MemberReportSheetPreview() {
+internal fun MemberReportSheetPreview() {
     UmcTheme {
         MemberReportSheetContent(
             selectedReasons = persistentSetOf(MemberReportReason.IMPERSONATION),
@@ -870,7 +870,7 @@ private fun MemberReportSheetPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun MemberProfileMenuPreview() {
+internal fun MemberProfileMenuPreview() {
     UmcTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             MemberProfileMenuContent(isBlocked = false, isBlockMenuEnabled = true, onBlockClick = {}, onReportClick = {})
@@ -880,7 +880,7 @@ private fun MemberProfileMenuPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun MemberProfileConfirmDialogPreview() {
+internal fun MemberProfileConfirmDialogPreview() {
     UmcTheme {
         MemberProfileConfirmDialog(
             title = AppStrings.MEMBER_BLOCK_CONFIRM_TITLE,

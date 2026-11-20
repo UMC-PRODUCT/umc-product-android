@@ -114,7 +114,7 @@ fun CommunityCreateTopBar(
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityCreateTopBarPreview() {
+internal fun CommunityCreateTopBarPreview() {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {

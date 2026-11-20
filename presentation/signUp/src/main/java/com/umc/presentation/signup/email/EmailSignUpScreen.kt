@@ -375,13 +375,13 @@ private fun FieldLabel(
 
 @Preview(showBackground = true)
 @Composable
-private fun EmailSignUpScreenPreview() {
+internal fun EmailSignUpScreenPreview() {
     EmailSignUpScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun EmailSignUpScreenVerifiedPreview() {
+internal fun EmailSignUpScreenVerifiedPreview() {
     EmailSignUpScreen(
         uiState = EmailSignUpState(
             email = "example@univ.ac.kr",

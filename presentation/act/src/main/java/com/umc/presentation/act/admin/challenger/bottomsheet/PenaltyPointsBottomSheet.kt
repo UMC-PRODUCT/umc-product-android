@@ -339,7 +339,7 @@ private fun defaultPenaltyItems(): ImmutableList<PenaltyPointItem> =
 
 @Preview(showBackground = false)
 @Composable
-private fun PenaltyPointsScreenPreview() {
+internal fun PenaltyPointsScreenPreview() {
     UmcTheme(darkTheme = false) {
         PenaltyPointsScreen()
     }
@@ -347,7 +347,7 @@ private fun PenaltyPointsScreenPreview() {
 
 @Preview(showBackground = false)
 @Composable
-private fun PenaltyPointsScreenSubmittingPreview() {
+internal fun PenaltyPointsScreenSubmittingPreview() {
     UmcTheme(darkTheme = false) {
         PenaltyPointsScreen(
             uiState = AdminChallengerUiState(

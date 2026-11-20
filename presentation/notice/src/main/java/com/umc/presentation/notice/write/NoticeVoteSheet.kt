@@ -498,7 +498,7 @@ internal fun formatVoteDateTime(utcDateTime: String?): String? {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeVoteSheetPreview() {
+internal fun NoticeVoteSheetPreview() {
     Column {
         NoticeVoteSheetContent(
             existingVote = NoticeVoteForm(
@@ -511,7 +511,7 @@ private fun NoticeVoteSheetPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeVoteRowPreview() {
+internal fun NoticeVoteRowPreview() {
     NoticeVoteRow(
         vote = NoticeVoteForm(
             title = "회식 메뉴",

@@ -261,7 +261,7 @@ fun AdminStudyGroupScheduleScreen(
     heightDp = 844
 )
 @Composable
-private fun AdminStudyGroupScheduleScreenPreview() {
+internal fun AdminStudyGroupScheduleScreenPreview() {
     AdminStudyGroupScheduleScreen(
         state = AdminStudyGroupScheduleState()
     )

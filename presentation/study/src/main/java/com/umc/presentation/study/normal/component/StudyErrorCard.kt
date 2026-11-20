@@ -85,7 +85,7 @@ fun StudyErrorCard(
 
 @Preview(showBackground = true)
 @Composable
-private fun StudyErrorCardPreview() {
+internal fun StudyErrorCardPreview() {
     UmcTheme {
         StudyErrorCard(onRetry = {})
     }

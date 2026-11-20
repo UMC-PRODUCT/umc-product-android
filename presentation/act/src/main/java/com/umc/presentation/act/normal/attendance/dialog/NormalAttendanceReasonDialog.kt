@@ -181,7 +181,7 @@ private fun AttendanceReasonDialogContent(
 
 @Preview(showBackground = false)
 @Composable
-private fun AttendanceReasonDialogSubmittingPreview() {
+internal fun AttendanceReasonDialogSubmittingPreview() {
     UmcTheme(darkTheme = false) {
         AttendanceReasonDialogContent(
             reason = "GPS 오류로 위치 인증이 되지 않았어요.",
@@ -195,7 +195,7 @@ private fun AttendanceReasonDialogSubmittingPreview() {
 
 @Preview(showBackground = false)
 @Composable
-private fun AttendanceReasonDialogPreview() {
+internal fun AttendanceReasonDialogPreview() {
     UmcTheme(darkTheme = false) {
         var reason by remember { mutableStateOf("") }
         AttendanceReasonDialogContent(

@@ -285,7 +285,7 @@ private fun ReasonInput(
 
 @Preview(showBackground = false)
 @Composable
-private fun OtherPointsScreenPreview() {
+internal fun OtherPointsScreenPreview() {
     UmcTheme(darkTheme = false) {
         OtherPointsScreen()
     }
@@ -293,7 +293,7 @@ private fun OtherPointsScreenPreview() {
 
 @Preview(showBackground = false)
 @Composable
-private fun OtherPointsScreenSubmittingPreview() {
+internal fun OtherPointsScreenSubmittingPreview() {
     UmcTheme(darkTheme = false) {
         OtherPointsScreen(
             uiState = AdminChallengerUiState(
