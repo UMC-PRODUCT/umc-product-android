@@ -14,7 +14,7 @@ Compose 전환 중인 멀티모듈 앱(`:app`, `:data`, `:domain`, `:presentatio
 - **테스트가 있는 모듈은 일부뿐이다.** 단위 테스트는 `:data`, `:domain`, `:presentation`, `:presentation:community`·`component`·`act`·`home`·`mypage`, `:lint-rules`에만 있다. `:app`과 나머지 presentation 모듈은 `testDebugUnitTest`가 NO-SOURCE로 **항상 통과**하므로, 이 모듈들을 바꿨을 때는 "테스트 통과"를 완료 근거로 보고하지 않는다.
 - **ktlint는 적용돼 있지 않다**(`ktlintCheck` 태스크가 없다). 정적 분석은 Android Lint와 `:lint-rules` 커스텀 규칙뿐이다.
 - **lint 중에서 CI를 막는 건 커스텀 규칙의 ERROR뿐이다.** 게이트는 lint 리포트에서 category가 `UMC`인 항목만 보고, 내장 규칙은 ERROR여도 막지 않는다. 커스텀 규칙의 기존 위반은 모듈별 `lint-baseline.xml`에 묶여 있다. baseline은 규칙을 새로 추가할 때만 `python3 lint-rules/update_baseline.py --issue-id <새 규칙 ID>`로 갱신하고(다른 규칙의 항목은 그대로 둔다), 새로 생긴 위반을 숨기려고 갱신하지 않는다.
-- **DI·네트워크를 바꿨으면 실행까지 확인한다.** `app/src/main/java/com/umc/product/di/`나 `Qualifier.kt`를 건드린 변경은 컴파일 통과로 끝내지 말고, 앱을 띄워 해당 화면의 네트워크 호출을 확인한 뒤 보고한다. qualifier 7종(`@NormalRetrofit`·`@AuthRetrofit`·Kakao·RemoteConfig 등)이 뒤바뀌어도 컴파일은 통과하고, 런타임에 401이나 엉뚱한 호스트로만 드러난다.
+- **DI·네트워크를 바꿨으면 실행까지 확인한다.** `app/src/main/java/com/umc/product/di/`나 `Qualifier.kt`를 건드린 변경은 컴파일 통과로 끝내지 말고, 앱을 띄워 해당 화면의 네트워크 호출을 확인한 뒤 보고한다. 확인은 `run-umc-app` 스킬로 한다: `python3 -I .claude/skills/run-umc-app/scripts/umc_app.py verify <Route> --email <QA 계정>`(비밀번호는 `UMC_QA_PASSWORD`나 `UMC_QA_DOC`로 넘기고 저장소에 넣지 않는다). 화면 이름과 진입 경로는 같은 폴더의 `feature-map.md`에 있다. qualifier 7종(`@NormalRetrofit`·`@AuthRetrofit`·Kakao·RemoteConfig 등)이 뒤바뀌어도 컴파일은 통과하고, 런타임에 401이나 엉뚱한 호스트로만 드러난다.
 - **UI를 바꾸면 그 화면의 `@Preview`를 같이 갱신한다.** 스크린샷 테스트 도구(Roborazzi·Paparazzi·screenshotTest)가 아직 없어서 CI는 UI 회귀를 잡지 못한다. 여러 폭을 봐야 하는 화면에는 `@PreviewScreenSizes`를 붙인다.
 
 ## 스킬
