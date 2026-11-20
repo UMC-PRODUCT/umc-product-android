@@ -288,11 +288,3 @@ fun lintWith(issue: Issue, vararg files: TestFile): TestLintResult =
         .files(*Stubs.ALL, *files)
         .issues(issue)
         .run()
-
-/** [Stubs]를 함께 넣고 [issues]를 함께 검사한다. */
-fun lintWithAll(issues: Array<com.android.tools.lint.detector.api.Issue>, vararg files: TestFile): TestLintResult =
-    lint()
-        .allowMissingSdk()
-        .files(*Stubs.ALL, *files)
-        .issues(*issues)
-        .run()

@@ -1,6 +1,10 @@
 package com.umc.lint
 
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
+import com.android.tools.lint.checks.infrastructure.TestLintResult
+import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Issue
 import org.junit.Test
 
@@ -8,10 +12,22 @@ class FixedScreenWidthDetectorTest {
 
     private val issues: Array<Issue> = arrayOf(FixedScreenWidthDetector.ISSUE, FixedScreenWidthDetector.ORDER_ISSUE)
 
+    /**
+     * lint 32 부터 기본으로 도는 JVM_OVERLOADS 모드는 스텁 함수에 @JvmOverloads 와 가짜 파라미터를 끼워 넣어 인자 매핑을 바꾼다.
+     * Compose 레이아웃 modifier(widthIn·size 등)는 @JvmOverloads 가 아니고, 이 검사는 실제 파라미터 이름(min·max·width)으로
+     * 인자를 고르므로 그 모드는 뺀다.
+     */
+    private fun lintWidth(vararg files: TestFile): TestLintResult =
+        lint()
+            .allowMissingSdk()
+            .files(*Stubs.ALL, *files)
+            .issues(*issues)
+            .skipTestModes(TestMode.JVM_OVERLOADS)
+            .run()
+
     @Test
     fun `300dp 이상 고정 폭은 오류, 상한과 300dp 미만과 파라미터와 미리보기는 무시`() {
-        lintWithAll(
-            issues,
+        lintWidth(
             kotlin(
                 """
                 package com.umc.presentation.login
@@ -70,8 +86,7 @@ class FixedScreenWidthDetectorTest {
 
     @Test
     fun `fillMaxWidth 뒤의 widthIn 은 오류, 앞에 두면 무시`() {
-        lintWithAll(
-            issues,
+        lintWidth(
             kotlin(
                 """
                 package com.umc.presentation.community
@@ -102,8 +117,7 @@ class FixedScreenWidthDetectorTest {
 
     @Test
     fun `DpSize 폭도 보고, 팀 multipreview 함수는 무시`() {
-        lintWithAll(
-            issues,
+        lintWidth(
             kotlin(
                 "src/com/umc/presentation/home/Sized.kt",
                 """
@@ -141,8 +155,7 @@ class FixedScreenWidthDetectorTest {
 
     @Test
     fun `높이만 거는 sizeIn 과 wrapContentWidth 뒤의 widthIn 은 무시, then 과 val 로 나눈 체인은 보고`() {
-        lintWithAll(
-            issues,
+        lintWidth(
             kotlin(
                 "src/com/umc/presentation/community/Chains.kt",
                 """
