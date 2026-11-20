@@ -7,7 +7,7 @@ Compose 전환 중인 멀티모듈 앱(`:app`, `:data`, `:domain`, `:presentatio
 
 - 텍스트는 `Text` 대신 **`UText`**(`com.umc.component.component`)를 쓴다. fontScale 고정이 들어간 공용 컴포넌트다.
 - 텍스트 입력은 `UTextField`를 거친다. 입력 지점 대부분이 이 컴포넌트 하나를 경유하므로, 입력 동작을 바꿀 일은 호출부가 아니라 이 파일에서 한다.
-- 레이아웃은 기기 종류가 아니라 창 크기를 기준으로 생각한다. 매니페스트에 `screenOrientation` 고정이나 `resizeableActivity="false"`를 새로 추가하지 않는다(현재 16개 매니페스트 모두 고정이 없다). 화면 폭을 `width(350.dp)`처럼 못 박지 말고 `widthIn(max = …)`를 쓴다.
+- 레이아웃은 기기 종류가 아니라 창 크기를 기준으로 생각한다. 매니페스트에 `screenOrientation` 고정이나 `resizeableActivity="false"`를 새로 추가하지 않는다(현재 16개 매니페스트 모두 고정이 없다). 화면 폭을 `width(350.dp)`처럼 못 박지 말고 `widthIn(max = …)`를 쓴다. 300dp 이상 고정 폭, `fillMaxWidth` 뒤의 `widthIn`, 매니페스트 방향 고정은 커스텀 lint가 막는다.
 
 ## 검증: 초록불이 보장하지 않는 것
 
