@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
+import com.umc.product.BuildConfig
 import com.umc.product.base.BASE_URL
 import com.umc.product.extension.isJsonArray
 import com.umc.product.extension.isJsonObject
@@ -73,7 +74,12 @@ object NormalNetworkModule {
                         }
                 }
             }
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+        // 본문 로그에는 로그인 비밀번호와 토큰이 그대로 담기므로 디버그 빌드에서만 남긴다(#374).
+        // 모든 OkHttp 클라이언트가 이 인터셉터를 함께 쓰므로 여기서 한 번만 정한다.
+        loggingInterceptor.level =
+            if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        // 디버그 로그에서도 인증 헤더 값(Bearer 토큰, 카카오 REST 키)과 쿠키는 가린다.
+        listOf("Authorization", "Cookie", "Set-Cookie").forEach(loggingInterceptor::redactHeader)
         return loggingInterceptor
     }
 
