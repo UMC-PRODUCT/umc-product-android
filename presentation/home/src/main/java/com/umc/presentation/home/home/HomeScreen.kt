@@ -1,5 +1,8 @@
 package com.umc.presentation.home.home
 
+import androidx.compose.runtime.CompositionLocalProvider
+import java.time.ZoneId
+import java.time.Clock
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -1021,6 +1024,30 @@ fun HomePlanHeader(
 
 
 
+/** 미리보기·스크린샷이 날짜에 따라 바뀌지 않도록 '오늘'(선택 날짜·보는 달 포함)을 기준 이미지를 만든 날로 고정한다. */
+private val PreviewToday: LocalDate = LocalDate.of(2026, 11, 20)
+
+@Composable
+private fun HomeScreenPreviewFrame(uiState: HomeUiState) {
+    val zone = ZoneId.systemDefault()
+    CompositionLocalProvider(LocalHomeClock provides Clock.fixed(PreviewToday.atStartOfDay(zone).toInstant(), zone)) {
+        HomeScreen(
+            uiState = uiState.copy(selectedDate = PreviewToday, viewedMonth = YearMonth.from(PreviewToday)),
+            onDateClick = {},
+            onMonthChange = {},
+            onChangeViewMode = {},
+            onNotificationClick = {},
+            onScheduleAddClick = {},
+            onScheduleDetailClick = {},
+            onNoticeClick = {},
+            onShareCardClick = {},
+            onProfileRetryClick = {},
+            onScheduleRetryClick = {},
+            onScheduleRefresh = {},
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 internal fun HomeScreenPreview() {
@@ -1042,146 +1069,68 @@ internal fun HomeScreenPreview() {
     )
 
     // 2. HomeScreen 호출 (모든 파라미터에 빈 람다나 더미 데이터 전달)
-    HomeScreen(
-        uiState = dummyUiState,
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+    HomeScreenPreviewFrame(uiState = dummyUiState)
 }
 
 /** 글꼴 최대 배율과 두 자리 점수에서 단위(point/Days)가 쪼개지지 않는지 확인한다. */
 @Preview(showBackground = true, fontScale = 2f)
 @Composable
 internal fun HomeScreenLargeFontPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.SUCCESS,
-            userName = "박유수",
-            userNickName = "어헛차",
-            userType = UserType.ACTIVE,
-            growDay = 120,
-            activeString = "12기 활동 상태",
-            sangjum = 10.0,
-            buljum = -10.5,
-            total = -0.5,
-            gisuTag = persistentListOf("10기", "11기", "12기"),
-            viewMode = HomeViewMode.CALENDAR,
-            dailyPlans = persistentListOf()
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.SUCCESS,
+        userName = "박유수",
+        userNickName = "어헛차",
+        userType = UserType.ACTIVE,
+        growDay = 120,
+        activeString = "12기 활동 상태",
+        sangjum = 10.0,
+        buljum = -10.5,
+        total = -0.5,
+        gisuTag = persistentListOf("10기", "11기", "12기"),
+        viewMode = HomeViewMode.CALENDAR,
+        dailyPlans = persistentListOf()
+    ))
 }
 
 /** 챌린저 기록 없이 들어온 프로덕트팀 계정(isUmcProduct): 기수 태그가 비고 활동 상태 카드가 없다. */
 @Preview(showBackground = true)
 @Composable
 internal fun HomeScreenNoGisuPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.SUCCESS,
-            userName = "프로덕트",
-            userNickName = "플덕",
-            userType = null,
-            growDay = 0,
-            gisuTag = persistentListOf(),
-            viewMode = HomeViewMode.CALENDAR,
-            dailyPlans = persistentListOf()
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.SUCCESS,
+        userName = "프로덕트",
+        userNickName = "플덕",
+        userType = null,
+        growDay = 0,
+        gisuTag = persistentListOf(),
+        viewMode = HomeViewMode.CALENDAR,
+        dailyPlans = persistentListOf()
+    ))
 }
 
 @Preview(showBackground = true)
 @Composable
 internal fun HomeScreenLoadErrorPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.ERROR,
-            isScheduleLoadFailed = true,
-            viewMode = HomeViewMode.CALENDAR
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.ERROR,
+        isScheduleLoadFailed = true,
+        viewMode = HomeViewMode.CALENDAR
+    ))
 }
 
 @Preview(showBackground = true)
 @Composable
 internal fun HomeScreenLoadingPreview() {
-    HomeScreen(
-        uiState = HomeUiState(),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+    HomeScreenPreviewFrame(uiState = HomeUiState())
 }
 
 @Preview(showBackground = true)
 @Composable
 internal fun HomeScreenListEmptyPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.SUCCESS,
-            userType = UserType.ACTIVE,
-            viewMode = HomeViewMode.LIST,
-            allPlans = persistentListOf()
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.SUCCESS,
+        userType = UserType.ACTIVE,
+        viewMode = HomeViewMode.LIST,
+        allPlans = persistentListOf()
+    ))
 }
