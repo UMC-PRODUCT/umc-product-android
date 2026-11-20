@@ -47,6 +47,9 @@ android {
         screenshotTests.create("screenshotTest") {
             engineVersion = libs.versions.screenshot.get()
             targetVariants.add("debug")
+            // macOS 에서 만든 기준 이미지와 Linux(CI) 렌더링은 글꼴 안티앨리어싱 때문에 0.01~0.02% 다르다.
+            // 그 차이는 넘기고 0.05% 이상 바뀐 화면만 실패로 본다(모서리·구분선 색 변경은 0.05~0.1% 였다).
+            imageDifferenceThreshold = 0.0005f
             dependencies {
                 implementation(libs.androidx.compose.ui.tooling)
                 implementation(libs.screenshot.validation.api)
