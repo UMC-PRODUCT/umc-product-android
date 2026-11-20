@@ -39,7 +39,7 @@ class FeatureMapTest {
         val missing = rows.flatMap { row ->
             row.getValue("진입").split(">").map { it.trim() }
                 .filter { it.startsWith("tab:") || it.startsWith("tap:") }
-                .map { it.substringAfter(':').trim() }
+                .flatMap { it.substringAfter(':').split(" / ").map(String::trim) }
                 .filterNot { it.startsWith("{") }
                 .filterNot { "\"$it\"" in sources }
                 .map { "${row.getValue("Route")}: $it" }

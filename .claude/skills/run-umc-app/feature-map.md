@@ -7,6 +7,7 @@
 - **모듈**: 화면 컴포저블이 있는 Gradle 모듈.
 - **진입**: 로그인한 홈 화면에서 출발하는 단계를 ` > `로 잇는다.
   - `tab:글자`(하단 탭), `tap:글자`(text나 content-desc가 정확히 그 글자인 요소). 글자는 presentation 소스에 따옴표째 있어야 한다(테스트가 확인).
+  - 상태에 따라 버튼 글자가 다르면 `tap:글자1 / 글자2`처럼 ` / `로 대체 글자를 적는다. 앞 글자부터 찾아 먼저 보이는 것을 누른다.
   - `tap:{인자}`, `deeplink:umc://…{인자}`의 중괄호는 `--arg 인자=값`으로 채운다.
   - `start`(자동 진입), `login`(로그인·가입 흐름), `-`(누를 글자가 없어 단계 이동으로 못 감, 이유는 설명에)는 `goto`가 거절한다.
 - **인자**: `goto`에 넘길 값과 얻는 곳. **계정**: 필요한 역할이나 상태(`-`는 로그인한 계정이면 무엇이든). 이메일·비밀번호는 적지 않는다.
@@ -47,7 +48,7 @@
 | ReceivedCard | ReceivedCard | :presentation:mypage | 받은 명함. MY 탭 메뉴가 숨겨져 들어갈 곳이 없다 | - | - | - |
 | Community | Community | :presentation:community | 커뮤니티 스레드 목록 | tab:커뮤니티 | - | - |
 | CommunitySearch | CommunitySearch | :presentation:community | 스레드 검색. 돋보기 아이콘(content-desc) | tab:커뮤니티 > tap:검색 | - | - |
-| CommunityCreate | CommunityCreate | :presentation:community | 스레드 만들기(목록이 비어 있으면 스레드 만들기 버튼이 대신 보인다) | tab:커뮤니티 > tap:새 스레드 | - | - |
+| CommunityCreate | CommunityCreate | :presentation:community | 스레드 만들기. 목록(또는 고른 카테고리)이 비어 있으면 떠 있는 새 스레드 버튼 대신 스레드 만들기 버튼이 보인다 | tab:커뮤니티 > tap:새 스레드 / 스레드 만들기 | - | - |
 | CommunityEdit | CommunityEdit | :presentation:community | 스레드 편집. 채팅방 더보기 메뉴(OWNER·ADMIN만 보임) | deeplink:umc://thread?threadId={threadId} > tap:더보기 > tap:스레드 편집 | threadId: 내가 OWNER·ADMIN인 스레드 ID | 해당 스레드 OWNER·ADMIN |
 | CommunityChatting | CommunityChatting | :presentation:community | 스레드 채팅방. 딥링크는 홈 도착 뒤 처리된다. 참여하지 않은 스레드는 보기 전용 | deeplink:umc://thread?threadId={threadId} | threadId: 커뮤니티에서 스레드를 연 뒤 net 요약의 community/threads/숫자 경로 | - |
 

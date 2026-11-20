@@ -10,7 +10,7 @@
   goto ROUTE [--arg k=v]    feature-map.md 의 진입 경로를 따라 이동하고 도착을 확인한다
   verify ROUTE [...]        launch(+login) → goto → 스크린샷 → 네트워크 요약을 한 번에 한다
   net                       마지막 표시 시점 이후의 HTTP 호출을 요약한다(본문·헤더는 출력하지 않는다)
-  texts | tap TEXT | shot   화면 글자 목록, 글자로 탭, 스크린샷
+  texts / tap TEXT / shot [PATH]  화면 글자 목록, 글자로 탭, 스크린샷(각각 따로 실행한다)
 
 환경 변수
   ANDROID_SERIAL   여러 기기가 연결됐을 때 쓸 기기
@@ -154,7 +154,7 @@ def screens_since(since: str) -> list[str]:
 
 
 def current_screen() -> str | None:
-    """logcat 에 남은 마지막 screen_view. login 은 logcat 을 비우므로 그 뒤 이동이 없으면 None 이다."""
+    """logcat 에 남은 마지막 screen_view. 기록이 없으면 None 이다."""
     names = re.findall(r"screen_name=(\w+)", adb("logcat", "-d", "-s", "UMC_ANALYTICS", check=False))
     return names[-1] if names else None
 
@@ -201,10 +201,17 @@ def find_node(root: ET.Element, text: str) -> ET.Element | None:
     return None
 
 
-def tap(text: str, wait: float = 1.5) -> None:
-    node = find_node(dump(), text)
+def tap(*texts: str, wait: float = 1.5, timeout: float = 4) -> None:
+    """texts 중 화면에 먼저 보이는 글자를 누른다. 로딩이 끝나지 않았을 수 있으므로 timeout 초 동안 다시 찾는다."""
+    deadline = time.time() + timeout
+    while True:
+        root = dump()
+        node = next((n for t in texts if (n := find_node(root, t)) is not None), None)
+        if node is not None or time.time() >= deadline:
+            break
+        time.sleep(1)
     if node is None:
-        raise Failure(f"화면에서 '{text}'를 찾지 못했습니다")
+        raise Failure(f"화면에서 '{' / '.join(texts)}'를 찾지 못했습니다")
     x, y = center(node)
     adb("shell", "input", "tap", str(x), str(y))
     time.sleep(wait)
@@ -221,11 +228,23 @@ def hide_keyboard() -> None:
         time.sleep(0.8)
 
 
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
 def shot(path: str | None = None) -> Path:
     WORK.mkdir(parents=True, exist_ok=True)
     target = Path(path) if path else WORK / f"shot-{time.strftime('%Y%m%d-%H%M%S')}.png"
-    with open(target, "wb") as f:
-        f.write(subprocess.run(["adb"] + args_for_serial() + ["exec-out", "screencap", "-p"], capture_output=True).stdout)
+    try:
+        result = subprocess.run(["adb"] + args_for_serial() + ["exec-out", "screencap", "-p"], capture_output=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        raise Failure("adb 응답이 없습니다: exec-out screencap -p")
+    # exec-out 은 기기 쪽 오류·경고("Multiple displays…" 등)를 PNG 와 같은 stdout 으로 보낸다. PNG 서명부터 잘라 쓰고,
+    # 서명이 없으면 캡처 실패로 본다.
+    start = result.stdout.find(PNG_SIGNATURE)
+    if result.returncode != 0 or start < 0:
+        detail = (result.stderr or result.stdout[:200]).decode(errors="replace").strip()
+        raise Failure("스크린샷을 찍지 못했습니다" + (f": {detail}" if detail else ""))
+    target.write_bytes(result.stdout[start:])
     return target
 
 
@@ -255,12 +274,17 @@ def type_into(node: ET.Element, value: str, secret: bool) -> None:
     time.sleep(0.5)
     adb("shell", "input", "keyevent", "KEYCODE_MOVE_END")
     adb("shell", "input", "keyevent", *(["KEYCODE_DEL"] * 60))
-    escaped = value.replace("\\", "\\\\").replace("'", "'\\''").replace("%", "\\%").replace(" ", "%s")
-    adb("shell", f"input text '{escaped}'", secret=secret)
+    # input text 는 "%s" 만 공백으로 바꾸고 역슬래시 이스케이프는 하지 않는다. 그래서 셸 인용(작은따옴표)과 공백 변환만 하고,
+    # 원문의 "%s" 는 % 와 s 를 다른 호출로 나눠 보내 공백으로 바뀌지 않게 한다.
+    for chunk in re.split(r"(?<=%)(?=s)", value):
+        if chunk:
+            encoded = chunk.replace(" ", "%s").replace("'", "'\\''")
+            adb("shell", f"input text '{encoded}'", secret=secret)
     time.sleep(0.4)
 
 
-def login(email: str) -> None:
+def login(email: str) -> str:
+    """로그인하고 홈 도착을 확인한다. 로그인 버튼을 누르기 직전의 기기 시각(logcat -T 기준)을 돌려준다."""
     password = qa_password()
     texts = visible_texts()
     if "UMC 계정 로그인" in texts:
@@ -279,6 +303,8 @@ def login(email: str) -> None:
         raise Failure("이메일을 입력하지 못했습니다(키보드 입력 언어를 영문으로 바꿔 보세요)")
     type_into(edit_fields()[1], password, secret=True)
     hide_keyboard()
+    # 디버그 빌드의 HTTP 로그는 요청·응답 줄과 헤더뿐이고(#374) 인증 헤더는 가려지므로, 로그인 뒤 logcat 을 지우지 않는다.
+    # 지우면 로그인 직후의 홈 요청까지 사라져 verify 가 호출 0건으로 통과할 수 있다.
     since = device_time()
     tap("로그인", wait=1)
     try:
@@ -286,10 +312,8 @@ def login(email: str) -> None:
     except Failure:
         visible = [t for t in visible_texts() if t not in {email}]
         raise Failure("로그인 후 홈으로 가지 못했습니다. 화면 글자: " + " / ".join(visible[:12]))
-    finally:
-        # 디버그 빌드는 로그인 요청 본문(비밀번호)과 토큰 응답을 logcat 에 남기므로, 성공·실패와 관계없이 바로 지운다.
-        adb("logcat", "-c", check=False)
     print(f"{email} 로그인 완료(비밀번호는 출력하지 않음)")
+    return since
 
 
 # ── feature map 과 이동 ──────────────────────────────────────────────
@@ -322,28 +346,39 @@ def goto(route: str, args: dict[str, str]) -> None:
     expected = row.get("screen_name", route).strip("`") or route
     if entry in {"-", "start", "login"}:
         raise Failure(f"{route} 는 단계 이동으로 갈 수 없습니다(진입: {entry}). {row.get('설명', '')}")
-    # 이미 그 화면이면 screen_view 가 다시 찍히지 않으므로 바로 끝낸다.
-    if current_screen() == expected:
-        print(f"이미 {route} 입니다")
-        return
-    steps = [s.strip() for s in entry.split(">")]
-    # 탭·버튼으로 가는 경로는 홈에서 출발한다고 적었다. 하단 탭이 안 보이는 화면이면 뒤로 가서 탭을 되찾고,
-    # 버튼으로 시작하는 경로라면 홈 탭으로 돌아간다.
-    if not steps[0].startswith("deeplink:"):
-        back_to_tabs()
-        if steps[0].startswith("tap:") and current_screen() not in {None, "Home"}:
-            tap("홈")
-    since = device_time()
-    for step in steps:
+    # 화면을 움직이기 전에 인자를 모두 채운다. 빠진 인자로 실패할 때 화면을 바꾸지 않기 위해서다.
+    # tap 단계의 대체 글자(" / ")는 채우기 전에 나눠, 인자 값에 "/" 가 있어도 잘리지 않게 한다.
+    fill = lambda text: re.sub(r"\{(\w+)\}", lambda m: args.get(m.group(1)) or missing_arg(m.group(1), route), text.strip())
+    steps = []
+    for step in (s.strip() for s in entry.split(">")):
         kind, _, value = step.partition(":")
-        value = re.sub(r"\{(\w+)\}", lambda m: args.get(m.group(1)) or missing_arg(m.group(1), route), value.strip())
         if kind in {"tab", "tap"}:
-            tap(value)
+            steps.append((kind, [fill(choice) for choice in value.split(" / ")]))
         elif kind == "deeplink":
-            adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", value, PACKAGE)
-            time.sleep(2)
+            steps.append((kind, [fill(value)]))
         else:
             raise Failure(f"알 수 없는 진입 단계: {step}")
+    if current_screen() == expected:
+        # 인자 없는 화면이면 이미 도착한 것이다. 인자가 있으면 같은 이름이어도 다른 대상(threadId 등)일 수 있고,
+        # 그 화면 위에서 다시 열면 앱이 같은 화면을 무시하거나 screen_view 가 다시 찍히지 않으므로 하단 탭까지 빠져나온다.
+        if "{" not in entry:
+            print(f"이미 {route} 입니다")
+            return
+        hide_keyboard()
+        back_to_tabs()
+    # 탭·버튼으로 가는 경로는 홈에서 출발한다고 적었다. 하단 탭이 안 보이는 화면이면 뒤로 가서 탭을 되찾고,
+    # 버튼으로 시작하는 경로라면 홈 탭으로 돌아간다.
+    if steps[0][0] != "deeplink":
+        back_to_tabs()
+        if steps[0][0] == "tap" and current_screen() not in {None, "Home"}:
+            tap("홈")
+    since = device_time()
+    for kind, values in steps:
+        if kind in {"tab", "tap"}:
+            tap(*values)
+        else:
+            adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", values[0], PACKAGE)
+            time.sleep(2)
     wait_screen(lambda name: name == expected, since, timeout=15)
     print(f"{route} 도착(screen_view={expected})")
 
@@ -373,7 +408,8 @@ def net(since: str | None) -> int:
     args = ["logcat", "-d", "-s", "RETROFIT1"]
     if since:
         args[2:2] = ["-T", since]
-    out = adb(*args, check=False)
+    # 조회 자체가 실패하면(기기 연결 끊김 등) Failure 로 끝낸다. 호출이 없어서 0건인 것과 구분한다.
+    out = adb(*args)
     requests = re.findall(r"--> (GET|POST|PUT|PATCH|DELETE) (https?://\S+)", out)
     responses = re.findall(r"<-- (\d{3}) [^\n]*?(https?://\S+)", out)
     problems = 0
@@ -435,12 +471,18 @@ def main() -> int:
             goto(a.route, parse_args(a.arg))
         elif a.command == "verify":
             boot(os.environ.get("UMC_AVD"))
+            # 홈 요청은 첫 화면이 뜨는 동안 끝나므로, 수집 기준은 실행 전에 잡는다.
+            since = device_time()
             first = launch(a.fresh)
             if first in {"Login", "EmailLogin"}:
                 if not a.email:
                     raise Failure("로그아웃 상태입니다. --email 로 QA 계정을 지정하세요")
-                login(a.email)
-            since = device_time()
+                # 로그인 전(Splash)의 만료 토큰 401 은 빼고, 로그인 요청부터 센다.
+                since = login(a.email)
+                first = "Home"
+            if first != "Home":
+                hint = " 챌린저 기록이 없는 계정이면 활동 코드 입력 화면에 머뭅니다." if first == "SignUpFailCode" else ""
+                raise Failure(f"홈에 도착하지 못했습니다(첫 화면: {first}).{hint}")
             if a.route != "Home":
                 goto(a.route, parse_args(a.arg))
             time.sleep(2)
