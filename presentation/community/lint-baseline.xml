@@ -195,4 +195,34 @@
     <issue id="FixedDelayInLaunchedEffect" message="LaunchedEffect 안에서 고정 시간(100ms)을 기다리면 기기 속도에 따라 타이밍이 어긋납니다. 기다리는 대상을 상태로 관찰하세요." errorLine1="        delay(100L)" errorLine2="        ~~~~~~~~~~~">
         <location file="src/main/java/com/umc/presentation/community/search/CommunitySearchScreen.kt" />
     </issue>
+    <issue id="UnstableCollectionParameter" message="imageUris: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    imageUris: List&lt;String&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="reactions: List&lt;CommunityReaction&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    reactions: List&lt;CommunityReaction&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="imageUris: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    imageUris: List&lt;String&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="imageUris: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    imageUris: List&lt;String&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="imageUris: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    imageUris: List&lt;String&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="imageUris: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    imageUris: List&lt;String&gt; = emptyList()," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="models: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    models: List&lt;String&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="models: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    models: List&lt;String&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="mentionNames: List&lt;String&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    mentionNames: List&lt;String&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+    <issue id="UnstableCollectionParameter" message="actions: Set&lt;CommunityParticipantBatchAction&gt; 는 내용이 같아도 새 인스턴스면 다시 그립니다. ImmutableList·ImmutableSet·ImmutableMap(kotlinx.collections.immutable)으로 받으세요." errorLine1="    actions: Set&lt;CommunityParticipantBatchAction&gt;," errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityThreadInfoScreen.kt" />
+    </issue>
 </issues>

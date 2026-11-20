@@ -43,6 +43,8 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+    // PR 축약 검사(모듈별 lint)에서도 커스텀 규칙이 data 소스를 보도록 등록한다.
+    lintChecks(project(":lint-rules"))
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.installations)
 

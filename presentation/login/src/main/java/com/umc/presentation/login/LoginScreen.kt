@@ -15,9 +15,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -218,7 +220,10 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 HorizontalDivider(
-                    modifier = Modifier.width(350.dp),
+                    // 위 카카오·구글 버튼(폭 350dp 벡터 이미지)과 같은 폭 규칙을 따른다. 창이 더 좁으면 창 폭에 맞춰 줄어든다.
+                    modifier = Modifier
+                        .widthIn(max = 350.dp)
+                        .fillMaxWidth(),
                     thickness = 1.dp,
                     color = grey200(),
                 )
@@ -227,7 +232,8 @@ fun LoginScreen(
 
                 Box(
                     modifier = Modifier
-                        .width(350.dp)
+                        .widthIn(max = 350.dp)
+                        .fillMaxWidth()
                         .height(48.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(mint100())
@@ -378,7 +384,9 @@ private fun handleSignIn(
     }
 }
 
+// 버튼 넷이 같은 폭으로 줄어드는지 350dp 보다 좁은 창에서도 본다.
 @PreviewScreenSizes
+@Preview(name = "좁은 폰(320dp)", widthDp = 320, heightDp = 640, showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
     LoginScreen()
