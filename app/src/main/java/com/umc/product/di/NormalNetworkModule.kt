@@ -1,13 +1,8 @@
 package com.umc.product.di
 
 import android.util.Log
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonParser
-import com.google.gson.JsonSyntaxException
 import com.umc.product.BuildConfig
 import com.umc.product.base.BASE_URL
-import com.umc.product.extension.isJsonArray
-import com.umc.product.extension.isJsonObject
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,28 +51,13 @@ object NormalNetworkModule {
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
-        val loggingInterceptor =
-            HttpLoggingInterceptor { message ->
-                when {
-                    !message.isJsonObject() && !message.isJsonArray() ->
-                        Log.d("RETROFIT1", "CONNECTION INFO -> $message")
-                    else ->
-                        try {
-                            Log.d(
-                                "RETROFIT2",
-                                GsonBuilder().setPrettyPrinting().create().toJson(
-                                    JsonParser().parse(message),
-                                ),
-                            )
-                        } catch (m: JsonSyntaxException) {
-                            Log.d("RETROFIT3", message)
-                        }
-                }
-            }
-        // 본문 로그에는 로그인 비밀번호와 토큰이 그대로 담기므로 디버그 빌드에서만 남긴다(#374).
+        // run-umc-app 스킬의 net·verify 가 RETROFIT1 태그의 "--> GET url" / "<-- 200 url" 줄을 읽는다. 태그를 바꾸면 함께 바꾼다.
+        val loggingInterceptor = HttpLoggingInterceptor { message -> Log.d("RETROFIT1", "CONNECTION INFO -> $message") }
+        // 본문에는 로그인 비밀번호, 토큰, refresh token 이 담기므로 디버그에서도 남기지 않는다(#374).
+        // 디버그는 요청·응답 줄과 헤더만 남기고, 릴리스는 아무것도 남기지 않는다.
         // 모든 OkHttp 클라이언트가 이 인터셉터를 함께 쓰므로 여기서 한 번만 정한다.
         loggingInterceptor.level =
-            if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+            if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS else HttpLoggingInterceptor.Level.NONE
         // 디버그 로그에서도 인증 헤더 값(Bearer 토큰, 카카오 REST 키)과 쿠키는 가린다.
         listOf("Authorization", "Cookie", "Set-Cookie").forEach(loggingInterceptor::redactHeader)
         return loggingInterceptor
