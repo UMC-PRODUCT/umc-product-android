@@ -34,3 +34,10 @@ fun AdminNoticeScreenLoadingShot() {
 fun AdminNoticeScreenErrorShot() {
     UmcTheme { AdminNoticeScreenErrorPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun AdminNoticeScreenEmptyPageRetryShot() {
+    UmcTheme { AdminNoticeScreenEmptyPageRetryPreview() }
+}

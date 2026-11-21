@@ -476,3 +476,15 @@ internal fun NoticeScreenPartSelectedPreview() {
         ),
     )
 }
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeScreenEmptyPageRetryPreview() {
+    NoticeScreen(
+        uiState = NoticeUiState(
+            nowTitle = "12기 공지사항",
+            errorMessage = "네트워크 연결을 확인해 주세요",
+            isNextPageError = true,
+        ),
+    )
+}

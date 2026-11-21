@@ -386,3 +386,16 @@ internal fun NoticeSearchResultScreenPreview() {
         ),
     )
 }
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeSearchResultEmptyPageRetryPreview() {
+    NoticeSearchResultScreen(
+        uiState = NoticeSearchUiState(
+            query = "중앙 해커톤",
+            isResultMode = true,
+            errorMessage = "네트워크 연결을 확인해 주세요",
+            isNextPageError = true,
+        ),
+    )
+}

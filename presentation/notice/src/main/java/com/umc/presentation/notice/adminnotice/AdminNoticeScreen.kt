@@ -338,3 +338,17 @@ internal fun AdminNoticeScreenErrorPreview() {
         ),
     )
 }
+
+@Preview(showBackground = true)
+@Composable
+internal fun AdminNoticeScreenEmptyPageRetryPreview() {
+    AdminNoticeScreen(
+        uiState = AdminNoticeUiState(
+            visibleTabs = AdminNoticeTab.entries.toImmutableList(),
+            selectedTab = AdminNoticeTab.CENTRAL,
+            hasLoaded = true,
+            errorMessage = "네트워크 연결을 확인해 주세요",
+            isNextPageError = true,
+        ),
+    )
+}
