@@ -380,17 +380,28 @@ jobs:
       - name: 스크린샷 차이 요약
         if: ${{ !cancelled() && steps.screenshot.outcome == 'failure' }}
         run: |
+          # 실패한 화면 이름과 차이 비율만 모은다(실패 줄 다음 줄의 'N% difference').
+          grep -E -A1 '^[a-z][a-zA-Z0-9_.]* > .* FAILED$' screenshot-test.log | grep -E 'FAILED|difference' \
+            | sed -E 's/^.* > (.*) FAILED$/\1/; s/^.*\(([0-9.]+% difference)\).*$/    \1/' > screenshot-failures.txt || true
+          # 이름 줄과 비율 줄을 한 줄로 합친다. 렌더링 오류처럼 비율이 없으면 이름만 남는다.
+          awk '/^    /{sub(/^ +/,""); print prev " (" $0 ")"; prev=""; next} {if (prev!="") print prev; prev=$0} END{if (prev!="") print prev}' \
+            screenshot-failures.txt > screenshot-failures-oneline.txt
           {
             echo "### 📸 스크린샷이 기준 이미지와 다릅니다"
             echo ""
-            echo '```'
-            # 실패한 화면 이름과 차이 비율만 모은다(다음 줄의 'N% difference').
-            grep -E -A1 '^[a-z][a-zA-Z0-9_.]* > .* FAILED$' screenshot-test.log | grep -E 'FAILED|difference' | sed -E 's/^.* > (.*) FAILED$/\1/; s/^.*\(([0-9.]+% difference)\).*$/    \1/' | head -80 || true
-            echo '```'
+            if [ -s screenshot-failures-oneline.txt ]; then
+              sed -E 's/^/- /' screenshot-failures-oneline.txt | head -80
+            else
+              echo "- 실패한 화면을 로그에서 찾지 못했습니다(컴파일 오류 등). '스크린샷 테스트' 단계 로그를 확인하세요."
+            fi
             echo ""
             echo "- 의도한 UI 변경이면: \`./gradlew :presentation:<모듈>:updateDebugScreenshotTestDefaultTestSuite\` 로 기준 이미지를 갱신해 이 PR 에 커밋하세요."
             echo "- 의도하지 않은 변경이면: screenshots-${{ github.run_number }} artifact 의 diffs(차이)·rendered(이번 렌더링) 이미지로 바뀐 곳을 찾아 코드를 고치세요."
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          # 실행 화면의 Annotations 와 PR 의 Checks 탭에서도 바로 보이도록 화면마다 오류 주석을 남긴다(단계당 10개까지 표시된다).
+          head -10 screenshot-failures-oneline.txt | while IFS= read -r line; do
+            echo "::error title=스크린샷 차이::${line}"
+          done
 
       - name: 스크린샷 이미지 업로드
         if: always()
