@@ -179,7 +179,7 @@ fun AdminNoticeScreen(
                 }
             }
 
-            uiState.errorMessage != null && uiState.noticeList.isEmpty() -> {
+            uiState.errorMessage != null && uiState.noticeList.isEmpty() && !uiState.isNextPageError -> {
                 AdminNoticeStatusContent(
                     iconRes = R.drawable.ic_speaker,
                     title = AppStrings.NOTICE_LIST_ERROR,
@@ -215,7 +215,7 @@ fun AdminNoticeScreen(
                     }
 
                     // 마지막 아이템 노출 시 다음 페이지 로드. 실패하면 다시 시도 버튼으로 바뀐다
-                    if (uiState.noticeList.isNotEmpty() && !uiState.isLastPage) {
+                    if (uiState.isNextPageError || (uiState.noticeList.isNotEmpty() && !uiState.isLastPage)) {
                         item {
                             NoticeNextPageItem(
                                 isError = uiState.isNextPageError,

@@ -188,7 +188,7 @@ fun NoticeScreen(
                 modifier = Modifier.weight(1f),
             ) {
                 // 실패와 0건을 구분해서 보여준다. 아무것도 안 그리면 원인을 알 수 없다
-                if (uiState.noticeList.isEmpty() && !uiState.isPageLoading) {
+                if (uiState.noticeList.isEmpty() && !uiState.isPageLoading && !uiState.isNextPageError) {
                     NoticeListMessage(
                         title = uiState.errorMessage?.let { AppStrings.NOTICE_LIST_ERROR }
                             ?: AppStrings.NOTICE_LIST_EMPTY_TITLE,
@@ -213,7 +213,7 @@ fun NoticeScreen(
                     }
 
                     // 마지막 아이템 노출 시 다음 페이지 로드. 실패하면 다시 시도 버튼으로 바뀐다
-                    if (uiState.noticeList.isNotEmpty() && !uiState.isLastPage) {
+                    if (uiState.isNextPageError || (uiState.noticeList.isNotEmpty() && !uiState.isLastPage)) {
                         item {
                             NoticeNextPageItem(
                                 isError = uiState.isNextPageError,

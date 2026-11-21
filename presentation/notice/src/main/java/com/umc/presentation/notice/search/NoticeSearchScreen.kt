@@ -292,7 +292,7 @@ fun NoticeSearchResultScreen(
                 }
             }
 
-            uiState.errorMessage != null && uiState.resultList.isEmpty() -> {
+            uiState.errorMessage != null && uiState.resultList.isEmpty() && !uiState.isNextPageError -> {
                 NoticeSearchMessage(
                     modifier = Modifier.weight(1f),
                     title = AppStrings.NOTICE_SEARCH_ERROR,
@@ -300,7 +300,7 @@ fun NoticeSearchResultScreen(
                 )
             }
 
-            uiState.resultList.isEmpty() -> {
+            uiState.resultList.isEmpty() && !uiState.isNextPageError -> {
                 NoticeSearchMessage(
                     modifier = Modifier.weight(1f),
                     title = AppStrings.NOTICE_SEARCH_EMPTY_TITLE,

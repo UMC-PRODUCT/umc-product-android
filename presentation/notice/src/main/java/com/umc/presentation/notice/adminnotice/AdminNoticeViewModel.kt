@@ -11,6 +11,7 @@ import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
+import com.umc.presentation.notice.loadUniqueNoticePage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -105,8 +106,20 @@ class AdminNoticeViewModel @Inject constructor(
     fun setGisuId(gisuId: Long) {
         if (gisuId == appliedGisuId) return
         appliedGisuId = gisuId
-        // 기수를 알 수 없으면 조회가 시작되지 않으므로, 끝없는 로딩 대신 빈 상태로 떨어지게 한다
-        updateState { copy(gisuId = gisuId, hasLoaded = hasLoaded || gisuId <= 0L) }
+        listJob?.cancel()
+        // 기수가 바뀌면 이전 기수의 페이지 번호와 결과를 버린다.
+        updateState {
+            copy(
+                gisuId = gisuId,
+                noticeList = persistentListOf(),
+                currentPage = 0,
+                isLastPage = false,
+                isPageLoading = false,
+                hasLoaded = gisuId <= 0L,
+                errorMessage = null,
+                isNextPageError = false,
+            )
+        }
         refreshIfReady()
     }
 
@@ -235,30 +248,30 @@ class AdminNoticeViewModel @Inject constructor(
     ) = viewModelScope.launch {
         updateState { copy(isPageLoading = true, errorMessage = null, isNextPageError = false) }
 
-        val pageToFetch = if (isRefresh) 0 else state.currentPage
-
         // 학교 소속 운영진(교내 회장단/파트장)은 schoolId를 함께 전달해 교내 운영진 공지를 조회하고,
         // 중앙 레벨은 schoolId 미입력으로 중앙운영사무국 공지를 조회 (서버 스펙: schoolId 입력 여부로 구분)
         val isSchoolStaff = state.visibleTabs.firstOrNull()?.isSchoolLevel == true
         val schoolId = if (isSchoolStaff) findUserSchoolId() else null
 
-        resultResponse(
-            response = getNoticeListUseCase(
+        val pageLoad = loadUniqueNoticePage(
+            existing = if (isRefresh) emptyList() else state.noticeList,
+            firstPage = if (isRefresh) 0 else state.currentPage,
+        ) { page ->
+            getNoticeListUseCase(
                 gisuId = state.gisuId,
                 noticeTab = selectedTab.noticeTab,
                 schoolId = schoolId,
-                page = pageToFetch,
-                size = 20
-            ),
+                page = page,
+                size = 20,
+            )
+        }
+        resultResponse(
+            response = pageLoad.response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
-                        noticeList = if (isRefresh) {
-                            noticeSearch.content.toImmutableList()
-                        } else {
-                            (noticeList + noticeSearch.content).toImmutableList()
-                        },
-                        currentPage = pageToFetch + 1,
+                        noticeList = noticeSearch.content.toImmutableList(),
+                        currentPage = pageLoad.pageNumber + 1,
                         isPageLoading = false,
                         hasLoaded = true,
                         isLastPage = !noticeSearch.hasNext,
@@ -269,12 +282,17 @@ class AdminNoticeViewModel @Inject constructor(
             errorCallback = { fail ->
                 // 실패 사유를 남기지 않으면 "0건" 빈 상태와 구분되지 않는다
                 // 다음 페이지 실패는 목록 끝에 다시 시도 버튼을 띄워 직접 다시 부르게 한다
+                val isNextPageError = !isRefresh || pageLoad.pageNumber > 0
                 updateState {
                     copy(
+                        // 새 조회의 첫 페이지가 비어 있었다면 이전 목록을 새 조회 결과와 섞지 않는다.
+                        noticeList = if (isRefresh && isNextPageError) persistentListOf() else noticeList,
+                        currentPage = if (isNextPageError) pageLoad.pageNumber else currentPage,
+                        isLastPage = !isNextPageError && isLastPage,
                         isPageLoading = false,
                         hasLoaded = true,
                         errorMessage = fail.message,
-                        isNextPageError = !isRefresh,
+                        isNextPageError = isNextPageError,
                     )
                 }
             }
