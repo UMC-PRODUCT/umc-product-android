@@ -400,11 +400,24 @@ fun NoticeWriteScreen(
 
             // 수정 모드·생성 완료 후 재등록에서는 수신 대상(카테고리/게시판 분류) 변경 불가
             if (!uiState.isTargetLocked) {
-                UText(
-                    text = AppStrings.NOTICE_WRITE_CATEGORY_TITLE,
-                    style = UmcTypographyTokens.HeadlineBold,
-                    color = grey950(),
-                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    UText(
+                        text = AppStrings.NOTICE_WRITE_CATEGORY_TITLE,
+                        style = UmcTypographyTokens.HeadlineBold,
+                        color = grey950(),
+                    )
+                    uiState.categoryHint?.let { hint ->
+                        UText(
+                            text = hint,
+                            style = UmcTypographyTokens.Footnote,
+                            color = grey600(),
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -461,7 +474,7 @@ fun NoticeWriteScreen(
                 }
 
                 // 게시판 분류 (권한/카테고리에 따라 노출)
-                if (uiState.boardChips.isNotEmpty()) {
+                if (uiState.visibleBoardChips.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -488,7 +501,7 @@ fun NoticeWriteScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        uiState.boardChips.forEach { chipType ->
+                        uiState.visibleBoardChips.forEach { chipType ->
                             when (chipType) {
                                 BoardChipType.ALL -> WriteBoardChip(
                                     text = AppStrings.COMMON_ALL,
@@ -1251,7 +1264,7 @@ private fun NoticeWriteScreenSpecificGisuPreview() {
                 GisuItem(gisuId = 12, generation = 12),
                 GisuItem(gisuId = 9, generation = 9),
             ),
-            targetGisuId = 9,
+            targetGisuId = 12,
             authorityGisuId = 12,
         ),
     )

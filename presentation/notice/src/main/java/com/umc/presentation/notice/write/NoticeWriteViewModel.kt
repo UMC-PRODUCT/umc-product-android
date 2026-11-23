@@ -267,7 +267,7 @@ class NoticeWriteViewModel @Inject constructor(
                         .sortedByDescending { it.generation }
                     val role = uiState.value.writerRole
                     updateState {
-                        val allowedGisus = role?.let { allowedNoticeTargetGisus(it, gisus, authorityGisuId) }.orEmpty()
+                        val allowedGisus = role?.let { allowedNoticeTargetGisus(it, gisus, authorityGisuId, selectedCategory?.type) }.orEmpty()
                         val targetId = targetGisuId?.takeIf { id -> allowedGisus.any { it.gisuId == id } }
                             ?: preferredGisuId?.toInt()?.takeIf { id -> allowedGisus.any { it.gisuId == id } }
                             ?: allowedGisus.firstOrNull()?.gisuId
@@ -510,6 +510,7 @@ class NoticeWriteViewModel @Inject constructor(
         updateState {
             copy(
                 selectedCategory = category,
+                targetGisuId = noticeTargetGisuId(writerRole, category.type, targetGisuId, authorityGisuId),
                 boardChips = chips.toImmutableList(),
                 boardHint = hint,
                 isAllSelected = false,
@@ -519,6 +520,7 @@ class NoticeWriteViewModel @Inject constructor(
                 selectedPart = null,
             )
         }
+        loadTargetOrganization(uiState.value.targetGisuId)
     }
 
     /** 전체는 나머지 분류와 배타적이다. 켜는 순간 다른 선택을 모두 해제한다 */
@@ -567,6 +569,7 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onSelectPart(part: UserPart) {
+        if (uiState.value.isTargetLocked || !uiState.value.canSelectPart || part !in UserPart.selectable) return
         updateState { copy(selectedPart = part, isAllSelected = false) }
     }
 
@@ -924,8 +927,12 @@ internal fun allowedNoticeTargetGisus(
     writerRole: NoticeWriterRole,
     gisus: List<GisuItem>,
     authorityGisuId: Int?,
+    category: WriteCategoryType? = null,
 ): List<GisuItem> = when (writerRole) {
-    NoticeWriterRole.SUPER_ADMIN, NoticeWriterRole.CENTRAL_CORE -> gisus
+    NoticeWriterRole.SUPER_ADMIN -> gisus
+    NoticeWriterRole.CENTRAL_CORE -> if (isNoticeStaffCategory(category)) {
+        gisus.filter { it.gisuId == authorityGisuId }
+    } else gisus
     else -> gisus.filter { it.gisuId == authorityGisuId }
 }
 
@@ -979,13 +986,26 @@ data class NoticeWriteUiState(
     // 화면 선택지와 선택 처리에서 같은 권한 정책을 사용한다. 권한이 없으면 선택지를 제공하지 않는다.
     val selectableTargetGisus: ImmutableList<GisuItem>
         get() = writerRole?.let { role ->
-            allowedNoticeTargetGisus(role, availableGisus, authorityGisuId).toImmutableList()
+            allowedNoticeTargetGisus(role, availableGisus, authorityGisuId, selectedCategory?.type).toImmutableList()
         } ?: persistentListOf()
 
     // 전체 기수 공지는 특정 기수를 지정하지 않는다. 그 외에는 기수 간 발행 권한이 있는 역할만 선택기를 표시한다.
     val showTargetGisuSelector: Boolean
         get() = (writerRole == NoticeWriterRole.SUPER_ADMIN || writerRole == NoticeWriterRole.CENTRAL_CORE) &&
                 selectedCategory?.type != WriteCategoryType.ALL_GISU
+
+    val categoryHint: String?
+        get() = AppStrings.NOTICE_WRITE_PAST_PART_HINT.takeIf {
+            targetGisuId != null && authorityGisuId != null && targetGisuId > 0 && authorityGisuId > 0 &&
+                targetGisuId != authorityGisuId && selectedCategory?.type != WriteCategoryType.ALL_GISU &&
+                BoardChipType.PART in boardChips
+        }
+
+    val canSelectPart: Boolean
+        get() = targetGisuId != null && targetGisuId == authorityGisuId && BoardChipType.PART in boardChips
+
+    val visibleBoardChips: List<BoardChipType>
+        get() = boardChips.filter { it != BoardChipType.PART || canSelectPart }
 
     // 게시판 분류가 있는 카테고리에서 하나라도 선택됐는지
     val hasBoardSelection: Boolean

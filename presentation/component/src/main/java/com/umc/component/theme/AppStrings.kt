@@ -600,6 +600,7 @@ object AppStrings {
     // const val ADMIN_NOTICE_CHAPTER = "지부장 공지"
     const val ADMIN_NOTICE_SCHOOL_CORE = "교내 회장단 공지"
     const val ADMIN_NOTICE_PART_LEADER = "파트장 공지"
+    const val NOTICE_WRITE_PAST_PART_HINT = "과거 기수 공지에는 파트를 지정할 수 없어요."
     const val NOTICE_WRITE_CATEGORY_PLACEHOLDER = COMMON_SELECT_CATEGORY
     const val NOTICE_WRITE_TITLE_PLACEHOLDER = COMMON_TITLE_PLACEHOLDER
     const val NOTICE_WRITE_CONTENT_PLACEHOLDER = COMMON_CONTENT_PLACEHOLDER

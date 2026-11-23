@@ -52,9 +52,10 @@ class NoticeWriteSelectionTest {
     }
 
     @Test
-    fun `특정 기수의 학교와 파트로 지정한 일반 공지 대상도 보존한다`() {
+    fun `활성 기수의 학교와 파트로 지정한 일반 공지 대상도 보존한다`() {
         val state = selectedState.copy(
             selectedCategory = WriteCategory(WriteCategoryType.GISU, "특정 기수"),
+            targetGisuId = 12,
             selectedPart = UserPart.PLAN,
         )
         val selection = resolve(state)
@@ -64,7 +65,7 @@ class NoticeWriteSelectionTest {
             selectedCategory = selection.previousCategory,
         ))
 
-        assertEquals(9, target?.targetGisuId)
+        assertEquals(12, target?.targetGisuId)
         assertEquals(7, target?.targetSchoolId)
         assertEquals(listOf("PLAN"), target?.targetParts)
         assertEquals("CHALLENGER", target?.targetNoticeTab)

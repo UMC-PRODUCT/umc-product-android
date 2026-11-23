@@ -33,7 +33,9 @@ internal fun resolveNoticeWriteSelection(
         ?: allowedGisus.firstOrNull()?.gisuId
 
     return NoticeWriteSelection(
-        targetGisuId = targetGisuId,
+        targetGisuId = noticeTargetGisuId(
+            writerRole, state.selectedCategory?.type.takeUnless { resetCategory }, targetGisuId, authorityGisuId,
+        ),
         previousCategory = state.selectedCategory.takeUnless { resetCategory },
         roleChanged = roleChanged,
         resetUserSelection = resetUserSelection,

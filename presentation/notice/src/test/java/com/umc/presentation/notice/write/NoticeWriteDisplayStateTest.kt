@@ -6,6 +6,7 @@ import com.umc.domain.model.notice.WriteCategory
 import com.umc.domain.model.organization.GisuItem
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -86,5 +87,33 @@ class NoticeWriteDisplayStateTest {
     fun `카테고리 선택 전에도 Super Admin의 기수 선택기를 표시하는 기존 동작을 유지한다`() {
         assertTrue(state.copy(writerRole = NoticeWriterRole.SUPER_ADMIN, selectedCategory = null)
             .showTargetGisuSelector)
+    }
+    @Test
+    fun `총괄단 운영진 카테고리는 활성 기수 하나의 선택기를 유지한다`() {
+        val current = state.copy(writerRole = NoticeWriterRole.CENTRAL_CORE,
+            selectedCategory = WriteCategory(WriteCategoryType.CENTRAL_STAFF, "중앙 운영진"))
+        assertEquals(gisus.take(1), current.selectableTargetGisus)
+        assertTrue(current.showTargetGisuSelector)
+        assertEquals(12, noticeTargetGisuId(NoticeWriterRole.CENTRAL_CORE,
+            WriteCategoryType.CENTRAL_STAFF, 9, 12))
+    }
+
+    @Test
+    fun `과거 기수에서는 파트 칩을 숨긴다`() {
+        val current = state.copy(writerRole = NoticeWriterRole.SUPER_ADMIN, targetGisuId = 9,
+            boardChips = persistentListOf(com.umc.domain.model.enums.BoardChipType.PART))
+        assertFalse(current.canSelectPart)
+        assertTrue(current.visibleBoardChips.isEmpty())
+        assertTrue(current.copy(targetGisuId = 12).canSelectPart)
+    }
+    @Test
+    fun `과거 파트 안내는 원래 PART 선택이 가능한 카테고리 힌트에만 표시한다`() {
+        val past = state.copy(writerRole = NoticeWriterRole.SUPER_ADMIN, targetGisuId = 9,
+            boardChips = persistentListOf(com.umc.domain.model.enums.BoardChipType.PART))
+        assertEquals(com.umc.component.theme.AppStrings.NOTICE_WRITE_PAST_PART_HINT, past.categoryHint)
+        assertNull(past.copy(boardChips = persistentListOf()).categoryHint)
+        assertNull(past.copy(targetGisuId = 12).categoryHint)
+        assertNull(past.copy(authorityGisuId = null).categoryHint)
+        assertNull(past.copy(selectedCategory = WriteCategory(WriteCategoryType.ALL_GISU, "전체 기수")).categoryHint)
     }
 }

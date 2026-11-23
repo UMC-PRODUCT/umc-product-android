@@ -239,7 +239,7 @@ class NoticeWriteTargetTest {
     }
 
     @Test
-    fun `Super Admin과 총괄단은 다른 기수를 대상으로 작성한다`() {
+    fun `Super Admin은 과거 운영진 공지를 허용하고 총괄단은 거절한다`() {
         val otherGisu = GisuItem(gisuId = 9, generation = 9)
         val cases = listOf(
             state(NoticeWriterRole.SUPER_ADMIN, WriteCategoryType.SCHOOL_CORE),
@@ -251,7 +251,8 @@ class NoticeWriteTargetTest {
                 targetGisuId = otherGisu.gisuId,
                 availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12), otherGisu),
             ))
-            assertEquals(current.writerRole.toString(), 9, target?.targetGisuId)
+            if (current.writerRole == NoticeWriterRole.SUPER_ADMIN) assertEquals(9, target?.targetGisuId)
+            else assertNull(target)
         }
     }
 
@@ -302,6 +303,16 @@ class NoticeWriteTargetTest {
             .copy(selectedPart = UserPart.WEB)
 
         assertNull(buildNoticeTargetRequest(state))
+    }
+
+    @Test
+    fun `과거 기수 챌린저 공지는 파트를 거절하고 전체 대상은 허용한다`() {
+        val gisus = persistentListOf(GisuItem(12, 12), GisuItem(9, 9))
+        listOf(NoticeWriterRole.SUPER_ADMIN, NoticeWriterRole.CENTRAL_CORE).forEach { role ->
+            val current = state(role, WriteCategoryType.GISU).copy(targetGisuId = 9, availableGisus = gisus)
+            assertNull(buildNoticeTargetRequest(current.copy(selectedPart = UserPart.PLAN)))
+            assertEquals(9, buildNoticeTargetRequest(current.copy(isAllSelected = true))?.targetGisuId)
+        }
     }
 
     private fun state(role: NoticeWriterRole, category: WriteCategoryType) = NoticeWriteUiState(

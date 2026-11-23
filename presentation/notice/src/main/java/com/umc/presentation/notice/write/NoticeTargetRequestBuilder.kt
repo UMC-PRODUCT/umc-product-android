@@ -38,6 +38,9 @@ internal fun buildNoticeTargetRequest(state: NoticeWriteUiState): NoticeTargetRe
 
     val gisuId = state.targetGisuId?.takeIf { it > 0 } ?: return null
     if (state.availableGisus.none { it.gisuId == gisuId }) return null
+    if (noticeTargetGisuId(role, category, gisuId, state.authorityGisuId) != gisuId) return null
+    // 활성 기수가 확인되지 않으면 파트 발행 범위를 판단할 수 없다.
+    if (part != null && gisuId != state.authorityGisuId) return null
     // 일반 운영진은 권한을 부여받은 기수에만 발행할 수 있다.
     if (role != NoticeWriterRole.SUPER_ADMIN && role != NoticeWriterRole.CENTRAL_CORE &&
         gisuId != state.authorityGisuId) return null
