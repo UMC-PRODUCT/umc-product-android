@@ -91,20 +91,9 @@ class AdminNoticeViewModel @Inject constructor(
 
     /** 조회 대상 기수는 공지 화면에서 nav argument로 전달받아 주입 */
     fun setGisuId(gisuId: Long) {
-        if (uiState.value.gisuId == gisuId) return
+        if (uiState.value.gisuId == gisuId && (gisuId > 0 || uiState.value.isAccessResolved)) return
         listJob?.cancel()
-        updateState {
-            copy(
-                gisuId = gisuId,
-                noticeList = persistentListOf(),
-                currentPage = 0,
-                isLastPage = false,
-                isPageLoading = false,
-                hasLoaded = gisuId <= 0L,
-                errorMessage = null,
-                selectedTab = null,
-            )
-        }
+        updateState { resetAdminNoticeGisu(this, gisuId) }
         cachedUserInfo?.let(::updateUserAccess)
     }
 
@@ -124,28 +113,11 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     private fun updateUserAccess(userInfo: UserInfo) {
-        // 다른 기수의 운영진 역할로 현재 선택 기수의 탭을 열면 서버 권한 판정과 어긋난다.
-        val roles = userInfo.noticeRolesForGisu(uiState.value.gisuId)
-        val highestTab = if (userInfo.isSuperAdmin) AdminNoticeTab.CENTRAL
-        else AdminNoticeTab.highestAccessibleTab(roles)
-        val tabs = highestTab?.let { accessible ->
-            AdminNoticeTab.entries.filter { it.ordinal >= accessible.ordinal }
-        }.orEmpty()
-        val accessChanged = uiState.value.selectedTab !in tabs
-        if (accessChanged) listJob?.cancel()
-        updateState {
-            copy(
-                hasAccess = highestTab != null,
-                visibleTabs = if (tabs.isEmpty()) persistentListOf(AdminNoticeTab.PART_LEADER) else tabs.toImmutableList(),
-                selectedTab = selectedTab?.takeIf { it in tabs } ?: highestTab ?: AdminNoticeTab.PART_LEADER,
-                noticeList = if (accessChanged) persistentListOf() else noticeList,
-                currentPage = if (accessChanged) 0 else currentPage,
-                isLastPage = if (accessChanged) false else isLastPage,
-                isPageLoading = if (accessChanged) false else isPageLoading,
-                hasLoaded = if (accessChanged) false else hasLoaded,
-                errorMessage = if (accessChanged) null else errorMessage,
-            )
+        val next = resolveAdminNoticeAccess(uiState.value, userInfo)
+        if (uiState.value.visibleTabs != next.visibleTabs || uiState.value.selectedTab != next.selectedTab) {
+            listJob?.cancel()
         }
+        updateState { next }
         refreshIfReady()
     }
 
@@ -172,7 +144,7 @@ class AdminNoticeViewModel @Inject constructor(
     fun onClickSearch() = viewModelScope.launch {
         val state = uiState.value
         val selectedTab = state.selectedTab ?: return@launch
-        if (state.gisuId <= 0L) return@launch
+        if (!state.canQuery) return@launch
 
         // 검색에서도 학교를 지정하지 않아야 중앙 발신 공지가 검색 범위에서 빠지지 않는다.
         emitEvent(
@@ -193,7 +165,7 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     fun loadNextPage() {
-        if (!uiState.value.isPageLoading && !uiState.value.isLastPage) {
+        if (uiState.value.canQuery && !uiState.value.isPageLoading && !uiState.value.isLastPage) {
             getNoticeList(isRefresh = false)
         }
     }
@@ -201,7 +173,7 @@ class AdminNoticeViewModel @Inject constructor(
     /** 기수·탭이 모두 준비된 경우에만 목록 새로고침 */
     private fun refreshIfReady() {
         val state = uiState.value
-        if (state.gisuId > 0L && state.hasAccess && state.selectedTab != null) {
+        if (state.canQuery) {
             getNoticeList(isRefresh = true)
         }
     }
@@ -216,7 +188,7 @@ class AdminNoticeViewModel @Inject constructor(
         val state = uiState.value
         val selectedTab = state.selectedTab ?: return@launch
 
-        if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
+        if (!state.canQuery || state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
 
         updateState { copy(isPageLoading = true, errorMessage = null) }
 
@@ -232,6 +204,8 @@ class AdminNoticeViewModel @Inject constructor(
         )
         // apiCall이 취소를 실패 응답으로 바꿔도 이전 조회가 새 탭의 상태를 덮어쓰지 않게 한다.
         currentCoroutineContext().ensureActive()
+        if (!uiState.value.canQuery || uiState.value.gisuId != state.gisuId ||
+            uiState.value.selectedTab != selectedTab) return@launch
         resultResponse(
             response = response,
             successCallback = { noticeSearch ->
@@ -262,7 +236,9 @@ class AdminNoticeViewModel @Inject constructor(
 
 data class AdminNoticeUiState(
     val gisuId: Long = 0,
-    val hasAccess: Boolean = true,
+    val hasAccess: Boolean = false,
+    /** 미확정 동안에는 로딩을 표시하고 검색·조회 요청을 허용하지 않는다. */
+    val isAccessResolved: Boolean = false,
     val visibleTabs: ImmutableList<AdminNoticeTab> = persistentListOf(),
     val selectedTab: AdminNoticeTab? = null,
     val noticeList: ImmutableList<NoticeSummary> = persistentListOf(),
@@ -273,14 +249,56 @@ data class AdminNoticeUiState(
     // 첫 조회가 끝났는지 (끝나기 전의 빈 목록을 "0건"으로 오해하지 않기 위함)
     val hasLoaded: Boolean = false,
     val errorMessage: String? = null,
+    val isNextPageError: Boolean = false,
 ) : UiState {
+    val canQuery: Boolean
+        get() = isAccessResolved && hasAccess && gisuId > 0 && selectedTab != null && selectedTab in visibleTabs
+
     // 접근 가능 + 첫 조회 완료 + 로딩 아님 + 실패 아님 + 목록 비어있음 -> 빈 상태 노출
     val isEmpty: Boolean
-        get() = hasAccess && hasLoaded && !isPageLoading && errorMessage == null && noticeList.isEmpty()
+        get() = isAccessResolved && hasAccess && hasLoaded && !isPageLoading && errorMessage == null && noticeList.isEmpty()
 
     // 접근 가능 + 목록 비어있음 + 아직 조회 전이거나 조회 중 -> 로딩 표시
     val isLoadingEmpty: Boolean
         get() = hasAccess && noticeList.isEmpty() && errorMessage == null && (!hasLoaded || isPageLoading)
+}
+
+internal fun resetAdminNoticeGisu(state: AdminNoticeUiState, gisuId: Long): AdminNoticeUiState = state.copy(
+    gisuId = gisuId,
+    hasAccess = false,
+    isAccessResolved = gisuId <= 0,
+    visibleTabs = persistentListOf(),
+    selectedTab = null,
+    noticeList = persistentListOf(),
+    currentPage = 0,
+    isLastPage = false,
+    isPageLoading = false,
+    hasLoaded = gisuId <= 0,
+    errorMessage = null,
+    isNextPageError = false,
+)
+
+internal fun resolveAdminNoticeAccess(state: AdminNoticeUiState, userInfo: UserInfo): AdminNoticeUiState {
+    val highestTab = if (state.gisuId <= 0) null
+        else if (userInfo.isSuperAdmin) AdminNoticeTab.CENTRAL
+        else AdminNoticeTab.highestAccessibleTab(userInfo.noticeRolesForGisu(state.gisuId))
+    val tabs = highestTab?.let { highest -> AdminNoticeTab.entries.filter { it.ordinal >= highest.ordinal } }.orEmpty()
+    val selected = state.selectedTab?.takeIf { it in tabs } ?: highestTab
+    val accessChanged = state.visibleTabs != tabs || state.selectedTab != selected
+    return state.copy(
+        hasAccess = highestTab != null,
+        // 프로필이 nav 기수보다 먼저 도착해도 초기 프레임을 권한 거부로 확정하지 않는다.
+        isAccessResolved = state.gisuId > 0 || state.isAccessResolved,
+        visibleTabs = tabs.toImmutableList(),
+        selectedTab = selected,
+        noticeList = if (accessChanged) persistentListOf() else state.noticeList,
+        currentPage = if (accessChanged) 0 else state.currentPage,
+        isLastPage = if (accessChanged) false else state.isLastPage,
+        isPageLoading = if (accessChanged) false else state.isPageLoading,
+        hasLoaded = if (accessChanged) false else state.hasLoaded,
+        errorMessage = if (accessChanged) null else state.errorMessage,
+        isNextPageError = if (accessChanged) false else state.isNextPageError,
+    )
 }
 
 sealed interface AdminNoticeEvent : UiEvent {

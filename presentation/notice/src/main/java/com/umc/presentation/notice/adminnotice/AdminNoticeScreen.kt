@@ -122,46 +122,42 @@ fun AdminNoticeScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Icon(
-                painter = painterResource(id = R.drawable.ic_search),
-                contentDescription = null,
-                tint = grey950(),
-                modifier = Modifier.clickable { onClickSearch() },
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 권한 계층에 따라 노출되는 운영진 공지 탭
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(
-                items = uiState.visibleTabs,
-                key = { it.name },
-            ) { tab ->
-                AdminNoticeChip(
-                    text = tab.label,
-                    isSelected = tab == uiState.selectedTab,
-                    onClick = { onClickTab(tab) },
+            if (uiState.canQuery) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_search),
+                    contentDescription = null,
+                    tint = grey950(),
+                    modifier = Modifier.clickable { onClickSearch() },
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        if (uiState.isAccessResolved && uiState.hasAccess && uiState.visibleTabs.isNotEmpty()) {
+            // 권한 계층에 따라 노출되는 운영진 공지 탭
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(
+                    items = uiState.visibleTabs,
+                    key = { it.name },
+                ) { tab ->
+                    AdminNoticeChip(
+                        text = tab.label,
+                        isSelected = tab == uiState.selectedTab,
+                        onClick = { onClickTab(tab) },
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+        }
 
         when {
-            !uiState.hasAccess -> {
-                AdminNoticeStatusContent(
-                    iconRes = R.drawable.ic_locked_filled,
-                    title = AppStrings.NOTICE_NO_ACCESS_TITLE,
-                    content = AppStrings.NOTICE_NO_ACCESS_CONTENT,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            uiState.isLoadingEmpty -> {
+            !uiState.isAccessResolved || uiState.isLoadingEmpty -> {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -170,6 +166,15 @@ fun AdminNoticeScreen(
                 ) {
                     CircularProgressIndicator(color = main500(), trackColor = main100())
                 }
+            }
+
+            !uiState.hasAccess -> {
+                AdminNoticeStatusContent(
+                    iconRes = R.drawable.ic_locked_filled,
+                    title = AppStrings.NOTICE_NO_ACCESS_TITLE,
+                    content = AppStrings.NOTICE_NO_ACCESS_CONTENT,
+                    modifier = Modifier.weight(1f),
+                )
             }
 
             uiState.errorMessage != null && uiState.noticeList.isEmpty() -> {
@@ -288,6 +293,9 @@ private fun AdminNoticeStatusContent(
 private fun AdminNoticeScreenPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
+            gisuId = 12,
+            isAccessResolved = true,
+            hasAccess = true,
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),
             selectedTab = AdminNoticeTab.CENTRAL,
             hasLoaded = true,
@@ -300,9 +308,11 @@ private fun AdminNoticeScreenPreview() {
 private fun AdminNoticeScreenNoAccessPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
+            gisuId = 12,
+            isAccessResolved = true,
             hasAccess = false,
-            visibleTabs = persistentListOf(AdminNoticeTab.PART_LEADER),
-            selectedTab = AdminNoticeTab.PART_LEADER,
+            visibleTabs = persistentListOf(),
+            selectedTab = null,
         ),
     )
 }
@@ -312,6 +322,9 @@ private fun AdminNoticeScreenNoAccessPreview() {
 private fun AdminNoticeScreenChapterPresidentPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
+            gisuId = 12,
+            isAccessResolved = true,
+            hasAccess = true,
             visibleTabs = persistentListOf(AdminNoticeTab.SCHOOL_CORE, AdminNoticeTab.PART_LEADER),
             selectedTab = AdminNoticeTab.SCHOOL_CORE,
             hasLoaded = true,
@@ -324,6 +337,9 @@ private fun AdminNoticeScreenChapterPresidentPreview() {
 private fun AdminNoticeScreenLoadingPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
+            gisuId = 12,
+            isAccessResolved = true,
+            hasAccess = true,
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),
             selectedTab = AdminNoticeTab.CENTRAL,
             isPageLoading = true,
@@ -336,10 +352,19 @@ private fun AdminNoticeScreenLoadingPreview() {
 private fun AdminNoticeScreenErrorPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
+            gisuId = 12,
+            isAccessResolved = true,
+            hasAccess = true,
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),
             selectedTab = AdminNoticeTab.CENTRAL,
             hasLoaded = true,
             errorMessage = "네트워크 연결을 확인해 주세요",
         ),
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun AdminNoticeScreenAccessPendingPreview() {
+    AdminNoticeScreen(uiState = AdminNoticeUiState(gisuId = 12))
 }
