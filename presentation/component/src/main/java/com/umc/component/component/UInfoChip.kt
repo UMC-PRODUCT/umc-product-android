@@ -186,7 +186,7 @@ fun partChipColors(part: UserPart): UPartChipColors {
 
 @Preview(showBackground = true)
 @Composable
-private fun UPartChipPreview() {
+internal fun UPartChipPreview() {
     UmcTheme {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // 11기 파트 (테두리 형태)

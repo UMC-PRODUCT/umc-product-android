@@ -2,20 +2,17 @@ package com.example.mypage.nearby
 
 import com.umc.component.theme.AppStrings
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mypage.dialog.ExchangeStep
 import com.example.mypage.nearby.NearbyManagerEvent
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
-import com.umc.domain.model.UserInfo
 import com.umc.domain.model.mypage.NearbyUserInfo
 import com.umc.domain.model.mypage.CardWriteContext
 import com.umc.domain.repository.AppDataStoreRepository
 import kotlinx.coroutines.CancellationException
 import com.umc.domain.model.mypage.UserCard
-import com.umc.domain.usecase.appDataStore.usercard.SaveUserCardUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -59,7 +56,7 @@ class NearbyViewModel @Inject constructor(
             // P2P 연결 성공 시 내 명함(UserCard)을 자동 전송
             is NearbyManagerEvent.ConnectionSuccess -> {
                 updateState { copy(connectedId = event.id, pendingAuth = null, status = AppStrings.NEARBY_CONNECTED) }
-                emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_CONNECTION_SUCCESS))
+                emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_CONNECTION_SUCCESS, isSuccess = true))
 
                 //전송 로직
                 /**
@@ -81,7 +78,7 @@ class NearbyViewModel @Inject constructor(
                 val expected = exchangeContext
                 stopExchange()
                 if (expected == null) {
-                    emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_ACCOUNT_MISSING))
+                    emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_ACCOUNT_MISSING, isSuccess = false))
                 } else viewModelScope.launch {
                     try {
                         cardRepository.saveUserCard(event.card, expected)
@@ -91,7 +88,7 @@ class NearbyViewModel @Inject constructor(
                     } catch (cancelled: CancellationException) {
                         throw cancelled
                     } catch (_: Exception) {
-                        emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_CARD_SAVE_ERROR))
+                        emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_CARD_SAVE_ERROR, isSuccess = false))
                     }
                 }
             }
@@ -105,7 +102,7 @@ class NearbyViewModel @Inject constructor(
             //에러
             is NearbyManagerEvent.Error -> {
                 updateState { copy(status = event.message) }
-                emitEvent(NearbyEvent.ShowToast(event.message))
+                emitEvent(NearbyEvent.ShowToast(event.message, isSuccess = false))
             }
         }
     }
@@ -222,7 +219,7 @@ class NearbyViewModel @Inject constructor(
                 throw cancelled
             } catch (_: Exception) {
                 exchangeContext = null
-                emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_ACCOUNT_RECHECK))
+                emitEvent(NearbyEvent.ShowToast(AppStrings.NEARBY_ACCOUNT_RECHECK, isSuccess = false))
             }
         }
     }
@@ -303,5 +300,6 @@ data class NearbyUiState(
 ) : UiState
 
 sealed interface NearbyEvent : UiEvent {
-    data class ShowToast(val message: String) : NearbyEvent
+    // isSuccess 로 토스트 아이콘(성공·실패)을 고른다
+    data class ShowToast(val message: String, val isSuccess: Boolean) : NearbyEvent
 }

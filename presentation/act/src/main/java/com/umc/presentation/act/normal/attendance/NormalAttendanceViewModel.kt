@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.naver.maps.geometry.LatLng
 import com.umc.component.base.BaseViewModel
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
@@ -69,13 +70,8 @@ class NormalAttendanceViewModel @Inject constructor(
             return
         }
 
-        val targetLatitude = session.latitude
-        val targetLongitude = session.longitude
-        if (
-            targetLatitude == null ||
-            targetLongitude == null ||
-            (targetLatitude == 0.0 && targetLongitude == 0.0)
-        ) {
+        val target = session.attendancePosition
+        if (target == null) {
             if (!silent) emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_MISSING_TOAST))
             return
         }
@@ -93,8 +89,8 @@ class NormalAttendanceViewModel @Inject constructor(
                 val distanceMeters = calculateDistanceMeters(
                     currentLatitude = currentLocation.latitude,
                     currentLongitude = currentLocation.longitude,
-                    targetLatitude = targetLatitude,
-                    targetLongitude = targetLongitude,
+                    targetLatitude = target.latitude,
+                    targetLongitude = target.longitude,
                 )
                 updateLocationVerification(
                     sessionId = sessionId,
@@ -130,13 +126,8 @@ class NormalAttendanceViewModel @Inject constructor(
             return
         }
 
-        val targetLatitude = session.latitude
-        val targetLongitude = session.longitude
-        if (
-            targetLatitude == null ||
-            targetLongitude == null ||
-            (targetLatitude == 0.0 && targetLongitude == 0.0)
-        ) {
+        val target = session.attendancePosition
+        if (target == null) {
             emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_MISSING_TOAST))
             return
         }
@@ -157,8 +148,8 @@ class NormalAttendanceViewModel @Inject constructor(
                 val distanceMeters = calculateDistanceMeters(
                     currentLatitude = currentLocation.latitude,
                     currentLongitude = currentLocation.longitude,
-                    targetLatitude = targetLatitude,
-                    targetLongitude = targetLongitude,
+                    targetLatitude = target.latitude,
+                    targetLongitude = target.longitude,
                 )
 
                 if (distanceMeters > ATTENDANCE_RADIUS_METERS) {
@@ -228,6 +219,11 @@ class NormalAttendanceViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    //위치 권한 요청이 거부됨. 안내 토스트도 다른 실패와 같은 이벤트로 보내 표시 경로를 하나로 둔다
+    fun onLocationPermissionDenied() {
+        emitEvent(NormalAttendanceEvent.ShowToast(AppStrings.ATTENDANCE_LOCATION_PERMISSION_REQUEST_TOAST))
     }
 
     //출석 요청 진행 상태 해제
@@ -419,7 +415,19 @@ data class NormalAvailableSessionUi(
     val longitude: Double?,
     val isOnline: Boolean = false,
     val locationDistanceMeters: Int? = null,
-)
+) {
+    /** 출석 위치 좌표. 온라인 세션이거나 좌표가 없으면(서버가 0,0 을 주는 경우 포함) null 이다. 지도와 위치 판정이 함께 쓴다 */
+    val attendancePosition: LatLng?
+        get() {
+            if (isOnline || latitude == null || longitude == null) return null
+            if (latitude == 0.0 && longitude == 0.0) return null
+            return LatLng(latitude, longitude)
+        }
+
+    /** 위치 조건상 출석을 요청할 수 있는지. 요청 중인지는 화면 상태라 따로 본다 */
+    val isAttendanceReady: Boolean
+        get() = isOnline || isLocationCertified == true
+}
 
 data class NormalHistorySessionUi(
     val id: Long,
@@ -461,7 +469,8 @@ private fun UserCheckHistory.toUi(): NormalHistorySessionUi {
     )
 }
 
-private const val ATTENDANCE_RADIUS_METERS = 50f
+/** 출석 인정 반경(m). 위치 판정과 지도의 반경 원이 이 값 하나를 함께 쓴다 */
+internal const val ATTENDANCE_RADIUS_METERS = 50.0
 
 private val shortAdministrativeAreas = linkedMapOf(
     "서울특별시" to "서울",

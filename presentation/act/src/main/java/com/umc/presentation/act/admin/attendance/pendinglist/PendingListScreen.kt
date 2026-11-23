@@ -1,6 +1,5 @@
 package com.umc.presentation.act.admin.attendance.pendinglist
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,7 +40,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
@@ -47,6 +47,9 @@ import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UReasonDialog
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastHost
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.CalloutBold
@@ -65,7 +68,6 @@ import com.umc.component.theme.grey800
 import com.umc.domain.model.act.check.AdminPendingUser
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -75,27 +77,47 @@ fun PendingListRoute(
     viewModel: PendingListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    // 승인·거절 뒤에도 시트가 열려 있어 앱 공용 토스트는 시트에 가려진다. 시트 안에 호스트를 따로 둔다.
+    var toastData by remember { mutableStateOf<UToastData?>(null) }
+    // 여러 명을 연달아 승인해 같은 문구가 다시 와도 새로 나타나도록 띄울 때마다 올린다
+    var toastGeneration by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(scheduleId, initialUsers) {
         viewModel.getPendingUsers(scheduleId, initialUsers)
     }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
-        val message = when (event) {
-            PendingListEvent.ApproveSuccess -> AppStrings.ADMIN_APPROVE_SUCCESS
-            PendingListEvent.RejectSuccess -> AppStrings.ADMIN_REJECT_SUCCESS
-            is PendingListEvent.ShowToast -> event.message
+        toastData = when (event) {
+            PendingListEvent.ApproveSuccess ->
+                UToastData(AppStrings.ADMIN_APPROVE_SUCCESS, UToastState.CHECK)
+            PendingListEvent.RejectSuccess ->
+                UToastData(AppStrings.ADMIN_REJECT_SUCCESS, UToastState.CHECK)
+            is PendingListEvent.ShowToast -> UToastData(
+                event.message.ifBlank { AppStrings.COMMON_NETWORK_ERROR_DESCRIPTION },
+                UToastState.ERROR,
+            )
         }
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        toastGeneration++
     }
 
-    PendingListScreen(
-        users = uiState.users,
-        onApproveSelectedClick = viewModel::approveAll,
-        onRejectClick = viewModel::reject,
-        onApproveClick = viewModel::approve
-    )
+    Box {
+        PendingListScreen(
+            users = uiState.users,
+            onApproveSelectedClick = viewModel::approveAll,
+            onRejectClick = viewModel::reject,
+            onApproveClick = viewModel::approve
+        )
+
+        key(toastGeneration) {
+            UToastHost(
+                data = toastData,
+                onDismiss = { toastData = null },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+            )
+        }
+    }
 }
 
 
@@ -461,7 +483,7 @@ private fun sampleList(): ImmutableList<AdminPendingUser> = persistentListOf(
 
 @Preview(showBackground = false)
 @Composable
-private fun PendingListScreenPreview() {
+internal fun PendingListScreenPreview() {
     UmcTheme(darkTheme = false) {
         PendingListScreen(users = sampleList())
     }
@@ -469,7 +491,7 @@ private fun PendingListScreenPreview() {
 
 @Preview(showBackground = false)
 @Composable
-private fun ReasonDialog() {
+internal fun ReasonDialog() {
     UmcTheme(darkTheme = false) {
         UReasonDialog (
             title = AppStrings.ADMIN_REASON_CHECK_TITLE,
@@ -486,7 +508,7 @@ private fun ReasonDialog() {
 
 @Preview(showBackground = false)
 @Composable
-private fun AcceptDialog() {
+internal fun AcceptDialog() {
     UmcTheme(darkTheme = false) {
         UDialog (
             isAccept = true,
@@ -504,7 +526,7 @@ private fun AcceptDialog() {
 
 @Preview(showBackground = false)
 @Composable
-private fun RejectDialog() {
+internal fun RejectDialog() {
     UmcTheme(darkTheme = false) {
         UDialog (
             isAccept = false,

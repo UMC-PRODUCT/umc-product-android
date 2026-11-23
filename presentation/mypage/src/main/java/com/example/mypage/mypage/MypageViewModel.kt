@@ -1,8 +1,6 @@
 package com.example.mypage.mypage
 
-import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.auth.TokenManagerProvider
 import com.umc.component.fcm.FcmTokenSynchronizer
 import com.umc.component.base.BaseViewModel
@@ -12,9 +10,6 @@ import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.TermsType
-import com.umc.domain.model.enums.UserChallengerRole
-import com.umc.domain.model.enums.UserPart
-import com.umc.domain.model.home.getGisuSummaryList
 import com.umc.domain.model.request.challenger.ChallengerRecordMemberRequest
 import com.umc.domain.usecase.appDataStore.ClearAllDataUseCase
 import com.umc.domain.usecase.PostLoginUseCase
@@ -101,7 +96,8 @@ class MypageViewModel @Inject constructor(
             resultResponse(
                 response = getMyOAuthUseCase(),
                 successCallback = { myOAuth ->
-                    val platforms = myOAuth.map { LoginType.valueOf(it.provider) }
+                    // 앱이 모르는 provider(서버에 새로 생긴 값)는 건너뛴다. valueOf 예외가 잡히지 않으면 화면 진입 시 앱이 종료된다
+                    val platforms = myOAuth.mapNotNull { runCatching { LoginType.valueOf(it.provider) }.getOrNull() }
                     updateState {
                         copy(
                             linkedPlatforms = platforms.toImmutableList(),
@@ -391,7 +387,13 @@ class MypageViewModel @Inject constructor(
                 },
                 errorCallback = { failState ->
                     updateState { copy(isAddingCode = false) }
-                    emitEvent(MypageEvent.FailAddCode(failState.code, failState.message))
+                    // 표준 응답이 아닌 실패는 message 가 비어 올 수 있어 기본 문구로 보정한다
+                    emitEvent(
+                        MypageEvent.FailAddCode(
+                            failState.code,
+                            failState.message.ifBlank { AppStrings.MYPAGE_ADDCODE_FAIL }
+                        )
+                    )
                 }
             )
         }

@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import java.util.UUID
 
 /**
  * 스레드 생성 시 챌린저를 추가하는 BottomSheet
@@ -70,7 +72,6 @@ fun CommunityCreateMemberBottomSheet(
     maxCount: Int,
     onDismissRequest: () -> Unit,
     onConfirm: (List<CommunityChallengerUiModel>) -> Unit,
-    onCsvUploadClick: () -> Unit = {},
     viewModel: CommunityCreateMemberBottomSheetViewModel = hiltViewModel(),
 ) {
     val searchFocusRequester = remember { FocusRequester() }
@@ -79,6 +80,9 @@ fun CommunityCreateMemberBottomSheet(
     var toastData by remember { mutableStateOf<UToastData?>(null) }
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 시트가 열린 동안 회전해도 같은 값으로 복원되는 세션 키. 같은 세션이면 ViewModel이 초기화를 건너뛴다.
+    val sheetSession = rememberSaveable { UUID.randomUUID().toString() }
 
     /**
      * 바텀시트가 열릴 때
@@ -91,6 +95,7 @@ fun CommunityCreateMemberBottomSheet(
         viewModel.initialize(
             preSelected = preSelected,
             maxCount = maxCount,
+            session = sheetSession,
         )
     }
 
@@ -367,7 +372,7 @@ private fun CommunityCreateMemberSheetPreviewContent(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetEmptyPreview() {
+internal fun CommunityCreateMemberSheetEmptyPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(),
@@ -381,7 +386,7 @@ private fun CommunityCreateMemberSheetEmptyPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetSelectedPreview() {
+internal fun CommunityCreateMemberSheetSelectedPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
@@ -399,7 +404,7 @@ private fun CommunityCreateMemberSheetSelectedPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetListUncheckedPreview() {
+internal fun CommunityCreateMemberSheetListUncheckedPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
@@ -417,7 +422,7 @@ private fun CommunityCreateMemberSheetListUncheckedPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetSearchFocusedPreview() {
+internal fun CommunityCreateMemberSheetSearchFocusedPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
@@ -436,7 +441,7 @@ private fun CommunityCreateMemberSheetSearchFocusedPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetSearchPreview() {
+internal fun CommunityCreateMemberSheetSearchPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
@@ -457,7 +462,7 @@ private fun CommunityCreateMemberSheetSearchPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetSearchNoResultPreview() {
+internal fun CommunityCreateMemberSheetSearchNoResultPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
@@ -475,7 +480,7 @@ private fun CommunityCreateMemberSheetSearchNoResultPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetLoadingPreview() {
+internal fun CommunityCreateMemberSheetLoadingPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
@@ -494,7 +499,7 @@ private fun CommunityCreateMemberSheetLoadingPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetErrorPreview() {
+internal fun CommunityCreateMemberSheetErrorPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityCreateMemberSheetPreviewContent(
             state = CommunityCreateMemberBottomSheetState(
@@ -513,7 +518,7 @@ private fun CommunityCreateMemberSheetErrorPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateMemberSheetMaxCountToastPreview() {
+internal fun CommunityCreateMemberSheetMaxCountToastPreview() {
     CommunityMemberSheetPreviewFrame(
         toastData = UToastData(
             message = AppStrings.COMMUNITY_CREATE_MEMBER_MAX_COUNT_FORMAT.format(99),

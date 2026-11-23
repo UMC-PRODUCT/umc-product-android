@@ -67,7 +67,7 @@ fun USelectSheetContent(
 
 @Preview(showBackground = true)
 @Composable
-private fun USelectSheetContentPreview() {
+internal fun USelectSheetContentPreview() {
     UmcTheme {
         USelectSheetContent(
             title = "지부를 선택하세요",

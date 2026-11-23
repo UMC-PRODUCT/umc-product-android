@@ -19,6 +19,11 @@ interface ChallengerApi {
         @Path("challengerId") challengerId: Long
     ): ApiResponse<ChallengerResponse>
 
+    @GET(Endpoints.Challenger.ADMIN_DETAIL)
+    suspend fun getAdminChallengerDetail(
+        @Path("challengerId") challengerId: Long
+    ): ApiResponse<ChallengerResponse>
+
     @POST(Endpoints.Challenger.POINT)
     suspend fun grantChallengerPoint(
         @Path("challengerId") challengerId: Long,
@@ -37,7 +42,18 @@ interface ChallengerApi {
         @Query("gisuId") gisuId: Long?
     ): ApiResponse<ChallengerSearchV2Response>
 
-    // 챌린저 기록이 있는 회원이면 누구나 쓸 수 있는 챌린저 단위 검색(api/v2/challenger/search 는 운영진 전용).
+    @GET(Endpoints.Challenger.ADMIN_SEARCH)
+    suspend fun getAdminChallengers(
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+        @Query("part") part: String?,
+        @Query("keyword") keyword: String?,
+        @Query("schoolId") schoolId: Long?,
+        @Query("chapterId") chapterId: Long?,
+        @Query("gisuId") gisuId: Long
+    ): ApiResponse<ChallengerSearchV2Response>
+
+    // 본인 학교 범위의 검색에 사용하는 챌린저 단위 회원 검색.
     // 응답 모양이 v2 챌린저 검색과 같아 같은 응답 클래스로 받는다.
     @GET(Endpoints.Member.MEMBER_SEARCH)
     suspend fun searchMembers(

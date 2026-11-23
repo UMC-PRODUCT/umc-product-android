@@ -1,19 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 12(API 31)+ 의 클라우드 백업·기기 이전 규칙. API 30 이하는 backup_rules.xml 을 쓴다.
+    두 파일의 제외 목록은 항상 같게 유지한다.
+
+    인증·세션·기기 종속 데이터가 복원되면 로그인 화면을 거치지 않고 세션이 살아나,
+    로그인 시점에 거는 처리(FCM 등록 등)까지 건너뛴다. 그래서 아래 항목은 백업하지 않는다.
+    - file: datastore/          user_prefs(액세스·리프레시 토큰, 사용자 정보) 등 DataStore 파일 전체.
+                                최근 검색어·명함첩도 같은 파일이라 함께 빠진다(키 단위 제외는 불가).
+    - file: PersistedInstallation.*.json
+                                구버전 Firebase SDK 가 files/ 에 남긴 설치 ID·인증 토큰. 경로에
+                                google-services.json 의 mobilesdk_app_id 가 들어가므로, 앱 ID 가
+                                바뀌면 이 경로도 함께 고친다. (현재 SDK 는 no_backup/ 에 써서 원래 제외된다)
+    - sharedpref: 전체           fcm_session·fcm_events·fcm_routes·pending_deep_link, 카카오 SDK 토큰
+                                (파일명이 앱 키라 고정 경로로 지정할 수 없다), Firebase appid 등.
+    - database: 전체             Firebase datatransport 전송 대기열(기기 종속).
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="file" path="datastore/" />
+        <exclude domain="file" path="PersistedInstallation.W0RFRkFVTFRd+MTo4ODIyOTc2NTg4MjI6YW5kcm9pZDoxYzQyMGJhZmQ4YTg3MDQ1ODFlNmM3.json" />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="database" path="." />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="file" path="datastore/" />
+        <exclude domain="file" path="PersistedInstallation.W0RFRkFVTFRd+MTo4ODIyOTc2NTg4MjI6YW5kcm9pZDoxYzQyMGJhZmQ4YTg3MDQ1ODFlNmM3.json" />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="database" path="." />
     </device-transfer>
-    -->
 </data-extraction-rules>

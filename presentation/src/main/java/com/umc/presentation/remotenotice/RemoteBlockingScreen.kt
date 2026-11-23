@@ -104,7 +104,7 @@ fun RemoteBlockingScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun RemoteBlockingScreenPreview() {
+internal fun RemoteBlockingScreenPreview() {
     UmcTheme {
         RemoteBlockingScreen(
             title = "서비스 점검 중이에요",

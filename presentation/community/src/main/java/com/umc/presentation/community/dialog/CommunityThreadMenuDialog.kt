@@ -21,6 +21,7 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey800
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.grey950
@@ -76,10 +77,11 @@ private fun CommunityThreadMenuContent(
     onLeaveClick: () -> Unit,
 ) {
     Surface(
+        // widthIn 을 fillMaxWidth 앞에 둬야 넓은 화면에서 370dp 상한이 적용된다.
         modifier = Modifier
-            .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .widthIn(max = 370.dp),
+            .widthIn(max = 370.dp)
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         color = grey50(),
         shadowElevation = 12.dp,
@@ -172,15 +174,17 @@ private fun CommunityThreadMenuItem(
     )
 }
 
+// 넓은 화면에서 메뉴 폭이 370dp 상한에 맞춰지는지 여러 크기로 본다.
+@PreviewScreenSizes
 @Preview(name = "방장·관리자 (편집 메뉴 있음)", showBackground = true)
 @Composable
-private fun CommunityThreadMenuDialogEditablePreview() {
+internal fun CommunityThreadMenuDialogEditablePreview() {
     CommunityThreadMenuContentPreview(canEdit = true)
 }
 
 @Preview(name = "일반 멤버 (편집 메뉴 없음)", showBackground = true)
 @Composable
-private fun CommunityThreadMenuDialogMemberPreview() {
+internal fun CommunityThreadMenuDialogMemberPreview() {
     CommunityThreadMenuContentPreview(canEdit = false)
 }
 

@@ -2,7 +2,6 @@ package com.example.mypage.profile
 
 import android.net.Uri
 import android.webkit.MimeTypeMap
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,11 +27,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,9 +45,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.mypage.mypage.SocialBadge
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
@@ -60,7 +57,6 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey300
-import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
@@ -68,11 +64,9 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main500
 import com.umc.domain.model.enums.LoginType
-import com.umc.domain.model.enums.UploadFileCategory
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -82,6 +76,8 @@ fun ProfileRoute(
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    // 안내는 모두 화면에 머무는 실패 안내라 앱 공용 토스트로 띄운다(키보드가 열려 있으면 키보드 위에 뜬다)
+    val toast = LocalUToast.current
 
     // 안드로이드 표준 Photo Picker 미디어 선택 계약 런처
     val pickMedia = rememberLauncherForActivityResult(
@@ -89,33 +85,14 @@ fun ProfileRoute(
     ) { uri ->
         if (uri != null) {
 
-            // ContentResolver를 이용한 파일 용량 및 MIME 타입 메타데이터 추출
+            // ContentResolver를 이용한 파일 용량 및 MIME 타입 메타데이터 추출 (형식·용량 검사는 ViewModel 이 한다)
             val fileSize =
                 context.contentResolver.openAssetFileDescriptor(uri, "r")?.use { it.length } ?: 0L
             //fileType은 MINETYPE -> image/jpg 이런 형식
             val fileType = context.contentResolver.getType(uri) ?: ""
             //extenstion은 확장자 -> JPG
             val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(fileType) ?: ""
-            val category = UploadFileCategory.PROFILE_IMAGE
-
-            when {
-                // 허용되지 않은 파일 확장자 검증
-                category.alloweType.isNotEmpty() && !category.alloweType.contains(extension.lowercase()) -> {
-                    Toast.makeText(context, AppStrings.PROFILE_IMAGE_FORMAT_ERROR_FORMAT.format(category.label), Toast.LENGTH_SHORT)
-                        .show()
-                }
-                // 용량 제한(MB) 초과 검증
-                fileSize > category.maxSizeBytes -> {
-                    val maxSizeMb = category.maxSizeBytes / (1024 * 1024)
-                    Toast.makeText(
-                        context,
-                        AppStrings.PROFILE_IMAGE_SIZE_ERROR_FORMAT.format(category.label, maxSizeMb),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-                else -> viewModel.settingImage(uri)
-            }
+            viewModel.onImagePicked(uri, fileSize, extension)
         }
     }
 
@@ -127,7 +104,7 @@ fun ProfileRoute(
             is ProfileEvent.ClickBackPressed -> {
                 onNavigateToBack()
             }
-            is ProfileEvent.MakeToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            is ProfileEvent.MakeToast -> toast.show(event.message, UToastState.ERROR)
         }
     }
 
@@ -526,7 +503,7 @@ private fun ProfileLoadError(isLoading: Boolean, onRetryClick: () -> Unit) {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 1400)
 @Composable
-private fun ProfileScreenPreview() {
+internal fun ProfileScreenPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(
@@ -547,7 +524,7 @@ private fun ProfileScreenPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun ProfileScreenLoadFailedPreview() {
+internal fun ProfileScreenLoadFailedPreview() {
     UmcTheme {
         ProfileScreen(
             uiState = ProfileUiState(isProfileLoadFailed = true),
@@ -563,7 +540,7 @@ private fun ProfileScreenLoadFailedPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 200)
 @Composable
-private fun ProfileTopbarSavingPreview() {
+internal fun ProfileTopbarSavingPreview() {
     UmcTheme {
         ProfileTopbar(onBackClick = {}, onCompleteClick = {}, isSaving = true)
     }

@@ -1,5 +1,6 @@
 package com.umc.presentation.community.component.chatting
 
+import com.umc.component.component.UText
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,7 +64,7 @@ internal fun CommunityChatMemberTag(
     foreground: Color,
     border: Color? = null, //1dp 테두리. null 이면 그리지 않는다
 ) {
-    Text(
+    UText(
         text = text,
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
@@ -72,8 +72,7 @@ internal fun CommunityChatMemberTag(
             .then(if (border != null) Modifier.border(1.dp, border, RoundedCornerShape(4.dp)) else Modifier)
             .padding(horizontal = 7.dp, vertical = 4.dp),
         color = foreground,
-        fontSize = 10.sp,
-        style = UmcTypographyTokens.Caption1Bold,
+        style = UmcTypographyTokens.Caption1Bold.copy(fontSize = 10.sp),
     )
 }
 

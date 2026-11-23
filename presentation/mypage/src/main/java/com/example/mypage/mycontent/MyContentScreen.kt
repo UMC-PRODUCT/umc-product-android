@@ -25,7 +25,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,7 +37,6 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey800
 import com.umc.component.theme.main500
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 
@@ -56,16 +54,15 @@ fun MyContentRoute(
 ){
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is MyContentEvent.ClickBackPressed -> {
-                /**TODO 차후 activity단으로 */
+                /** 차후 activity단으로 */
             }
             is MyContentEvent.ShowErrorToast -> {
-                //Toast.makeText(context, event.errorMessage, Toast.LENGTH_SHORT).show()
+                // 조회 실패 안내는 띄우지 않는 기존 동작을 유지한다(더 이상 쓰지 않는 화면)
             }
             else -> {}
         }

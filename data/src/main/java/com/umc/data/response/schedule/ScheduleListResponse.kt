@@ -51,7 +51,7 @@ data class ScheduleListResponse (
             )
         }
 
-        /**TODO 서버 DTO에 맞춰 수정 : attendanceRate는 차후 douvle 추천!**/
+        /** 서버는 출석률을 Double 로 내려주고 관리자 출석 화면은 정수로 보여 주므로, 소수점 아래를 버린다. **/
         fun ScheduleListResponse.toAdminDomain(): AdminSessionCheck {
             return AdminSessionCheck(
                 id = scheduleId,

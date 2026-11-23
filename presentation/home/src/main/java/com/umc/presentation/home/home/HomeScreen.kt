@@ -1,17 +1,18 @@
 package com.umc.presentation.home.home
 
+import androidx.compose.runtime.CompositionLocalProvider
+import java.time.ZoneId
+import java.time.Clock
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,10 +28,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -39,14 +38,15 @@ import java.time.LocalDate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,12 +55,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.fcm.NotificationPermissionRequestEffect
 import com.umc.component.component.UButton
-import com.umc.component.component.getGrowthText
 import com.umc.component.theme.AppStrings
-import com.umc.component.theme.UmcTypography
 import com.umc.component.theme.UmcTypographyTokens
-import com.umc.component.theme.red100
 import com.umc.component.theme.red500
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
@@ -70,7 +68,6 @@ import com.umc.component.theme.grey900
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
 import com.umc.component.theme.main600
-import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey500
@@ -80,14 +77,14 @@ import com.umc.component.theme.main900
 import com.umc.domain.model.enums.HomeViewMode
 import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.home.SchedulePlanItem
-import kotlinx.coroutines.flow.collectLatest
 import java.time.YearMonth
 import com.umc.component.base.CollectUiEvents
 import com.umc.component.util.UPointFormat.toPointText
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * [임시] 명함 교환 차단 — 교환이 막혀 있는 동안 홈 배너로 권하지 않는다.
+ * 명함 교환 차단 — 교환이 막혀 있는 동안 홈 배너로 권하지 않는다.
  *
  * `isBannerVisible` 은 기본값이 true 라 일정 조회가 끝나기 전에도 배너가 잠깐 보인다.
  * 상태가 아니라 그리는 자리에서 막아야 그 깜빡임까지 함께 사라진다.
@@ -107,12 +104,12 @@ fun HomeRoute(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    // [임시] 명함 교환 차단 — iOS 구현 전까지 안내 다이얼로그만 띄운다.
+    // 명함 교환 차단 — iOS 구현 전까지 안내 다이얼로그만 띄운다.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 MoveShareCardEvent 를 다시 onNavigateToCardShare() 로 연결한다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
+
+    // 가입 흐름을 거치지 않고 들어온 사용자(재설치·새 기기 로그인 등)에게도 알림 권한을 묻는다
+    NotificationPermissionRequestEffect()
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         //이벤트 처리
@@ -125,13 +122,13 @@ fun HomeRoute(
             is HomeEvent.MoveScheduleDetailEvent -> onNavigateToScheduleDetail(event.plan)
             //일정 추가 이동
             is HomeEvent.MoveScheduleAddEvent -> onNavigateToScheduleAdd()
-            //카드 공유 이동 ([임시] 차단 중이라 이동 대신 안내)
+            // 카드 공유 이동. 차단 중이라 이동 대신 안내한다
             is HomeEvent.MoveShareCardEvent -> showExchangeBlockedDialog = true
             else -> {}
         }
     }
 
-    // [임시] 명함 교환 차단 안내
+    // 명함 교환 차단 안내
     if (showExchangeBlockedDialog) {
         UDialog(
             title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
@@ -203,7 +200,7 @@ fun HomeScreen(
                     .height(16.dp)
                 )
 
-                //카드 교환 배너 ([임시] 명함 교환 차단 중이라 숨긴다)
+                // 카드 교환 배너. 명함 교환 차단 중이라 숨긴다
                 if(!HIDE_CARD_EXCHANGE_BANNER && uiState.isBannerVisible){
                     HomeShareCardsRow(
                         uiState = uiState,
@@ -559,7 +556,8 @@ fun HomeProfileCardsRow(
                 // 일러스트는 300x300 정사각형 벡터라, 이전 PNG 그림과 비슷한 크기로 카드 오른쪽 아래에 둔다
                 Image(
                     painter = painterResource(id = R.drawable.ic_home_attend_day_background),
-                    contentDescription = "누적 활동일 배경",
+                    // 장식용 배경이라 읽지 않는다
+                    contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .size(80.dp)
@@ -589,11 +587,10 @@ fun HomeProfileCardsRow(
                     } else {
                         // 글꼴을 키워도 숫자만 따라 커지고 단위(Days)는 UText 로 고정한다
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text(
+                            SystemScaledNumberText(
                                 text = "${uiState.growDay}",
                                 style = UmcTypographyTokens.Title3Bold,
                                 color = main500(),
-                                maxLines = 1,
                                 modifier = Modifier.alignByBaseline(),
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -623,7 +620,8 @@ fun HomeProfileCardsRow(
             Box(modifier = Modifier.fillMaxSize()) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_home_attend_gisu_background),
-                    contentDescription = "참여 기수 배경",
+                    // 장식용 배경이라 읽지 않는다
+                    contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .size(80.dp)
@@ -670,7 +668,7 @@ fun HomeProfileCardsRow(
  * 기수 목록이 4개를 초과할 경우, 최신 3개만 보여주고 남은 개수를 "+N" 형태의 칩으로 표기
  * **/
 @Composable
-fun GisuGrid(gisuStrings: List<String>){
+fun GisuGrid(gisuStrings: ImmutableList<String>){
 
     val latestGisus = gisuStrings.reversed() //최신 꺼 가져오기 위함.
 
@@ -700,14 +698,18 @@ fun GisuGrid(gisuStrings: List<String>){
                 items.forEach { item ->
                     //만약 More이면 남은 개수 표시 (+ N)
                     if (item == "MORE") {
+                        // 아이콘과 숫자를 따로 읽으면 숫자만 들리므로 한 문장으로 묶어 읽힌다
                         Row(
+                            modifier = Modifier.clearAndSetSemantics {
+                                contentDescription = AppStrings.HOME_CD_MORE_GISU_FORMAT.format(remainingCount)
+                            },
                             verticalAlignment = Alignment.CenterVertically
                         ){
                             Icon(
                                 modifier = Modifier
                                     .size(18.dp),
                                 painter = painterResource(id = R.drawable.ic_add_filled),
-                                contentDescription = "Add",
+                                contentDescription = null,
                                 tint = main500()
                             )
 
@@ -829,6 +831,29 @@ fun HomeActivityStatusCard(uiState: HomeUiState) {
     }
 }
 
+/**
+ * 시스템 글자 크기를 그대로 따르는 숫자.
+ *
+ * 글꼴을 키운 사용자에게 숫자만 커져 보이도록 일부러 UText 대신 Text 를 쓴다(#301).
+ * 옆의 단위는 UText 로 고정해 줄이 쪼개지지 않게 한다. 다른 곳에서는 쓰지 않는다.
+ */
+@Suppress("UseUText")
+@Composable
+private fun SystemScaledNumberText(
+    text: String,
+    style: TextStyle,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        style = style,
+        color = color,
+        maxLines = 1,
+        modifier = modifier,
+    )
+}
+
 /**라벨(상점/벌점)과 그 점수가 존재하는 1개의 영역**/
 @Composable
 private fun ScoreCard(
@@ -877,11 +902,10 @@ private fun ScoreCard(
 
             // 글꼴을 키워도 숫자만 따라 커지고 단위(point)는 UText 로 고정한다
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(
+                SystemScaledNumberText(
                     text = score.toPointText(),
                     style = UmcTypographyTokens.CalloutBold.copy(fontSize = 16.sp),
                     color = grey900(),
-                    maxLines = 1,
                     modifier = Modifier.alignByBaseline(),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -929,7 +953,7 @@ fun HomePlanHeader(
 
             Icon(
                     painter = painterResource(id = R.drawable.ic_add_filled),
-                    contentDescription = "Add",
+                    contentDescription = AppStrings.HOME_CD_ADD_SCHEDULE,
                     tint = grey950(),
                     modifier = Modifier
                         .clickable { onAddClick() }
@@ -961,7 +985,7 @@ fun HomePlanHeader(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_home_grid_base),
-                            contentDescription = "Calendar Mode",
+                            contentDescription = AppStrings.HOME_CD_CALENDAR_MODE,
                             modifier = Modifier.size(26.dp),
                             tint = if (viewMode == HomeViewMode.CALENDAR) grey50() else grey400()
                         )
@@ -983,7 +1007,7 @@ fun HomePlanHeader(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_home_list_base),
-                            contentDescription = "List Mode",
+                            contentDescription = AppStrings.HOME_CD_LIST_MODE,
                             modifier = Modifier.size(26.dp),
                             tint = if (viewMode == HomeViewMode.LIST) grey50() else grey400()
                         )
@@ -1000,9 +1024,33 @@ fun HomePlanHeader(
 
 
 
+/** 미리보기·스크린샷이 날짜에 따라 바뀌지 않도록 '오늘'(선택 날짜·보는 달 포함)을 기준 이미지를 만든 날로 고정한다. */
+private val PreviewToday: LocalDate = LocalDate.of(2026, 11, 20)
+
+@Composable
+private fun HomeScreenPreviewFrame(uiState: HomeUiState) {
+    val zone = ZoneId.systemDefault()
+    CompositionLocalProvider(LocalHomeClock provides Clock.fixed(PreviewToday.atStartOfDay(zone).toInstant(), zone)) {
+        HomeScreen(
+            uiState = uiState.copy(selectedDate = PreviewToday, viewedMonth = YearMonth.from(PreviewToday)),
+            onDateClick = {},
+            onMonthChange = {},
+            onChangeViewMode = {},
+            onNotificationClick = {},
+            onScheduleAddClick = {},
+            onScheduleDetailClick = {},
+            onNoticeClick = {},
+            onShareCardClick = {},
+            onProfileRetryClick = {},
+            onScheduleRetryClick = {},
+            onScheduleRefresh = {},
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenPreview() {
+internal fun HomeScreenPreview() {
     // 1. 테스트용 가짜 UI 상태 생성
     val dummyUiState = HomeUiState(
         profileLoadState = HomeLoadState.SUCCESS,
@@ -1021,146 +1069,68 @@ private fun HomeScreenPreview() {
     )
 
     // 2. HomeScreen 호출 (모든 파라미터에 빈 람다나 더미 데이터 전달)
-    HomeScreen(
-        uiState = dummyUiState,
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+    HomeScreenPreviewFrame(uiState = dummyUiState)
 }
 
 /** 글꼴 최대 배율과 두 자리 점수에서 단위(point/Days)가 쪼개지지 않는지 확인한다. */
 @Preview(showBackground = true, fontScale = 2f)
 @Composable
-private fun HomeScreenLargeFontPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.SUCCESS,
-            userName = "박유수",
-            userNickName = "어헛차",
-            userType = UserType.ACTIVE,
-            growDay = 120,
-            activeString = "12기 활동 상태",
-            sangjum = 10.0,
-            buljum = -10.5,
-            total = -0.5,
-            gisuTag = persistentListOf("10기", "11기", "12기"),
-            viewMode = HomeViewMode.CALENDAR,
-            dailyPlans = persistentListOf()
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+internal fun HomeScreenLargeFontPreview() {
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.SUCCESS,
+        userName = "박유수",
+        userNickName = "어헛차",
+        userType = UserType.ACTIVE,
+        growDay = 120,
+        activeString = "12기 활동 상태",
+        sangjum = 10.0,
+        buljum = -10.5,
+        total = -0.5,
+        gisuTag = persistentListOf("10기", "11기", "12기"),
+        viewMode = HomeViewMode.CALENDAR,
+        dailyPlans = persistentListOf()
+    ))
 }
 
 /** 챌린저 기록 없이 들어온 프로덕트팀 계정(isUmcProduct): 기수 태그가 비고 활동 상태 카드가 없다. */
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenNoGisuPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.SUCCESS,
-            userName = "프로덕트",
-            userNickName = "플덕",
-            userType = null,
-            growDay = 0,
-            gisuTag = persistentListOf(),
-            viewMode = HomeViewMode.CALENDAR,
-            dailyPlans = persistentListOf()
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+internal fun HomeScreenNoGisuPreview() {
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.SUCCESS,
+        userName = "프로덕트",
+        userNickName = "플덕",
+        userType = null,
+        growDay = 0,
+        gisuTag = persistentListOf(),
+        viewMode = HomeViewMode.CALENDAR,
+        dailyPlans = persistentListOf()
+    ))
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenLoadErrorPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.ERROR,
-            isScheduleLoadFailed = true,
-            viewMode = HomeViewMode.CALENDAR
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+internal fun HomeScreenLoadErrorPreview() {
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.ERROR,
+        isScheduleLoadFailed = true,
+        viewMode = HomeViewMode.CALENDAR
+    ))
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenLoadingPreview() {
-    HomeScreen(
-        uiState = HomeUiState(),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+internal fun HomeScreenLoadingPreview() {
+    HomeScreenPreviewFrame(uiState = HomeUiState())
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenListEmptyPreview() {
-    HomeScreen(
-        uiState = HomeUiState(
-            profileLoadState = HomeLoadState.SUCCESS,
-            userType = UserType.ACTIVE,
-            viewMode = HomeViewMode.LIST,
-            allPlans = persistentListOf()
-        ),
-        onDateClick = {},
-        onMonthChange = {},
-        onChangeViewMode = {},
-        onNotificationClick = {},
-        onScheduleAddClick = {},
-        onScheduleDetailClick = {},
-        onNoticeClick = {},
-        onShareCardClick = {},
-        onProfileRetryClick = {},
-        onScheduleRetryClick = {},
-        onScheduleRefresh = {},
-    )
+internal fun HomeScreenListEmptyPreview() {
+    HomeScreenPreviewFrame(uiState = HomeUiState(
+        profileLoadState = HomeLoadState.SUCCESS,
+        userType = UserType.ACTIVE,
+        viewMode = HomeViewMode.LIST,
+        allPlans = persistentListOf()
+    ))
 }

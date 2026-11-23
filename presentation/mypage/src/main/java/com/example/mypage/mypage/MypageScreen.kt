@@ -4,17 +4,11 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -24,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,9 +25,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,14 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.example.mypage.dialog.AddCodeDialog
-import com.example.mypage.nearby.NearbyEvent
-import com.example.mypage.nearby.NearbyUiState
-import com.example.mypage.nearby.NearbyViewModel
 import com.kakao.sdk.talk.TalkApiClient
 import com.kakao.sdk.user.UserApiClient
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UText
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
@@ -66,25 +55,18 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
 import com.umc.component.theme.kakaoColor
 import com.umc.component.theme.grey100
-import com.umc.component.theme.grey200
 import com.umc.component.base.CollectUiEvents
 import com.umc.component.R
-import com.umc.component.component.DialogType
-import com.umc.component.component.UBasicDialog
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.theme.red500
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey500
-import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
-import com.umc.component.theme.grey950
 import com.umc.domain.model.enums.LoginType
 import com.umc.domain.model.enums.OutLinkType
 import com.umc.domain.model.enums.TermsType
 import kotlinx.collections.immutable.persistentListOf
-import com.umc.domain.model.mypage.UserCard
 
 
 /**
@@ -101,7 +83,6 @@ import com.umc.domain.model.mypage.UserCard
 @Composable
 fun MypageRoute(
     viewModel: MypageViewModel = hiltViewModel(),
-    nearbyViewModel: NearbyViewModel = hiltViewModel(),
     onNavigateToEditProfile: () -> Unit, //프로필 페이지 이동
     onNavigateToMyContent: (String) -> Unit, //내가 쓴 글 이동
     onNavigateToLogin: () -> Unit, //로그인 이동(로그아웃 or 탈퇴)
@@ -111,6 +92,12 @@ fun MypageRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    // 이 화면의 안내는 시트·다이얼로그가 닫힌 뒤에 뜨므로 앱 공용 토스트로 띄운다
+    val toast = LocalUToast.current
+    // 링크를 열지 못하면 같은 안내를 띄운다
+    val openLink: (String) -> Unit = { url ->
+        if (!openWebpage(context, url)) toast.show(AppStrings.MYPAGE_LINK_OPEN_FAIL, UToastState.ERROR)
+    }
 
     var showAddCodeDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -131,7 +118,7 @@ fun MypageRoute(
                     selectedOutLinkType = OutLinkType.GITHUB
                     showOutLinkDialog = true
                 } else {
-                    openWebpage(context, uiState.githubUrl)
+                    openLink(uiState.githubUrl)
                 }
             }
             //블로그 누를 때
@@ -140,7 +127,7 @@ fun MypageRoute(
                     selectedOutLinkType = OutLinkType.BLOG
                     showOutLinkDialog = true
                 } else {
-                    openWebpage(context, uiState.blogUrl)
+                    openLink(uiState.blogUrl)
                 }
             }
             //링크드인 누를 때
@@ -149,7 +136,7 @@ fun MypageRoute(
                     selectedOutLinkType = OutLinkType.LINKEDIN
                     showOutLinkDialog = true
                 } else {
-                    openWebpage(context, uiState.linkedinUrl)
+                    openLink(uiState.linkedinUrl)
                 }
             }
             //인스타그램 누를 때
@@ -158,7 +145,7 @@ fun MypageRoute(
                     selectedOutLinkType = OutLinkType.INSTAGRAM
                     showOutLinkDialog = true
                 } else {
-                    openWebpage(context, uiState.instagramUrl)
+                    openLink(uiState.instagramUrl)
                 }
             }
             //개인 사이트 누를 때
@@ -167,7 +154,7 @@ fun MypageRoute(
                     selectedOutLinkType = OutLinkType.PERSONAL
                     showOutLinkDialog = true
                 } else {
-                    openWebpage(context, uiState.personalUrl)
+                    openLink(uiState.personalUrl)
                 }
             }
             //프로필 누를 때 (이동)
@@ -182,13 +169,13 @@ fun MypageRoute(
             is MypageEvent.NavigateToSettingNotice,
             is MypageEvent.NavigateToSettingLocation -> openPermissionPage(context)
             //개인정보처리 방침 누를 때
-            is MypageEvent.NavigateToPersonalInformation -> openWebpage(context, event.privacyTerms)
+            is MypageEvent.NavigateToPersonalInformation -> openLink(event.privacyTerms)
             //이용약관 누를 때
-            is MypageEvent.NavigateToUseManual -> openWebpage(context, event.manualTerms)
+            is MypageEvent.NavigateToUseManual -> openLink(event.manualTerms)
             //UMC 웹사이트 누를 때
-            is MypageEvent.NavigateToWebstieUmc -> openWebpage(context, uiState.websiteUMC)
+            is MypageEvent.NavigateToWebstieUmc -> openLink(uiState.websiteUMC)
             //UMC 인스타그램 누를 때
-            is MypageEvent.NavigateToInstagramUmc -> openWebpage(context, uiState.instagramUMC)
+            is MypageEvent.NavigateToInstagramUmc -> openLink(uiState.instagramUMC)
             //로그아웃 누를 때
             is MypageEvent.Logout -> {
                 showLogoutDialog = true
@@ -202,8 +189,9 @@ fun MypageRoute(
 
             //챌린저 기록 추가 시 (다이얼로그)
             is MypageEvent.ConfirmAddCode -> {
-                Toast.makeText(context, AppStrings.MYPAGE_ACTIVITY_ADDED, Toast.LENGTH_SHORT).show()
+                // 시트를 컴포지션에서 빼야 시트 창에 가리지 않고 토스트가 보인다
                 showAddCodeDialog = false
+                toast.show(AppStrings.MYPAGE_ACTIVITY_ADDED, UToastState.CHECK)
             }
             //챌린저 기록 추가 실패 시(다이얼로그)
             is MypageEvent.FailAddCode -> {
@@ -212,25 +200,25 @@ fun MypageRoute(
                     // 이미 사용된 코드는 다시 입력해도 소용없으므로 문의 채널을 안내한다.
                     showUsedCodeDialog = true
                 } else {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    toast.show(event.message, UToastState.ERROR)
                 }
             }
             //약관 조회 실패 시 (다시 시도 안내)
             is MypageEvent.TermsLoadFailed -> failedTermsType = event.type
             //프로필 조회 실패 상태에서 외부 링크를 눌렀을 때
             is MypageEvent.ProfileLoadFailed -> {
-                Toast.makeText(context, AppStrings.MYPAGE_PROFILE_LOAD_FAIL, Toast.LENGTH_SHORT).show()
+                toast.show(AppStrings.MYPAGE_PROFILE_LOAD_FAIL, UToastState.ERROR)
             }
             //소셜 연동 결과
             is MypageEvent.SocialLinked -> {
-                Toast.makeText(context, AppStrings.MYPAGE_SOCIAL_LINK_SUCCESS, Toast.LENGTH_SHORT).show()
+                toast.show(AppStrings.MYPAGE_SOCIAL_LINK_SUCCESS, UToastState.CHECK)
             }
             is MypageEvent.SocialLinkFailed -> {
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                toast.show(event.message, UToastState.ERROR)
             }
             //에러 토스트 (회원 탈퇴 실패 등)
             is MypageEvent.ShowErrorToast -> {
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                toast.show(event.message, UToastState.ERROR)
             }
             //뒤로 가기
             is MypageEvent.NavigateToBack -> onNavigateToBack()
@@ -262,13 +250,13 @@ fun MypageRoute(
                 LoginType.KAKAO -> signInKakao(
                     context = context,
                     onLoginSuccess = { token -> viewModel.linkSocial(token, LoginType.KAKAO) },
-                    onFailure = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+                    onFailure = { message -> toast.show(message, UToastState.ERROR) }
                 )
                 else -> signInGoogle(
                     scope = scope,
                     context = context,
                     onLoginSuccess = { token -> viewModel.linkSocial(token, LoginType.GOOGLE) },
-                    onFailure = { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+                    onFailure = { message -> toast.show(message, UToastState.ERROR) }
                 )
             }
         }
@@ -383,7 +371,6 @@ fun MypageRoute(
             positiveText = AppStrings.MYPAGE_DELETE_ACCOUNT_ACTION,
             negativeText = AppStrings.COMMON_CANCEL,
             onPositive = {
-                /**TODO: 회원 탈퇴 로직 연결*/
                 showDeleteUserDialog = false
                 viewModel.deleteUser()
             },
@@ -407,10 +394,13 @@ private val URL_SCHEME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
 
 /**
  * 외부 브라우저 인텐트를 호출하는 암시적 인텐트 연결 메서드
+ *
+ * 토스트는 컴포저블 밖에서 띄울 수 없으므로 열지 못했을 때 false 를 돌려주고, 안내는 호출부가 띄운다.
  */
-private fun openWebpage(context: Context, url: String) {
+private fun openWebpage(context: Context, url: String): Boolean {
     val trimmed = url.trim()
-    if (trimmed.isEmpty()) return
+    // 빈 링크는 안내 없이 무시해 온 동작을 그대로 둔다
+    if (trimmed.isEmpty()) return true
 
     // 프로필 링크는 사용자가 입력한 값이 그대로 저장되므로 스킴이 없을 수 있다(github.com/id). https:// 를 붙여 연다.
     val target = if (URL_SCHEME_REGEX.containsMatchIn(trimmed)) trimmed else "https://$trimmed"
@@ -419,23 +409,21 @@ private fun openWebpage(context: Context, url: String) {
     val uri = target.toUri().normalizeScheme()
 
     // 웹 링크(http/https)만 연다. file:// 등은 인텐트로 넘기면 앱이 종료될 수 있다.
-    if (uri.scheme != "http" && uri.scheme != "https") {
-        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
-        return
-    }
+    if (uri.scheme != "http" && uri.scheme != "https") return false
 
-    try {
+    return try {
         val intent = Intent(Intent.ACTION_VIEW, uri).apply {
             //Activity 외부(Context)에서 시작할 경우 필요한 플래그
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
+        true
     } catch (e: ActivityNotFoundException) {
         // 링크를 열 수 있는 앱이 없는 경우
-        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
+        false
     } catch (e: RuntimeException) {
         // 그 외(SecurityException 등) 사용자 입력 값 때문에 앱이 종료되지 않게 같은 안내로 처리
-        Toast.makeText(context, AppStrings.MYPAGE_LINK_OPEN_FAIL, Toast.LENGTH_SHORT).show()
+        false
     }
 }
 
@@ -962,7 +950,7 @@ private fun MypageScreenPreviewContent(uiState: MypageUiState) {
 // 카카오 + Apple 연동: 구글 연동 카드가 보인다
 @Preview(showBackground = true, widthDp = 360, heightDp = 1000)
 @Composable
-private fun MypageScreenGoogleLinkCardPreview() {
+internal fun MypageScreenGoogleLinkCardPreview() {
     MypageScreenPreviewContent(
         MypageUiState(
             linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.APPLE),
@@ -974,7 +962,7 @@ private fun MypageScreenGoogleLinkCardPreview() {
 // 카카오 + 구글 연동: 소셜 연동 섹션이 숨겨진다
 @Preview(showBackground = true, widthDp = 360, heightDp = 1000)
 @Composable
-private fun MypageScreenAllLinkedPreview() {
+internal fun MypageScreenAllLinkedPreview() {
     MypageScreenPreviewContent(
         MypageUiState(
             linkedPlatforms = persistentListOf(LoginType.KAKAO, LoginType.GOOGLE),

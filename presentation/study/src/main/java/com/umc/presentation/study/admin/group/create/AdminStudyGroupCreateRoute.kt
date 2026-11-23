@@ -1,13 +1,12 @@
 package com.umc.presentation.study.admin.group.create
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.base.CollectUiEvents
-import com.umc.component.theme.AppStrings
+import com.umc.component.component.LocalUToast
+import com.umc.component.component.UToastState
 
 /**
  * 스터디 그룹 생성 화면의 Route
@@ -29,7 +28,7 @@ fun AdminStudyGroupCreateRoute(
     val state = viewModel.uiState
         .collectAsStateWithLifecycle()
         .value
-    val context = LocalContext.current
+    val toast = LocalUToast.current
 
     /**
      * 현재 생성할 스터디 그룹의 기수는 활성 기수를 따른다.
@@ -48,7 +47,7 @@ fun AdminStudyGroupCreateRoute(
      * -> 그룹 생성 API가 성공한 경우
      *
      * RegisterFailure
-     * -> 그룹 생성 API가 실패한 경우
+     * -> 그룹 생성 API가 실패했거나 기수 정보를 불러오지 못한 경우
      */
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
@@ -62,12 +61,9 @@ fun AdminStudyGroupCreateRoute(
             }
 
             is AdminStudyGroupCreateEvent.RegisterFailure -> {
-                // 화면에 머물며 입력값은 유지하고, 서버 메시지가 없으면 기본 문구를 표시
-                Toast.makeText(
-                    context,
-                    event.message.ifBlank { AppStrings.STUDY_GROUP_CREATE_FAIL },
-                    Toast.LENGTH_SHORT,
-                ).show()
+                // 화면에 머물며 입력값은 유지한다. 빈 서버 메시지의 기본 문구는 ViewModel 이 채워 보낸다.
+                // 파트·파트장·스터디원 시트가 열려 있으면 시트 안의 UToastOverlay 가 그린다.
+                toast.show(event.message, UToastState.ERROR)
             }
         }
     }

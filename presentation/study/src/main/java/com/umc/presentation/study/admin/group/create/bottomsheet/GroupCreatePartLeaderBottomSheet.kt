@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,8 +29,10 @@ import kotlinx.collections.immutable.ImmutableList
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
@@ -80,10 +84,12 @@ fun GroupCreatePartLeaderBottomSheet(
     /**
      * 바텀시트가 처음 열리거나
      * 기존 선택 파트장이 변경되면 선택 상태를 초기화합니다.
+     *
+     * 구성 변경으로 다시 실행돼도 ViewModel 이 같은 입력은 무시해 편집 중인 상태가 남는다.
+     * 스터디원 시트와 ViewModel 을 함께 쓰지만, 두 시트 모두 닫을 때 resetAfterDismiss 로 비운다.
      */
     LaunchedEffect(preSelected) {
-        viewModel.resetAfterDismiss()
-        viewModel.setSelected(preSelected)
+        viewModel.open(preSelected)
     }
 
     ModalBottomSheet(
@@ -100,132 +106,146 @@ fun GroupCreatePartLeaderBottomSheet(
             topEnd = 28.dp
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(620.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
+        // 시트는 별도 창이라 앱 토스트가 가려진다. 시트가 열린 동안 띄운 토스트를 시트 위에 그린다.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            // 검색 여부에 따라 제목 변경
-            GroupCreatePickerTitle(
-                title = if (state.isSearching) {
-                    AppStrings.STUDY_LEADER_SEARCH_TITLE
-                } else {
-                    AppStrings.STUDY_LEADER_ADD_PLACEHOLDER
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-            // 파트장 이름 검색창
-            UTextField(
-                value = state.query,
-                onValueChange = viewModel::searchMembers,
-                placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                prevIcon = painterResource(
-                    id = R.drawable.ic_search
-                ),
-                prevIconTint = grey500(),
-                prevIconSize = 24.dp,
-                backgroundColor = grey100(),
-                focusBackgroundColor = grey50(),
-                strokeColor = grey100(),
-                focusStrokeColor = grey900(),
-                cornerRadius = 8.dp
-            )
-
-            Spacer(
-                modifier = Modifier.height(28.dp)
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .height(620.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp)
             ) {
-                when {
-                    // 검색이 끝났는데 결과가 없거나 검색에 실패한 경우
-                    state.isSearching &&
-                            !state.isLoading &&
-                            state.searchResults.isEmpty() -> {
-                        GroupCreateEmptyContent(
-                            text = if (state.isSearchFailed) {
-                                AppStrings.NOTICE_SEARCH_ERROR
-                            } else {
-                                AppStrings.NOTICE_SEARCH_EMPTY_TITLE
-                            }
-                        )
+                // 검색 여부에 따라 제목 변경
+                GroupCreatePickerTitle(
+                    title = if (state.isSearching) {
+                        AppStrings.STUDY_LEADER_SEARCH_TITLE
+                    } else {
+                        AppStrings.STUDY_LEADER_ADD_PLACEHOLDER
                     }
+                )
 
-                    // 검색 중인 경우 검색 결과 표시
-                    state.isSearching -> {
-                        GroupCreatePartLeaderSearchResults(
-                            searchResults = state.searchResults,
-                            selectedMembers = state.selectedMembers,
-                            onSelectClick = { member ->
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
 
-                                // 선택한 멤버를 파트장 목록에 추가
-                                viewModel.setSelected(
-                                    (
-                                            state.selectedMembers +
-                                                    member
-                                            )
-                                        .distinctBy { selectedMember ->
-                                            selectedMember.id
-                                        }
-                                )
+                // 파트장 이름 검색창
+                UTextField(
+                    value = state.query,
+                    onValueChange = viewModel::searchMembers,
+                    placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    prevIcon = painterResource(
+                        id = R.drawable.ic_search
+                    ),
+                    prevIconTint = grey500(),
+                    prevIconSize = 24.dp,
+                    backgroundColor = grey100(),
+                    focusBackgroundColor = grey50(),
+                    strokeColor = grey100(),
+                    focusStrokeColor = grey900(),
+                    cornerRadius = 8.dp
+                )
 
-                                // 선택 완료 후 검색 화면 종료
-                                viewModel.clearSearchOnly()
-                            }
-                        )
-                    }
+                Spacer(
+                    modifier = Modifier.height(28.dp)
+                )
 
-                    // 선택된 파트장이 없는 경우
-                    state.selectedMembers.isEmpty() -> {
-                        GroupCreateEmptyContent(
-                            text = AppStrings.STUDY_GROUP_LEADER_EMPTY
-                        )
-                    }
-
-                    // 현재 선택된 파트장 목록
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(
-                                items = state.selectedMembers,
-                                key = { member ->
-                                    member.id
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    when {
+                        // 검색이 끝났는데 결과가 없거나 검색에 실패한 경우
+                        state.isSearching &&
+                                !state.isLoading &&
+                                state.searchResults.isEmpty() -> {
+                            GroupCreateEmptyContent(
+                                text = if (state.isSearchFailed) {
+                                    AppStrings.NOTICE_SEARCH_ERROR
+                                } else {
+                                    AppStrings.NOTICE_SEARCH_EMPTY_TITLE
                                 }
-                            ) { item ->
-                                GroupCreateAddedMemberRow(
-                                    item = item,
-                                    onRemoveClick = {
-                                        viewModel.removeMember(item)
+                            )
+                        }
+
+                        // 검색 중인 경우 검색 결과 표시
+                        state.isSearching -> {
+                            GroupCreatePartLeaderSearchResults(
+                                searchResults = state.searchResults,
+                                selectedMembers = state.selectedMembers,
+                                onSelectClick = { member ->
+
+                                    // 선택한 멤버를 파트장 목록에 추가
+                                    viewModel.setSelected(
+                                        (
+                                                state.selectedMembers +
+                                                        member
+                                                )
+                                            .distinctBy { selectedMember ->
+                                                selectedMember.id
+                                            }
+                                    )
+
+                                    // 선택 완료 후 검색 화면 종료
+                                    viewModel.clearSearchOnly()
+                                }
+                            )
+                        }
+
+                        // 선택된 파트장이 없는 경우
+                        state.selectedMembers.isEmpty() -> {
+                            GroupCreateEmptyContent(
+                                text = AppStrings.STUDY_GROUP_LEADER_EMPTY
+                            )
+                        }
+
+                        // 현재 선택된 파트장 목록
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(
+                                    items = state.selectedMembers,
+                                    key = { member ->
+                                        member.id
                                     }
-                                )
+                                ) { item ->
+                                    GroupCreateAddedMemberRow(
+                                        item = item,
+                                        onRemoveClick = {
+                                            viewModel.removeMember(item)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                // 검색 API 로딩 표시
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        ),
-                        color = main500()
-                    )
+                    // 검색 API 로딩 표시
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(
+                                Alignment.Center
+                            ),
+                            color = main500()
+                        )
+                    }
                 }
             }
+
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

@@ -50,7 +50,7 @@ fun CommunityActionButton(
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityActionButtonPreview() {
+internal fun CommunityActionButtonPreview() {
     Column(
         modifier = Modifier
             .widthIn(max = 360.dp)

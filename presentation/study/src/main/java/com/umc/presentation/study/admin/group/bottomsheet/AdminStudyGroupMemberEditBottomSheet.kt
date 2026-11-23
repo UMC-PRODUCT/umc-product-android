@@ -28,9 +28,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastOverlay
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey100
@@ -71,6 +73,8 @@ fun AdminStudyGroupMemberEditBottomSheet(
     /**
      * BottomSheet가 열릴 때
      * 현재 스터디 그룹에 포함된 멤버를 ViewModel에 전달합니다.
+     *
+     * 구성 변경으로 다시 실행돼도 ViewModel 이 같은 입력은 무시해 편집 중인 상태가 남는다.
      */
     LaunchedEffect(preSelected) {
         viewModel.initialize(preSelected)
@@ -107,95 +111,109 @@ fun AdminStudyGroupMemberEditBottomSheet(
             topEnd = 28.dp,
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(620.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
+        // 시트는 별도 창이라 앱 토스트가 가려진다. 시트가 열린 동안 띄운 토스트를 시트 위에 그린다.
+        Box(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-
-            // 상단 제목 및 검색 결과 확인 버튼
-            EditMemberHeader(
-                isSearching = state.isSearching,
-                isConfirmEnabled = state.isConfirmEnabled,
-                onConfirmClick = {
-                    viewModel.confirmPendingMembers()
-                },
-            )
-
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-            // 스터디원 검색 입력창
-            UTextField(
-                value = state.query,
-                onValueChange = viewModel::searchMembers,
-                placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                prevIcon = painterResource(
-                    R.drawable.ic_search
-                ),
-                prevIconTint = grey500(),
-                prevIconSize = 24.dp,
-                backgroundColor = grey100(),
-                focusBackgroundColor = grey50(),
-                strokeColor = grey100(),
-                focusStrokeColor = grey900(),
-                cornerRadius = 8.dp,
-            )
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-            /**
-             * BottomSheet의 멤버 목록 영역
-             *
-             * 로딩 중      -> 로딩 인디케이터
-             * 검색 중      -> 검색 결과
-             * 검색하지 않음 -> 현재 스터디원 목록
-             */
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+                    .height(620.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp),
             ) {
-                when {
-                    state.isLoading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(
-                                Alignment.Center
-                            ),
-                            color = main500(),
-                        )
-                    }
 
-                    state.isSearching -> {
-                        EditMemberSearchContent(
-                            state = state,
-                            onToggleMember = {
-                                viewModel.togglePendingMember(it)
-                            },
-                            onLoadMore = {
-                                viewModel.loadMoreMembers()
-                            },
-                        )
-                    }
+                // 상단 제목 및 검색 결과 확인 버튼
+                EditMemberHeader(
+                    isSearching = state.isSearching,
+                    isConfirmEnabled = state.isConfirmEnabled,
+                    onConfirmClick = {
+                        viewModel.confirmPendingMembers()
+                    },
+                )
 
-                    else -> {
-                        EditCurrentMemberContent(
-                            members = state.selectedMembers,
-                            onRemoveMember = {
-                                viewModel.removeMember(it)
-                            },
-                        )
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
+
+                // 스터디원 검색 입력창
+                UTextField(
+                    value = state.query,
+                    onValueChange = viewModel::searchMembers,
+                    placeholder = AppStrings.STUDY_MEMBER_SEARCH_HINT,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    prevIcon = painterResource(
+                        R.drawable.ic_search
+                    ),
+                    prevIconTint = grey500(),
+                    prevIconSize = 24.dp,
+                    backgroundColor = grey100(),
+                    focusBackgroundColor = grey50(),
+                    strokeColor = grey100(),
+                    focusStrokeColor = grey900(),
+                    cornerRadius = 8.dp,
+                )
+
+                Spacer(
+                    modifier = Modifier.height(20.dp)
+                )
+
+                /**
+                 * BottomSheet의 멤버 목록 영역
+                 *
+                 * 로딩 중      -> 로딩 인디케이터
+                 * 검색 중      -> 검색 결과
+                 * 검색하지 않음 -> 현재 스터디원 목록
+                 */
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                ) {
+                    when {
+                        state.isLoading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(
+                                    Alignment.Center
+                                ),
+                                color = main500(),
+                            )
+                        }
+
+                        state.isSearching -> {
+                            EditMemberSearchContent(
+                                state = state,
+                                onToggleMember = {
+                                    viewModel.togglePendingMember(it)
+                                },
+                                onLoadMore = {
+                                    viewModel.loadMoreMembers()
+                                },
+                            )
+                        }
+
+                        else -> {
+                            EditCurrentMemberContent(
+                                members = state.selectedMembers,
+                                onRemoveMember = {
+                                    viewModel.removeMember(it)
+                                },
+                            )
+                        }
                     }
                 }
             }
+
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }

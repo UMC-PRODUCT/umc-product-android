@@ -47,6 +47,9 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
     /** 검색 디바운스를 관리하기 위한 Job */
     private var searchJob: Job? = null
 
+    /** 마지막으로 초기화한 시트 세션. 같은 세션의 재호출(회전)은 상태를 유지한다. */
+    private var initializedSession: String? = null
+
     /**
      * 현재 로그인한 사용자의 memberId
      *
@@ -86,7 +89,11 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
     fun initialize(
         preSelected: List<CommunityChallengerUiModel>,
         maxCount: Int,
+        session: String? = null,
     ) {
+        // 시트가 열린 채로 회전하면 같은 세션 키로 다시 불린다. 검색어와 새로 고른 멤버를 지우지 않도록 건너뛴다.
+        if (session != null && session == initializedSession) return
+        initializedSession = session
         searchJob?.cancel()
 
         val initialMembers = preSelected
@@ -356,6 +363,7 @@ class CommunityCreateMemberBottomSheetViewModel @Inject constructor(
      * 진행 중인 검색 Job도 함께 취소
      */
     fun resetAfterDismiss() {
+        initializedSession = null
         searchJob?.cancel()
 
         updateState {

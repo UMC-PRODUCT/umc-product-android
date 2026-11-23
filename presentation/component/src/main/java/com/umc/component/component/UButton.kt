@@ -161,7 +161,7 @@ fun UButton(
 
 @Preview(showBackground = true)
 @Composable
-private fun UButtonDefaultPreview() {
+internal fun UButtonDefaultPreview() {
     UmcTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             UButton(
@@ -176,7 +176,7 @@ private fun UButtonDefaultPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun UButtonOutlinedPreview() {
+internal fun UButtonOutlinedPreview() {
     UmcTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             UButton(
@@ -195,7 +195,7 @@ private fun UButtonOutlinedPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun UButtonDisabledPreview() {
+internal fun UButtonDisabledPreview() {
     UmcTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             UButton(

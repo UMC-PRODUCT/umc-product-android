@@ -1,22 +1,22 @@
 package com.umc.presentation.community
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
+import com.umc.component.component.UToastState
 
 /**
  * 커뮤니티 메인 화면의 Route
  *
- * ViewModel 상태를 구독하고 화면 이동 및 Toast 이벤트를 처리하며,
+ * ViewModel 상태를 구독하고 화면 이동 및 토스트 이벤트를 처리하며,
  * 화면 Lifecycle에 맞춰 스레드 목록 Polling을 시작/중지합니다.
  */
 @Composable
@@ -27,7 +27,7 @@ fun CommunityRoute(
     onNavigateToEditThread: (String) -> Unit,
     viewModel: CommunityViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
+    val toast = LocalUToast.current
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -58,11 +58,10 @@ fun CommunityRoute(
             }
 
             is CommunityEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
+                toast.show(
+                    message = event.message,
+                    state = if (event.isError) UToastState.ERROR else UToastState.CHECK,
+                )
             }
         }
     }

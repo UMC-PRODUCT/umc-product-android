@@ -27,6 +27,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import com.umc.domain.model.community.thread.CommunityMessageRecovery
 import com.umc.domain.model.community.thread.CommunityMessageMerge
 import com.umc.domain.model.community.thread.CommunityThreadMemberState
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.umc.domain.model.member.MemberBlockChanges
@@ -159,7 +160,6 @@ class CommunityChattingViewModel @Inject constructor(
             }
             is CommunityChattingAction.OnVisibleMessage -> markRead(action.messageId)
             CommunityChattingAction.OnBackClick -> emitEvent(CommunityChattingEvent.NavigateBack)
-            CommunityChattingAction.OnMoreClick -> emitEvent(CommunityChattingEvent.OpenMore)
             CommunityChattingAction.OnUnreadSummaryClick ->
                 summarizeUnreadMessages()
             CommunityChattingAction.OnRetryUnreadSummary -> {
@@ -177,16 +177,15 @@ class CommunityChattingViewModel @Inject constructor(
                     )
                 }
             }
-            CommunityChattingAction.OnCameraClick -> emitEvent(CommunityChattingEvent.OpenCamera)
             is CommunityChattingAction.OnSendImages -> sendImages(action.uris)
             CommunityChattingAction.OnImageSizeExceeded -> emitEvent(
-                CommunityChattingEvent.ShowError("이미지는 한 장당 최대 10MiB까지 전송할 수 있어요.")
+                CommunityChattingEvent.ShowError(AppStrings.CHAT_IMAGE_SIZE_EXCEEDED_FORMAT.format(COMMUNITY_CHAT_MAX_IMAGE_MIB))
             )
             CommunityChattingAction.OnImageTotalSizeExceeded -> emitEvent(
-                CommunityChattingEvent.ShowError("이미지는 총합 40MiB까지 전송할 수 있어요.")
+                CommunityChattingEvent.ShowError(AppStrings.CHAT_IMAGE_TOTAL_SIZE_EXCEEDED_FORMAT.format(COMMUNITY_CHAT_MAX_TOTAL_IMAGE_MIB))
             )
             CommunityChattingAction.OnImageSizeUnreadable -> emitEvent(
-                CommunityChattingEvent.ShowError("이미지 용량을 확인할 수 없어요. 다시 선택해주세요.")
+                CommunityChattingEvent.ShowError(AppStrings.CHAT_IMAGE_SIZE_UNREADABLE)
             )
             is CommunityChattingAction.OnDraftChanged -> updateDraft(action.value, action.changeStart, action.changeEnd)
             is CommunityChattingAction.OnSendClick -> sendText(
@@ -574,8 +573,8 @@ class CommunityChattingViewModel @Inject constructor(
         if (current.editCommandId != null || current.isAccessDenied || current.thread == null ||
             current.thread.myRole == CommunityThreadRole.UNKNOWN) return
         val message = current.messages.find { it.messageId == messageId }
-        if (message == null || message.senderId != current.myMemberId || message.deletedAt != null ||
-            message.status == "DELETED" || message.type != CommunityMessageType.TEXT) {
+        if (message == null || message.senderId != current.myMemberId || message.isDeleted ||
+            message.type != CommunityMessageType.TEXT) {
             updateState { copy(editError = AppStrings.CHAT_EDIT_UNAVAILABLE_ERROR) }
             return
         }
@@ -600,7 +599,7 @@ class CommunityChattingViewModel @Inject constructor(
     fun deleteMessage(messageId: String) {
         val current = uiState.value
         val message = current.messages.find { it.messageId == messageId } ?: return
-        if (message.deletedAt != null || message.status == "DELETED") return
+        if (message.isDeleted) return
         if (message.senderId != current.myMemberId && current.thread?.myRole !in
             setOf(CommunityThreadRole.OWNER, CommunityThreadRole.ADMIN)) return
         runCommand("deleted:$messageId") { chatRepository.deleteMessage(current.threadId, messageId) }
@@ -627,7 +626,7 @@ class CommunityChattingViewModel @Inject constructor(
                         commandId = "",
                         content = "",
                         type = CommunityMessageType.IMAGE,
-                        localUris = uploadUris,
+                        localUris = uploadUris.toImmutableList(),
                         confirmedFilesByUri = confirmedFiles,
                     )
                 )
@@ -749,7 +748,7 @@ class CommunityChattingViewModel @Inject constructor(
         if (reasons.isEmpty()) return@launch
         val current = uiState.value
         val message = current.messages.find { it.messageId == messageId } ?: return@launch
-        if (message.senderId == current.myMemberId || message.deletedAt != null || message.status == "DELETED") return@launch
+        if (message.senderId == current.myMemberId || message.isDeleted) return@launch
         if (!reportingMessageIds.add(messageId)) return@launch
         try {
             when (val result = threadRepository.reportMessage(messageId, reasons)) {
@@ -1460,7 +1459,7 @@ class CommunityChattingViewModel @Inject constructor(
                     val receivedMessage = CommunityMessageMerge.merge(
                         messages.find { it.messageId == rawMessage.messageId },
                         if (event.type == CommunityChatEvent.MessageChanged.Type.DELETED)
-                            rawMessage.copy(status = "DELETED", content = null, files = emptyList(), reactions = emptyList())
+                            rawMessage.copy(status = COMMUNITY_MESSAGE_STATUS_DELETED, content = null, files = emptyList(), reactions = emptyList())
                         else rawMessage,
                     )
                     // 수정·삭제 이벤트는 제자리에서 갱신하고, 새 메시지(CREATED)만 맨 앞(최신)에 넣는다.

@@ -89,6 +89,7 @@ class NoticeSearchViewModel @Inject constructor(
                 currentPage = 0,
                 isLastPage = false,
                 errorMessage = null,
+                isNextPageError = false,
             )
         }
         searchNotices(isRefresh = true)
@@ -137,7 +138,7 @@ class NoticeSearchViewModel @Inject constructor(
         // gisuId는 서버 필수값이라 아직 주입 전이면 요청하지 않는다 (400 방지)
         if (state.gisuId <= 0L) return@launch
 
-        updateState { copy(isPageLoading = true, errorMessage = null) }
+        updateState { copy(isPageLoading = true, errorMessage = null, isNextPageError = false) }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
@@ -167,8 +168,11 @@ class NoticeSearchViewModel @Inject constructor(
                 }
             },
             errorCallback = { fail ->
-                // 실패를 삼키면 0건인지 오류인지 구분할 수 없어 "검색이 안 된다"로 보인다
-                updateState { copy(isPageLoading = false, errorMessage = fail.message) }
+                // 실패를 삼키면 0건인지 오류인지 구분할 수 없어 "검색이 안 된다"로 보인다.
+                // 다음 페이지 실패는 목록 끝에 다시 시도 버튼을 띄워 직접 다시 부르게 한다
+                updateState {
+                    copy(isPageLoading = false, errorMessage = fail.message, isNextPageError = !isRefresh)
+                }
             }
         )
     }
@@ -188,6 +192,8 @@ data class NoticeSearchUiState(
     val currentPage: Int = 0,
     val isPageLoading: Boolean = false,
     val isLastPage: Boolean = false,
+    /** 다음 페이지 요청이 실패했는지. true면 목록 끝에 다시 시도 버튼을 보인다 */
+    val isNextPageError: Boolean = false,
     val readNoticeIds: ImmutableSet<Long> = persistentSetOf(),
 ) : UiState
 

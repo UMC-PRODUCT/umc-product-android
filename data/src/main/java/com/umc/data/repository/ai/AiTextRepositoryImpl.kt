@@ -10,9 +10,12 @@ import com.umc.domain.model.base.ApiState
 import com.umc.domain.model.base.FailState
 import com.umc.domain.model.enums.AiFeatureStatus
 import com.umc.domain.repository.ai.AiTextRepository
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * ML Kit GenAI(Gemini Nano) Prompt API 기반 온디바이스 텍스트 생성 구현.
@@ -33,6 +36,8 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
             Log.d(TAG, "checkStatus raw=$rawStatus mapped=$featureStatus")
             featureStatus
         }.getOrElse { error ->
+            // 호출한 코루틴이 취소됐으면 미지원으로 바꾸지 않고 취소를 이어 간다
+            if (error is CancellationException) currentCoroutineContext().ensureActive()
             Log.e(TAG, "checkStatus failed", error)
             AiFeatureStatus.UNAVAILABLE
         }
@@ -51,12 +56,19 @@ class AiTextRepositoryImpl @Inject constructor() : AiTextRepository {
                 val response = generator.generateContent(prompt)
                 val generatedText = response.candidates.firstOrNull()?.text.orEmpty().trim()
                 if (generatedText.isBlank()) {
+                    Log.e(TAG, "generate returned empty text")
                     ApiState.Fail(FailState(code = AI_ERROR_CODE, message = EMPTY_RESPONSE_MESSAGE))
                 } else {
                     ApiState.Success(generatedText)
                 }
             }
-        }.getOrElse { error -> fail(error) }
+        }.getOrElse { error ->
+            // 입력이 바뀌어 호출부가 취소한 경우는 실패가 아니므로 Fail 로 바꾸지 않고 취소를 이어 간다.
+            // 코루틴은 살아 있는데 ML Kit 안에서 난 취소 예외는 실패로 돌려 호출부의 '생성 중' 상태가 남지 않게 한다
+            if (error is CancellationException) currentCoroutineContext().ensureActive()
+            Log.e(TAG, "generate failed", error)
+            fail(error)
+        }
     }
 
     /** 생성 클라이언트를 만들어 사용하고 반드시 닫는다 */

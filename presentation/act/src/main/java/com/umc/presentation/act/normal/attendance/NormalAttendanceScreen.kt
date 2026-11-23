@@ -10,7 +10,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -36,10 +35,10 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,10 +54,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import com.naver.maps.map.compose.CircleOverlay
@@ -69,9 +69,12 @@ import com.naver.maps.map.compose.NaverMap
 import com.naver.maps.map.compose.rememberFusedLocationSource
 import com.naver.maps.map.compose.rememberCameraPositionState
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.BodyBold
@@ -107,7 +110,6 @@ import com.umc.domain.model.enums.CheckAvailableStatus
 import com.umc.domain.model.enums.CheckHistoryStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -117,6 +119,17 @@ fun NormalAttendanceRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val toast = LocalUToast.current
+    // 사유 다이얼로그는 별도 창이라 앱 공용 토스트가 딤 아래에 가려진다. 열려 있을 때는 다이얼로그 안에 띄운다.
+    // 다이얼로그를 닫거나 다시 열면 지워 지난 토스트가 다시 보이지 않게 한다.
+    var reasonToastData by remember(uiState.reasonSessionId) { mutableStateOf<UToastData?>(null) }
+    // 같은 실패 문구가 연달아 와도 다시 나타나도록 띄울 때마다 올린다
+    var reasonToastGeneration by remember { mutableIntStateOf(0) }
+    // 지도에 내 위치를 보일지 정한다. 권한 팝업이나 앱 설정에서 돌아오면 다시 확인해 허용 직후에도 바로 반영한다.
+    var hasLocationPermission by remember { mutableStateOf(context.hasFineLocationPermission()) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        hasLocationPermission = context.hasFineLocationPermission()
+    }
     var pendingAttendanceSession by remember {
         mutableStateOf<NormalAvailableSessionUi?>(null)
     }
@@ -128,6 +141,7 @@ fun NormalAttendanceRoute(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        hasLocationPermission = granted
         val pendingSession = pendingAttendanceSession
         val pendingVerificationSessionId = pendingLocationVerificationSessionId
         pendingAttendanceSession = null
@@ -137,11 +151,6 @@ fun NormalAttendanceRoute(
             pendingSession?.let(viewModel::requestAttendance)
             pendingVerificationSessionId?.let(viewModel::verifySessionLocation)
         } else if (pendingSession != null || pendingVerificationSessionId != null) {
-            Toast.makeText(
-                context,
-                AppStrings.ATTENDANCE_LOCATION_PERMISSION_REQUEST_TOAST,
-                Toast.LENGTH_SHORT
-            ).show()
             // '다시 묻지 않음'까지 거부된 상태면 팝업이 뜨지 않으므로 앱 설정으로 안내한다
             val activity = context.findActivity()
             if (activity != null &&
@@ -150,7 +159,10 @@ fun NormalAttendanceRoute(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             ) {
+                // 설정 안내 다이얼로그가 같은 내용을 알리고, 토스트는 그 딤 아래에 가려지므로 보내지 않는다
                 showLocationSettingsDialog = true
+            } else {
+                viewModel.onLocationPermissionDenied()
             }
         }
     }
@@ -162,7 +174,13 @@ fun NormalAttendanceRoute(
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is NormalAttendanceEvent.ShowToast -> {
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                val message = event.message.ifBlank { AppStrings.COMMON_NETWORK_ERROR_DESCRIPTION }
+                if (uiState.reasonSessionId != null) {
+                    reasonToastData = UToastData(message, UToastState.ERROR)
+                    reasonToastGeneration++
+                } else {
+                    toast.show(message, UToastState.ERROR)
+                }
             }
         }
     }
@@ -175,13 +193,7 @@ fun NormalAttendanceRoute(
             viewModel.toggleSessionExpanded(sessionId)
 
             if (willExpand && session != null && !session.isOnline) {
-                val hasLocationPermission =
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-
-                if (hasLocationPermission) {
+                if (context.hasFineLocationPermission()) {
                     viewModel.verifySessionLocation(sessionId)
                 } else {
                     pendingLocationVerificationSessionId = sessionId
@@ -195,13 +207,7 @@ fun NormalAttendanceRoute(
             }
         },
         onAttendanceClick = { session ->
-            val hasLocationPermission =
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-
-            if (session.isOnline || hasLocationPermission) {
+            if (session.isOnline || context.hasFineLocationPermission()) {
                 viewModel.requestAttendance(session)
             } else {
                 pendingAttendanceSession = session
@@ -216,7 +222,11 @@ fun NormalAttendanceRoute(
         onReasonClick = viewModel::openReasonDialog,
         onReasonChange = viewModel::onReasonChanged,
         onDismissReason = viewModel::dismissReasonDialog,
-        onSubmitReason = viewModel::submitReason
+        onSubmitReason = viewModel::submitReason,
+        hasLocationPermission = hasLocationPermission,
+        reasonToastData = reasonToastData,
+        reasonToastGeneration = reasonToastGeneration,
+        onReasonToastDismiss = { reasonToastData = null },
     )
 
     if (showLocationSettingsDialog) {
@@ -249,6 +259,12 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
+private fun Context.hasFineLocationPermission(): Boolean =
+    ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
 @Composable
 fun NormalAttendanceScreen(
     modifier: Modifier = Modifier,
@@ -259,6 +275,12 @@ fun NormalAttendanceScreen(
     onReasonChange: (String) -> Unit = {},
     onDismissReason: () -> Unit = {},
     onSubmitReason: () -> Unit = {},
+    // 지도에 내 위치를 보일지. 권한은 Route 가 확인해 넘긴다
+    hasLocationPermission: Boolean = false,
+    // 사유 다이얼로그 안에 띄울 토스트. 다이얼로그는 별도 창이라 화면 토스트가 가려진다
+    reasonToastData: UToastData? = null,
+    reasonToastGeneration: Int = 0,
+    onReasonToastDismiss: () -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier
@@ -273,6 +295,7 @@ fun NormalAttendanceScreen(
                 sessions = uiState.availableSessions,
                 expandedSessionId = uiState.expandedSessionId,
                 isRequesting = uiState.isRequestingAttendance,
+                hasLocationPermission = hasLocationPermission,
                 onExpandToggle = onExpandToggle,
                 onAttendanceClick = onAttendanceClick,
                 onReasonClick = onReasonClick
@@ -293,7 +316,10 @@ fun NormalAttendanceScreen(
             onReasonChange = onReasonChange,
             onDismissRequest = onDismissReason,
             onSubmit = { onSubmitReason() },
-            isSubmitting = uiState.isSubmittingReason
+            isSubmitting = uiState.isSubmittingReason,
+            toastData = reasonToastData,
+            toastGeneration = reasonToastGeneration,
+            onToastDismiss = onReasonToastDismiss,
         )
     }
 }
@@ -304,12 +330,13 @@ private fun AvailableSession(
     sessions: ImmutableList<NormalAvailableSessionUi>,
     expandedSessionId: Long?,
     isRequesting: Boolean,
+    hasLocationPermission: Boolean,
     onExpandToggle: (Long) -> Unit,
     onAttendanceClick: (NormalAvailableSessionUi) -> Unit,
     onReasonClick: (Long) -> Unit,
 ) {
     Column {
-        Text(
+        UText(
             text = AppStrings.ATTENDANCE_HEADER_AVAILABLE,
             color = grey800(),
             style = Title3Bold
@@ -329,6 +356,7 @@ private fun AvailableSession(
                         session = session,
                         isExpanded = expandedSessionId == session.id,
                         isRequesting = isRequesting,
+                        hasLocationPermission = hasLocationPermission,
                         onExpandToggle = { onExpandToggle(session.id) },
                         onAttendanceClick = { onAttendanceClick(session) },
                         onReasonClick = { onReasonClick(session.id) }
@@ -345,7 +373,7 @@ private fun MyAttendance(
     sessions: ImmutableList<NormalHistorySessionUi>
 ) {
     Column {
-        Text(
+        UText(
             text = AppStrings.ATTENDANCE_HEADER_HISTORY,
             color = grey800(),
             style = Title3Bold
@@ -391,6 +419,7 @@ private fun AvailableSessionCard(
     onAttendanceClick: () -> Unit,
     onReasonClick: () -> Unit,
     isRequesting: Boolean = false,
+    hasLocationPermission: Boolean = false,
 ) {
     Column(
         modifier = Modifier
@@ -404,7 +433,7 @@ private fun AvailableSessionCard(
             Spacer(modifier = Modifier.size(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
+                UText(
                     text = session.title,
                     color = grey800(),
                     style = Subheadline
@@ -453,6 +482,7 @@ private fun AvailableSessionCard(
             AvailableSessionExpandedContent(
                 session = session,
                 isRequesting = isRequesting,
+                hasLocationPermission = hasLocationPermission,
                 onAttendanceClick = onAttendanceClick,
                 onReasonClick = onReasonClick
             )
@@ -464,11 +494,11 @@ private fun AvailableSessionCard(
 private fun AvailableSessionExpandedContent(
     session: NormalAvailableSessionUi,
     isRequesting: Boolean,
+    hasLocationPermission: Boolean,
     onAttendanceClick: () -> Unit,
     onReasonClick: () -> Unit,
 ) {
-    val canRequestAttendance =
-        (session.isOnline || session.isLocationCertified == true) && !isRequesting
+    val canRequestAttendance = session.isAttendanceReady && !isRequesting
 
     Column() {
         Spacer(modifier = Modifier.height(16.dp))
@@ -482,6 +512,7 @@ private fun AvailableSessionExpandedContent(
         ) {
             AttendanceLocationMap(
                 session = session,
+                hasLocationPermission = hasLocationPermission,
                 modifier = Modifier.fillMaxSize(),
             )
 
@@ -682,37 +713,17 @@ private fun AvailableSessionExpandedContent(
     }
 }
 
-/** 출석 인정 반경(m). ViewModel의 판정 기준과 같은 값이어야 원과 실제 인증이 어긋나지 않는다 */
-private const val ATTENDANCE_RADIUS_METERS = 50.0
-
 /** 반경 50m 원이 지도에 꽉 차 보이는 배율 */
 private const val ATTENDANCE_MAP_ZOOM = 16.5
-
-/** 지도의 내 위치 표시 여부를 정하기 위한 위치 권한 확인 */
-@Composable
-private fun rememberHasLocationPermission(): Boolean {
-    val context = LocalContext.current
-    return remember(context) {
-        ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-}
 
 @OptIn(ExperimentalNaverMapApi::class)
 @Composable
 private fun AttendanceLocationMap(
     session: NormalAvailableSessionUi,
+    hasLocationPermission: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val latitude = session.latitude
-    val longitude = session.longitude
-    val hasLocation =
-        !session.isOnline &&
-            latitude != null &&
-            longitude != null &&
-            !(latitude == 0.0 && longitude == 0.0)
+    val attendancePosition = session.attendancePosition
 
     Box(
         modifier = modifier
@@ -720,19 +731,17 @@ private fun AttendanceLocationMap(
             .background(grey200()),
         contentAlignment = Alignment.Center
     ) {
-        if (hasLocation) {
-            val attendancePosition = LatLng(latitude!!, longitude!!)
+        if (attendancePosition != null) {
             val cameraPositionState = rememberCameraPositionState {
                 position = CameraPosition(attendancePosition, ATTENDANCE_MAP_ZOOM)
             }
 
-            LaunchedEffect(latitude, longitude) {
+            LaunchedEffect(attendancePosition.latitude, attendancePosition.longitude) {
                 cameraPositionState.position = CameraPosition(attendancePosition, ATTENDANCE_MAP_ZOOM)
             }
 
             // 위치 권한이 있을 때만 내 위치(파란 점)를 켠다.
             // 권한이 없으면 LocationSource가 계속 권한을 요청해 화면이 깜빡인다
-            val hasLocationPermission = rememberHasLocationPermission()
             val locationSource = rememberFusedLocationSource()
 
             NaverMap(
@@ -882,7 +891,7 @@ private fun HistorySessionRow(session: NormalHistorySessionUi) {
         Spacer(modifier = Modifier.size(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
+            UText(
                 text = session.title,
                 color = grey800(),
                 style = BodyBold
@@ -938,7 +947,7 @@ private fun SessionTimeText(timeRange: String) {
 
         Spacer(modifier = Modifier.size(4.dp))
 
-        Text(
+        UText(
             text = timeRange,
             color = grey500(),
             style = Footnote
@@ -960,7 +969,7 @@ private fun StatusChip(
             .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
+        UText(
             text = text,
             color = textColor,
             style = Caption1
@@ -998,7 +1007,7 @@ fun EmptyComponent(
                 )
             }
 
-            Text(
+            UText(
                 text = text,
                 color = grey600(),
                 style = Callout
@@ -1066,7 +1075,7 @@ private fun sampleHistorySessions(): ImmutableList<NormalHistorySessionUi> = per
 
 @Preview(showBackground = true)
 @Composable
-private fun NormalAttendanceEmptyScreenPreview() {
+internal fun NormalAttendanceEmptyScreenPreview() {
     UmcTheme(darkTheme = false) {
         NormalAttendanceScreen()
     }
@@ -1075,7 +1084,7 @@ private fun NormalAttendanceEmptyScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NormalAttendanceScreenPreview() {
+internal fun NormalAttendanceScreenPreview() {
     UmcTheme(darkTheme = false) {
         NormalAttendanceScreen(
             uiState = NormalAttendanceUiState(
@@ -1088,7 +1097,7 @@ private fun NormalAttendanceScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AvailableSessionCardCanCheckPreview() {
+internal fun AvailableSessionCardCanCheckPreview() {
     UmcTheme(darkTheme = false) {
         Box(
             modifier = Modifier
@@ -1109,7 +1118,7 @@ private fun AvailableSessionCardCanCheckPreview() {
 
 @Preview(showBackground = true, name = "Available Session Expanded")
 @Composable
-private fun AvailableSessionCardCantCheckPreview() {
+internal fun AvailableSessionCardCantCheckPreview() {
     UmcTheme(darkTheme = false) {
         Box(
             modifier = Modifier
@@ -1130,7 +1139,7 @@ private fun AvailableSessionCardCantCheckPreview() {
 
 @Preview(showBackground = true, name = "Available Session Requesting")
 @Composable
-private fun AvailableSessionCardRequestingPreview() {
+internal fun AvailableSessionCardRequestingPreview() {
     UmcTheme(darkTheme = false) {
         Box(
             modifier = Modifier

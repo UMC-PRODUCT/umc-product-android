@@ -32,6 +32,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UText
@@ -46,9 +48,9 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
 import com.umc.presentation.notice.NoticeCard
+import com.umc.presentation.notice.NoticeNextPageItem
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -61,8 +63,13 @@ fun AdminNoticeRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
+    // 회전처럼 Route만 다시 그려진 경우에는 ViewModel이 같은 기수를 무시해 보던 목록을 지킨다
+    LaunchedEffect(gisuId) {
         viewModel.setGisuId(gisuId)
+    }
+    // 상세·검색에서 돌아온 뒤의 새로고침은 RESUMED에서만 확인한다. 예측 뒤로 가기 미리보기는 RESUMED 없이 컴포지션만 다시 만든다
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onResumed()
     }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
@@ -188,7 +195,6 @@ fun AdminNoticeScreen(
 
             uiState.isEmpty -> {
                 AdminNoticeStatusContent(
-                    // TODO: 확성기 아이콘 에셋 추가 후 교체 (임시로 ic_alarm 사용)
                     iconRes = R.drawable.ic_speaker,
                     title = AppStrings.NOTICE_EMPTY_TITLE,
                     content = AppStrings.NOTICE_EMPTY_CONTENT,
@@ -213,12 +219,13 @@ fun AdminNoticeScreen(
                         )
                     }
 
-                    // 마지막 아이템 노출 시 다음 페이지 로드
+                    // 마지막 아이템 노출 시 다음 페이지 로드. 실패하면 다시 시도 버튼으로 바뀐다
                     if (uiState.noticeList.isNotEmpty() && !uiState.isLastPage) {
                         item {
-                            LaunchedEffect(Unit) {
-                                onLoadNextPage()
-                            }
+                            NoticeNextPageItem(
+                                isError = uiState.isNextPageError,
+                                onLoadNextPage = onLoadNextPage,
+                            )
                         }
                     }
                 }
@@ -290,7 +297,7 @@ private fun AdminNoticeStatusContent(
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenPreview() {
+internal fun AdminNoticeScreenPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             gisuId = 12,
@@ -305,7 +312,7 @@ private fun AdminNoticeScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenNoAccessPreview() {
+internal fun AdminNoticeScreenNoAccessPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             gisuId = 12,
@@ -319,7 +326,7 @@ private fun AdminNoticeScreenNoAccessPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenChapterPresidentPreview() {
+internal fun AdminNoticeScreenChapterPresidentPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             gisuId = 12,
@@ -334,7 +341,7 @@ private fun AdminNoticeScreenChapterPresidentPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenLoadingPreview() {
+internal fun AdminNoticeScreenLoadingPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             gisuId = 12,
@@ -349,7 +356,7 @@ private fun AdminNoticeScreenLoadingPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminNoticeScreenErrorPreview() {
+internal fun AdminNoticeScreenErrorPreview() {
     AdminNoticeScreen(
         uiState = AdminNoticeUiState(
             gisuId = 12,

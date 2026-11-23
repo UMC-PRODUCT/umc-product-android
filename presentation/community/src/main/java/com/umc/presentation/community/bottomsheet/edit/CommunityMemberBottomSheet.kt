@@ -13,7 +13,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import com.umc.component.theme.grey950
 import com.umc.presentation.community.component.chatting.CommunityChatProfileImage
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,12 +38,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -72,6 +71,7 @@ import com.umc.presentation.community.model.CommunityChallengerUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import java.util.UUID
 
 /**
  * 커뮤니티 스레드의 현재 멤버를 관리하는 BottomSheet입니다.
@@ -92,13 +92,15 @@ fun CommunityMemberBottomSheet(
     onInviteSuccess: () -> Unit,
     viewModel: CommunityMemberBottomSheetViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
     val searchFocusRequester = remember { FocusRequester() }
     var searchFocused by remember { mutableStateOf(false) }
     val sheetHeight = LocalConfiguration.current.screenHeightDp.dp * 0.7f
     var toastData by remember(threadId) { mutableStateOf<UToastData?>(null) }
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 시트가 열린 동안 회전해도 같은 값으로 복원되는 세션 키. 같은 세션이면 ViewModel이 초기화를 건너뛴다.
+    val sheetSession = rememberSaveable { UUID.randomUUID().toString() }
 
     /**
      * BottomSheet가 열릴 때 threadId를 기준으로
@@ -107,6 +109,7 @@ fun CommunityMemberBottomSheet(
     LaunchedEffect(threadId) {
         viewModel.initialize(
             threadId = threadId,
+            session = sheetSession,
         )
     }
 
@@ -126,20 +129,18 @@ fun CommunityMemberBottomSheet(
         /**
          * ViewModel에서 발생한 일회성 이벤트를 처리합니다.
          *
-         * 멤버 초대 성공 또는 에러 발생 시 Toast를 표시합니다.
+         * 멤버 초대 성공 또는 에러 발생 시 시트 안 토스트를 표시합니다.
+         * 일부만 초대되면 뒤이어 오는 부분 결과 토스트가 성공 토스트를 덮어쓴다.
          */
         CollectUiEvents(viewModel.uiEvent) { event ->
             when (event) {
                 is CommunityMemberBottomSheetEvent.MemberUpdateSuccess -> {
                     focusManager.clearFocus()
                     keyboard?.hide()
-                    val message = AppStrings.COMMUNITY_MEMBER_ADD_SUCCESS_FORMAT.format(event.addedMemberCount)
-
-                    Toast.makeText(
-                        context,
-                        message,
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    toastData = UToastData(
+                        message = AppStrings.COMMUNITY_MEMBER_ADD_SUCCESS_FORMAT.format(event.addedMemberCount),
+                        state = UToastState.CHECK,
+                    )
 
                     onInviteSuccess()
                 }
@@ -601,9 +602,9 @@ internal fun CommunityMemberSearchRow(
                 },
             ),
             contentDescription = if (isChecked) {
-                "선택됨"
+                AppStrings.COMMUNITY_CREATE_MEMBER_CD_CHECKED
             } else {
-                "선택되지 않음"
+                AppStrings.COMMUNITY_CREATE_MEMBER_CD_UNCHECKED
             },
             tint = Color.Unspecified,
             modifier = Modifier.size(24.dp),
@@ -776,7 +777,7 @@ private fun CommunityMemberSheetPreviewContent(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetCurrentMembersPreview() {
+internal fun CommunityMemberSheetCurrentMembersPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -793,7 +794,7 @@ private fun CommunityMemberSheetCurrentMembersPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetEmptyPreview() {
+internal fun CommunityMemberSheetEmptyPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -809,7 +810,7 @@ private fun CommunityMemberSheetEmptyPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetLoadingPreview() {
+internal fun CommunityMemberSheetLoadingPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -826,7 +827,7 @@ private fun CommunityMemberSheetLoadingPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetSearchFocusedPreview() {
+internal fun CommunityMemberSheetSearchFocusedPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -844,7 +845,7 @@ private fun CommunityMemberSheetSearchFocusedPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetSearchPreview() {
+internal fun CommunityMemberSheetSearchPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -867,7 +868,7 @@ private fun CommunityMemberSheetSearchPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetSearchNoResultPreview() {
+internal fun CommunityMemberSheetSearchNoResultPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -888,7 +889,7 @@ private fun CommunityMemberSheetSearchNoResultPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetUpdatingPreview() {
+internal fun CommunityMemberSheetUpdatingPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -913,7 +914,7 @@ private fun CommunityMemberSheetUpdatingPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetErrorPreview() {
+internal fun CommunityMemberSheetErrorPreview() {
     CommunityMemberSheetPreviewFrame {
         CommunityMemberSheetPreviewContent(
             state = CommunityMemberBottomSheetState(
@@ -933,7 +934,7 @@ private fun CommunityMemberSheetErrorPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityMemberSheetMaxCountToastPreview() {
+internal fun CommunityMemberSheetMaxCountToastPreview() {
     CommunityMemberSheetPreviewFrame(
         toastData = UToastData(
             message = "최대 ${DEFAULT_COMMUNITY_MAX_MEMBER_COUNT}명까지 초대할 수 있습니다.",

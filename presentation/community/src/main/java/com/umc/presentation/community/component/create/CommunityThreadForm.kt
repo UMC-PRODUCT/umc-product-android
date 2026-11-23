@@ -145,7 +145,7 @@ private fun CommunityThreadFormLabel(
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityThreadFormEmptyPreview() {
+internal fun CommunityThreadFormEmptyPreview() {
     CommunityThreadForm(
         title = "",
         description = "",
@@ -160,7 +160,7 @@ private fun CommunityThreadFormEmptyPreview() {
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityThreadFormMaxLengthPreview() {
+internal fun CommunityThreadFormMaxLengthPreview() {
     CommunityThreadForm(
         title = "가".repeat(80),
         description = "안드로이드 파트 스터디 과제 인증과 코드 리뷰를 나누는 스레드예요.",

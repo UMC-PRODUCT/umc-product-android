@@ -35,23 +35,23 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.example.mypage.dialog.AddCodeDialog
 import com.example.mypage.mypage.UMC_KAKAO_CHANNEL_ID
 import com.example.mypage.mypage.openKakaoChannel
 import com.umc.component.R
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.black
 import com.umc.component.theme.grey200
-import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey500
@@ -77,13 +77,15 @@ fun ActivityHistoryRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    // 이벤트가 올 때는 코드 입력 시트가 이미 닫혀 있어 앱 공용 토스트로 띄운다
+    val toast = LocalUToast.current
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is ActivityHistoryEvent.RecordAdded ->
-                Toast.makeText(context, AppStrings.ACTIVITY_HISTORY_RECORD_ADDED, Toast.LENGTH_SHORT).show()
+                toast.show(AppStrings.ACTIVITY_HISTORY_RECORD_ADDED, UToastState.CHECK)
             is ActivityHistoryEvent.ShowToast ->
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                toast.show(event.message, UToastState.ERROR)
         }
     }
 
@@ -228,7 +230,7 @@ fun ActivityHistoryTopBar(
                 .padding(12.dp)
                 .clickable { onBackClick() },
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = "뒤로가기",
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 
@@ -412,7 +414,7 @@ private fun ActivityHistoryLoadError(isLoading: Boolean, onRetryClick: () -> Uni
 
 @PreviewScreenSizes
 @Composable
-private fun ActivityHistoryScreenPreview() {
+internal fun ActivityHistoryScreenPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(
@@ -434,7 +436,7 @@ private fun ActivityHistoryScreenPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 400)
 @Composable
-private fun ActivityHistoryScreenEmptyPreview() {
+internal fun ActivityHistoryScreenEmptyPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(),
@@ -446,7 +448,7 @@ private fun ActivityHistoryScreenEmptyPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 400)
 @Composable
-private fun ActivityHistoryScreenLoadingPreview() {
+internal fun ActivityHistoryScreenLoadingPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(isLoading = true),
@@ -458,7 +460,7 @@ private fun ActivityHistoryScreenLoadingPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 600)
 @Composable
-private fun ActivityHistoryScreenLoadFailedPreview() {
+internal fun ActivityHistoryScreenLoadFailedPreview() {
     UmcTheme {
         ActivityHistoryScreen(
             uiState = ActivityHistoryUiState(isLoadFailed = true),

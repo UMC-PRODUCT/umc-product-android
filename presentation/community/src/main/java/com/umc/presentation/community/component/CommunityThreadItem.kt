@@ -153,7 +153,7 @@ fun CommunityThreadItem(
                             painter = painterResource(
                                 id = R.drawable.ic_pin,
                             ),
-                            contentDescription = "고정 스레드",
+                            contentDescription = AppStrings.COMMUNITY_CD_PINNED_THREAD,
                             tint = if (useUpdatedListStyle) grey500() else grey400(),
                             modifier = Modifier.size(18.dp),
                         )
@@ -167,7 +167,7 @@ fun CommunityThreadItem(
                             painter = painterResource(
                                 id = R.drawable.ic_notification_off,
                             ),
-                            contentDescription = "알림 꺼짐",
+                            contentDescription = AppStrings.COMMUNITY_CD_NOTIFICATION_OFF,
                             tint = grey400(),
                             modifier = Modifier.size(18.dp),
                         )
@@ -326,7 +326,7 @@ private fun categoryIconRes(
 
 @Preview(showBackground = true)
 @Composable
-private fun CommunityThreadItemPreview() {
+internal fun CommunityThreadItemPreview() {
     UmcTheme {
         Column(
             modifier = Modifier.padding(16.dp),

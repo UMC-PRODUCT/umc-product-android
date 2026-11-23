@@ -18,8 +18,6 @@ sealed interface CommunityAction {
         val threadId: String,
     ) : CommunityAction
 
-    data object OnFilterClick : CommunityAction
-
     data object OnSearchClick : CommunityAction
 
     data object OnCreateThreadClick : CommunityAction

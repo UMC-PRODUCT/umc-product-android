@@ -1,7 +1,5 @@
 package com.example.mypage.mycard
 
-import android.util.Log
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -43,7 +41,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
@@ -55,15 +52,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.mypage.dialog.CardExchangeBottomSheet
-import com.example.mypage.mypage.MypageUiState
-import com.example.mypage.mypage.SocialBadge
 import com.example.mypage.nearby.NearbyEvent
 import com.example.mypage.nearby.NearbyViewModel
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UDialog
 import com.umc.component.component.UText
-import com.umc.component.component.UToast
+import com.umc.component.component.UToastData
 import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
@@ -72,9 +68,6 @@ import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey200
 import com.umc.component.theme.grey400
-import com.umc.component.theme.grey500
-import com.umc.component.theme.grey600
-import com.umc.component.theme.grey700
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
@@ -83,12 +76,8 @@ import com.umc.component.theme.main500
 import com.umc.component.theme.main600
 import com.umc.component.theme.white
 import com.umc.domain.model.enums.LinkType
-import com.umc.domain.model.enums.LoginType
-import com.umc.domain.model.enums.UserType
 import com.umc.domain.model.mypage.NearbyUserInfo
-import com.umc.domain.model.mypage.UserCard
 import com.umc.domain.model.toUserCard
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 
@@ -120,8 +109,15 @@ fun MycardRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val nearbyUiState by nearbyViewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // 화면 안내는 앱 공용 토스트로 띄운다
+    val toast = LocalUToast.current
+    // 명함 교환 시트는 별도 창이라 앱 공용 토스트가 그 아래에 가려진다. 시트가 열려 있을 때는 시트 안 호스트로 띄운다
+    var sheetToastData by remember { mutableStateOf<UToastData?>(null) }
+    // 시트가 닫히면 시트 안 토스트도 지운다(다시 열 때 지난 안내가 또 뜨지 않게)
+    LaunchedEffect(nearbyUiState.isBottomSheetOpen) {
+        if (!nearbyUiState.isBottomSheetOpen) sheetToastData = null
+    }
 
     // 화면 복귀(Restore) 시에도 교환 다이얼로그의 중복 실행을 방지하는 플래그
     // rememberSaveable
@@ -129,7 +125,7 @@ fun MycardRoute(
         mutableStateOf(false)
     }
 
-    // [임시] 명함 교환 차단 — iOS 구현 전까지 교환으로 가는 모든 입구에서 안내 다이얼로그만 띄운다.
+    // 명함 교환 차단 — iOS 구현 전까지 교환으로 가는 모든 입구에서 안내 다이얼로그만 띄운다.
     // 차단 지점: 홈 배너 진입(openExchangeDialog), 명함 교환 버튼, 내 QR 코드, QR 딥링크 수신.
     // 되돌릴 때: 이 상태와 아래 UDialog 블록을 지우고 각 지점의 원래 호출을 주석에서 되살린다.
     var showExchangeBlockedDialog by remember { mutableStateOf(false) }
@@ -154,7 +150,7 @@ fun MycardRoute(
     // QR 딥링크로 전달된 상대방 회원 ID 존재 시 회원 조회 수행
     LaunchedEffect(targetMemberId) {
         if (!viewProfileOnly && !targetMemberId.isNullOrEmpty()) {
-            // [임시] 명함 교환 차단 — 원래 동작: viewModel.searchUser(targetMemberId.toLong())
+            // 명함 교환 차단 — 원래 동작: viewModel.searchUser(targetMemberId.toLong())
             showExchangeBlockedDialog = true
         }
     }
@@ -162,7 +158,7 @@ fun MycardRoute(
     // 홈 화면 등 외부에서 명함 교환 요청 플래그를 가지고 진입 시 다이얼로그 즉시 오픈
     LaunchedEffect(openExchangeDialog) {
         if (!viewProfileOnly && openExchangeDialog && !hasOpenedExchangeDialog) {
-            // [임시] 명함 교환 차단 — 원래 동작: nearbyViewModel.openBottomSheet()
+            // 명함 교환 차단 — 원래 동작: nearbyViewModel.openBottomSheet()
             showExchangeBlockedDialog = true
             hasOpenedExchangeDialog = true //오픈 후 즉시 처리 완료 상태로 변경!
         }
@@ -191,8 +187,12 @@ fun MycardRoute(
     CollectUiEvents(nearbyViewModel.uiEvent) { event ->
         when (event) {
             is NearbyEvent.ShowToast -> {
-                //UToast(event.message, UToastState.NONE)
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                val state = if (event.isSuccess) UToastState.CHECK else UToastState.ERROR
+                if (nearbyUiState.isBottomSheetOpen) {
+                    sheetToastData = UToastData(event.message, state)
+                } else {
+                    toast.show(event.message, state)
+                }
             }
         }
     }
@@ -203,9 +203,9 @@ fun MycardRoute(
 
             }
 
-            is MycardEvent.ShowError -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            is MycardEvent.ShowError -> toast.show(event.message, UToastState.ERROR)
             is MycardEvent.ProfileLoadFailed -> {
-                Toast.makeText(context, AppStrings.MYCARD_PROFILE_LOAD_ERROR_TITLE, Toast.LENGTH_SHORT).show()
+                toast.show(AppStrings.MYCARD_PROFILE_LOAD_ERROR_TITLE, UToastState.ERROR)
             }
 
             else -> {}
@@ -216,18 +216,18 @@ fun MycardRoute(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onNavigateToMypage = onNavigateToMypage,
-        // [임시] 명함 교환 차단 — 원래 동작: onNavigateToMyqrCode (QR 공유도 교환 경로라 함께 막는다)
+        // 명함 교환 차단 — 원래 동작: onNavigateToMyqrCode (QR 공유도 교환 경로라 함께 막는다)
         onNavigateToMyqrCode = { showExchangeBlockedDialog = true },
         onNavigateToReceivedCard = onNavigateToReceivedCard,
         onNavigateToEditCard = onNavigateToEditCard,
         onNavigateToMyStudy = onNavigateToMyStudy,
         onNavigateToActivityHistory = onNavigateToActivityHistory,
         onRetryProfile = viewModel::getUserInfo,
-        // [임시] 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
+        // 명함 교환 차단 — 원래 동작: { nearbyViewModel.openBottomSheet() }
         onOpenExchangeBottomSheet = { showExchangeBlockedDialog = true },
     )
 
-    // [임시] 명함 교환 차단 안내
+    // 명함 교환 차단 안내
     if (showExchangeBlockedDialog) {
         UDialog(
             title = AppStrings.EXCHANGE_CARD_BLOCKED_TITLE,
@@ -242,6 +242,8 @@ fun MycardRoute(
     if(nearbyUiState.isBottomSheetOpen){
         CardExchangeBottomSheet(
             sheetState = sheetState,
+            toastData = sheetToastData,
+            onDismissToast = { sheetToastData = null },
             currentStep = nearbyUiState.exchangeStep,
             discoveredDevices = nearbyUiState.devices,
             selectedTargetUser = nearbyUiState.selectedTargetUser,
@@ -457,14 +459,14 @@ fun MycardTopBar(
             androidx.compose.material3.IconButton(onClick = onBackClick) {
                 Icon(
                     painter = painterResource(R.drawable.ic_back),
-                    contentDescription = "뒤로가기",
+                    contentDescription = AppStrings.COMMON_BACK,
                     tint = grey950(),
                     modifier = Modifier.size(24.dp),
                 )
             }
         }
         UText(
-            text = if (showBackButton) "프로필" else AppStrings.MYPAGE_TITLE,
+            text = if (showBackButton) AppStrings.MEMBER_PROFILE_TITLE else AppStrings.MYPAGE_TITLE,
             style = UmcTypographyTokens.Title2Bold,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -647,7 +649,7 @@ private fun CardFrontContent(
                 }
             }
 
-            // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+            // 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
             // Spacer(modifier = Modifier.height(24.dp))
             // if (!uiState.isViewingMemberProfile) CardBottomButtons(
             //     onExchangeCardClick = onExchangeCardClick,
@@ -711,7 +713,7 @@ private fun CardBackContent(
             }
         }
 
-        // [임시] 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
+        // 명함 교환·QR 코드 버튼 숨김. 다시 열 때 아래 주석을 되살린다
         // Spacer(modifier = Modifier.height(24.dp))
         // if (!uiState.isViewingMemberProfile) CardBottomButtons(
         //     onExchangeCardClick = onExchangeCardClick,
@@ -875,7 +877,7 @@ private fun SocialLinkItem(
     val link = com.umc.domain.model.mypage.validCardWebLink(text) ?: return
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     Row(
-        modifier = Modifier.clickable(onClickLabel = "링크 열기") { runCatching { uriHandler.openUri(link) } },
+        modifier = Modifier.clickable(onClickLabel = AppStrings.MYCARD_CD_OPEN_LINK) { runCatching { uriHandler.openUri(link) } },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -908,7 +910,7 @@ private fun CardEmailItem(email: String) {
     if (email.isBlank()) return
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     Row(
-        modifier = Modifier.clickable(onClickLabel = "메일 보내기") { runCatching { uriHandler.openUri("mailto:$email") } },
+        modifier = Modifier.clickable(onClickLabel = AppStrings.MYCARD_CD_SEND_MAIL) { runCatching { uriHandler.openUri("mailto:$email") } },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -1027,7 +1029,7 @@ fun MycardListItem(
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CardBackEmptyPreview() {
+internal fun CardBackEmptyPreview() {
     UmcTheme {
         Box(
             modifier = Modifier
@@ -1047,7 +1049,7 @@ private fun CardBackEmptyPreview() {
 
 @PreviewScreenSizes
 @Composable
-private fun MycardScreenPreview() {
+internal fun MycardScreenPreview() {
     UmcTheme {
         MycardScreen(
             uiState = MycardUiState(
@@ -1091,7 +1093,7 @@ private fun MycardScreenPreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun MycardScreenProfileLoadFailedPreview() {
+internal fun MycardScreenProfileLoadFailedPreview() {
     UmcTheme {
         MycardScreen(
             uiState = MycardUiState(isProfileLoadFailed = true),

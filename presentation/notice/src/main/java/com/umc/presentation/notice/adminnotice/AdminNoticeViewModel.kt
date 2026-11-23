@@ -84,6 +84,12 @@ class AdminNoticeViewModel @Inject constructor(
     private var cachedUserInfo: UserInfo? = null
     private var listJob: Job? = null
 
+    // 마지막으로 반영한 기수. 회전 등으로 Route가 다시 그려져도 같은 기수면 보던 목록을 처음부터 다시 받지 않는다
+    private var appliedGisuId: Long? = null
+
+    // 상세·검색에 다녀오면 그 사이 삭제·수정된 공지를 반영해야 하므로 돌아왔을 때 다시 받는다
+    private var refreshOnReturn = false
+
     init {
         loadUserAccess()
         collectReadNoticeIds()
@@ -91,10 +97,21 @@ class AdminNoticeViewModel @Inject constructor(
 
     /** 조회 대상 기수는 공지 화면에서 nav argument로 전달받아 주입 */
     fun setGisuId(gisuId: Long) {
-        if (uiState.value.gisuId == gisuId && (gisuId > 0 || uiState.value.isAccessResolved)) return
+        if (gisuId == appliedGisuId) return
+        appliedGisuId = gisuId
         listJob?.cancel()
         updateState { resetAdminNoticeGisu(this, gisuId) }
         cachedUserInfo?.let(::updateUserAccess)
+    }
+
+    /**
+     * 화면이 RESUMED가 될 때 부른다. 상세·검색에서 실제로 돌아왔을 때만 목록을 다시 받는다.
+     * 컴포지션에 들어올 때 확인하면 취소될 수 있는 예측 뒤로 가기 미리보기에서 플래그가 소비돼 실제 복귀 때 갱신이 빠진다
+     */
+    fun onResumed() {
+        if (!refreshOnReturn) return
+        refreshOnReturn = false
+        refreshIfReady()
     }
 
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
@@ -122,7 +139,7 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     fun onClickTab(tab: AdminNoticeTab) {
-        if (!uiState.value.hasAccess || tab !in uiState.value.visibleTabs) return
+        if (!uiState.value.isAccessResolved || !uiState.value.hasAccess || tab !in uiState.value.visibleTabs) return
         if (tab == uiState.value.selectedTab) return
         // 진행 중이던 이전 탭 조회는 버리고, 이전 탭의 목록·페이징을 비워 새 탭 제목 아래에 남지 않게 한다.
         // 비워 두면 전환 중에는 로딩이, 조회 실패 시에는 실패 안내가 새 탭 기준으로 보인다
@@ -136,6 +153,7 @@ class AdminNoticeViewModel @Inject constructor(
                 isPageLoading = false,
                 hasLoaded = false,
                 errorMessage = null,
+                isNextPageError = false,
             )
         }
         refreshIfReady()
@@ -147,6 +165,7 @@ class AdminNoticeViewModel @Inject constructor(
         if (!state.canQuery) return@launch
 
         // 검색에서도 학교를 지정하지 않아야 중앙 발신 공지가 검색 범위에서 빠지지 않는다.
+        refreshOnReturn = true
         emitEvent(
             AdminNoticeEvent.MoveToSearchEvent(
                 gisuId = state.gisuId,
@@ -161,6 +180,7 @@ class AdminNoticeViewModel @Inject constructor(
         viewModelScope.launch {
             appDataStoreRepository.addReadNoticeId(noticeId)
         }
+        refreshOnReturn = true
         emitEvent(AdminNoticeEvent.MoveToDetailEvent(noticeId))
     }
 
@@ -179,18 +199,21 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     private fun getNoticeList(isRefresh: Boolean) {
-        // 프로필이 갱신돼도 진행 중인 조회의 취소 핸들을 중복 작업으로 덮어쓰지 않는다.
-        if (listJob?.isActive == true) return
-        listJob = fetchNoticeList(isRefresh)
+        val state = uiState.value
+        val selectedTab = state.selectedTab ?: return
+
+        // 가드를 launch 밖에서 확인한다. 걸린 호출이 listJob을 덮어쓰면 탭 전환 때 진행 중인 요청을 취소하지 못한다
+        if (!state.canQuery || listJob?.isActive == true || state.isPageLoading || (!isRefresh && state.isLastPage)) return
+
+        listJob = fetchNoticeList(state, selectedTab, isRefresh)
     }
 
-    private fun fetchNoticeList(isRefresh: Boolean) = viewModelScope.launch {
-        val state = uiState.value
-        val selectedTab = state.selectedTab ?: return@launch
-
-        if (!state.canQuery || state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
-
-        updateState { copy(isPageLoading = true, errorMessage = null) }
+    private fun fetchNoticeList(
+        state: AdminNoticeUiState,
+        selectedTab: AdminNoticeTab,
+        isRefresh: Boolean,
+    ) = viewModelScope.launch {
+        updateState { copy(isPageLoading = true, errorMessage = null, isNextPageError = false) }
 
         val pageToFetch = if (isRefresh) 0 else state.currentPage
 
@@ -220,13 +243,20 @@ class AdminNoticeViewModel @Inject constructor(
                         isPageLoading = false,
                         hasLoaded = true,
                         isLastPage = !noticeSearch.hasNext,
+                        isNextPageError = false,
                     )
                 }
             },
             errorCallback = { fail ->
                 // 실패 사유를 남기지 않으면 "0건" 빈 상태와 구분되지 않는다
+                // 다음 페이지 실패는 목록 끝에 다시 시도 버튼을 띄워 직접 다시 부르게 한다
                 updateState {
-                    copy(isPageLoading = false, hasLoaded = true, errorMessage = fail.message)
+                    copy(
+                        isPageLoading = false,
+                        hasLoaded = true,
+                        errorMessage = fail.message,
+                        isNextPageError = !isRefresh,
+                    )
                 }
             }
         )
@@ -249,6 +279,7 @@ data class AdminNoticeUiState(
     // 첫 조회가 끝났는지 (끝나기 전의 빈 목록을 "0건"으로 오해하지 않기 위함)
     val hasLoaded: Boolean = false,
     val errorMessage: String? = null,
+    /** 다음 페이지 요청이 실패했는지. true면 목록 끝에 다시 시도 버튼을 보인다 */
     val isNextPageError: Boolean = false,
 ) : UiState {
     val canQuery: Boolean

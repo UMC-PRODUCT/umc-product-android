@@ -201,6 +201,12 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
                 "StudyGroupCreate",
                 "등록 실패: gisuId가 null입니다."
             )
+            // 기수 조회가 실패해 비어 있으면 등록 버튼이 반응 없이 끝나므로, 진입 때와 같은 실패 토스트로 알린다.
+            emitEvent(
+                AdminStudyGroupCreateEvent.RegisterFailure(
+                    AppStrings.STUDY_GROUP_GISU_LOAD_ERROR
+                )
+            )
             return
         }
 
@@ -308,11 +314,13 @@ class AdminStudyGroupCreateViewModel @Inject constructor(
 
                     /**
                      * 서버에서 전달받은 실패 메시지를
-                     * UI 이벤트로 전달합니다.
+                     * UI 이벤트로 전달합니다. 메시지가 비어 있으면 기본 문구로 채웁니다.
                      */
                     emitEvent(
                         AdminStudyGroupCreateEvent.RegisterFailure(
-                            message = result.failState.message
+                            message = result.failState.message.ifBlank {
+                                AppStrings.STUDY_GROUP_CREATE_FAIL
+                            }
                         )
                     )
                 }

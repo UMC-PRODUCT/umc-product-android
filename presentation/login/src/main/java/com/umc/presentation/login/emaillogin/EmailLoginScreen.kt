@@ -15,7 +15,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +25,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -53,7 +53,6 @@ import com.umc.component.theme.grey950
 import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -74,7 +73,11 @@ fun EmailLoginRoute(
             is EmailLoginEvent.MoveToMainEvent -> navigateToMain()
             is EmailLoginEvent.MoveToInputCodeEvent -> navigateToInputCode()
             is EmailLoginEvent.ShowErrorToast ->
-                toastData = UToastData(event.message, UToastState.ERROR)
+                // 서버가 빈 메시지를 주면 빈 토스트가 뜨지 않게 공용 문구로 대신한다
+                toastData = UToastData(
+                    event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED },
+                    UToastState.ERROR,
+                )
         }
     }
 
@@ -118,13 +121,14 @@ fun EmailLoginScreen(
             .fillMaxSize()
             .background(grey50()),
     ) {
+        // clickable 을 안쪽 패딩보다 먼저 둬서 아이콘 둘레 12dp 까지 눌리게 한다(터치 영역 48dp)
         Icon(
             modifier = Modifier
                 .padding(start = 4.dp, top = 8.dp)
-                .padding(12.dp)
-                .clickable { onClickBack() },
+                .clickable(role = Role.Button) { onClickBack() }
+                .padding(12.dp),
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = null,
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 
@@ -294,13 +298,13 @@ private fun FieldLabel(
 
 @Preview(showBackground = true)
 @Composable
-private fun EmailLoginScreenPreview() {
+internal fun EmailLoginScreenPreview() {
     EmailLoginScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun EmailLoginScreenFailPreview() {
+internal fun EmailLoginScreenFailPreview() {
     EmailLoginScreen(
         uiState = EmailLoginState(
             email = "example@univ.ac.kr",

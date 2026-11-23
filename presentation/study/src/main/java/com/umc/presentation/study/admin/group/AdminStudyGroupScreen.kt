@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -19,10 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.component.component.UText
+import com.umc.component.component.UToastData
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey500
+import com.umc.component.theme.main500
 import com.umc.presentation.study.admin.group.bottomsheet.AdminStudyGroupMemberEditBottomSheet
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCard
 import com.umc.presentation.study.admin.group.component.AdminStudyGroupCreateCard
@@ -48,6 +51,9 @@ import kotlinx.collections.immutable.persistentListOf
 fun AdminStudyGroupScreen(
     state: AdminStudyGroupState,
     onAction: (AdminStudyGroupAction) -> Unit = {},
+    // 수정·삭제 다이얼로그가 열려 있는 동안 그 안에 띄울 토스트
+    dialogToast: UToastData? = null,
+    onDialogToastDismiss: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
 
@@ -113,6 +119,9 @@ fun AdminStudyGroupScreen(
                     AdminStudyGroupAction.CloseEditDialog
                 )
             },
+
+            toastData = dialogToast,
+            onToastDismiss = onDialogToastDismiss,
         )
     }
 
@@ -131,6 +140,8 @@ fun AdminStudyGroupScreen(
                     AdminStudyGroupAction.CloseDeleteDialog
                 )
             },
+            toastData = dialogToast,
+            onToastDismiss = onDialogToastDismiss,
         )
     }
 
@@ -192,15 +203,22 @@ fun AdminStudyGroupScreen(
                     .background(grey100()),
                 contentAlignment = Alignment.Center,
             ) {
-                UText(
-                    text = if (state.hasReadAccess) {
-                        AppStrings.STUDY_GROUP_EMPTY
-                    } else {
-                        AppStrings.STUDY_GROUP_NO_PERMISSION
-                    },
-                    style = HeadlineBold,
-                    color = grey500(),
-                )
+                // 조회가 끝나기 전에 빈 목록 문구를 그리면 '그룹 없음'이 잠깐 보였다가 바뀌므로 로딩을 보여 준다.
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        color = main500(),
+                    )
+                } else {
+                    UText(
+                        text = if (state.hasReadAccess) {
+                            AppStrings.STUDY_GROUP_EMPTY
+                        } else {
+                            AppStrings.STUDY_GROUP_NO_PERMISSION
+                        },
+                        style = HeadlineBold,
+                        color = grey500(),
+                    )
+                }
             }
         } else {
             /**
@@ -300,7 +318,7 @@ fun AdminStudyGroupScreen(
  */
 @Preview(showBackground = true)
 @Composable
-private fun AdminStudyGroupScreenPreview() {
+internal fun AdminStudyGroupScreenPreview() {
     AdminStudyGroupScreen(
         state = AdminStudyGroupState(
             groups = persistentListOf(
@@ -344,10 +362,23 @@ private fun AdminStudyGroupScreenPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun AdminStudyGroupScreenNoPermissionPreview() {
+internal fun AdminStudyGroupScreenNoPermissionPreview() {
     AdminStudyGroupScreen(
         state = AdminStudyGroupState(
             hasReadAccess = false,
+        )
+    )
+}
+
+/**
+ * 첫 조회 중인 상태 Preview
+ */
+@Preview(showBackground = true)
+@Composable
+internal fun AdminStudyGroupScreenLoadingPreview() {
+    AdminStudyGroupScreen(
+        state = AdminStudyGroupState(
+            isLoading = true,
         )
     )
 }

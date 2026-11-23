@@ -95,27 +95,34 @@ reviews:
     - path: "**/*.kt"
       instructions: |
         [이미 자동 검사되는 항목 — 리뷰에서 지적하지 말 것]
-        아래 세 가지는 :lint-rules 커스텀 Lint 가 CI 에서 잡고, 위반 시 파이프라인이 막힌다.
-        중복 지적은 순수 소음이므로 언급하지 않는다.
-          - OneShotEventSharedFlow: 단발성 이벤트를 StateFlow/SharedFlow(replay>0)로 노출
-          - LifecycleUnawareEventCollect: 수명주기를 고려하지 않은 이벤트 수집
-          - BlockingCallInRequestPath: 요청 경로에서 runBlocking 사용
-        ktlint/Android Lint 가 잡는 포매팅·네이밍 규칙도 지적하지 않는다.
+        아래 규칙은 :lint-rules 커스텀 Lint 가 CI 에서 잡는다. ERROR 는 파이프라인을 막고 WARNING 은 요약에 남는다.
+        중복 지적은 순수 소음이므로 언급하지 않는다. (목록 기준: lint-rules/src/main/java/com/umc/lint/UmcIssueRegistry.kt)
+          - OneShotEventSharedFlow (ERROR): 단발성 이벤트에 인자 없는 MutableSharedFlow() 사용
+          - LifecycleUnawareEventCollect (ERROR): LaunchedEffect 안에서 수명주기를 고려하지 않은 Flow 수집
+          - BlockingCallInRequestPath (ERROR): 요청 경로(인터셉터·인증자 등)에서 runBlocking 사용
+          - UseUText (ERROR): presentation:component 밖에서 material3 Text·BasicText 사용
+          - UseUTextField (ERROR): presentation:component 밖에서 TextField·BasicTextField 계열 사용
+          - UseUToast (ERROR): 시스템 android.widget.Toast 사용(LocalUToast·UToastHost 로 띄운다)
+          - FixedDelayInLaunchedEffect (WARNING): LaunchedEffect 안의 고정 시간 delay
+          - FixedScreenWidth (ERROR): 300dp 이상 고정 폭(width·size·widthIn(min) 등)
+          - WidthInAfterFillMaxWidth (ERROR): fillMaxWidth 뒤에 있어 적용되지 않는 widthIn·sizeIn
+          - LockedScreenOrientation (ERROR): 매니페스트의 screenOrientation 고정, resizeableActivity="false"
+          - UnstableCollectionParameter (WARNING): @Composable 파라미터의 List·Set·Map
+          - UntrackedTodo (ERROR): 이슈 번호 없는 TODO·FIXME·[임시] 주석(TODO(#123) 형식만 허용). domain/** 은 lint 대상이 아니므로 여기서는 지적한다
+        이 목록은 UmcIssueRegistryTest 가 레지스트리와 비교한다. 규칙을 바꾸면 여기도 함께 바꾼다.
+        모듈 의존 방향은 gradle/module-rules.gradle.kts 가 Gradle 구성 단계에서 막으므로 지적하지 않는다.
+        포매팅 자동 검사(ktlint 등)는 적용돼 있지 않다. 포매팅·네이밍 지적은 nitpick (non-blocking) 으로만 남긴다.
 
         [리뷰에서 봐야 할 것]
-        1. 동작이 바뀌는 결함을 우선한다. 널 처리, 예외 경로, 경계값, 동시성.
-        2. 모듈 의존 방향 위반. domain 은 어디에도 의존하지 않는다.
-           presentation 의 잎 모듈끼리 직접 의존하면 안 된다(공통은 presentation:component).
+        동작이 바뀌는 결함을 우선한다. 널 처리, 예외 경로, 경계값, 동시성.
 
     - path: "data/**"
       instructions: |
-        [R8 난독화와 직결되는 규칙 — 가장 중요]
-        release 빌드는 R8 이 켜져 있고, proguard-rules.pro 는 아래 패키지만 keep 한다.
-          com.umc.data.request.**, com.umc.data.response.**, com.umc.domain.model.**
-        이 앱의 DTO 는 @SerializedName 이 없는 것이 많아 "필드 이름이 곧 JSON 키"다.
-        따라서 위 패키지 "밖"에 새 DTO 를 만들면 디버그에서는 멀쩡하고
-        릴리스에서만 필드가 난독화되어 파싱 결과가 조용히 null 이 된다.
-        새 요청/응답 모델이 저 패키지 밖에 생기면 issue (blocking) 으로 지적할 것.
+        [R8 keep 패키지 — 테스트가 보지 않는 곳만 확인]
+        release 의 R8 은 com.umc.data.request.**, com.umc.data.response.**, com.umc.domain.model.** 만 keep 한다.
+        Retrofit API 에서 닿는 DTO 가 이 밖에 있으면 :data 의 GsonDtoKeepPackageTest 가 실패하므로 지적하지 않는다.
+        Retrofit 을 거치지 않고 Gson 으로 직접 (역)직렬화하는 클래스는 이 테스트가 보지 않는다.
+        그런 클래스가 keep 패키지 밖에 새로 생기면 issue (blocking) 으로 지적한다(release 에서만 필드가 null 이 된다).
 
         [그 외]
         1. Retrofit 인터페이스의 suspend 시그니처, 에러 응답 처리, ApiResponse<T> 래퍼 사용 일관성.
@@ -132,12 +139,9 @@ reviews:
 
     - path: "presentation/**"
       instructions: |
-        1. Compose 안정성: 파라미터로 넘기는 컬렉션은 ImmutableList/ImmutableSet 을 쓴다.
-           List/Set 을 그대로 넘기면 불필요한 리컴포지션이 생긴다.
-           https://developer.android.com/develop/ui/compose/performance/stability
-        2. 상태는 ViewModel 이 단일 소유한다. Composable 안에서 비즈니스 분기를 만들지 않는다.
-        3. 네비게이션 인자, 뒤로가기, 화면 회전/프로세스 종료 후 복원 경로를 확인한다.
-        4. 잎 모듈(home, notice, study ...)은 서로 의존하지 않는다. 공통은 presentation:component.
+        1. 상태는 ViewModel 이 단일 소유한다. Composable 안에서 비즈니스 분기를 만들지 않는다.
+        2. 네비게이션 인자, 뒤로가기, 화면 회전/프로세스 종료 후 복원 경로를 확인한다.
+        (컬렉션 파라미터의 ImmutableList 사용은 UnstableCollectionParameter 가 검사하므로 지적하지 않는다.)
 
     - path: "app/**"
       instructions: |
@@ -162,8 +166,20 @@ reviews:
       instructions: |
         1. release 의 isMinifyEnabled 를 끄는 변경은 Play 앱 최적화 점수와
            크래시 난독화 해제(mapping.txt)에 직접 영향을 준다. issue (blocking) 으로 근거를 묻는다.
-        2. 의존성 추가 시 libs.versions.toml 을 거치는지, 모듈 의존 방향을 지키는지 확인한다.
+        2. 의존성 추가 시 libs.versions.toml 을 거치는지 확인한다.
         3. signingConfig 와 시크릿 관련 변경은 특히 주의 깊게 본다.
+
+    - path: "**/lint-baseline.xml"
+      instructions: |
+        커스텀 Lint(:lint-rules)의 기존 위반 목록이다. 여기 있는 위반은 CI 게이트가 막지 않는다.
+        lint-rules/update_baseline.py --issue-id <규칙> 로 생성하며, 규칙을 새로 추가하거나 기존 규칙의 심각도·판정 범위를
+        바꿀 때만 갱신한다.
+        1. 새로 추가된 <issue> 는 위반을 숨기는 것이다. 기존 <issue> 의 id·message·location file 을 바꿔
+           다른 위반을 숨기게 되는 경우도 같다. 같은 PR 이 그 규칙을 :lint-rules 에 새로 추가했거나 심각도·판정 범위를
+           바꿨고, 그 위반 코드가 기준 브랜치에도 이미 있었던 경우에만 허용한다. 이 PR 에서 새로 생긴 위반 코드를 숨기는
+           항목은 issue (blocking) 으로 지적하고, baseline 항목을 되돌린 뒤 위반 코드를 고치도록 요청한다.
+        2. 삭제된 <issue> 는 위반을 고친 결과이므로 지적하지 않는다.
+        3. baseline 에는 UMC 규칙만 담는다. UnusedResources 같은 내장 Lint 규칙 항목이 들어 있으면 지적한다.
 
   # ---------------------------------------------------------------- #
   # 자동 리뷰 트리거
@@ -184,7 +200,7 @@ chat:
 knowledge_base:
   web_search:
     enabled: true
-  # 이 레포에는 별도의 컨벤션 문서가 없다. 규칙은 위 path_instructions 에 직접 적었다.
+  # 리뷰 규칙은 위 path_instructions 에 직접 적었다.
   # 존재하지 않는 파일을 가리키면 설정이 통째로 무효가 되므로 끈다.
   code_guidelines:
     enabled: false

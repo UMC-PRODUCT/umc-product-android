@@ -46,6 +46,8 @@ class FixLocationViewModel @Inject constructor(
     private val geocoder = Geocoder(context, Locale.KOREAN)
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     private var searchJob: Job? = null
+    // 마지막으로 불러온 일정. 프로세스가 다시 시작돼 VM 이 새로 만들어지면 비어 있어 Route 가 다시 불러올 수 있다
+    private var loadedScheduleId: Long? = null
 
     init {
         observeRecentPlaces()
@@ -59,8 +61,11 @@ class FixLocationViewModel @Inject constructor(
         }
     }
 
+    fun isScheduleLocationLoaded(scheduleId: Long): Boolean = loadedScheduleId == scheduleId
+
     fun loadScheduleLocation(scheduleId: Long) {
         if (scheduleId <= 0L) return
+        loadedScheduleId = scheduleId
 
         updateState {
             copy(
@@ -164,6 +169,11 @@ class FixLocationViewModel @Inject constructor(
     //수정할 장소 선택
     fun selectLocation(location: LocationItem) {
         updateState { copy(selectedLocation = location) }
+    }
+
+    //위치 권한 요청이 거부됨. 안내 토스트도 다른 실패와 같은 이벤트로 보내 표시 경로를 하나로 둔다
+    fun onLocationPermissionDenied() {
+        emitEvent(FixLocationEvent.ShowToast(AppStrings.ACT_LOCATION_PERMISSION_REQUIRED_TOAST))
     }
 
     fun moveToCurrentLocation() {

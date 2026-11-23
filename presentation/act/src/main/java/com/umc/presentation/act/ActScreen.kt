@@ -1,7 +1,6 @@
 package com.umc.presentation.act
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +15,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,12 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.presentation.act.admin.attendance.AttendanceRoute
-import com.umc.presentation.study.normal.UserStudyRoute
 import com.umc.presentation.act.admin.challenger.AdminChallengerRoute
 import com.umc.presentation.act.normal.attendance.NormalAttendanceRoute
 import com.umc.presentation.act.normal.challenger.NormalChallengerRoute
+import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.USwitch
 import com.umc.component.component.UText
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.AppStrings.ADMIN_LABEL
 import com.umc.component.theme.UmcTheme
@@ -49,7 +49,6 @@ import com.umc.component.theme.grey100
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
-import com.umc.presentation.study.ActStudyRoute
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -66,28 +65,45 @@ private fun List<ManageTab>.indexOfStudyTab(): Int =
 fun ActManageRoute(
     vm: ActViewModel = hiltViewModel(),
     onNavigateToChallengerDetail: (Long) -> Unit = {},
-    onNavigateCreateStudyGroup: () -> Unit,
-    onNavigateAddStudySchedule: (
-        groupId: Long,
-        groupTitle: String,
-        groupPart: String,
-    ) -> Unit = { _, _, _ -> },
+    // 스터디 탭 화면. :presentation:study 를 직접 의존하지 않도록 상위(:presentation)에서 조립해 넘긴다.
+    adminStudyContent: @Composable (isActive: Boolean) -> Unit,
+    userStudyContent: @Composable (isActive: Boolean) -> Unit,
     // 마이페이지 '나의 스터디'에서 들어왔을 때 스터디 탭을 열어 달라는 일회성 요청
     openStudyTab: Boolean = false,
     onStudyTabOpened: () -> Unit = {},
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val toast = LocalUToast.current
 
     LaunchedEffect(vm) {
         vm.getUserInfo()
     }
 
+    // 내 정보 조회 실패를 알린다. 수집하지 않으면 이벤트가 버퍼에 쌓이기만 하고 사용자는 실패를 모른다.
+    CollectUiEvents(vm.uiEvent) { event ->
+        when (event) {
+            is ActEvent.ShowToast -> toast.show(
+                event.message.ifBlank { AppStrings.COMMON_PROFILE_LOAD_ERROR },
+                UToastState.ERROR,
+            )
+        }
+    }
+
     ActManageScreen(
         uiState = uiState,
         onAdminCheckedChange = vm::setAdminMode,
-        onNavigateToChallengerDetail = onNavigateToChallengerDetail,
-        onNavigateCreateStudyGroup = onNavigateCreateStudyGroup,
-        onNavigateAddStudySchedule = onNavigateAddStudySchedule,
+        adminAttendanceContent = { isActive -> AttendanceRoute(isActive = isActive) },
+        adminChallengerContent = { isActive, adminModeSession ->
+            AdminChallengerRoute(
+                isActive = isActive,
+                adminModeSession = adminModeSession,
+                onNavigateToDetail = onNavigateToChallengerDetail,
+            )
+        },
+        userAttendanceContent = { isActive -> NormalAttendanceRoute(isActive = isActive) },
+        userChallengerContent = { isActive -> NormalChallengerRoute(isActive = isActive) },
+        adminStudyContent = adminStudyContent,
+        userStudyContent = userStudyContent,
         openStudyTab = openStudyTab,
         onStudyTabOpened = onStudyTabOpened,
     )
@@ -97,56 +113,40 @@ fun ActManageRoute(
 fun ActManageScreen(
     uiState: ActUiState,
     onAdminCheckedChange: (Boolean) -> Unit,
-    onNavigateToChallengerDetail: (Long) -> Unit = {},
-    onNavigateCreateStudyGroup: () -> Unit = {},
-    onNavigateAddStudySchedule: (
-        groupId: Long,
-        groupTitle: String,
-        groupPart: String,
-    ) -> Unit = { _, _, _ -> },
+    // 탭 화면은 ViewModel 을 쓰는 Route 라 ActManageRoute 가 넘긴다. 이 화면은 상태만 받아 미리보기·스크린샷으로 그릴 수 있다.
+    // 기본값을 두지 않는다. 빠뜨리면 그 탭이 빈 화면이 되므로 호출하는 쪽이 반드시 넘기게 한다.
+    adminAttendanceContent: @Composable (isActive: Boolean) -> Unit,
+    adminChallengerContent: @Composable (isActive: Boolean, adminModeSession: Int) -> Unit,
+    userAttendanceContent: @Composable (isActive: Boolean) -> Unit,
+    userChallengerContent: @Composable (isActive: Boolean) -> Unit,
+    adminStudyContent: @Composable (isActive: Boolean) -> Unit,
+    userStudyContent: @Composable (isActive: Boolean) -> Unit,
     openStudyTab: Boolean = false,
     onStudyTabOpened: () -> Unit = {},
 ) {
     // '나의 스터디' 요청을 처리하는 동안에는 운영진 모드여도 챌린저 탭 목록을 써서 운영진 탭 화면의 조회가 먼저 돌지 않게 한다
     val showAdminTabs = uiState.isAdmin && !openStudyTab
+    val adminModeSession by rememberUpdatedState(uiState.adminModeSession)
     val tabs = remember(
         showAdminTabs,
-        onNavigateToChallengerDetail,
-        onNavigateCreateStudyGroup,
-        onNavigateAddStudySchedule,
-        ) {
+        adminAttendanceContent,
+        adminChallengerContent,
+        userAttendanceContent,
+        userChallengerContent,
+        adminStudyContent,
+        userStudyContent,
+    ) {
         if (showAdminTabs) {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive ->
-                    AttendanceRoute(isActive = isActive)
-                },
-                ManageTab(AppStrings.TAB_STUDY_ADMIN) { isActive ->
-                    ActStudyRoute(
-                        isAdmin = true,
-                        isActive = isActive,
-                        onNavigateCreateGroup = onNavigateCreateStudyGroup,
-                        onNavigateAddSchedule = onNavigateAddStudySchedule,
-                    )
-                },
-                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive ->
-                    AdminChallengerRoute(
-                        isActive = isActive,
-                        adminModeSession = uiState.adminModeSession,
-                        onNavigateToDetail = onNavigateToChallengerDetail,
-                    )
-                }
+                ManageTab(AppStrings.TAB_ATTENDANCE_ADMIN) { isActive -> adminAttendanceContent(isActive) },
+                ManageTab(AppStrings.TAB_STUDY_ADMIN) { isActive -> adminStudyContent(isActive) },
+                ManageTab(AppStrings.TAB_CHALLENGE_ADMIN) { isActive -> adminChallengerContent(isActive, adminModeSession) },
             )
         } else {
             listOf(
-                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { isActive ->
-                    NormalAttendanceRoute(isActive = isActive)
-                },
-                ManageTab(AppStrings.TAB_STUDY_USER) { isActive ->
-                    UserStudyRoute(isActive = isActive)
-                },
-                ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive ->
-                    NormalChallengerRoute(isActive = isActive)
-                }
+                ManageTab(AppStrings.TAB_ATTENDANCE_USER) { isActive -> userAttendanceContent(isActive) },
+                ManageTab(AppStrings.TAB_STUDY_USER) { isActive -> userStudyContent(isActive) },
+                ManageTab(AppStrings.TAB_CHALLENGE_USER) { isActive -> userChallengerContent(isActive) },
             )
         }
     }
@@ -219,7 +219,7 @@ fun ActManageScreen(
                         }
                     },
                     text = {
-                        Text(
+                        UText(
                             text = tab.title,
                             color = if (pagerState.currentPage == index) {
                                 grey800()
@@ -249,20 +249,6 @@ fun ActManageScreen(
 }
 
 @Composable
-private fun ComingSoonScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        UText(
-            text = AppStrings.ACTIVITY_COMING_SOON_MESSAGE,
-            style = Subheadline,
-            color = grey600()
-        )
-    }
-}
-
-@Composable
 private fun ActHeader(
     hasAdminAccess: Boolean,
     isAdmin: Boolean,
@@ -274,7 +260,7 @@ private fun ActHeader(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
+        UText(
             text = AppStrings.ACTIVITY_MANAGEMENT_TITLE,
             modifier = Modifier.weight(1f),
             color = grey800(),
@@ -282,7 +268,7 @@ private fun ActHeader(
         )
 
         if (hasAdminAccess) {
-            Text(
+            UText(
                 text = ADMIN_LABEL,
                 modifier = Modifier.padding(end = 8.dp),
                 color = grey600(),
@@ -312,42 +298,60 @@ fun AdminToggle(
 
 @Preview(showBackground = true)
 @Composable
-private fun AdminActScreenPreview() {
+internal fun AdminActScreenPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
             uiState = ActUiState(
                 isAdmin = true,
                 hasAdminAccess = true
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            adminAttendanceContent = {},
+            adminChallengerContent = { _, _ -> },
+            userAttendanceContent = {},
+            userChallengerContent = {},
+            adminStudyContent = {},
+            userStudyContent = {},
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun NormalActScreenPreview() {
+internal fun NormalActScreenPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
             uiState = ActUiState(
                 isAdmin = false,
                 hasAdminAccess = true
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            adminAttendanceContent = {},
+            adminChallengerContent = { _, _ -> },
+            userAttendanceContent = {},
+            userChallengerContent = {},
+            adminStudyContent = {},
+            userStudyContent = {},
         )
     }
 }
 
 @Preview(showBackground = true, fontScale = 2f)
 @Composable
-private fun NormalActScreenLargeFontPreview() {
+internal fun NormalActScreenLargeFontPreview() {
     UmcTheme(darkTheme = false) {
         ActManageScreen(
             uiState = ActUiState(
                 isAdmin = false,
                 hasAdminAccess = true
             ),
-            onAdminCheckedChange = {}
+            onAdminCheckedChange = {},
+            adminAttendanceContent = {},
+            adminChallengerContent = { _, _ -> },
+            userAttendanceContent = {},
+            userChallengerContent = {},
+            adminStudyContent = {},
+            userStudyContent = {},
         )
     }
 }

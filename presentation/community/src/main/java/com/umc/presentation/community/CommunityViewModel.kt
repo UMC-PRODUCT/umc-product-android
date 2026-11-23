@@ -23,7 +23,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -45,7 +44,7 @@ import kotlinx.coroutines.launch
  * - 스레드 알림 켜기/끄기
  * - 스레드 수정 화면 이동
  * - 스레드 나가기
- * - 화면 이동 및 Toast 이벤트 전달
+ * - 화면 이동 및 토스트 이벤트 전달
  */
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
@@ -68,8 +67,6 @@ class CommunityViewModel @Inject constructor(
 
     fun onAction(action: CommunityAction) {
         when (action) {
-            CommunityAction.OnFilterClick -> Unit
-
             CommunityAction.OnSearchClick -> {
                 sendEvent(CommunityEvent.NavigateToSearch)
             }
@@ -324,7 +321,7 @@ class CommunityViewModel @Inject constructor(
 
                 sendEvent(
                     CommunityEvent.ShowToast(
-                        message = throwable.message
+                        message = throwable.message?.takeIf(String::isNotBlank)
                             ?: AppStrings.COMMUNITY_PIN_UPDATE_ERROR,
                     )
                 )
@@ -359,7 +356,7 @@ class CommunityViewModel @Inject constructor(
 
                 sendEvent(
                     CommunityEvent.ShowToast(
-                        message = throwable.message
+                        message = throwable.message?.takeIf(String::isNotBlank)
                             ?: AppStrings.COMMUNITY_NOTIFICATION_UPDATE_ERROR,
                     )
                 )
@@ -460,6 +457,7 @@ class CommunityViewModel @Inject constructor(
                 sendEvent(
                     CommunityEvent.ShowToast(
                         message = AppStrings.CHAT_LEAVE_SUCCESS,
+                        isError = false,
                     )
                 )
             }.onFailure { throwable ->
@@ -471,7 +469,7 @@ class CommunityViewModel @Inject constructor(
 
                 sendEvent(
                     CommunityEvent.ShowToast(
-                        message = throwable.message
+                        message = throwable.message?.takeIf(String::isNotBlank)
                             ?: AppStrings.COMMUNITY_LEAVE_ERROR,
                     )
                 )

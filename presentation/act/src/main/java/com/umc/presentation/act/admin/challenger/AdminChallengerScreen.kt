@@ -1,6 +1,5 @@
 package com.umc.presentation.act.admin.challenger
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -35,7 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,14 +43,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Body
 import com.umc.component.theme.UmcTypographyTokens.BodyBold
-import com.umc.component.theme.UmcTypographyTokens.Caption1Bold
 import com.umc.component.theme.UmcTypographyTokens.Footnote
 import com.umc.component.theme.UmcTypographyTokens.HeadlineBold
 import com.umc.component.theme.UmcTypographyTokens.Subheadline
@@ -67,8 +65,6 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.main500
-import com.umc.component.theme.yellow100
-import com.umc.component.theme.yellow500
 import com.umc.domain.model.enums.UserPart
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.ImmutableList
@@ -82,16 +78,19 @@ fun AdminChallengerRoute(
     viewModel: AdminChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val toast = LocalUToast.current
 
     LaunchedEffect(isActive, adminModeSession) {
         if (isActive) viewModel.refresh(adminModeSession)
     }
 
+    // 지금은 상세 화면에서만 토스트 이벤트를 보내지만, 목록에서 보내도 사라지지 않게 화면(앱 공용) 토스트로 띄운다
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
-            is AdminChallengerEvent.ShowToast ->
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            is AdminChallengerEvent.ShowToast -> toast.show(
+                event.message.ifBlank { AppStrings.COMMON_NETWORK_ERROR_DESCRIPTION },
+                UToastState.ERROR,
+            )
             AdminChallengerEvent.PointGranted -> Unit
         }
     }
@@ -504,27 +503,6 @@ private fun ChallengerMemberRow(
             )
         }
 
-        /* member.totalScore.let { score ->
-            Spacer(Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .height(24.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(yellow100())
-                    .border(1.dp, yellow100(), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                UText(
-                    text = "총점수 $score",
-                    style = Caption1Bold,
-                    color = yellow500()
-                )
-            }
-            Spacer(Modifier.width(10.dp))
-        } */
-
 
         Box(
             modifier = Modifier.size(24.dp),
@@ -542,7 +520,7 @@ private fun ChallengerMemberRow(
 
 @Preview(showBackground = true)
 @Composable
-private fun preview() {
+internal fun preview() {
     UmcTheme(darkTheme = false) {
         EmptyScreen()
     }
@@ -550,7 +528,7 @@ private fun preview() {
 
 @Preview(showBackground = true, name = "Unfocused State")
 @Composable
-private fun PreviewMainUnfocused() {
+internal fun PreviewMainUnfocused() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -587,7 +565,7 @@ private fun PreviewMainUnfocused() {
 
 @Preview(showBackground = true, name = "Loading State")
 @Composable
-private fun PreviewMainLoading() {
+internal fun PreviewMainLoading() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -600,7 +578,7 @@ private fun PreviewMainLoading() {
 
 @PreviewScreenSizes
 @Composable
-private fun PreviewLoadingMoreChallengers() {
+internal fun PreviewLoadingMoreChallengers() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -619,7 +597,7 @@ private fun PreviewLoadingMoreChallengers() {
 
 @Preview(showBackground = true, name = "Error State")
 @Composable
-private fun PreviewMainError() {
+internal fun PreviewMainError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -632,7 +610,7 @@ private fun PreviewMainError() {
 
 @Preview(showBackground = true, name = "권한 확인 중")
 @Composable
-private fun PreviewMainChecking() {
+internal fun PreviewMainChecking() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(uiState = AdminChallengerUiState(manageAccess = AdminChallengerAccess.CHECKING))
     }
@@ -640,7 +618,7 @@ private fun PreviewMainChecking() {
 
 @Preview(showBackground = true, name = "권한 없음 (파트장·기타 운영진·지부장)")
 @Composable
-private fun PreviewMainNoAccess() {
+internal fun PreviewMainNoAccess() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(manageAccess = AdminChallengerAccess.DENIED)
@@ -650,7 +628,7 @@ private fun PreviewMainNoAccess() {
 
 @Preview(showBackground = true, name = "Error State (Server Message)")
 @Composable
-private fun PreviewMainServerError() {
+internal fun PreviewMainServerError() {
     UmcTheme(darkTheme = false) {
         AdminChallengerScreen(
             uiState = AdminChallengerUiState(
@@ -664,7 +642,7 @@ private fun PreviewMainServerError() {
 
 @Preview(showBackground = true, name = "권한별 필터 연결")
 @Composable
-private fun PreviewConnectedSchoolFilters() {
+internal fun PreviewConnectedSchoolFilters() {
     val gisu = com.umc.domain.model.organization.GisuItem(2, 12)
     val user = com.umc.domain.model.UserInfo(
         id = 1, schoolId = 10,

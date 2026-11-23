@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -77,6 +78,12 @@ import com.umc.component.theme.main500
  * @param verticalAlignment 입력 내용의 세로 정렬. 기본값은 중앙 정렬
  * @param acceptInput 새 입력의 허용 여부. 거절한 입력은 내부 편집 상태에도 반영하지 않는다.
  * @param onInputRejected 입력이 거절되었을 때 안내를 표시하는 콜백
+ * @param contentPadding 배경·테두리 안쪽 여백. 기본값 가로 16dp·세로 14dp
+ * @param cursorColor 커서 색상. 기본값은 focusStrokeColor
+ * @param borderWidth 테두리 두께. 0dp 면 테두리를 그리지 않는다
+ * @param maxLines 여러 줄 입력의 최대 줄 수. 한 줄 입력이면 무시된다
+ * @param minLines 여러 줄 입력의 최소 줄 수. 한 줄 입력이면 무시된다
+ * @param nextIconContentDescription nextIcon 의 접근성 설명. 누를 수 있는 아이콘이면 넣는다
  */
 @Composable
 fun UTextField(
@@ -109,6 +116,12 @@ fun UTextField(
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     acceptInput: (String) -> Boolean = { true },
     onInputRejected: () -> Unit = {},
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+    cursorColor: Color = focusStrokeColor,
+    borderWidth: Dp = 1.dp,
+    maxLines: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
+    nextIconContentDescription: String? = null,
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
 
@@ -153,7 +166,11 @@ fun UTextField(
         onValueChange = {
             // Keep cursor/composition changes, but do not display rejected text even when
             // the parent value stays unchanged and therefore does not trigger recomposition.
-            if (it.text == fieldValue.text || acceptInput(it.text)) {
+            // 커서 이동·조합 해제처럼 글자가 그대로인 변경은 편집 상태에만 반영하고 onValueChange 는 부르지 않는다.
+            // BasicTextField(String) 과 같은 의미다. 부르면 같은 값으로 검색을 다시 시작하는 화면 등에서 상태가 초기화된다.
+            if (it.text == fieldValue.text) {
+                fieldValue = it
+            } else if (acceptInput(it.text)) {
                 fieldValue = it
                 onValueChange(it.text)
             } else {
@@ -162,11 +179,13 @@ fun UTextField(
         },
         enabled = enabled,
         textStyle = textStyle.copy(color = textColor),
-        cursorBrush = SolidColor(focusStrokeColor),
+        cursorBrush = SolidColor(cursorColor),
         visualTransformation = resolvedVisualTransformation,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = resolvedSingleLine,
+        maxLines = if (resolvedSingleLine) 1 else maxLines,
+        minLines = if (resolvedSingleLine) 1 else minLines,
         interactionSource = interactionSource,
         modifier = modifier,
         decorationBox = { innerTextField ->
@@ -174,8 +193,8 @@ fun UTextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(currentBackgroundColor, shape)
-                    .border(1.dp, currentStrokeColor, shape)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .then(if (borderWidth > 0.dp) Modifier.border(borderWidth, currentStrokeColor, shape) else Modifier)
+                    .padding(contentPadding),
                 verticalAlignment = verticalAlignment,
             ) {
                 if (prevIcon != null) {
@@ -204,7 +223,7 @@ fun UTextField(
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         painter = nextIcon,
-                        contentDescription = null,
+                        contentDescription = nextIconContentDescription,
                         tint = nextIconTint ?: Color.Unspecified,
                         modifier = Modifier
                             .size(nextIconSize)

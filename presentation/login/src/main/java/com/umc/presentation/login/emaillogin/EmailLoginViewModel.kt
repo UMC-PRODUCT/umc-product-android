@@ -38,8 +38,10 @@ class EmailLoginViewModel @Inject constructor(
         copy(isPasswordVisible = !isPasswordVisible)
     }
 
-    // 이메일 로그인 시도
+    // 이메일 로그인 시도. 요청이 끝나기 전에는 다시 호출돼도 무시해 연타해도 요청이 한 번만 나간다
     fun login() = viewModelScope.launch {
+        if (uiState.value.isSubmitting) return@launch
+        updateState { copy(isSubmitting = true) }
         startLoading()
         resultResponse(
             response = postEmailLoginUseCase(
@@ -55,6 +57,7 @@ class EmailLoginViewModel @Inject constructor(
                 if (!failState.isNetworkError) {
                     updateState { copy(isLoginFailed = true) }
                 }
+                updateState { copy(isSubmitting = false) }
                 emitEvent(EmailLoginEvent.ShowErrorToast(failState.message))
             }
         )
@@ -68,6 +71,7 @@ class EmailLoginViewModel @Inject constructor(
                 checkUserChallengerRecord()
             },
             errorCallback = { failState ->
+                updateState { copy(isSubmitting = false) }
                 emitEvent(EmailLoginEvent.ShowErrorToast(failState.message))
             }
         )
@@ -81,11 +85,14 @@ class EmailLoginViewModel @Inject constructor(
                 if (userInfo.canEnterMain()) {
                     registerFcmToken()
                 } else {
+                    // 코드 입력 화면에서 뒤로 돌아올 수 있어 버튼 잠금을 풀고 이동한다
+                    updateState { copy(isSubmitting = false) }
                     // 챌린저 코드 입력 화면으로 이동
                     emitEvent(EmailLoginEvent.MoveToInputCodeEvent)
                 }
             },
             errorCallback = {
+                updateState { copy(isSubmitting = false) }
                 emitEvent(EmailLoginEvent.ShowErrorToast(it.message))
             }
         )
@@ -103,9 +110,11 @@ data class EmailLoginState(
     val password: String = "",
     val isPasswordVisible: Boolean = false,
     val isLoginFailed: Boolean = false,
+    // 로그인 요청부터 화면 이동까지 진행 중인지. 메인으로 이동하는 성공 경로에서는 화면을 떠나므로 풀지 않는다
+    val isSubmitting: Boolean = false,
 ) : UiState {
     val enableLoginButton: Boolean
-        get() = email.isNotEmpty() && password.isNotEmpty()
+        get() = email.isNotEmpty() && password.isNotEmpty() && !isSubmitting
 }
 
 sealed interface EmailLoginEvent : UiEvent {

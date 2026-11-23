@@ -58,7 +58,6 @@ import com.umc.presentation.community.model.CommunityCategory
 fun CommunityAiCard(
     aiState: CommunityAiState,
     classifiedCategory: CommunityCategory?,
-    canRequestClassification: Boolean,
     onRequestClassificationClick: () -> Unit,
     onRetryClassificationClick: () -> Unit,
     onChangeEmojiClick: () -> Unit,
@@ -551,11 +550,10 @@ private fun categoryIconRes(
  */
 @Preview
 @Composable
-private fun CommunityAiGuidePreview() {
+internal fun CommunityAiGuidePreview() {
     CommunityAiCard(
         aiState = CommunityAiState.GUIDE,
         classifiedCategory = null,
-        canRequestClassification = true,
         onRequestClassificationClick = {},
         onRetryClassificationClick = {},
         onChangeEmojiClick = {},
@@ -568,11 +566,10 @@ private fun CommunityAiGuidePreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityAiFailedPreview() {
+internal fun CommunityAiFailedPreview() {
     CommunityAiCard(
         aiState = CommunityAiState.FAILED,
         classifiedCategory = CommunityCategory.FREE,
-        canRequestClassification = false,
         onRequestClassificationClick = {},
         onRetryClassificationClick = {},
         onChangeEmojiClick = {},

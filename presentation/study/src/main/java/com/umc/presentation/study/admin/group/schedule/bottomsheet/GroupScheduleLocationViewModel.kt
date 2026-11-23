@@ -7,6 +7,7 @@ import android.location.Geocoder
 import android.os.Build
 import androidx.lifecycle.viewModelScope
 import com.umc.component.base.BaseViewModel
+import com.umc.component.component.UToastState
 import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.domain.model.home.LocationItem
@@ -157,9 +158,11 @@ class GroupScheduleLocationViewModel @Inject constructor(
                     }
 
                     if (locationList.isEmpty()) {
+                        // 결과 없음은 실패가 아니라 안내라서, 같은 문구를 쓰는 홈 일정 추가 화면처럼 아이콘 없이 띄운다.
                         emitEvent(
                             GroupScheduleLocationEvent.ShowToast(
-                                AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_EMPTY
+                                AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_EMPTY,
+                                UToastState.NONE,
                             )
                         )
                     } else {
@@ -176,7 +179,8 @@ class GroupScheduleLocationViewModel @Inject constructor(
 
                     emitEvent(
                         GroupScheduleLocationEvent.ShowToast(
-                            AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_ERROR
+                            AppStrings.STUDY_SCHEDULE_LOCATION_SEARCH_ERROR,
+                            UToastState.ERROR,
                         )
                     )
                 },
@@ -354,7 +358,8 @@ class GroupScheduleLocationViewModel @Inject constructor(
         if (!uiState.value.isPlaceSelected) {
             emitEvent(
                 GroupScheduleLocationEvent.ShowToast(
-                    AppStrings.STUDY_SCHEDULE_LOCATION_MOVE_MAP_GUIDE
+                    AppStrings.STUDY_SCHEDULE_LOCATION_MOVE_MAP_GUIDE,
+                    UToastState.NONE,
                 )
             )
             return
@@ -405,9 +410,10 @@ data class GroupScheduleLocationState(
  */
 sealed interface GroupScheduleLocationEvent : UiEvent {
 
-    /** Toast 메시지 표시 */
+    /** 시트 안에 토스트 메시지 표시. 검색 실패는 ERROR, 결과 없음·지도 이동 안내는 NONE */
     data class ShowToast(
         val message: String,
+        val state: UToastState,
     ) : GroupScheduleLocationEvent
 
     /** 지도 카메라를 지정된 좌표로 이동 */

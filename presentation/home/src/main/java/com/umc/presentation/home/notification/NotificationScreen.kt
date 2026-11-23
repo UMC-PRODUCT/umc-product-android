@@ -42,6 +42,7 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey950
 
 import com.umc.domain.model.home.NotificationItem
+import kotlinx.collections.immutable.ImmutableList
 
 
 /**
@@ -56,7 +57,7 @@ fun NotificationRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     //뒤로 가기 디스패처
-    /**TODO. 삭제 - MainActivity에서 적용할 예정**/
+    /** 삭제 - MainActivity에서 적용할 예정**/
     val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
 
@@ -69,7 +70,7 @@ fun NotificationRoute(
 
 @Composable
 fun NotificationScreen(
-    notifications: List<NotificationItem>,
+    notifications: ImmutableList<NotificationItem>,
     onBackClick: () -> Unit,
 ){
 
@@ -159,7 +160,7 @@ fun NotificationTopBar(onBackClick: () -> Unit){
                 painter = painterResource(
                     id = R.drawable.ic_back
                 ),
-                contentDescription = null,
+                contentDescription = AppStrings.COMMON_BACK,
                 tint = grey950(),
                 modifier = Modifier.size(24.dp)
             )

@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UText
+import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey950
@@ -63,7 +64,7 @@ fun CommunityCreateTopBar(
                 painter = painterResource(
                     id = R.drawable.ic_back,
                 ),
-                contentDescription = "뒤로가기",
+                contentDescription = AppStrings.COMMON_BACK,
                 tint = grey950(),
                 modifier = Modifier
                     .size(24.dp)
@@ -114,7 +115,7 @@ fun CommunityCreateTopBar(
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityCreateTopBarPreview() {
+internal fun CommunityCreateTopBarPreview() {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {

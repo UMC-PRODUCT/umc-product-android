@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.component.UDateTimePickerDialog
 import com.umc.component.component.UText
+import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
@@ -43,7 +43,6 @@ import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey700
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
@@ -279,33 +278,23 @@ private fun VoteInputField(
     onTextChanged: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, grey200(), RoundedCornerShape(12.dp))
-            .padding(horizontal = 16.dp, vertical = 15.dp),
-    ) {
-        BasicTextField(
-            value = text,
-            onValueChange = onTextChanged,
-            textStyle = UmcTypographyTokens.Body.copy(color = grey950()),
-            cursorBrush = SolidColor(grey950()),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            decorationBox = { innerTextField ->
-                Box {
-                    if (text.isEmpty()) {
-                        UText(
-                            text = placeholder,
-                            style = UmcTypographyTokens.Body,
-                            color = grey400(),
-                        )
-                    }
-                    innerTextField()
-                }
-            },
-        )
-    }
+    // 배경 없이 테두리만 있고, 포커스가 와도 테두리 색이 바뀌지 않는 기존 모양을 그대로 둔다
+    UTextField(
+        value = text,
+        onValueChange = onTextChanged,
+        placeholder = placeholder,
+        placeholderColor = grey400(),
+        textStyle = UmcTypographyTokens.Body,
+        textColor = grey950(),
+        backgroundColor = Color.Transparent,
+        strokeColor = grey200(),
+        focusStrokeColor = grey200(),
+        cursorColor = grey950(),
+        cornerRadius = 12.dp,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 15.dp),
+        singleLine = true,
+        modifier = modifier.fillMaxWidth(),
+    )
 }
 
 /** 익명/복수 선택 체크 옵션 (라벨 + 체크박스) */
@@ -498,7 +487,7 @@ internal fun formatVoteDateTime(utcDateTime: String?): String? {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeVoteSheetPreview() {
+internal fun NoticeVoteSheetPreview() {
     Column {
         NoticeVoteSheetContent(
             existingVote = NoticeVoteForm(
@@ -511,7 +500,7 @@ private fun NoticeVoteSheetPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeVoteRowPreview() {
+internal fun NoticeVoteRowPreview() {
     NoticeVoteRow(
         vote = NoticeVoteForm(
             title = "회식 메뉴",

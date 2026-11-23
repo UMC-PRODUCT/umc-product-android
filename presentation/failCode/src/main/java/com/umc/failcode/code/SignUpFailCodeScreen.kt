@@ -21,12 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
@@ -46,14 +44,13 @@ import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
 import com.umc.component.theme.main500
 import com.umc.component.theme.main700
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
-import android.content.Intent
 import com.umc.failcode.KAKAO_INQUIRY_URL
 import com.umc.failcode.SignUpFailAccountLinks
 import com.umc.failcode.SignUpFailEvent
 import com.umc.failcode.SignUpFailInquiryLink
 import com.umc.failcode.SignUpFailViewModel
+import com.umc.failcode.openExternalUrl
 import com.umc.failcode.requestGoogleAccessToken
 
 @Composable
@@ -79,12 +76,16 @@ fun SignUpFailCodeRoute(
         when (event) {
             SignUpFailEvent.MoveToLogin -> navigateToLogin()
             SignUpFailEvent.MoveToKakaoInquiry -> {
-                runCatching {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, KAKAO_INQUIRY_URL.toUri()))
+                if (!context.openExternalUrl(KAKAO_INQUIRY_URL)) {
+                    toastData = UToastData(AppStrings.COMMON_LINK_OPEN_FAIL, UToastState.ERROR)
                 }
             }
             is SignUpFailEvent.ShowErrorToast ->
-                toastData = UToastData(event.message, UToastState.ERROR)
+                // 서버가 빈 메시지를 주면 빈 토스트가 뜨지 않게 공용 문구로 대신한다
+                toastData = UToastData(
+                    event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED },
+                    UToastState.ERROR,
+                )
             SignUpFailEvent.MoveToBack,
             SignUpFailEvent.MoveToHomePage,
             SignUpFailEvent.MoveToCode -> Unit
@@ -95,7 +96,9 @@ fun SignUpFailCodeRoute(
         when (event) {
             SignUpFailCodeEvent.MoveToBack -> navigateToBack()
             SignUpFailCodeEvent.MoveToHome -> navigateToHome()
-            is SignUpFailCodeEvent.ShowErrorDialog -> errorMessage = event.message
+            // 서버가 빈 메시지를 주면 제목 없는 다이얼로그가 뜨지 않게 공용 문구로 대신한다
+            is SignUpFailCodeEvent.ShowErrorDialog ->
+                errorMessage = event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED }
         }
     }
 
@@ -144,13 +147,14 @@ fun SignUpFailCodeScreen(
             .fillMaxSize()
             .background(grey50()),
     ) {
+        // clickable 을 안쪽 패딩보다 먼저 둬서 아이콘 둘레 12dp 까지 눌리게 한다(터치 영역 48dp)
         Icon(
             modifier = Modifier
                 .padding(start = 4.dp, top = 8.dp)
-                .padding(12.dp)
-                .clickable { onClickBack() },
+                .clickable(role = Role.Button) { onClickBack() }
+                .padding(12.dp),
             painter = painterResource(R.drawable.ic_back),
-            contentDescription = null,
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 
@@ -223,18 +227,18 @@ fun SignUpFailCodeScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpFailCodeScreenPreview() {
+internal fun SignUpFailCodeScreenPreview() {
     SignUpFailCodeScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpFailCodeScreenFilledPreview() {
+internal fun SignUpFailCodeScreenFilledPreview() {
     SignUpFailCodeScreen(uiState = SignUpFailCodeState(code = "123456"))
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SignUpFailCodeScreenSubmittingPreview() {
+internal fun SignUpFailCodeScreenSubmittingPreview() {
     SignUpFailCodeScreen(uiState = SignUpFailCodeState(code = "123456", isSubmitting = true))
 }

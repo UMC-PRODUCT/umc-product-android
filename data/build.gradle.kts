@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.android.ksp)
 }
@@ -36,19 +35,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 }
 
 dependencies {
     implementation(project(":domain"))
+    // PR 축약 검사(모듈별 lint)에서도 커스텀 규칙이 data 소스를 보도록 등록한다.
+    lintChecks(project(":lint-rules"))
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.installations)
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.hilt.android)
 
     // 온디바이스 AI (ML Kit GenAI Prompt API / Gemini Nano)

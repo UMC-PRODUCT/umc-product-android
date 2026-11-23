@@ -2,7 +2,6 @@ package com.umc.permission
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
@@ -40,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
+import com.umc.component.fcm.NotificationPermission
 import com.umc.component.component.UText
 import com.umc.component.component.UToastData
 import com.umc.component.component.UToastHost
@@ -49,15 +49,11 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey100
 import com.umc.component.theme.grey300
-import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
-import com.umc.component.theme.grey800
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
-import com.umc.component.theme.main600
 import com.umc.component.theme.main700
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -82,7 +78,8 @@ fun PermissionRoute(
             PermissionEvent.MoveToBack -> navigateToBack()
             PermissionEvent.ShowPermissionDialog -> {
                 val permissions = buildList {
-                    if (uiState.isAlarmCheck && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    // 가입 재시도에서 이미 물어본 알림 권한을 다시 요청하지 않는다
+                    if (uiState.isAlarmCheck && NotificationPermission.shouldRequest(context)) {
                         add(Manifest.permission.POST_NOTIFICATIONS)
                     }
                     if (uiState.isLocationCheck) {
@@ -99,6 +96,10 @@ fun PermissionRoute(
                 }
 
                 if (permissions.isNotEmpty()) {
+                    // 가입 직후 홈에서 같은 질문을 다시 띄우지 않게 기록한다
+                    if (Manifest.permission.POST_NOTIFICATIONS in permissions) {
+                        NotificationPermission.markRequested(context)
+                    }
                     requestPermissionsLauncher.launch(permissions.toTypedArray())
                 } else {
                     viewModel.signUp()
@@ -107,7 +108,11 @@ fun PermissionRoute(
             PermissionEvent.MoveToMainEvent -> navigateToMain()
             PermissionEvent.MoveToFailEvent -> navigateToFail()
             is PermissionEvent.ShowErrorToast ->
-                toastData = UToastData(event.message, UToastState.ERROR)
+                // 서버가 빈 메시지를 주면 빈 토스트가 뜨지 않게 공용 문구로 대신한다
+                toastData = UToastData(
+                    event.message.ifBlank { AppStrings.COMMON_REQUEST_FAILED },
+                    UToastState.ERROR,
+                )
         }
     }
 
@@ -153,13 +158,14 @@ fun PermissionScreen(
             modifier = Modifier
                 .weight(1f)
         ) {
+            // clickable 을 안쪽 패딩보다 먼저 둬서 아이콘 둘레 12dp 까지 눌리게 한다(터치 영역 48dp)
             Icon(
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .padding(12.dp)
-                    .clickable { onClickBack() },
+                    .clickable(role = Role.Button) { onClickBack() }
+                    .padding(12.dp),
                 painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = null,
+                contentDescription = AppStrings.COMMON_BACK,
                 tint = Color.Unspecified
             )
 
@@ -333,13 +339,13 @@ private fun PermissionItem(
 
 @PreviewScreenSizes
 @Composable
-private fun PermissionScreenPreview() {
+internal fun PermissionScreenPreview() {
     PermissionScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PermissionScreenAllCheckedPreview() {
+internal fun PermissionScreenAllCheckedPreview() {
     PermissionScreen(
         uiState = PermissionUiState(
             isAlarmCheck = true,
@@ -351,7 +357,7 @@ private fun PermissionScreenAllCheckedPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun PermissionScreenAlarmOnlyPreview() {
+internal fun PermissionScreenAlarmOnlyPreview() {
     PermissionScreen(
         uiState = PermissionUiState(isAlarmCheck = true)
     )

@@ -1,6 +1,5 @@
 package com.umc.presentation.notice.detail
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,7 +26,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +39,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -49,10 +48,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.component.R
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UText
+import com.umc.component.component.UToastOverlay
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.green600
@@ -79,7 +83,6 @@ import com.umc.presentation.notice.NoticeTags
 import com.umc.presentation.notice.formatNoticeDate
 import com.umc.presentation.notice.write.MarkdownRenderer
 import com.umc.presentation.notice.write.drawMarkdownQuoteBars
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,7 +95,8 @@ fun NoticeDetailRoute(
     onDeleted: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    // 삭제 성공·잘못된 공지처럼 토스트 직후 화면을 떠나는 경우에도 남도록 앱 공용 토스트를 쓴다
+    val toast = LocalUToast.current
 
     var showReadStatusSheet by remember { mutableStateOf(false) }
     var showVoteStatusScreen by remember { mutableStateOf(false) }
@@ -101,6 +105,10 @@ fun NoticeDetailRoute(
     LaunchedEffect(noticeId) {
         viewModel.load(noticeId)
     }
+    // 수정 후 다시 받기는 RESUMED에서만 확인한다. 예측 뒤로 가기 미리보기는 RESUMED 없이 컴포지션만 다시 만든다
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onResumed()
+    }
 
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
@@ -108,7 +116,7 @@ fun NoticeDetailRoute(
             NoticeDetailEvent.Deleted -> onDeleted()
             is NoticeDetailEvent.MoveToEdit -> navigateToEdit(event.noticeId)
             is NoticeDetailEvent.ShowToast -> {
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                toast.show(event.message, if (event.isSuccess) UToastState.CHECK else UToastState.ERROR)
             }
         }
     }
@@ -145,15 +153,26 @@ fun NoticeDetailRoute(
             sheetState = readStatusSheetState,
             containerColor = grey50(),
         ) {
-            NoticeReadStatusSheetContent(
-                statistics = uiState.readStatistics,
-                unreadList = uiState.unreadList,
-                readList = uiState.readList,
-                isReminderSent = uiState.isReminderSent,
-                isSendingReminder = uiState.isSendingReminder,
-                onLoadMore = viewModel::loadMoreReadStatus,
-                onClickSendReminder = viewModel::onClickSendReminder,
-            )
+            // 바텀시트는 별도 창이라 화면 쪽 앱 토스트가 시트에 가려진다. 재알림 결과 토스트가 보이게 시트 안에서도 그린다
+            Box(modifier = Modifier.fillMaxWidth()) {
+                NoticeReadStatusSheetContent(
+                    statistics = uiState.readStatistics,
+                    unreadList = uiState.unreadList,
+                    readList = uiState.readList,
+                    isReminderSent = uiState.isReminderSent,
+                    isSendingReminder = uiState.isSendingReminder,
+                    onLoadMore = viewModel::loadMoreReadStatus,
+                    onClickSendReminder = viewModel::onClickSendReminder,
+                )
+                UToastOverlay(
+                    controller = toast,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .imePadding()
+                        .padding(bottom = 24.dp),
+                )
+            }
         }
     }
 }
@@ -289,7 +308,7 @@ fun NoticeDetailScreen(
             }
             var bodyTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
-            Text(
+            UText(
                 text = rendered.transformed.text,
                 onTextLayout = { bodyTextLayout = it },
                 // 인용구 세로선은 좌측 여백(음수 x)에 그려 본문 위치를 그대로 둔다
@@ -588,7 +607,7 @@ private fun NoticeReadStatusBar(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeDetailScreenPreview() {
+internal fun NoticeDetailScreenPreview() {
     NoticeDetailScreen(
         uiState = NoticeDetailUiState(
             detail = NoticeDetail(

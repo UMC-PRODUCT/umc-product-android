@@ -82,7 +82,7 @@ fun CommunityTopBar(
                     painter = painterResource(
                         id = R.drawable.ic_community_filter,
                     ),
-                    contentDescription = "필터",
+                    contentDescription = AppStrings.COMMUNITY_CD_FILTER,
                     tint = grey950(),
                     modifier = Modifier.size(24.dp),
                 )
@@ -106,7 +106,7 @@ fun CommunityTopBar(
                 painter = painterResource(
                     id = R.drawable.ic_search,
                 ),
-                contentDescription = "검색",
+                contentDescription = AppStrings.COMMUNITY_CD_SEARCH,
                 tint = grey950(),
                 modifier = Modifier.size(24.dp),
             )

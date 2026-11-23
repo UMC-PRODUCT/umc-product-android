@@ -323,7 +323,7 @@ private fun MemberProfileContent(uiState: MemberProfileUiState) {
                 // 회원 조회(MEMBER-101)는 비공개 링크를 null 로 내려줘 미입력과 구분되지 않고, 연락처 이메일은 내려주지 않는다.
                 // 우선 값이 없으면 모두 비공개 항목으로 안내한다.
                 // 응답의 email 은 연락처가 아니라 로그인 이메일이라, 공개 설정과 상관없이 드러나지 않게 쓰지 않는다
-                // TODO 서버가 공개 여부나 연락처를 함께 내려주면 미입력과 비공개를 나눠 보여준다
+                // 서버가 공개 여부나 연락처를 함께 내려주면 미입력과 비공개를 나눠 보여준다
                 MemberProfileField(AppStrings.PROFILE_LINK_EMAIL, AppStrings.MEMBER_PROFILE_PRIVATE)
                 MemberProfileField(AppStrings.PROFILE_LINK_GITHUB, profile.github.orPrivateLabel())
                 MemberProfileField(AppStrings.PROFILE_LINK_LINKEDIN, profile.linkedIn.orPrivateLabel())
@@ -366,7 +366,7 @@ private fun MemberProfileTopBar(
                 .padding(12.dp)
                 .clickable { onBackClick() },
             painter = painterResource(id = R.drawable.ic_back),
-            contentDescription = "뒤로가기",
+            contentDescription = AppStrings.COMMON_BACK,
             tint = Color.Unspecified,
         )
 
@@ -804,7 +804,7 @@ private val previewUserInfo = UserInfo(
 
 @PreviewScreenSizes
 @Composable
-private fun MemberProfileScreenPreview() {
+internal fun MemberProfileScreenPreview() {
     UmcTheme {
         MemberProfileScreen(
             uiState = MemberProfileUiState(
@@ -830,7 +830,7 @@ private fun MemberProfileScreenPreview() {
 /** 시안 12: 값이 없는(비공개) 항목은 '비공개 항목이에요.' */
 @Preview(showBackground = true, widthDp = 412, heightDp = 1500)
 @Composable
-private fun MemberProfileScreenPrivatePreview() {
+internal fun MemberProfileScreenPrivatePreview() {
     UmcTheme {
         MemberProfileScreen(
             uiState = MemberProfileUiState(
@@ -854,7 +854,7 @@ private fun MemberProfileScreenPrivatePreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 760)
 @Composable
-private fun MemberReportSheetPreview() {
+internal fun MemberReportSheetPreview() {
     UmcTheme {
         MemberReportSheetContent(
             selectedReasons = persistentSetOf(MemberReportReason.IMPERSONATION),
@@ -870,7 +870,7 @@ private fun MemberReportSheetPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun MemberProfileMenuPreview() {
+internal fun MemberProfileMenuPreview() {
     UmcTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             MemberProfileMenuContent(isBlocked = false, isBlockMenuEnabled = true, onBlockClick = {}, onReportClick = {})
@@ -880,7 +880,7 @@ private fun MemberProfileMenuPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun MemberProfileConfirmDialogPreview() {
+internal fun MemberProfileConfirmDialogPreview() {
     UmcTheme {
         MemberProfileConfirmDialog(
             title = AppStrings.MEMBER_BLOCK_CONFIRM_TITLE,

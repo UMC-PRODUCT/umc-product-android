@@ -2,7 +2,6 @@ package com.umc.presentation.act.normal.challenger
 
 import com.umc.presentation.act.normal.challenger.dialog.NormalChallengerInfoDialog
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +14,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -36,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,9 +46,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
 import com.umc.component.component.UTextField
+import com.umc.component.component.UToastOverlay
+import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.UmcTypographyTokens.Body
@@ -80,16 +83,19 @@ fun NormalChallengerRoute(
     viewModel: NormalChallengerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val toast = LocalUToast.current
 
     LaunchedEffect(isActive) {
         if (isActive) viewModel.refresh()
     }
 
+    // 상세 조회가 실패하면 상세 다이얼로그가 열리지 않으므로 화면(앱 공용) 토스트로 띄운다
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
-            is NormalChallengerEvent.ShowToast ->
-                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            is NormalChallengerEvent.ShowToast -> toast.show(
+                event.message.ifBlank { AppStrings.COMMON_NETWORK_ERROR_DESCRIPTION },
+                UToastState.ERROR,
+            )
         }
     }
 
@@ -317,35 +323,46 @@ private fun NormalChallengerPartBottomSheet(
         dragHandle = { BottomSheetDefaults.DragHandle(color = grey600()) },
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(420.dp)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp),
-        ) {
-            UText(
-                text = AppStrings.CHALLENGER_PART_SELECT_TITLE,
-                style = Title3Bold,
-                color = grey800(),
-                modifier = Modifier.padding(top = 8.dp),
-            )
+        Box(Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(420.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 24.dp),
+            ) {
+                UText(
+                    text = AppStrings.CHALLENGER_PART_SELECT_TITLE,
+                    style = Title3Bold,
+                    color = grey800(),
+                    modifier = Modifier.padding(top = 8.dp),
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(challengerPartFilters, key = UserPart::name) { part ->
-                    UText(
-                        text = part.label,
-                        style = Body,
-                        color = if (selectedPart == part) main500() else grey800(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPartSelected(part) }
-                            .padding(vertical = 14.dp),
-                    )
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(challengerPartFilters, key = UserPart::name) { part ->
+                        UText(
+                            text = part.label,
+                            style = Body,
+                            color = if (selectedPart == part) main500() else grey800(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onPartSelected(part) }
+                                .padding(vertical = 14.dp),
+                        )
+                    }
                 }
             }
+            // 시트는 별도 창이라 열린 동안 조용한 목록 갱신이 실패하면 앱 토스트가 가려지므로 시트 안에도 그린다
+            UToastOverlay(
+                controller = LocalUToast.current,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 24.dp),
+            )
         }
     }
 }
@@ -551,7 +568,7 @@ fun previewMainError() {
 
 @Preview(showBackground = true, name = "Error State (Server Message)")
 @Composable
-private fun PreviewMainServerError() {
+internal fun PreviewMainServerError() {
     UmcTheme(darkTheme = false) {
         NormalChallengerScreen(
             uiState = NormalChallengerUiState(

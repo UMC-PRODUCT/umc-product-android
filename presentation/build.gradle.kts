@@ -1,12 +1,10 @@
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.android.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
-    alias(libs.plugins.androidx.navigation.safeargs.kotlin)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -50,8 +48,21 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    testOptions {
+        // 스크린샷 테스트가 Compose 미리보기를 그리려면 컴파일된 리소스(테마·폰트·드로어블)가 필요하다.
+        unitTests.isIncludeAndroidResources = true
+        // Compose Preview 스크린샷 테스트(AGP test suite). 테스트는 src/screenshotTest, 기준 이미지는 src/screenshotTestDefaultDebug/reference.
+        screenshotTests.create("screenshotTest") {
+            engineVersion = libs.versions.screenshot.get()
+            targetVariants.add("debug")
+            // macOS 에서 만든 기준 이미지와 Linux(CI) 렌더링은 글꼴 안티앨리어싱 때문에 0.01~0.02% 다르다.
+            // 그 차이는 넘기고 0.05% 이상 바뀐 화면만 실패로 본다(모서리·구분선 색 변경은 0.05~0.1% 였다).
+            imageDifferenceThreshold = 0.0005f
+            dependencies {
+                implementation(libs.androidx.compose.ui.tooling)
+                implementation(libs.screenshot.validation.api)
+            }
+        }
     }
     buildFeatures {
         compose = true
@@ -137,6 +148,13 @@ dependencies {
 }
 
 fun getApiKey(propertyKey: String): String {
-    return gradleLocalProperties(rootDir, providers).getProperty(propertyKey) ?: ""
+    // AGP 내부 API(gradleLocalProperties) 대신 local.properties 를 직접 읽어 AGP 버전에 묶이지 않게 한다.
+    val localProperties = providers.fileContents(rootProject.layout.projectDirectory.file("local.properties")).asText.orNull
+        ?: return ""
+    return Properties().apply { load(localProperties.reader()) }.getProperty(propertyKey) ?: ""
 }
 
+// FeatureMapTest 가 읽는 표만 바꿨을 때도 테스트가 다시 돌도록 입력으로 등록한다.
+tasks.withType<Test>().configureEach {
+    inputs.file(rootProject.file(".claude/skills/run-umc-app/feature-map.md")).withPathSensitivity(PathSensitivity.RELATIVE)
+}

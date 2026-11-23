@@ -8,6 +8,8 @@ import com.umc.domain.model.community.thread.CommunityThreadMember
 import com.umc.domain.model.community.thread.CommunityThreadRole
 import com.umc.domain.model.community.thread.CommunityThreadMessage
 import com.umc.domain.model.enums.AiFeatureStatus
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 enum class BlockedMembersStatus { LOADING, LOADED, FAILED }
 
@@ -29,7 +31,7 @@ data class CommunityChattingState(
     val unreadMessagesAtEntry: List<CommunityThreadMessage> = emptyList(),
     val unreadCountAtEntry: Int = 0,
     val summaryCandidateMessages: List<CommunityThreadMessage> = emptyList(),
-    val localImageUrisByMessageId: Map<String, List<String>> = emptyMap(),
+    val localImageUrisByMessageId: Map<String, ImmutableList<String>> = emptyMap(),
     val pendingMessages: Map<String, PendingCommunityMessage> = emptyMap(),
     val readWatermarks: Map<String, String> = emptyMap(),
     val connectionState: CommunityChatConnectionState = CommunityChatConnectionState.DISCONNECTED,
@@ -71,7 +73,7 @@ data class CommunityChattingState(
     internal fun toggleBlockedMessage(messageId: String): CommunityChattingState {
         val message = messages.firstOrNull { it.messageId == messageId } ?: return this
         if (message.senderId == myMemberId || message.senderId !in blockedMemberIds ||
-            message.type.isSystemNotice || message.deletedAt != null || message.status == "DELETED") return this
+            message.type.isSystemNotice || message.isDeleted) return this
         return copy(revealedBlockedMessageIds = if (messageId in revealedBlockedMessageIds)
             revealedBlockedMessageIds - messageId else revealedBlockedMessageIds + messageId)
     }
@@ -126,7 +128,7 @@ data class PendingCommunityMessage(
     val commandId: String,
     val content: String,
     val type: CommunityMessageType = CommunityMessageType.TEXT,
-    val localUris: List<String> = emptyList(),
+    val localUris: ImmutableList<String> = persistentListOf(),
     val fileMetadataIds: List<String> = emptyList(),
     val confirmedFilesByUri: Map<String, String> = emptyMap(),
     val error: String? = null,

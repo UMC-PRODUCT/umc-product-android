@@ -9,9 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +20,6 @@ import com.umc.component.component.UTextField
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.UmcTypographyTokens
 import com.umc.component.theme.grey50
-import com.umc.component.theme.grey300
 import com.umc.component.theme.grey400
 import com.umc.component.theme.grey600
 import com.umc.component.theme.grey800
@@ -112,7 +108,7 @@ fun AddCodeDialog(
 
 @Preview(showBackground = true)
 @Composable
-private fun AddCodeDialogPreview() {
+internal fun AddCodeDialogPreview() {
     AddCodeDialog(
         code = "ABC123",
         onCodeChanged = {},
@@ -123,7 +119,7 @@ private fun AddCodeDialogPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AddCodeDialogSubmittingPreview() {
+internal fun AddCodeDialogSubmittingPreview() {
     AddCodeDialog(
         code = "ABC123",
         onCodeChanged = {},

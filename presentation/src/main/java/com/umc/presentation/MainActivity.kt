@@ -12,7 +12,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,19 +25,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import com.umc.component.component.UToastOverlay
+import com.umc.component.component.UToastController
+import com.umc.component.component.LocalUToast
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -55,17 +59,23 @@ import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.presentation.remotenotice.RemoteNoticeHost
 import com.umc.presentation.analytics.ScreenViewTracker
+import com.umc.presentation.update.InAppUpdateController
+import com.umc.presentation.update.InAppUpdateReadyDialog
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var tokenSynchronizer: FcmTokenSynchronizer
+    private var updateController: InAppUpdateController? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (openUnsupportedWebLink(intent)) {
             finish()
             return
         }
+        // Play 인앱 업데이트. 결과 런처를 등록해야 해서 onCreate 에서 만든다. 확인은 화면에 올라올 때마다 스스로 한다
+        val updateController = InAppUpdateController(this).also { updateController = it }
         PendingDeepLink.initialize(this)
         // 외부 링크로 처음 열린 경우 NavController 가 곧바로 목적지를 열지 않도록 링크를 보류한다.
         // 앱은 항상 스플래시(인증 판정)부터 시작하고, 홈에 도착한 뒤 원래 목적지로 이동한다.
@@ -79,7 +89,7 @@ class MainActivity : ComponentActivity() {
         // 아이콘 명암은 시스템 다크모드를 따라 자동으로 바뀐다
         enableEdgeToEdge()
         setContent {
-            UmcApp()
+            UmcApp(updateController = updateController)
         }
     }
 
@@ -95,6 +105,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // 즉시 업데이트 화면이 알림 탭 등으로 걷힌 경우를 사용자 취소와 구분한다
+        updateController?.onNewIntent()
         if (openUnsupportedWebLink(intent)) return
         setIntent(intent)
         acceptDeepLink(intent)
@@ -148,69 +160,95 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun UmcApp() {
+private fun UmcApp(updateController: InAppUpdateController) {
+    // 화면을 떠나도 남는 앱 공용 토스트. 각 화면은 LocalUToast.current.show(…)로 띄운다.
+    val toast = remember { UToastController() }
     UmcTheme {
+        CompositionLocalProvider(LocalUToast provides toast) {
 
-        val navController = rememberNavController()
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        /**백스택마다 감지**/
-        val currentDestination = navBackStackEntry?.destination
+            val navController = rememberNavController()
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            /**백스택마다 감지**/
+            val currentDestination = navBackStackEntry?.destination
 
-        // 💡 현재 화면이 5개 메인 탭(1뎁스) 화면 중 하나인지 확인 (Type-Safe 체크)
-        val currentTab = when {
-            currentDestination?.hasRoute<MainDestination.Home>() == true -> MainTab.Home
-            currentDestination?.hasRoute<MainDestination.Notice>() == true -> MainTab.Notice
-            currentDestination?.hasRoute<MainDestination.Act>() == true -> MainTab.Activity
-            currentDestination?.hasRoute<MainDestination.Community>() == true -> MainTab.Community
-            // 내 명함일 때만 MY 탭으로 취급 (memberId가 있으면 딥링크로 열린 타인 명함 = 2뎁스)
-            currentDestination?.hasRoute<MainDestination.Mycard>() == true ->
-                if (navBackStackEntry?.toRoute<MainDestination.Mycard>()?.memberId == null) MainTab.My else null
-            else -> null
-        }
-        val showBottomBar = currentTab != null
+            // 💡 현재 화면이 5개 메인 탭(1뎁스) 화면 중 하나인지 확인 (Type-Safe 체크)
+            val currentTab = when {
+                currentDestination?.hasRoute<MainDestination.Home>() == true -> MainTab.Home
+                currentDestination?.hasRoute<MainDestination.Notice>() == true -> MainTab.Notice
+                currentDestination?.hasRoute<MainDestination.Act>() == true -> MainTab.Activity
+                currentDestination?.hasRoute<MainDestination.Community>() == true -> MainTab.Community
+                // 내 명함일 때만 MY 탭으로 취급 (memberId가 있으면 딥링크로 열린 타인 명함 = 2뎁스)
+                currentDestination?.hasRoute<MainDestination.Mycard>() == true ->
+                    if (navBackStackEntry?.toRoute<MainDestination.Mycard>()?.memberId == null) MainTab.My else null
+                else -> null
+            }
+            val showBottomBar = currentTab != null
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            Scaffold(
-                // 상태바 뒤 영역 색. 홈은 헤더 없이 grey100 배경이라 같은 색으로 맞추고, 나머지는 grey50
-                containerColor = if (currentTab == MainTab.Home) grey100() else grey50(),
-                bottomBar = {
-                    if (showBottomBar) {
-                        UmcBottomNavigationBar(
-                            currentTab = currentTab,
-                            onTabSelected = { tab ->
-                                // Type-Safe 객체로 navigate 실행
-                                navController.navigate(tab.destination) {
-                                    /**
-                                     * 스택이 계속 쌓이는 것을 방지하기 위해 홈(메인 영역 루트)까지
-                                     * 기존 스택을 정리하고 saveState = true로 이전 화면 상태(스크롤 위치 등)를 보존
-                                     * (그래프 시작점은 스플래시라 findStartDestination은 사용 불가)
-                                     * **/
-                                    popUpTo(MainDestination.Home) {
-                                        saveState = true
-                                        inclusive = false // Home 화면 자체는 백스택에 남겨둠
+            Box(modifier = Modifier.fillMaxSize()) {
+                Scaffold(
+                    // 상태바 뒤 영역 색. 홈은 헤더 없이 grey100 배경이라 같은 색으로 맞추고, 나머지는 grey50
+                    containerColor = if (currentTab == MainTab.Home) grey100() else grey50(),
+                    bottomBar = {
+                        if (showBottomBar) {
+                            UmcBottomNavigationBar(
+                                currentTab = currentTab,
+                                onTabSelected = { tab ->
+                                    // Type-Safe 객체로 navigate 실행
+                                    navController.navigate(tab.destination) {
+                                        /**
+                                         * 스택이 계속 쌓이는 것을 방지하기 위해 홈(메인 영역 루트)까지
+                                         * 기존 스택을 정리하고 saveState = true로 이전 화면 상태(스크롤 위치 등)를 보존
+                                         * (그래프 시작점은 스플래시라 findStartDestination은 사용 불가)
+                                         * **/
+                                        popUpTo(MainDestination.Home) {
+                                            saveState = true
+                                            inclusive = false // Home 화면 자체는 백스택에 남겨둠
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
-                            }
+                            )
+                        }
+                    }
+                ) { innerPadding ->
+                    // Scaffold 패딩을 적용하여 바텀바와 화면 내용이 겹치지 않게 처리
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .consumeWindowInsets(innerPadding)
+                    ) {
+                        MainNavHost(
+                            navHostController = navController,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        // 화면별 호스트와 같은 자리(하단 56dp)에 띄운다. 하단바가 있으면 그 위, 키보드가 열리면 키보드 위다.
+                        UToastOverlay(
+                            controller = toast,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .imePadding()
+                                .padding(bottom = 56.dp)
                         )
                     }
                 }
-            ) { innerPadding ->
-                // Scaffold 패딩을 적용하여 바텀바와 화면 내용이 겹치지 않게 처리
-                MainNavHost(
-                    navHostController = navController,
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .consumeWindowInsets(innerPadding)
-                )
+
+                // 원격 설정으로 켠 안내. 이용을 막는 화면(BLOCKING)은 하단바까지 덮어야 해서 Scaffold 바깥에 둔다
+                RemoteNoticeHost(currentRoute = currentDestination?.route)
+
+                // 화면 이동마다 Firebase Analytics 에 screen_view 를 남긴다
+                ScreenViewTracker(backStackEntry = navBackStackEntry)
+
+                // 유연한 업데이트를 다 받았으면 다시 시작해 적용할지 묻는다.
+                // 글쓰기·채팅 중에 끼어들지 않도록 메인 탭(하단바가 보이는 화면)에서만 띄운다
+                if (updateController.isReadyToInstall && showBottomBar) {
+                    InAppUpdateReadyDialog(
+                        onRestart = updateController::completeUpdate,
+                        onLater = updateController::postponeInstall,
+                    )
+                }
             }
-
-            // 원격 설정으로 켠 안내. 이용을 막는 화면(BLOCKING)은 하단바까지 덮어야 해서 Scaffold 바깥에 둔다
-            RemoteNoticeHost(currentRoute = currentDestination?.route)
-
-            // 화면 이동마다 Firebase Analytics 에 screen_view 를 남긴다
-            ScreenViewTracker(backStackEntry = navBackStackEntry)
         }
     }
 }
@@ -232,10 +270,12 @@ private fun UmcBottomNavigationBar(
             .navigationBarsPadding()
     ) {
         HorizontalDivider(thickness = 1.dp, color = grey200())
+        // 스크린리더가 '탭, n개 중 m번째, 선택됨'을 알리도록 탭 묶음과 선택 상태를 semantics 로 둔다
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(71.dp)
+                .selectableGroup()
         ) {
             MainTab.tabs.forEach { tab ->
                 val isSelected = currentTab == tab
@@ -244,18 +284,22 @@ private fun UmcBottomNavigationBar(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clickable(
+                        .selectable(
+                            selected = isSelected,
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null // 리플 없이 플랫하게
-                        ) { onTabSelected(tab) },
+                            indication = null, // 리플 없이 플랫하게
+                            role = Role.Tab,
+                            onClick = { onTabSelected(tab) },
+                        ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    // 아래 라벨이 탭 이름을 읽어 주므로 아이콘 설명은 비워 이름이 두 번 읽히지 않게 한다
                     Icon(
                         painter = painterResource(
                             id = if (isSelected) tab.selectedIcon else tab.unselectedIcon
                         ),
-                        contentDescription = tab.title,
+                        contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = if (isSelected) grey900() else grey400()
                     )

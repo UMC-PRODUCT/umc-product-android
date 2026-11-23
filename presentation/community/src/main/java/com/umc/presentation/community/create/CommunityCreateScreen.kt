@@ -11,7 +11,6 @@ import com.umc.component.component.UToastState
 import com.umc.component.theme.AppStrings
 import com.umc.component.theme.grey50
 import com.umc.component.theme.grey950
-import com.umc.presentation.community.bottomsheet.create.CommunityCreateMemberBottomSheet
 import com.umc.presentation.community.component.CommunityThreadEditorContent
 import com.umc.presentation.community.component.CommunityThreadEditorMode
 import com.umc.presentation.community.model.CommunityAiState
@@ -41,7 +40,6 @@ fun CommunityCreateScreen(
         aiState = state.aiState,
         aiCategory = state.aiCategory,
         selectedCategory = state.selectedCategory,
-        canRequestClassification = state.canRequestClassification,
         isSubmitEnabled = state.isCompleteEnabled,
         challengers = state.selectedChallengers,
         maxChallengerCount = state.maxChallengerCount,
@@ -96,29 +94,6 @@ fun CommunityCreateScreen(
         },
         modifier = modifier,
     )
-
-    // 챌린저 선택 BottomSheet
-    if (state.showChallengerBottomSheet) {
-        CommunityCreateMemberBottomSheet(
-            preSelected = state.selectedChallengers,
-            maxCount = state.maxChallengerCount,
-            onDismissRequest = {
-                onAction(
-                    CommunityCreateAction.OnDismissChallengerBottomSheet
-                )
-            },
-            onConfirm = { challengers ->
-                onAction(
-                    CommunityCreateAction.OnChallengersSelected(
-                        challengers = challengers,
-                    )
-                )
-            },
-            onCsvUploadClick = {
-                // TODO CSV 파일 선택 기능 연결
-            },
-        )
-    }
 }
 
 /**
@@ -126,7 +101,7 @@ fun CommunityCreateScreen(
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenPreview() {
+internal fun CommunityCreateScreenPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(),
         onAction = {},
@@ -138,7 +113,7 @@ private fun CommunityCreateScreenPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenFilledPreview() {
+internal fun CommunityCreateScreenFilledPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(
             title = "안드로이드 스터디",
@@ -167,7 +142,7 @@ private fun CommunityCreateScreenFilledPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenErrorToastPreview() {
+internal fun CommunityCreateScreenErrorToastPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(),
         onAction = {},
@@ -183,7 +158,7 @@ private fun CommunityCreateScreenErrorToastPreview() {
  */
 @Preview(showBackground = true)
 @Composable
-private fun CommunityCreateScreenManualCategoryPreview() {
+internal fun CommunityCreateScreenManualCategoryPreview() {
     CommunityCreateScreen(
         state = CommunityCreateState(
             title = "안드로이드 스터디",

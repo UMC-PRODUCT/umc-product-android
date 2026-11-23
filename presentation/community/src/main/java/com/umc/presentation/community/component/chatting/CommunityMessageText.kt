@@ -1,7 +1,7 @@
 package com.umc.presentation.community.component.chatting
 
+import com.umc.component.component.UText
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,7 +65,7 @@ internal fun CommunityMessageText(
     val openLink by rememberUpdatedState<(String) -> Boolean>({ url ->
         runCatching { uriHandler.openUri(url) }.isSuccess
     })
-    Text(
+    UText(
         text = annotated,
         color = color,
         style = style,

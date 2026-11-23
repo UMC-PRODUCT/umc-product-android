@@ -14,6 +14,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -136,20 +143,82 @@ fun UToastHost(
     }
 }
 
+/**
+ * 앱 전체에서 하나만 두는 토스트 상태. MainActivity 의 UmcApp 이 [LocalUToast] 로 내려주고 [UToastOverlay] 로 그린다.
+ *
+ * 화면마다 호스트를 두는 대신 이것을 쓰면, 저장 직후 뒤로 가기처럼 토스트를 띄우자마자 화면을 떠나도 토스트가 남는다.
+ * 바텀시트·다이얼로그는 별도 창이라 이 토스트가 그 아래에 가려진다. 시트·다이얼로그가 열린 채로 띄울 때는
+ * 그 안에 [UToastHost] 를 따로 둔다.
+ */
+@Stable
+class UToastController {
+    var current: UToastData? by mutableStateOf(null)
+        private set
+
+    /** 같은 문구를 연달아 띄워도 다시 나타나도록 띄울 때마다 바뀐다. */
+    var generation: Int by mutableIntStateOf(0)
+        private set
+
+    fun show(message: String, state: UToastState = UToastState.NONE) {
+        if (message.isBlank()) return
+        current = UToastData(message, state)
+        generation++
+    }
+
+    fun dismiss() {
+        current = null
+    }
+
+    /** [generation] 번째로 띄운 토스트가 아직 떠 있을 때만 닫는다. 앞 토스트의 타이머가 새 토스트를 지우지 않게 한다. */
+    fun dismiss(generation: Int) {
+        if (generation == this.generation) current = null
+    }
+}
+
+/** UmcApp 밖(미리보기·스크린샷 테스트)에서는 화면에 그리지 않는 컨트롤러가 쓰인다. */
+val LocalUToast = staticCompositionLocalOf { UToastController() }
+
+/**
+ * [controller] 의 토스트를 그린다. 위치는 호출하는 쪽이 [modifier] 로 정한다.
+ * 바텀시트·다이얼로그 안에도 두면, 그것이 열린 동안 띄운 앱 토스트가 시트 위에 보인다(앱 화면 쪽 토스트는 시트에 가려진다).
+ */
+@Composable
+fun UToastOverlay(controller: UToastController, modifier: Modifier = Modifier, durationMillis: Long = 2000L) {
+    val generation = controller.generation
+    val data = controller.current
+    LaunchedEffect(generation, data) {
+        if (data != null) {
+            delay(durationMillis)
+            controller.dismiss(generation)
+        }
+    }
+    // 사라지는 애니메이션 동안에도 내용이 보이도록 마지막 토스트를 들고 있는다.
+    var shown by remember { mutableStateOf(data) }
+    if (data != null) shown = data
+    AnimatedVisibility(
+        visible = data != null,
+        enter = fadeIn() + slideInVertically { it },
+        exit = fadeOut() + slideOutVertically { it },
+        modifier = modifier,
+    ) {
+        shown?.let { UToast(message = it.message, state = it.state) }
+    }
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFF888888)
 @Composable
-private fun UToastCheckPreview() {
+internal fun UToastCheckPreview() {
     UToast(message = "인증 코드가 발송되었습니다.", state = UToastState.CHECK)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF888888)
 @Composable
-private fun UToastErrorPreview() {
+internal fun UToastErrorPreview() {
     UToast(message = "이메일 형식이 올바르지 않습니다.", state = UToastState.ERROR)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF888888)
 @Composable
-private fun UToastNonePreview() {
+internal fun UToastNonePreview() {
     UToast(message = "알림 메세지입니다.", state = UToastState.NONE)
 }

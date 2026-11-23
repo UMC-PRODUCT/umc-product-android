@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -17,15 +16,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.R
 import com.umc.component.component.UButton
 import com.umc.component.component.UText
@@ -52,25 +48,9 @@ import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import com.umc.domain.model.enums.RewardType
 import com.umc.presentation.act.admin.challenger.AdminChallengerUiState
-import com.umc.presentation.act.admin.challenger.AdminChallengerViewModel
 import com.umc.presentation.act.admin.challenger.POINT_DESCRIPTION_MAX_LENGTH
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-
-@Composable
-fun RewardPointsRoute(
-    challengerId: Long = 0L,
-    viewModel: AdminChallengerViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    RewardPointsScreen(
-        uiState = uiState,
-        onSelectReward = viewModel::selectReward,
-        onMemoChange = viewModel::onMemoChanged,
-        onSubmitClick = { viewModel.grantReward(challengerId) }
-    )
-}
 
 @Composable
 fun RewardPointsScreen(
@@ -289,7 +269,7 @@ private fun defaultRewardItems(): ImmutableList<RewardPointItem> =
 
 @Preview(showBackground = false)
 @Composable
-private fun RewardPointsScreenPreview() {
+internal fun RewardPointsScreenPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen()
     }
@@ -297,7 +277,7 @@ private fun RewardPointsScreenPreview() {
 
 @Preview(showBackground = false, name = "항목만 고르고 사유 없음 (등록 비활성)")
 @Composable
-private fun RewardPointsScreenNoReasonPreview() {
+internal fun RewardPointsScreenNoReasonPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen(
             uiState = AdminChallengerUiState(selectedRewardType = RewardType.BEST_WORKBOOK_V2)
@@ -307,7 +287,7 @@ private fun RewardPointsScreenNoReasonPreview() {
 
 @Preview(showBackground = false)
 @Composable
-private fun RewardPointsScreenSubmittingPreview() {
+internal fun RewardPointsScreenSubmittingPreview() {
     UmcTheme(darkTheme = false) {
         RewardPointsScreen(
             uiState = AdminChallengerUiState(

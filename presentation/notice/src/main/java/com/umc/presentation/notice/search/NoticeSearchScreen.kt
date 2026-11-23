@@ -1,5 +1,6 @@
 package com.umc.presentation.notice.search
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,8 +54,8 @@ import com.umc.component.theme.grey800
 import com.umc.component.theme.grey900
 import com.umc.component.theme.grey950
 import com.umc.presentation.notice.NoticeCard
+import com.umc.presentation.notice.NoticeNextPageItem
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.collectLatest
 import com.umc.component.base.CollectUiEvents
 
 @Composable
@@ -78,6 +79,11 @@ fun NoticeSearchRoute(
         when (event) {
             is NoticeSearchEvent.MoveToDetailEvent -> navigateToDetail(event.noticeId)
         }
+    }
+
+    // 결과 화면의 상단 뒤로가기와 같게, 시스템 뒤로가기도 검색 화면을 나가지 않고 검색어 입력으로 돌아간다
+    BackHandler(enabled = uiState.isResultMode) {
+        viewModel.backToSearchMode()
     }
 
     if (uiState.isResultMode) {
@@ -319,12 +325,13 @@ fun NoticeSearchResultScreen(
                         )
                     }
 
-                    // 마지막 아이템 노출 시 다음 페이지 로드
+                    // 마지막 아이템 노출 시 다음 페이지 로드. 실패하면 다시 시도 버튼으로 바뀐다
                     if (!uiState.isLastPage) {
                         item {
-                            LaunchedEffect(Unit) {
-                                onLoadNextPage()
-                            }
+                            NoticeNextPageItem(
+                                isError = uiState.isNextPageError,
+                                onLoadNextPage = onLoadNextPage,
+                            )
                         }
                     }
                 }
@@ -361,7 +368,7 @@ private fun NoticeSearchMessage(
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeSearchScreenPreview() {
+internal fun NoticeSearchScreenPreview() {
     NoticeSearchScreen(
         uiState = NoticeSearchUiState(
             recentSearchList = persistentListOf("중앙", "해커톤"),
@@ -371,7 +378,7 @@ private fun NoticeSearchScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NoticeSearchResultScreenPreview() {
+internal fun NoticeSearchResultScreenPreview() {
     NoticeSearchResultScreen(
         uiState = NoticeSearchUiState(
             query = "중앙 해커톤",

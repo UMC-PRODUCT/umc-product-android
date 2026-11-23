@@ -1,0 +1,42 @@
+name: 스크린샷 기준 이미지 생성
+
+# CI(Linux)와 같은 환경에서 스크린샷 테스트 기준 이미지를 다시 만들어 artifact 로 올린다.
+# 커밋은 하지 않는다. 내려받아 확인한 뒤 src/screenshotTestDefaultDebug/reference 에 넣어 PR 로 올린다.
+# 배포로 이어지는 android.yml 과 분리해 두었다.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    name: 기준 이미지 생성
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+
+      - name: JDK 17 설치
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle 준비
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 기준 이미지 생성
+        run: |
+          chmod +x ./gradlew
+          ./gradlew updateDebugScreenshotTestDefaultTestSuite --console=plain
+
+      - name: 기준 이미지 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-reference-${{ github.run_number }}
+          path: |
+            presentation/src/screenshotTestDefaultDebug/reference/**
+            presentation/*/src/screenshotTestDefaultDebug/reference/**
+          retention-days: 7

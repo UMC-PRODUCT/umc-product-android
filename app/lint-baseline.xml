@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<issues format="6" by="lint 9.5.1" type="baseline" client="gradle" dependencies="true" name="AGP (9.5.1)" variant="all" version="9.5.1">
+    <issue id="BlockingCallInRequestPath" message="요청 경로(AuthenticationInterceptor.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요." errorLine1="        val accessToken = runBlocking { appDataStoreRepository.getAccessToken() }" errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/product/di/AuthenticationInterceptor.kt" />
+    </issue>
+    <issue id="BlockingCallInRequestPath" message="요청 경로(TokenAuthenticator.kt)의 runBlocking은 API 호출마다 메인 스레드를 정지시킵니다. 토큰 적재를 suspend 경로로 옮기세요." errorLine1="        return runBlocking {" errorLine2="               ^">
+        <location file="src/main/java/com/umc/product/di/TokenAuthenticator.kt" />
+    </issue>
+    <issue id="UseUTextField" message="BasicTextField를 화면에서 직접 쓰면 입력 동작이 화면마다 갈라집니다. com.umc.component.component.UTextField를 사용하세요." errorLine1="                            BasicTextField(" errorLine2="                            ~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/component/chatting/CommunityChatInputBar.kt" />
+    </issue>
+    <issue id="UseUTextField" message="BasicTextField를 화면에서 직접 쓰면 입력 동작이 화면마다 갈라집니다. com.umc.component.component.UTextField를 사용하세요." errorLine1="            BasicTextField(" errorLine2="            ~~~~~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/notice/write/NoticeWriteScreen.kt" />
+    </issue>
+    <issue id="FixedDelayInLaunchedEffect" message="LaunchedEffect 안에서 고정 시간(120ms)을 기다리면 기기 속도에 따라 타이밍이 어긋납니다. 기다리는 대상을 상태로 관찰하세요." errorLine1="        delay(120)" errorLine2="        ~~~~~~~~~~">
+        <location file="src/main/java/com/umc/presentation/community/chatting/CommunityChattingScreen.kt" />
+    </issue>
+</issues>

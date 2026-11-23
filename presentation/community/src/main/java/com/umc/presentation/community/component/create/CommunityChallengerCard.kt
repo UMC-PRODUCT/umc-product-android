@@ -109,7 +109,7 @@ fun CommunityChallengerCard(
                 painter = painterResource(
                     id = R.drawable.ic_next,
                 ),
-                contentDescription = "챌린저 선택",
+                contentDescription = AppStrings.COMMUNITY_CD_SELECT_CHALLENGER,
                 tint = grey400(),
                 modifier = Modifier.size(24.dp),
             )
@@ -122,7 +122,7 @@ fun CommunityChallengerCard(
  */
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun CommunityChallengerCardPreview() {
+internal fun CommunityChallengerCardPreview() {
     val challengers = persistentListOf(
         CommunityChallengerUiModel(
             memberId = 1L,

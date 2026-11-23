@@ -14,13 +14,6 @@ class ActViewModel @Inject constructor(
 ) : BaseViewModel<ActUiState, ActEvent>(
     ActUiState()
 ) {
-    fun onAction(action: ActAction) {
-        when (action) {
-            ActAction.LoadUserInfo -> getUserInfo()
-            is ActAction.SetAdminMode -> setAdminMode(action.isAdmin)
-        }
-    }
-
     //초기 유저 정보 조회
     //내 정보와 관리자 권한 여부 조회
     fun getUserInfo() {

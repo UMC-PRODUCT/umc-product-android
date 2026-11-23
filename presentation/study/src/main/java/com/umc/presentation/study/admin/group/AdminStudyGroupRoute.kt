@@ -1,14 +1,16 @@
 package com.umc.presentation.study.admin.group
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.flow.collectLatest
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.component.base.CollectUiEvents
+import com.umc.component.component.LocalUToast
+import com.umc.component.component.UToastData
 
 /**
  * 관리자 스터디 그룹 화면의 Route
@@ -20,7 +22,7 @@ import com.umc.component.base.CollectUiEvents
  * - 화면 활성화 시 그룹 목록 갱신
  * - ViewModel에서 발생한 일회성 Event 처리
  * - 네비게이션 처리
- * - Toast 메시지 출력
+ * - 토스트 메시지 출력
  */
 @Composable
 fun AdminStudyGroupRoute(
@@ -53,12 +55,18 @@ fun AdminStudyGroupRoute(
     /**
      * ViewModel의 현재 UI 상태 구독
      */
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    /**
-     * Toast 출력에 사용할 Context
-     */
-    val context = LocalContext.current
+    val toast = LocalUToast.current
+
+    // 다이얼로그는 별도 창이라 앱 토스트가 딤 아래에 가려진다. 다이얼로그가 열린 채로 띄우는 토스트는 다이얼로그 안에 그린다.
+    var dialogToast by remember { mutableStateOf<UToastData?>(null) }
+    val isDialogOpen = state.isEditDialogOpen || state.isDeleteDialogOpen
+
+    // 다이얼로그가 닫히면 남은 토스트를 버려, 다음에 열 때 지난 토스트가 다시 뜨지 않게 한다.
+    LaunchedEffect(isDialogOpen) {
+        if (!isDialogOpen) dialogToast = null
+    }
 
     /**
      * 현재 관리자 스터디 화면이 활성화되면
@@ -107,14 +115,18 @@ fun AdminStudyGroupRoute(
             }
 
             /**
-             * 사용자에게 Toast 메시지 표시
+             * 사용자에게 토스트 메시지 표시
+             *
+             * 수정·삭제 실패는 다이얼로그를 연 채로 오므로, 그때 열려 있는 창에 띄운다.
              */
             is AdminStudyGroupEvent.ShowToast -> {
-                Toast.makeText(
-                    context,
-                    event.message,
-                    Toast.LENGTH_SHORT,
-                ).show()
+                val current = viewModel.uiState.value
+                if (current.isEditDialogOpen || current.isDeleteDialogOpen) {
+                    dialogToast = UToastData(event.message, event.state)
+                } else {
+                    // 멤버 수정 시트가 열려 있으면 시트 안의 UToastOverlay 가 이 토스트를 그린다.
+                    toast.show(event.message, event.state)
+                }
             }
         }
     }
@@ -128,5 +140,7 @@ fun AdminStudyGroupRoute(
     AdminStudyGroupScreen(
         state = state,
         onAction = viewModel::onAction,
+        dialogToast = dialogToast,
+        onDialogToastDismiss = { dialogToast = null },
     )
 }

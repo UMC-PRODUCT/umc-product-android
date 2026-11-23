@@ -8,9 +8,9 @@ data class NearbyUserInfo(
     val info: String,
     val profileImageLink: String = "",
 ) {
-    /*TODO nearbyConnection의 경우, advertise name이 120바이트 이내여야 한다.
-    *
-    * 즉, 프로필 이미지 때문에 짤리면 이름이랑 정보만 가지고 다시 재생성(이미지는null)
+    /*
+    * Nearby Connections 의 advertise name 은 120바이트 이내여야 한다.
+    * 프로필 이미지 때문에 넘치면 이름과 정보만으로 다시 만든다(이미지는 null).
     * **/
     fun toJson(): String {
         val gson = Gson()

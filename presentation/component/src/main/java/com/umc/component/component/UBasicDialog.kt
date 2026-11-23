@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -32,8 +31,6 @@ import com.umc.component.theme.grey50
 import com.umc.component.theme.green100
 import com.umc.component.theme.green500
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.umc.component.theme.UmcTypographyTokens
@@ -178,7 +175,7 @@ fun UBasicDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 //타이틀 & 내용
-                Text(
+                UText(
                     text = title,
                     style = if (useCompactStyle) {
                         UmcTypographyTokens.Title2Bold.copy(fontSize = 20.sp, lineHeight = 25.sp, letterSpacing = 0.38.sp)
@@ -192,7 +189,7 @@ fun UBasicDialog(
                         .height(if (useCompactStyle) 8.dp else 16.dp)
                     )
 
-                    Text(
+                    UText(
                         text = text,
                         style = UmcTypographyTokens.Subheadline,
                         textAlign = if (useCompactStyle) TextAlign.Center else TextAlign.Start,

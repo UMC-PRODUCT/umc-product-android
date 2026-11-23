@@ -52,8 +52,10 @@ import com.umc.presentation.community.chatting.CommunityChattingRoute
 import com.umc.presentation.community.search.CommunitySearchRoute
 import com.umc.presentation.community.create.CommunityCreateRoute
 import com.umc.presentation.community.edit.CommunityEditRoute
+import com.umc.presentation.study.ActStudyRoute
 import com.umc.presentation.study.admin.group.create.AdminStudyGroupCreateRoute
 import com.umc.presentation.study.admin.group.schedule.AdminStudyGroupScheduleRoute
+import com.umc.presentation.study.normal.UserStudyRoute
 import com.umc.component.base.CollectUiEvents
 
 private const val COMMUNITY_REFRESH_KEY = "community_refresh"
@@ -420,21 +422,26 @@ fun MainNavHost(
                         MainDestination.AdminChallengerDetail(challengerId)
                     )
                 },
-
-                onNavigateCreateStudyGroup = {
-                    navHostController.navigate(
-                        MainDestination.AdminStudyGroupCreate
+                adminStudyContent = { isActive ->
+                    ActStudyRoute(
+                        isAdmin = true,
+                        isActive = isActive,
+                        onNavigateCreateGroup = {
+                            navHostController.navigate(MainDestination.AdminStudyGroupCreate)
+                        },
+                        onNavigateAddSchedule = { groupId, groupTitle, groupPart ->
+                            navHostController.navigate(
+                                MainDestination.AdminStudyGroupSchedule(
+                                    groupId = groupId,
+                                    groupTitle = groupTitle,
+                                    groupPart = groupPart,
+                                )
+                            )
+                        },
                     )
                 },
-
-                onNavigateAddStudySchedule = { groupId, groupTitle, groupPart ->
-                    navHostController.navigate(
-                        MainDestination.AdminStudyGroupSchedule(
-                            groupId = groupId,
-                            groupTitle = groupTitle,
-                            groupPart = groupPart,
-                        )
-                    )
+                userStudyContent = { isActive ->
+                    UserStudyRoute(isActive = isActive)
                 },
             )
         }
@@ -530,7 +537,7 @@ fun MainNavHost(
             ScheduleDetailRoute(
                 onBackClick = {navHostController.popBackStack()},
                 onNavigateToAttendSchedule = {
-                    /**TODO. 일정 출석 페이지로 이동하기**/
+                    /** 일정 출석 페이지로 이동하기**/
                     // 하단 탭 이동과 같은 스택([Home, Act])을 만들어 뒤로가기가 홈으로 돌아오게 한다
                     navHostController.navigate(MainDestination.Act){
                         popUpTo<MainDestination.Home>{
@@ -638,7 +645,7 @@ fun MainNavHost(
         composable<MainDestination.MyContent> {
             MyContentRoute(
                 onNavigateToPostDetail = { id ->
-                    /**TODO id를 줘서 커뮤니티 게시글 상세 페이지로 이동*/
+                    /** id를 줘서 커뮤니티 게시글 상세 페이지로 이동*/
                 }
             )
         }
@@ -721,7 +728,7 @@ fun MainNavHost(
                     navHostController.popBackStack()
                 },
                 onNavigateToEmojiPicker = {
-                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
+                    // 이모지 선택 화면 또는 다이얼로그 연결
                 },
                 onCreateSuccess = {
                     navHostController.previousBackStackEntry
@@ -747,7 +754,7 @@ fun MainNavHost(
                     navHostController.popBackStack()
                 },
                 onNavigateToEmojiPicker = {
-                    // TODO: 이모지 선택 화면 또는 다이얼로그 연결
+                    // 이모지 선택 화면 또는 다이얼로그 연결
                 },
                 onEditSuccess = {
                     navHostController.previousBackStackEntry

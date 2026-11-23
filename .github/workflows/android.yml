@@ -266,7 +266,8 @@ jobs:
         run: |
           F=${{ steps.resolve.outputs.flavor-cap }}
           # 라이브러리 모듈은 flavor 가 없어 testDebugUnitTest 그대로, :app 만 flavor 태스크.
-          ./gradlew testDebugUnitTest \
+          # JVM 모듈(:domain)에는 testDebugUnitTest 가 없으므로 :domain:test 를 따로 부른다.
+          ./gradlew testDebugUnitTest :domain:test \
             ":app:test${F}DebugUnitTest" ":app:lint${F}Debug" \
             --console=plain
 
@@ -280,7 +281,7 @@ jobs:
           set -euo pipefail
           if [ "$TASKS" = "ALL" ]; then
             F=${{ steps.resolve.outputs.flavor-cap }}
-            ./gradlew testDebugUnitTest \
+            ./gradlew testDebugUnitTest :domain:test \
               ":app:test${F}DebugUnitTest" ":app:lint${F}Debug" --console=plain
           else
             # shellcheck disable=SC2086
@@ -290,23 +291,29 @@ jobs:
           fi
 
       # :lint-rules 가 스스로 선언한 severity 를 그대로 신뢰한다.
-      # ERROR(OneShotEventSharedFlow) 는 파이프라인을 세우고, WARNING 은 요약에만 남긴다.
+      # ERROR 는 파이프라인을 세우고, WARNING 은 요약에만 남긴다.
+      # 커스텀 규칙은 ID 목록이 아니라 category="UMC" 로 고른다. 새 규칙도 UMC_CATEGORY 만 쓰면 대상이 된다.
+      # 기존 위반은 각 모듈의 lint-baseline.xml 에 기록돼 리포트에 나오지 않는다.
       - name: UMC 커스텀 Lint 게이트
+        env:
+          SCOPE: ${{ steps.resolve.outputs.scope }}
         run: |
           python3 - <<'PY'
           import os, sys, xml.etree.ElementTree as ET
           from pathlib import Path
 
-          UMC = {"OneShotEventSharedFlow", "LifecycleUnawareEventCollect", "BlockingCallInRequestPath"}
-          reports = sorted(Path(".").glob("**/build/reports/lint-results-debug.xml"))
+          # app 은 flavor 가 있어 리포트 이름에 variant 가 붙는다(lint-results-devDebug.xml).
+          reports = sorted(Path(".").glob("**/build/reports/lint-results-*.xml"))
           if not reports:
+              if os.environ.get("SCOPE") == "full":
+                  sys.exit("lint 리포트가 없습니다 — 배포 경로에서는 app lint 리포트가 반드시 있어야 합니다.")
               print("lint 리포트가 없습니다 — 검사 대상 모듈이 없었을 수 있습니다.")
               sys.exit(0)
 
           errors, warnings = [], []
           for report in reports:
               for issue in ET.parse(report).getroot().iter("issue"):
-                  if issue.get("id") not in UMC:
+                  if issue.get("category") != "UMC":
                       continue
                   loc = issue.find("location")
                   where = "%s:%s" % (loc.get("file", "?").split("/")[-1], loc.get("line", "?"))
@@ -357,6 +364,56 @@ jobs:
           fi
           echo "### 🌐 서버 주소 \`$ACTUAL_URL\`" >> "$GITHUB_STEP_SUMMARY"
 
+      # 스크린샷 테스트(presentation 전체 모듈의 @Preview). 기준 이미지는 각 모듈 src/screenshotTestDefaultDebug/reference 에 있다.
+      # PR 에서는 기준 이미지와 다르면 실패시킨다. 의도한 UI 변경이면 updateDebugScreenshotTestDefaultTestSuite 로
+      # 기준 이미지를 갱신해 같은 PR 에 커밋한다(리뷰어는 Files changed 의 이미지 비교로 확인한다).
+      # develop-compose·main 푸시(배포 경로)에서는 리뷰를 마친 코드의 배포를 멈추지 않도록 보고만 한다.
+      # macOS 기준 이미지와 Linux 렌더링의 글꼴 차이(0.01~0.02%)는 각 모듈의 imageDifferenceThreshold(0.05%)가 넘긴다.
+      - name: 스크린샷 테스트
+        id: screenshot
+        continue-on-error: ${{ github.event_name != 'pull_request' }}
+        run: |
+          # 기본 셸(bash -e)은 pipefail 이 없어 tee 뒤에서 Gradle 실패가 가려지므로 직접 켠다.
+          set -o pipefail
+          ./gradlew testDebugScreenshotTestDefaultTestSuite --continue --console=plain 2>&1 | tee screenshot-test.log
+
+      - name: 스크린샷 차이 요약
+        if: ${{ !cancelled() && steps.screenshot.outcome == 'failure' }}
+        run: |
+          # 실패한 화면 이름과 차이 비율만 모은다(실패 줄 다음 줄의 'N% difference').
+          grep -E -A1 '^[a-z][a-zA-Z0-9_.]* > .* FAILED$' screenshot-test.log | grep -E 'FAILED|difference' \
+            | sed -E 's/^.* > (.*) FAILED$/\1/; s/^.*\(([0-9.]+% difference)\).*$/    \1/' > screenshot-failures.txt || true
+          # 이름 줄과 비율 줄을 한 줄로 합친다. 렌더링 오류처럼 비율이 없으면 이름만 남는다.
+          awk '/^    /{sub(/^ +/,""); print prev " (" $0 ")"; prev=""; next} {if (prev!="") print prev; prev=$0} END{if (prev!="") print prev}' \
+            screenshot-failures.txt > screenshot-failures-oneline.txt
+          {
+            echo "### 📸 스크린샷이 기준 이미지와 다릅니다"
+            echo ""
+            if [ -s screenshot-failures-oneline.txt ]; then
+              sed -E 's/^/- /' screenshot-failures-oneline.txt | head -80
+            else
+              echo "- 실패한 화면을 로그에서 찾지 못했습니다(컴파일 오류 등). '스크린샷 테스트' 단계 로그를 확인하세요."
+            fi
+            echo ""
+            echo "- 의도한 UI 변경이면: \`./gradlew :presentation:<모듈>:updateDebugScreenshotTestDefaultTestSuite\` 로 기준 이미지를 갱신해 이 PR 에 커밋하세요."
+            echo "- 의도하지 않은 변경이면: screenshots-${{ github.run_number }} artifact 의 diffs(차이)·rendered(이번 렌더링) 이미지로 바뀐 곳을 찾아 코드를 고치세요."
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          # 실행 화면의 Annotations 와 PR 의 Checks 탭에서도 바로 보이도록 화면마다 오류 주석을 남긴다(단계당 10개까지 표시된다).
+          head -10 screenshot-failures-oneline.txt | while IFS= read -r line; do
+            echo "::error title=스크린샷 차이::${line}"
+          done
+
+      - name: 스크린샷 이미지 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ github.run_number }}
+          path: |
+            presentation/build/intermediates/test_suite_results/debug/testDebugScreenshotTestDefaultTestSuite/**
+            presentation/*/build/intermediates/test_suite_results/debug/testDebugScreenshotTestDefaultTestSuite/**
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: 리포트 업로드
         if: always()
         uses: actions/upload-artifact@v4
@@ -364,7 +421,7 @@ jobs:
           name: reports-${{ github.run_number }}
           path: |
             **/build/reports/tests/**
-            **/build/reports/lint-results-debug.*
+            **/build/reports/lint-results-*.*
           retention-days: 7
           if-no-files-found: ignore
 
