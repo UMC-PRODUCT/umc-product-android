@@ -7,6 +7,7 @@ import com.umc.component.theme.UmcTheme
 import com.umc.component.theme.AppStrings
 import com.umc.domain.model.enums.BoardChipType
 import com.umc.domain.model.enums.NoticeWriterRole
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.enums.WriteCategoryType
 import com.umc.domain.model.notice.WriteCategory
 import com.umc.domain.model.organization.GisuItem
@@ -76,15 +77,47 @@ fun NoticeWriteChapterShot() {
 
 @PreviewTest
 @Preview(showBackground = true, widthDp = 360, heightDp = 900)
+@Preview(showBackground = true, widthDp = 600, heightDp = 900)
 @Composable
 fun NoticeWritePastPartCategoryShot() {
     UmcTheme {
         NoticeWriteScreen(uiState = NoticeWriteUiState(
             writerRole = NoticeWriterRole.SUPER_ADMIN,
             selectedCategory = WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU),
-            boardChips = persistentListOf(BoardChipType.ALL, BoardChipType.PART),
+            boardChips = persistentListOf(BoardChipType.ALL, BoardChipType.CHAPTER, BoardChipType.SCHOOL, BoardChipType.PART),
+            boardHint = AppStrings.NOTICE_WRITE_GISU_CLASS_HINT,
             availableGisus = persistentListOf(GisuItem(12, 12), GisuItem(9, 9)),
             authorityGisuId = 12, targetGisuId = 9, isAllSelected = true,
+        ))
+    }
+}
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 360, heightDp = 900)
+@Preview(showBackground = true, widthDp = 600, heightDp = 900)
+@Composable
+fun NoticeWriteLongRecipientPartShot() {
+    UmcTheme {
+        NoticeWriteScreen(uiState = singleSchoolRoleState(
+            NoticeWriterRole.SCHOOL_PART_LEADER, "아주 긴 이름을 가진 UMC 중앙대학교 캠퍼스",
+        ).copy(selectedPart = UserPart.WEB_PRODUCT_ENGINEER))
+    }
+}
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 360, heightDp = 900)
+@Preview(showBackground = true, widthDp = 600, heightDp = 900)
+@Composable
+fun NoticeWriteLongStaffRecipientShot() {
+    val category = WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE)
+    UmcTheme {
+        NoticeWriteScreen(uiState = NoticeWriteUiState(
+            writerRole = NoticeWriterRole.SCHOOL_CORE,
+            availableCategories = persistentListOf(category), selectedCategory = category,
+            boardChips = persistentListOf(BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART),
+            isStaffSelected = true,
+            availableGisus = persistentListOf(GisuItem(12, 12)), authorityGisuId = 12, targetGisuId = 12,
+            writerSchoolId = 7, writerSchoolName = "아주 긴 이름을 가진 UMC 중앙대학교 캠퍼스",
         ))
     }
 }

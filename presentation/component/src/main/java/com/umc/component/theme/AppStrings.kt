@@ -605,6 +605,12 @@ object AppStrings {
     const val NOTICE_WRITE_SCHOOL_UNKNOWN = "본교 확인 필요"
     const val NOTICE_WRITE_PART_REQUIRED = "파트 선택 필수"
     const val NOTICE_WRITE_PAST_PART_HINT = "과거 기수 공지에는 파트를 지정할 수 없어요."
+    const val NOTICE_WRITE_ALL_GISU_RECIPIENT = "전체 기수 · 챌린저 대상"
+    const val NOTICE_WRITE_RECIPIENT_FORMAT = "%s 대상"
+    const val NOTICE_WRITE_RECIPIENT_UMC = "UMC 전체"
+    const val NOTICE_WRITE_RECIPIENT_CENTRAL = "중앙 운영진"
+    const val NOTICE_WRITE_RECIPIENT_SCHOOL_CORE = "학교 회장단"
+    const val NOTICE_WRITE_RECIPIENT_STAFF = "학교 운영진"
     const val NOTICE_WRITE_CATEGORY_PLACEHOLDER = COMMON_SELECT_CATEGORY
     const val NOTICE_WRITE_TITLE_PLACEHOLDER = COMMON_TITLE_PLACEHOLDER
     const val NOTICE_WRITE_CONTENT_PLACEHOLDER = COMMON_CONTENT_PLACEHOLDER

@@ -87,10 +87,9 @@ class NoticeWriteTargetTest {
         val schoolCore = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_STAFF, WriteCategoryType.SCHOOL_CORE))
         assertEquals("SCHOOL_CORE", schoolCore?.targetNoticeTab)
         assertNull(schoolCore?.targetSchoolId)
-        val partLeader = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_STAFF, WriteCategoryType.SCHOOL_PART_LEADER)
-            .copy(selectedPart = UserPart.PLAN))
+        val partLeader = buildNoticeTargetRequest(state(NoticeWriterRole.CENTRAL_STAFF, WriteCategoryType.SCHOOL_PART_LEADER))
         assertEquals("SCHOOL_PART_LEADER", partLeader?.targetNoticeTab)
-        assertEquals(listOf("PLAN"), partLeader?.targetParts)
+        assertEquals(emptyList<String>(), partLeader?.targetParts)
         assertNull(partLeader?.targetSchoolId)
     }
 
@@ -118,12 +117,12 @@ class NoticeWriteTargetTest {
         val core = buildNoticeTargetRequest(state(NoticeWriterRole.SUPER_ADMIN, WriteCategoryType.SCHOOL_CORE)
             .copy(selectedSchool = school, schoolList = persistentListOf(school)))
         val leader = buildNoticeTargetRequest(state(NoticeWriterRole.SUPER_ADMIN, WriteCategoryType.SCHOOL_PART_LEADER)
-            .copy(selectedSchool = school, selectedPart = UserPart.PLAN, schoolList = persistentListOf(school)))
+            .copy(selectedSchool = school, schoolList = persistentListOf(school)))
 
         assertEquals(7, core?.targetSchoolId)
         assertEquals("SCHOOL_CORE", core?.targetNoticeTab)
         assertEquals(7, leader?.targetSchoolId)
-        assertEquals(listOf("PLAN"), leader?.targetParts)
+        assertEquals(emptyList<String>(), leader?.targetParts)
         assertEquals("SCHOOL_PART_LEADER", leader?.targetNoticeTab)
     }
 
@@ -194,7 +193,7 @@ class NoticeWriteTargetTest {
     }
 
     @Test
-    fun `교내 회장단의 운영진 공지는 본교 운영진 전체를 대상으로 하고 파트를 고르면 좁힌다`() {
+    fun `교내 회장단의 운영진 공지는 본교 운영진 전체를 대상으로 하고 파트를 거절한다`() {
         val base = state(NoticeWriterRole.SCHOOL_CORE, WriteCategoryType.SCHOOL_CORE)
             .copy(writerSchoolId = 7, isStaffSelected = true)
 
@@ -203,9 +202,7 @@ class NoticeWriteTargetTest {
         assertEquals(7, staff?.targetSchoolId)
         assertEquals(emptyList<String>(), staff?.targetParts)
         val partTarget = buildNoticeTargetRequest(base.copy(selectedPart = UserPart.PLAN))
-        assertEquals("SCHOOL_PART_LEADER", partTarget?.targetNoticeTab)
-        assertEquals(7, partTarget?.targetSchoolId)
-        assertEquals(listOf("PLAN"), partTarget?.targetParts)
+        assertNull(partTarget)
     }
 
     @Test
@@ -312,6 +309,33 @@ class NoticeWriteTargetTest {
             val current = state(role, WriteCategoryType.GISU).copy(targetGisuId = 9, availableGisus = gisus)
             assertNull(buildNoticeTargetRequest(current.copy(selectedPart = UserPart.PLAN)))
             assertEquals(9, buildNoticeTargetRequest(current.copy(isAllSelected = true))?.targetGisuId)
+        }
+    }
+
+    @Test
+    fun `중앙 역할의 모든 운영진 카테고리는 잔류 파트를 거절한다`() {
+        listOf(NoticeWriterRole.SUPER_ADMIN, NoticeWriterRole.CENTRAL_CORE, NoticeWriterRole.CENTRAL_STAFF)
+            .forEach { role ->
+                listOf(WriteCategoryType.CENTRAL_STAFF, WriteCategoryType.SCHOOL_CORE,
+                    WriteCategoryType.SCHOOL_PART_LEADER).forEach { category ->
+                    UserPart.selectable.forEach { part ->
+                        val current = state(role, category).copy(selectedPart = part)
+                        assertNull("$role/$category/$part", buildNoticeTargetRequest(current))
+                    }
+                }
+            }
+    }
+
+    @Test
+    fun `학교 지정 운영진 공지와 교내 회장 겸임도 파트를 거절한다`() {
+        val school = SchoolInfo(7, "학교")
+        val admin = state(NoticeWriterRole.SUPER_ADMIN, WriteCategoryType.SCHOOL_PART_LEADER)
+            .copy(selectedSchool = school, schoolList = persistentListOf(school))
+        val dual = state(NoticeWriterRole.CHAPTER_PRESIDENT, WriteCategoryType.SCHOOL_CORE)
+            .copy(canWriteAsSchoolCore = true, writerSchoolId = 7, isStaffSelected = true)
+        UserPart.selectable.forEach { part ->
+            assertNull(buildNoticeTargetRequest(admin.copy(selectedPart = part)))
+            assertNull(buildNoticeTargetRequest(dual.copy(selectedPart = part)))
         }
     }
 

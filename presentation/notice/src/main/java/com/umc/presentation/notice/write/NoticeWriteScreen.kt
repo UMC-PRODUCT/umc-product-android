@@ -475,20 +475,22 @@ fun NoticeWriteScreen(
                 if (uiState.visibleBoardChips.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
                         UText(
                             text = AppStrings.NOTICE_WRITE_CLASS_TITLE,
                             style = UmcTypographyTokens.HeadlineBold,
                             color = grey950(),
                         )
 
-                        uiState.boardHint?.let { hint ->
-                            Spacer(modifier = Modifier.width(8.dp))
-
+                        uiState.displayBoardHint?.let { hint ->
                             UText(
                                 text = hint,
                                 style = UmcTypographyTokens.Footnote,
                                 color = grey600(),
+                                modifier = Modifier.align(Alignment.CenterVertically),
                             )
                         }
                     }
@@ -1260,9 +1262,10 @@ internal fun NoticeWriteScreenFixedGisuPreview() {
             writerRole = NoticeWriterRole.SCHOOL_CORE,
             selectedCategory = WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
             boardChips = persistentListOf(BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART),
-            boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,
             // 운영진 공지는 본교 운영진 전체(SCHOOL_PART_LEADER)를 대상으로 한다.
             isStaffSelected = true,
+            writerSchoolId = 7,
+            writerSchoolName = "중앙대학교",
             availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
             targetGisuId = 12,
             authorityGisuId = 12,

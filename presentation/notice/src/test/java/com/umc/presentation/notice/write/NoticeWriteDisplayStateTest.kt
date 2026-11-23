@@ -107,14 +107,14 @@ class NoticeWriteDisplayStateTest {
         assertTrue(current.copy(targetGisuId = 12).canSelectPart)
     }
     @Test
-    fun `과거 파트 안내는 원래 PART 선택이 가능한 카테고리 힌트에만 표시한다`() {
+    fun `과거 파트 안내는 원래 PART 선택이 가능한 게시판 힌트에만 표시한다`() {
         val past = state.copy(writerRole = NoticeWriterRole.SUPER_ADMIN, targetGisuId = 9,
             boardChips = persistentListOf(com.umc.domain.model.enums.BoardChipType.PART))
-        assertEquals(com.umc.component.theme.AppStrings.NOTICE_WRITE_PAST_PART_HINT, past.categoryHint)
-        assertNull(past.copy(boardChips = persistentListOf()).categoryHint)
-        assertNull(past.copy(targetGisuId = 12).categoryHint)
-        assertNull(past.copy(authorityGisuId = null).categoryHint)
-        assertNull(past.copy(selectedCategory = WriteCategory(WriteCategoryType.ALL_GISU, "전체 기수")).categoryHint)
+        assertEquals(com.umc.component.theme.AppStrings.NOTICE_WRITE_PAST_PART_HINT, past.displayBoardHint)
+        assertNull(past.copy(boardChips = persistentListOf()).displayBoardHint)
+        assertNull(past.copy(targetGisuId = 12).displayBoardHint)
+        assertNull(past.copy(authorityGisuId = null).displayBoardHint)
+        assertNull(past.copy(selectedCategory = WriteCategory(WriteCategoryType.ALL_GISU, "전체 기수")).displayBoardHint)
     }
     @Test
     fun `단일 지부장 카테고리는 고정 기수와 지부를 표시한다`() {
@@ -127,15 +127,18 @@ class NoticeWriteDisplayStateTest {
     }
 
     @Test
-    fun `교내 파트장과 기타 운영진은 본교와 파트 필수를 표시한다`() {
+    fun `교내 파트장과 기타 운영진은 범위와 파트 필수를 서로 다른 힌트에 표시한다`() {
         listOf(NoticeWriterRole.SCHOOL_PART_LEADER, NoticeWriterRole.SCHOOL_ETC_ADMIN).forEach { role ->
-            val category = WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, "파트장")
+            val type = if (role == NoticeWriterRole.SCHOOL_ETC_ADMIN) WriteCategoryType.SCHOOL_CORE
+                else WriteCategoryType.SCHOOL_PART_LEADER
+            val category = WriteCategory(type, "교내 카테고리")
             val current = state.copy(writerRole = role, targetGisuId = 12,
                 availableCategories = persistentListOf(category), selectedCategory = category,
                 writerSchoolId = 7, writerSchoolName = "본교")
             assertEquals(category, selectNoticeCategory(current.availableCategories, null))
-            assertEquals("12기 · 본교 · 파트 선택 필수", current.categoryHint)
-            assertTrue(current.copy(writerSchoolName = null).categoryHint!!.contains("본교 확인 필요"))
+            assertEquals("12기 · 본교", current.categoryHint)
+            assertEquals(com.umc.component.theme.AppStrings.NOTICE_WRITE_PART_REQUIRED, current.displayBoardHint)
+            assertNull(current.copy(writerSchoolName = null).categoryHint)
         }
     }
 }

@@ -421,7 +421,7 @@ class NoticeWriteViewModel @Inject constructor(
                     BoardChipType.ALL, BoardChipType.CHAPTER, BoardChipType.SCHOOL, BoardChipType.PART
                 ) to AppStrings.NOTICE_WRITE_GISU_CLASS_HINT
 
-                WriteCategoryType.SCHOOL_PART_LEADER -> listOf(BoardChipType.SCHOOL, BoardChipType.PART) to null
+                WriteCategoryType.SCHOOL_PART_LEADER -> listOf(BoardChipType.SCHOOL) to null
 
                 else -> emptyList<BoardChipType>() to null
             }
@@ -430,7 +430,7 @@ class NoticeWriteViewModel @Inject constructor(
                 NoticeWriterRole.CENTRAL_CORE, NoticeWriterRole.CENTRAL_STAFF -> when (categoryType) {
                     WriteCategoryType.GISU -> listOf(BoardChipType.ALL, BoardChipType.PART) to null
                     // 중앙운영진 카테고리는 대상 칩 없이 CENTRAL_MEMBER로 발행한다.
-                    WriteCategoryType.SCHOOL_PART_LEADER -> listOf(BoardChipType.PART) to null
+                    WriteCategoryType.SCHOOL_PART_LEADER -> emptyList<BoardChipType>() to null
                     else -> emptyList<BoardChipType>() to null
                 }
 
@@ -439,13 +439,13 @@ class NoticeWriteViewModel @Inject constructor(
                     WriteCategoryType.GISU -> listOf(BoardChipType.ALL, BoardChipType.PART) to null
                     WriteCategoryType.SCHOOL_CORE -> if (canWriteAsSchoolCore) listOf(
                         BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
-                    ) to AppStrings.NOTICE_WRITE_CLASS_HINT else emptyList<BoardChipType>() to null
+                    ) to null else emptyList<BoardChipType>() to null
                     else -> emptyList<BoardChipType>() to null
                 }
 
                 NoticeWriterRole.SCHOOL_CORE -> listOf(
                     BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART
-                ) to AppStrings.NOTICE_WRITE_CLASS_HINT
+                ) to null
 
                 NoticeWriterRole.SCHOOL_ETC_ADMIN -> listOf(BoardChipType.PART) to null
 
@@ -453,7 +453,7 @@ class NoticeWriteViewModel @Inject constructor(
                 // 학교 선택을 주지 않고 발행 요청에는 활성 기수 학교 역할의 소속 ID를 사용한다.
                 NoticeWriterRole.SCHOOL_PART_LEADER -> listOf(
                     BoardChipType.PART
-                ) to AppStrings.NOTICE_WRITE_CLASS_HINT
+                ) to null
 
                 NoticeWriterRole.SUPER_ADMIN -> emptyList<BoardChipType>() to null
             }
@@ -544,7 +544,7 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onToggleStaff() {
-        updateState { copy(isStaffSelected = !isStaffSelected, isAllSelected = false) }
+        updateState { toggleNoticeStaffSelection(this) }
     }
 
     /** 지부 선택. 기수 카테고리에서는 학교와 동시 선택 불가 */
@@ -1009,36 +1009,14 @@ data class NoticeWriteUiState(
                 selectedCategory?.type != WriteCategoryType.ALL_GISU
 
     val categoryHint: String?
-        get() = fixedCategoryHint ?: AppStrings.NOTICE_WRITE_PAST_PART_HINT.takeIf {
-            targetGisuId != null && authorityGisuId != null && targetGisuId > 0 && authorityGisuId > 0 &&
-                targetGisuId != authorityGisuId && selectedCategory?.type != WriteCategoryType.ALL_GISU &&
-                BoardChipType.PART in boardChips
-        }
+        get() = formatNoticeRecipientHint(this)
 
-    private val fixedCategoryHint: String?
-        get() {
-            val role = writerRole ?: return null
-            val generation = availableGisus.firstOrNull { it.gisuId == targetGisuId }?.generation
-                ?.let { AppStrings.COMMON_GENERATION_FORMAT.format(it) } ?: AppStrings.NOTICE_WRITE_GISU_UNKNOWN
-            val organization = when (role) {
-                NoticeWriterRole.CHAPTER_PRESIDENT -> if (selectedCategory?.type == WriteCategoryType.GISU) {
-                    writerChapterName ?: chapterList.firstOrNull { it.id.toInt() == writerChapterId }?.name
-                        ?: AppStrings.NOTICE_WRITE_CHAPTER_UNKNOWN
-                } else return null
-                NoticeWriterRole.SCHOOL_PART_LEADER, NoticeWriterRole.SCHOOL_ETC_ADMIN ->
-                    writerSchoolName ?: schoolList.firstOrNull { it.schoolId == writerSchoolId }?.schoolName
-                        ?: AppStrings.NOTICE_WRITE_SCHOOL_UNKNOWN
-                NoticeWriterRole.CENTRAL_CORE -> if (isNoticeStaffCategory(selectedCategory?.type)) null else return null
-                else -> return null
-            }
-            return listOfNotNull(generation, organization,
-                AppStrings.NOTICE_WRITE_PART_REQUIRED.takeIf {
-                    role == NoticeWriterRole.SCHOOL_PART_LEADER || role == NoticeWriterRole.SCHOOL_ETC_ADMIN
-                }).joinToString(" · ")
-        }
+    val displayBoardHint: String?
+        get() = resolveNoticeBoardHint(this)
 
     val canSelectPart: Boolean
-        get() = targetGisuId != null && targetGisuId == authorityGisuId && BoardChipType.PART in boardChips
+        get() = targetGisuId != null && targetGisuId == authorityGisuId &&
+            !isStaffSelected && BoardChipType.PART in boardChips
 
     val visibleBoardChips: List<BoardChipType>
         get() = boardChips.filter { it != BoardChipType.PART || canSelectPart }
