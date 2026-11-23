@@ -116,4 +116,26 @@ class NoticeWriteDisplayStateTest {
         assertNull(past.copy(authorityGisuId = null).categoryHint)
         assertNull(past.copy(selectedCategory = WriteCategory(WriteCategoryType.ALL_GISU, "전체 기수")).categoryHint)
     }
+    @Test
+    fun `단일 지부장 카테고리는 고정 기수와 지부를 표시한다`() {
+        val category = WriteCategory(WriteCategoryType.GISU, "특정 기수")
+        val current = state.copy(writerRole = NoticeWriterRole.CHAPTER_PRESIDENT, targetGisuId = 12,
+            availableCategories = persistentListOf(category), selectedCategory = category,
+            writerChapterId = 5, writerChapterName = "담당 지부")
+        assertEquals(category, selectNoticeCategory(current.availableCategories, null))
+        assertEquals("12기 · 담당 지부", current.categoryHint)
+    }
+
+    @Test
+    fun `교내 파트장과 기타 운영진은 본교와 파트 필수를 표시한다`() {
+        listOf(NoticeWriterRole.SCHOOL_PART_LEADER, NoticeWriterRole.SCHOOL_ETC_ADMIN).forEach { role ->
+            val category = WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, "파트장")
+            val current = state.copy(writerRole = role, targetGisuId = 12,
+                availableCategories = persistentListOf(category), selectedCategory = category,
+                writerSchoolId = 7, writerSchoolName = "본교")
+            assertEquals(category, selectNoticeCategory(current.availableCategories, null))
+            assertEquals("12기 · 본교 · 파트 선택 필수", current.categoryHint)
+            assertTrue(current.copy(writerSchoolName = null).categoryHint!!.contains("본교 확인 필요"))
+        }
+    }
 }

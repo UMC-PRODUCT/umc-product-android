@@ -600,6 +600,10 @@ object AppStrings {
     // const val ADMIN_NOTICE_CHAPTER = "지부장 공지"
     const val ADMIN_NOTICE_SCHOOL_CORE = "교내 회장단 공지"
     const val ADMIN_NOTICE_PART_LEADER = "파트장 공지"
+    const val NOTICE_WRITE_GISU_UNKNOWN = "기수 확인 중"
+    const val NOTICE_WRITE_CHAPTER_UNKNOWN = "담당 지부 확인 필요"
+    const val NOTICE_WRITE_SCHOOL_UNKNOWN = "본교 확인 필요"
+    const val NOTICE_WRITE_PART_REQUIRED = "파트 선택 필수"
     const val NOTICE_WRITE_PAST_PART_HINT = "과거 기수 공지에는 파트를 지정할 수 없어요."
     const val NOTICE_WRITE_CATEGORY_PLACEHOLDER = COMMON_SELECT_CATEGORY
     const val NOTICE_WRITE_TITLE_PLACEHOLDER = COMMON_TITLE_PLACEHOLDER

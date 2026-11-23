@@ -242,8 +242,14 @@ class NoticeWriteViewModel @Inject constructor(
                 availableGisus = knownGisus.toImmutableList(),
                 // 서버는 활성 기수의 학교 역할 소속과 대상 학교를 비교한다.
                 writerSchoolId = userInfo.noticeWriterSchoolId(activeGisuId ?: 0L)?.toInt(),
+                writerSchoolName = userInfo.schoolName.takeIf {
+                    userInfo.schoolId == userInfo.noticeWriterSchoolId(activeGisuId ?: 0L) && it.isNotBlank()
+                },
                 // 서버는 지부장 역할의 담당 지부와 대상 지부를 비교한다.
                 writerChapterId = userInfo.noticeWriterChapterId(activeGisuId ?: 0L)?.toInt(),
+                writerChapterName = userInfo.roles.firstOrNull {
+                    it.gisuId == activeGisuId && it.roleType == UserChallengerRole.CHAPTER_PRESIDENT.name
+                }?.chapterName?.takeIf { it.isNotBlank() },
             )
         }
         loadTargetOrganization(targetGisuId)
@@ -971,7 +977,9 @@ data class NoticeWriteUiState(
     /** 작성 권한을 부여받은 기수. Super Admin·총괄단 외에는 이 기수에만 발행한다. */
     val authorityGisuId: Int? = null,
     val writerSchoolId: Int? = null,
+    val writerSchoolName: String? = null,
     val writerChapterId: Int? = null,
+    val writerChapterName: String? = null,
     val availableGisus: ImmutableList<GisuItem> = persistentListOf(),
     val isSubmitting: Boolean = false,
     val isAiRefineEnabled: Boolean = false,
@@ -995,10 +1003,32 @@ data class NoticeWriteUiState(
                 selectedCategory?.type != WriteCategoryType.ALL_GISU
 
     val categoryHint: String?
-        get() = AppStrings.NOTICE_WRITE_PAST_PART_HINT.takeIf {
+        get() = fixedCategoryHint ?: AppStrings.NOTICE_WRITE_PAST_PART_HINT.takeIf {
             targetGisuId != null && authorityGisuId != null && targetGisuId > 0 && authorityGisuId > 0 &&
                 targetGisuId != authorityGisuId && selectedCategory?.type != WriteCategoryType.ALL_GISU &&
                 BoardChipType.PART in boardChips
+        }
+
+    private val fixedCategoryHint: String?
+        get() {
+            val role = writerRole ?: return null
+            val generation = availableGisus.firstOrNull { it.gisuId == targetGisuId }?.generation
+                ?.let { AppStrings.COMMON_GENERATION_FORMAT.format(it) } ?: AppStrings.NOTICE_WRITE_GISU_UNKNOWN
+            val organization = when (role) {
+                NoticeWriterRole.CHAPTER_PRESIDENT -> if (selectedCategory?.type == WriteCategoryType.GISU) {
+                    writerChapterName ?: chapterList.firstOrNull { it.id.toInt() == writerChapterId }?.name
+                        ?: AppStrings.NOTICE_WRITE_CHAPTER_UNKNOWN
+                } else return null
+                NoticeWriterRole.SCHOOL_PART_LEADER, NoticeWriterRole.SCHOOL_ETC_ADMIN ->
+                    writerSchoolName ?: schoolList.firstOrNull { it.schoolId == writerSchoolId }?.schoolName
+                        ?: AppStrings.NOTICE_WRITE_SCHOOL_UNKNOWN
+                NoticeWriterRole.CENTRAL_CORE -> if (isNoticeStaffCategory(selectedCategory?.type)) null else return null
+                else -> return null
+            }
+            return listOfNotNull(generation, organization,
+                AppStrings.NOTICE_WRITE_PART_REQUIRED.takeIf {
+                    role == NoticeWriterRole.SCHOOL_PART_LEADER || role == NoticeWriterRole.SCHOOL_ETC_ADMIN
+                }).joinToString(" · ")
         }
 
     val canSelectPart: Boolean

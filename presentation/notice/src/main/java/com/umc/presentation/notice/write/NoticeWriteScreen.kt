@@ -1313,3 +1313,20 @@ private fun readClipboardText(context: Context): String {
         .joinToString("\n")
         .trim()
 }
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun NoticeWriteFixedTargetPreview() {
+    val category = WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER)
+    NoticeWriteScreen(uiState = NoticeWriteUiState(
+        writerRole = NoticeWriterRole.SCHOOL_PART_LEADER,
+        selectedCategory = category,
+        availableCategories = persistentListOf(category),
+        boardChips = persistentListOf(BoardChipType.PART),
+        availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
+        authorityGisuId = 12,
+        targetGisuId = 12,
+        writerSchoolId = 7,
+        writerSchoolName = "UMC 대학교",
+    ))
+}
