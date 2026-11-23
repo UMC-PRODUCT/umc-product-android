@@ -339,6 +339,29 @@ class NoticeWriteTargetTest {
         }
     }
 
+    @Test
+    fun `중앙 역할의 학교 회장단과 운영진 요청은 비허용 칩을 무시하지 않고 거절한다`() {
+        val chapter = Chapter(5, "지부")
+        val school = SchoolInfo(7, "학교")
+        listOf(NoticeWriterRole.SUPER_ADMIN, NoticeWriterRole.CENTRAL_CORE, NoticeWriterRole.CENTRAL_STAFF)
+            .forEach { role ->
+                listOf(WriteCategoryType.SCHOOL_CORE, WriteCategoryType.SCHOOL_PART_LEADER).forEach { category ->
+                    val base = state(role, category).copy(chapterList = persistentListOf(chapter))
+                    assertNotNull(buildNoticeTargetRequest(base))
+                    assertNull(buildNoticeTargetRequest(base.copy(selectedChapter = chapter)))
+                    assertNull(buildNoticeTargetRequest(base.copy(isAllSelected = true)))
+                    assertNull(buildNoticeTargetRequest(base.copy(isStaffSelected = true)))
+                    if (role == NoticeWriterRole.SUPER_ADMIN) {
+                        val schoolTarget = base.copy(selectedSchool = school, schoolList = persistentListOf(school))
+                        assertEquals(7, buildNoticeTargetRequest(schoolTarget)?.targetSchoolId)
+                        assertNull(buildNoticeTargetRequest(schoolTarget.copy(selectedChapter = chapter)))
+                        assertNull(buildNoticeTargetRequest(schoolTarget.copy(isAllSelected = true)))
+                        assertNull(buildNoticeTargetRequest(schoolTarget.copy(isStaffSelected = true)))
+                    }
+                }
+            }
+    }
+
     private fun state(role: NoticeWriterRole, category: WriteCategoryType) = NoticeWriteUiState(
         writerRole = role,
         selectedCategory = WriteCategory(category, category.name),

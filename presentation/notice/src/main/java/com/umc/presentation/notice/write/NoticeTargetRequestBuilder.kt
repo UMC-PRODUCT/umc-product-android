@@ -76,7 +76,7 @@ private fun NoticeWriteUiState.centralTarget(
         }
         WriteCategoryType.CENTRAL_STAFF -> centralStaffTarget(role, gisuId, part)
         WriteCategoryType.SCHOOL_CORE, WriteCategoryType.SCHOOL_PART_LEADER -> {
-            if (part != null) return null
+            if (part != null || selectedChapter != null || isAllSelected || isStaffSelected) return null
             if (role != NoticeWriterRole.SUPER_ADMIN && targetSchoolId != null) return null
             val tab = if (category == WriteCategoryType.SCHOOL_CORE) NoticeTab.SCHOOL_CORE else NoticeTab.SCHOOL_PART_LEADER
             NoticeTargetRequest(gisuId, null, targetSchoolId, emptyList(), tab.value)

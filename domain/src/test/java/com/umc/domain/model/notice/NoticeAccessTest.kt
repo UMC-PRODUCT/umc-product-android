@@ -82,6 +82,52 @@ class NoticeAccessTest {
         assertNull(user.noticeWriterChapterId(11))
     }
 
+    @Test
+    fun `첫 학교 역할 소속이 없으면 같은 기수의 다음 유효 역할을 먼저 사용한다`() {
+        listOf(null, 0L, -1L).forEach { invalidId ->
+            val user = UserInfo(schoolId = 99, roles = listOf(
+                role(UserChallengerRole.SCHOOL_PRESIDENT, 11).copy(organizationId = invalidId),
+                role(UserChallengerRole.SCHOOL_PART_LEADER, 10).copy(organizationId = 8),
+                role(UserChallengerRole.SCHOOL_PART_LEADER, 11).copy(organizationId = 7),
+            ))
+            assertEquals(7L, user.noticeWriterSchoolId(11))
+        }
+    }
+
+    @Test
+    fun `유효한 학교 역할 소속이 없을 때 기존 프로필 학교 폴백을 유지한다`() {
+        val user = UserInfo(schoolId = 99, roles = listOf(
+            role(UserChallengerRole.SCHOOL_PRESIDENT, 11).copy(organizationId = 0),
+            role(UserChallengerRole.SCHOOL_PART_LEADER, 11).copy(organizationId = null),
+        ))
+        assertEquals(99L, user.noticeWriterSchoolId(11))
+        assertNull(user.copy(schoolId = 0).noticeWriterSchoolId(11))
+    }
+
+    @Test
+    fun `CHAPTER 소속 ID가 없으면 같은 역할의 지부 ID를 사용한다`() {
+        listOf(null, 0L, -1L).forEach { invalidId ->
+            val user = UserInfo(roles = listOf(
+                role(UserChallengerRole.CHAPTER_PRESIDENT, 11).copy(
+                    organizationType = "CHAPTER", organizationId = invalidId, chapterId = 5),
+            ))
+            assertEquals(5L, user.noticeWriterChapterId(11))
+        }
+    }
+
+    @Test
+    fun `첫 지부장 소속이 무효여도 다음 유효 지부장 역할을 탐색한다`() {
+        val user = UserInfo(roles = listOf(
+            role(UserChallengerRole.CHAPTER_PRESIDENT, 11).copy(
+                organizationType = "CHAPTER", organizationId = 0, chapterId = null),
+            role(UserChallengerRole.CHAPTER_PRESIDENT, 10).copy(
+                organizationType = "CHAPTER", organizationId = 8, chapterId = 8),
+            role(UserChallengerRole.CHAPTER_PRESIDENT, 11).copy(
+                organizationType = "SCHOOL", organizationId = 99, chapterId = 5),
+        ))
+        assertEquals(5L, user.noticeWriterChapterId(11))
+    }
+
     private fun role(type: UserChallengerRole, gisuId: Long) = UserRole(
         id = 1,
         challengerId = 1,

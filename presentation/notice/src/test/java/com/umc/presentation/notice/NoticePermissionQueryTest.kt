@@ -4,12 +4,15 @@ import com.umc.component.theme.AppStrings
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.UserRole
 import com.umc.domain.model.enums.UserChallengerRole
+import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.organization.GisuItem
 import com.umc.presentation.notice.adminnotice.AdminNoticeUiState
 import com.umc.presentation.notice.adminnotice.resetAdminNoticeGisu
 import com.umc.presentation.notice.adminnotice.resolveAdminNoticeAccess
 import com.umc.presentation.notice.adminnotice.AdminNoticeTab
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -132,6 +135,75 @@ class NoticePermissionQueryTest {
         assertTrue(invalid.isAccessResolved)
         assertFalse(invalid.canQuery)
         assertTrue(resolveAdminNoticeAccess(invalid, UserInfo(isSuperAdmin = true)).isAccessResolved)
+    }
+
+    @Test
+    fun `자동 기수 변경은 이전 파트와 페이징 조건을 해제한다`() {
+        val before = NoticeUiState(selectedGisu = 10, selectedPart = UserPart.WEB,
+            selectedChipText = UserPart.WEB.label, currentPage = 3, isLastPage = true)
+        val after = resolveNoticeGisuOptions(before, UserInfo(), listOf(GisuItem(11, 11, true)))
+
+        assertEquals(11L, after.selectedGisu)
+        assertEquals(AppStrings.COMMON_ALL, after.selectedChipText)
+        assertNull(after.selectedPart)
+        assertEquals(0, after.currentPage)
+        assertFalse(after.isLastPage)
+    }
+
+    @Test
+    fun `동일 기수의 옵션 갱신은 선택 파트와 페이징을 보존한다`() {
+        val selected = GisuItem(12, 12, true)
+        val before = NoticeUiState(selectedGisu = 12, selectedPart = UserPart.PLAN,
+            selectedChipText = UserPart.PLAN.label, currentPage = 3, isLastPage = true)
+        val after = resolveNoticeGisuOptions(before, UserInfo(), listOf(GisuItem(13, 13), selected))
+
+        assertEquals(12L, after.selectedGisu)
+        assertEquals(UserPart.PLAN, after.selectedPart)
+        assertEquals(UserPart.PLAN.label, after.selectedChipText)
+        assertEquals(3, after.currentPage)
+        assertTrue(after.isLastPage)
+    }
+
+    @Test
+    fun `기수 옵션이 없어지면 파트와 선택 기수도 해제한다`() {
+        val before = NoticeUiState(selectedGisu = 12, selectedPart = UserPart.PLAN,
+            selectedChipText = UserPart.PLAN.label)
+        val after = resolveNoticeGisuOptions(before, UserInfo(), emptyList())
+
+        assertEquals(0L, after.selectedGisu)
+        assertEquals(AppStrings.COMMON_ALL, after.selectedChipText)
+        assertNull(after.selectedPart)
+        assertFalse(after.canOpenAdminNotice)
+    }
+
+    @Test
+    fun `같은 권한의 프로필 갱신은 조회 완료와 페이징 및 읽음 상태를 보존한다`() {
+        val user = UserInfo(roles = listOf(role(UserChallengerRole.SCHOOL_PART_LEADER, 12)))
+        val before = resolveAdminNoticeAccess(AdminNoticeUiState(gisuId = 12), user).copy(
+            hasLoaded = true, currentPage = 3, isLastPage = true, isPageLoading = true,
+            readNoticeIds = persistentSetOf(1L, 2L), isNextPageError = true, errorMessage = "페이지 실패",
+        )
+        val after = resolveAdminNoticeAccess(before, user.copy(name = "갱신된 이름"))
+
+        assertEquals(before, after)
+        assertTrue(after.hasLoaded)
+    }
+
+    @Test
+    fun `최초 권한 확정과 권한 변경은 조회가 필요하고 읽음 상태는 보존한다`() {
+        val user = UserInfo(roles = listOf(role(UserChallengerRole.SCHOOL_PART_LEADER, 12)))
+        val first = resolveAdminNoticeAccess(AdminNoticeUiState(gisuId = 12), user)
+        assertTrue(first.canQuery)
+        assertFalse(first.hasLoaded)
+        val before = first.copy(hasLoaded = true, currentPage = 3, readNoticeIds = persistentSetOf(1L))
+        val changed = resolveAdminNoticeAccess(before, UserInfo(isSuperAdmin = true))
+
+        assertTrue(changed.canQuery)
+        assertFalse(changed.hasLoaded)
+        assertEquals(0, changed.currentPage)
+        assertEquals(AdminNoticeTab.PART_LEADER, changed.selectedTab)
+        assertTrue(AdminNoticeTab.CENTRAL in changed.visibleTabs)
+        assertEquals(before.readNoticeIds, changed.readNoticeIds)
     }
 
     private fun role(type: UserChallengerRole, gisuId: Long) = UserRole(

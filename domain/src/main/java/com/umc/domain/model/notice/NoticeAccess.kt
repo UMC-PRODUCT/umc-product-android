@@ -18,12 +18,12 @@ fun UserInfo.noticeWriterRole(gisuId: Long): NoticeWriterRole? =
 
 /** 학교 대상 작성은 현재 회원 학교보다 활성 기수 학교 역할의 소속을 우선한다. */
 fun UserInfo.noticeWriterSchoolId(authorityGisuId: Long): Long? =
-    roles.firstOrNull { role ->
+    roles.asSequence().filter { role ->
         role.gisuId == authorityGisuId && UserChallengerRole.from(role.roleType) in setOf(
             UserChallengerRole.SCHOOL_PRESIDENT, UserChallengerRole.SCHOOL_VICE_PRESIDENT,
             UserChallengerRole.SCHOOL_ETC_ADMIN, UserChallengerRole.SCHOOL_PART_LEADER,
         )
-    }?.organizationId?.takeIf { it > 0 }
+    }.mapNotNull { it.organizationId?.takeIf { id -> id > 0 } }.firstOrNull()
         ?: schoolId.takeIf { it > 0 }
         ?: challengerRecords.firstOrNull { it.gisuId == authorityGisuId }
             ?.schoolId?.takeIf { it > 0 }
@@ -35,14 +35,16 @@ fun UserInfo.noticeWriterSchoolId(authorityGisuId: Long): Long? =
  * 이때는 organizationId 대신 역할에 실린 지부 ID를 쓴다.
  */
 fun UserInfo.noticeWriterChapterId(authorityGisuId: Long): Long? {
-    val role = roles.firstOrNull {
+    val chapterRoles = roles.filter {
         it.gisuId == authorityGisuId &&
             UserChallengerRole.from(it.roleType) == UserChallengerRole.CHAPTER_PRESIDENT
-    } ?: return null
-    val chapterId = if (role.organizationType == CHAPTER_ORGANIZATION_TYPE) role.organizationId else role.chapterId
-    return chapterId?.takeIf { it > 0 }
-        ?: challengerRecords.firstOrNull { it.gisuId == authorityGisuId }
-            ?.chapterId?.takeIf { it > 0 }
+    }
+    if (chapterRoles.isEmpty()) return null
+    return chapterRoles.firstNotNullOfOrNull { role ->
+        role.organizationId?.takeIf { role.organizationType == CHAPTER_ORGANIZATION_TYPE && it > 0 }
+            ?: role.chapterId?.takeIf { it > 0 }
+    } ?: challengerRecords.firstOrNull { it.gisuId == authorityGisuId }
+        ?.chapterId?.takeIf { it > 0 }
 }
 
 private const val CHAPTER_ORGANIZATION_TYPE = "CHAPTER"

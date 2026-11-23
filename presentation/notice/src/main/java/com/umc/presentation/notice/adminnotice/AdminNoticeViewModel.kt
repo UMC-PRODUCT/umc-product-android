@@ -130,12 +130,14 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     private fun updateUserAccess(userInfo: UserInfo) {
-        val next = resolveAdminNoticeAccess(uiState.value, userInfo)
-        if (uiState.value.visibleTabs != next.visibleTabs || uiState.value.selectedTab != next.selectedTab) {
+        val previous = uiState.value
+        updateState { resolveAdminNoticeAccess(this, userInfo) }
+        val next = uiState.value
+        if (previous.visibleTabs != next.visibleTabs || previous.selectedTab != next.selectedTab) {
             listJob?.cancel()
         }
-        updateState { next }
-        refreshIfReady()
+        // 권한 변경 시 resolver가 hasLoaded를 초기화한다. 동일 권한의 프로필 갱신은 페이징을 보존한다.
+        if (!next.hasLoaded) refreshIfReady()
     }
 
     fun onClickTab(tab: AdminNoticeTab) {

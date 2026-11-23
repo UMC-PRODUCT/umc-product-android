@@ -127,37 +127,29 @@ class NoticeViewModel @Inject constructor(
             .sortedByDescending { it.generation }
     }
 
-    private fun loadAllGisus() = viewModelScope.launch {
+    private fun loadAllGisus() {
+        if (isLoadingAllGisus) return
+        // 프로필 수집과 새로고침이 함께 호출해도 요청은 한 번만 시작한다.
         isLoadingAllGisus = true
-        resultResponse(
-            response = getSearchGisusUseCase(),
-            successCallback = { result ->
-                allGisus = result.gisuList
-                cachedUserInfo?.let { updateGisuOptions(it, createDropDownList(it)) }
-                refreshNoticeList()
-            },
-            errorCallback = { fail -> updateState { copy(errorMessage = fail.message) } },
-        )
-        isLoadingAllGisus = false
+        viewModelScope.launch {
+            try {
+                resultResponse(
+                    response = getSearchGisusUseCase(),
+                    successCallback = { result ->
+                        allGisus = result.gisuList
+                        cachedUserInfo?.let { updateGisuOptions(it, createDropDownList(it)) }
+                        refreshNoticeList()
+                    },
+                    errorCallback = { fail -> updateState { copy(errorMessage = fail.message) } },
+                )
+            } finally {
+                isLoadingAllGisus = false
+            }
+        }
     }
 
     private fun updateGisuOptions(userInfo: UserInfo, options: List<GisuItem>) {
-        val selected = options.firstOrNull { it.gisuId.toLong() == uiState.value.selectedGisu }
-            ?: options.firstOrNull { it.isActive }
-            ?: options.firstOrNull()
-        updateState {
-            val changedGisu = selectedGisu != selected?.gisuId?.toLong()
-            copy(
-                selectedGisu = selected?.gisuId?.toLong() ?: 0L,
-                nowTitle = selected?.displayText.orEmpty(),
-                dropdownList = options.toImmutableList(),
-                canOpenAdminNotice = userInfo.canOpenAdminNotice(selected?.gisuId?.toLong() ?: 0L),
-                selectedChipText = if (selectedGisu == selected?.gisuId?.toLong()) selectedChipText else AppStrings.COMMON_ALL,
-                noticeList = if (changedGisu) persistentListOf() else noticeList,
-                currentPage = if (changedGisu) 0 else currentPage,
-                isLastPage = if (changedGisu) false else isLastPage,
-            )
-        }
+        updateState { resolveNoticeGisuOptions(this, userInfo, options) }
         val chips = createFilterChips(userInfo)
         if (chips.none { it.isClicked }) updateState { copy(selectedChipText = AppStrings.COMMON_ALL) }
         updateState { copy(chipList = createFilterChips(userInfo).toImmutableList()) }
@@ -459,6 +451,29 @@ class NoticeViewModel @Inject constructor(
             else -> NOTICE_TAB_CHALLENGER
         }
     }
+}
+
+internal fun resolveNoticeGisuOptions(
+    state: NoticeUiState,
+    userInfo: UserInfo,
+    options: List<GisuItem>,
+): NoticeUiState {
+    val selected = options.firstOrNull { it.gisuId.toLong() == state.selectedGisu }
+        ?: options.firstOrNull { it.isActive }
+        ?: options.firstOrNull()
+    val changedGisu = state.selectedGisu != selected?.gisuId?.toLong()
+    return state.copy(
+        selectedGisu = selected?.gisuId?.toLong() ?: 0L,
+        nowTitle = selected?.displayText.orEmpty(),
+        dropdownList = options.toImmutableList(),
+        canOpenAdminNotice = userInfo.canOpenAdminNotice(selected?.gisuId?.toLong() ?: 0L),
+        selectedChipText = if (changedGisu) AppStrings.COMMON_ALL else state.selectedChipText,
+        // 자동 기수 변경도 수동 선택과 동일하게 이전 기수의 파트 조건을 해제한다.
+        selectedPart = if (changedGisu) null else state.selectedPart,
+        noticeList = if (changedGisu) persistentListOf() else state.noticeList,
+        currentPage = if (changedGisu) 0 else state.currentPage,
+        isLastPage = if (changedGisu) false else state.isLastPage,
+    )
 }
 
 /** 운영진 공지 화면과 같은 선택 기수의 역할을 기준으로 진입 여부를 판단한다. */
