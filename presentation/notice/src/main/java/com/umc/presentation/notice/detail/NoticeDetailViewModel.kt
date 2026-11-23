@@ -6,12 +6,15 @@ import com.umc.component.base.UiEvent
 import com.umc.component.base.UiState
 import com.umc.component.theme.AppStrings
 import com.umc.domain.model.enums.NoticeVoteStatus
+import com.umc.domain.model.enums.PermissionType
+import com.umc.domain.model.enums.ResourceType
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.ChallengerReadInfo
 import com.umc.domain.model.notice.NoticeDetail
 import com.umc.domain.model.notice.NoticeReadStatistics
 import com.umc.domain.model.notice.NoticeVoteOption
 import com.umc.domain.model.notice.NoticeVoteParticipant
+import com.umc.domain.usecase.GetAuthAccessUseCase
 import com.umc.domain.usecase.GetGisuInfoUseCase
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.member.GetMemberProfileUseCase
@@ -28,6 +31,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -51,11 +55,15 @@ class NoticeDetailViewModel @Inject constructor(
     private val deleteNoticeUseCase: DeleteNoticeUseCase,
     private val markNoticeAsReadUseCase: MarkNoticeAsReadUseCase,
     private val getChapterListUseCase: GetChapterListUseCase,
+    private val getAuthAccessUseCase: GetAuthAccessUseCase,
 ) : BaseViewModel<NoticeDetailUiState, NoticeDetailEvent>(
     NoticeDetailUiState(),
 ) {
 
     private var noticeId: Long = 0L
+    private var detailRequestVersion = 0L
+    private var permissionRequestVersion = 0L
+    private var managementPermissionsJob: Job? = null
 
     // 투표 등으로 loadDetail이 다시 불려도 읽음 등록은 상세 진입당 한 번만 보낸다
     private var hasMarkedRead = false
@@ -74,27 +82,37 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     /**
-     * 화면이 RESUMED가 될 때 부른다. 수정 화면에서 실제로 돌아왔을 때만 다시 받는다.
+     * 화면이 RESUMED가 될 때 부른다. 수정 화면에서 돌아오면 상세를, 그 외 복귀에서는 관리 권한만 다시 받는다.
      * 컴포지션에 들어올 때 확인하면 취소될 수 있는 예측 뒤로 가기 미리보기에서 플래그가 소비돼 실제 복귀 때 갱신이 빠진다
      */
     fun onResumed() {
-        if (!reloadOnReturn) return
+        if (!reloadOnReturn) {
+            if (hasLoadedDetail && !uiState.value.isLoading) {
+                loadManagementPermissions(noticeId, detailRequestVersion)
+            }
+            return
+        }
         reloadOnReturn = false
         loadDetail()
     }
 
     private fun loadDetail() = viewModelScope.launch {
-        if (noticeId <= 0L) {
+        val requestedNoticeId = noticeId
+        val requestVersion = ++detailRequestVersion
+        managementPermissionsJob?.cancel()
+        permissionRequestVersion++
+        updateState { copy(isLoading = true, canEdit = false, canDelete = false) }
+
+        if (requestedNoticeId <= 0L) {
             emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL, isSuccess = false))
             emitEvent(NoticeDetailEvent.MoveBack)
             return@launch
         }
 
-        updateState { copy(isLoading = true) }
-
         resultResponse(
-            response = getNoticeDetailUseCase(noticeId),
+            response = getNoticeDetailUseCase(requestedNoticeId),
             successCallback = { detail ->
+                if (requestVersion != detailRequestVersion) return@resultResponse
                 hasLoadedDetail = true
                 updateState {
                     copy(
@@ -107,11 +125,13 @@ class NoticeDetailViewModel @Inject constructor(
                             ?: NoticeVoteStatus.OPEN,
                     )
                 }
+                loadManagementPermissions(requestedNoticeId, requestVersion)
                 markAsRead()
                 loadAuthorInfo(detail)
                 loadReceiverText(detail)
             },
             errorCallback = {
+                if (requestVersion != detailRequestVersion) return@resultResponse
                 updateState { copy(isLoading = false) }
                 emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL, isSuccess = false))
             },
@@ -165,7 +185,7 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     /**
-     * 작성자 여부 판단(메뉴/수신 확인 현황 노출 조건) 후 작성자 프로필 로드.
+     * 작성자 여부 판단(수신 확인 현황 노출 조건) 후 작성자 프로필 로드.
      *
      * memberId는 기수와 무관한 전역 식별자라 1순위로 비교한다.
      * challengerId는 기수마다 달라지므로 "최신 기수 하나"가 아니라
@@ -423,23 +443,75 @@ class NoticeDetailViewModel @Inject constructor(
     }
 
     // ---------------------------------------------------------------
-    // 수정 / 삭제 (작성자 전용)
+    // 수정 / 삭제 (서버의 개별 권한 기준)
     // ---------------------------------------------------------------
 
+    private fun loadManagementPermissions(requestedNoticeId: Long, requestVersion: Long) {
+        managementPermissionsJob?.cancel()
+        val permissionVersion = ++permissionRequestVersion
+        updateState { copy(canEdit = false, canDelete = false) }
+        managementPermissionsJob = viewModelScope.launch {
+            resultResponse(
+                response = getAuthAccessUseCase(ResourceType.NOTICE, requestedNoticeId),
+                successCallback = { access ->
+                    if (requestedNoticeId != noticeId || requestVersion != detailRequestVersion ||
+                        permissionVersion != permissionRequestVersion
+                    ) return@resultResponse
+                    // 다른 리소스 응답이나 누락된 권한을 작성자·역할 정보로 보완하지 않는다.
+                    val matchesNotice = access.resourceType == ResourceType.NOTICE && access.resourceId == requestedNoticeId
+                    updateState {
+                        copy(
+                            canEdit = matchesNotice && access.permissions.any { it.type == PermissionType.EDIT && it.hasPermission },
+                            canDelete = matchesNotice && access.permissions.any { it.type == PermissionType.DELETE && it.hasPermission },
+                        )
+                    }
+                },
+                errorCallback = {
+                    if (requestedNoticeId != noticeId || requestVersion != detailRequestVersion ||
+                        permissionVersion != permissionRequestVersion
+                    ) return@resultResponse
+                    updateState { copy(canEdit = false, canDelete = false) }
+                },
+            )
+        }
+    }
+
     fun onClickEdit() {
+        val state = uiState.value
+        if (!state.canEdit || state.isLoading || state.isDeleting || noticeId <= 0L) return
         reloadOnReturn = true
         emitEvent(NoticeDetailEvent.MoveToEdit(noticeId))
     }
 
     fun onClickDelete() = viewModelScope.launch {
+        val state = uiState.value
+        if (!state.canDelete || state.isLoading || state.isDeleting || noticeId <= 0L) return@launch
+        val requestedNoticeId = noticeId
+        updateState { copy(isDeleting = true) }
         resultResponse(
-            response = deleteNoticeUseCase(noticeId),
+            response = deleteNoticeUseCase(requestedNoticeId),
             successCallback = {
+                if (requestedNoticeId != noticeId) {
+                    updateState { copy(isDeleting = false) }
+                    return@resultResponse
+                }
+                // 진행 중인 상세·권한 응답이 삭제 성공 뒤 메뉴를 다시 열지 못하게 한다.
+                detailRequestVersion++
+                permissionRequestVersion++
+                managementPermissionsJob?.cancel()
+                updateState { copy(isLoading = false, isDeleting = false, canEdit = false, canDelete = false) }
                 emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_DELETE_SUCCESS, isSuccess = true))
                 // 목록이 삭제를 반영하도록 단순 뒤로가기와 구분해 알린다
                 emitEvent(NoticeDetailEvent.Deleted)
             },
             errorCallback = {
+                updateState { copy(isDeleting = false) }
+                if (requestedNoticeId != noticeId) return@resultResponse
+                // 서버 거부 뒤 오래된 허용 상태로 재실행하지 않도록 권한을 다시 확인한다.
+                updateState { copy(canEdit = false, canDelete = false) }
+                if (!uiState.value.isLoading) {
+                    loadManagementPermissions(requestedNoticeId, detailRequestVersion)
+                }
                 emitEvent(
                     NoticeDetailEvent.ShowToast(
                         it.message.ifBlank { AppStrings.NOTICE_DETAIL_DELETE_FAIL },
@@ -460,6 +532,9 @@ data class NoticeDetailUiState(
     val detail: NoticeDetail = NoticeDetail(),
     val isLoading: Boolean = true,
     val isAuthor: Boolean = false,
+    val canEdit: Boolean = false,
+    val canDelete: Boolean = false,
+    val isDeleting: Boolean = false,
     val authorName: String = "",
     val authorProfileImageUrl: String = "",
     val selectedOptionIds: ImmutableList<Long> = persistentListOf(),
