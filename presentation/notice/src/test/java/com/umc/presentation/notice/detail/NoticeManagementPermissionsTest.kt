@@ -7,6 +7,7 @@ import com.umc.domain.model.base.FailState
 import com.umc.domain.model.base.NETWORK_ERROR_CODE
 import com.umc.domain.model.enums.PermissionType
 import com.umc.domain.model.enums.ResourceType
+import com.umc.domain.model.notice.NoticeDetail
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -15,6 +16,32 @@ import org.junit.Test
 
 class NoticeManagementPermissionsTest {
     private val allowed = NoticeDetailUiState(isLoading = false, canEdit = true, canDelete = true)
+
+    @Test fun `같은 공지 상세 갱신 성공 뒤 권한 조회가 실패해도 메뉴를 유지한다`() {
+        val before = allowed.copy(detail = NoticeDetail(id = 99L))
+        listOf(NETWORK_ERROR_CODE, "503").forEach { code ->
+            assertEquals(before, before.withManagementPermissionResult(99L, failure(code)))
+        }
+    }
+
+    @Test fun `같은 공지의 일시적 상세 조회 실패는 로딩을 끝내고 현재 권한을 유지한다`() {
+        val before = allowed.copy(detail = NoticeDetail(id = 99L))
+        listOf(NETWORK_ERROR_CODE, "503").forEach { code ->
+            val state = before.copy(isLoading = true).withDetailLoadFailure(FailState(code = code, message = "실패"))
+            assertEquals(before, state)
+        }
+    }
+
+    @Test fun `상세 조회가 명시적으로 거부되면 이전 메뉴를 다시 노출하지 않는다`() {
+        val state = allowed.copy(detail = NoticeDetail(id = 99L), isLoading = true)
+            .withDetailLoadFailure(FailState(code = "403", message = "거부"))
+        assertFalse(state.isLoading)
+        assertFalse(state.canEdit)
+        assertFalse(state.canDelete)
+        val retried = state.copy(isLoading = true).withDetailLoadFailure(FailState(code = "503", message = "실패"))
+        assertFalse(retried.canEdit)
+        assertFalse(retried.canDelete)
+    }
 
     @Test fun `네트워크 단절로 갱신에 실패해도 기존 메뉴를 유지한다`() {
         assertSame(allowed, allowed.withManagementPermissionResult(99L, failure(NETWORK_ERROR_CODE)))

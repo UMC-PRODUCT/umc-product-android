@@ -101,7 +101,7 @@ class NoticeDetailViewModel @Inject constructor(
         val requestVersion = ++detailRequestVersion
         managementPermissionsJob?.cancel()
         permissionRequestVersion++
-        updateState { copy(isLoading = true, canEdit = false, canDelete = false) }
+        updateState { copy(isLoading = true) }
 
         if (requestedNoticeId <= 0L) {
             emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL, isSuccess = false))
@@ -132,7 +132,7 @@ class NoticeDetailViewModel @Inject constructor(
             },
             errorCallback = {
                 if (requestVersion != detailRequestVersion) return@resultResponse
-                updateState { copy(isLoading = false) }
+                updateState { withDetailLoadFailure(it) }
                 emitEvent(NoticeDetailEvent.ShowToast(AppStrings.NOTICE_DETAIL_LOAD_FAIL, isSuccess = false))
             },
         )
@@ -449,12 +449,12 @@ class NoticeDetailViewModel @Inject constructor(
     private fun loadManagementPermissions(requestedNoticeId: Long, requestVersion: Long) {
         managementPermissionsJob?.cancel()
         val permissionVersion = ++permissionRequestVersion
-        // 같은 공지의 권한 갱신 중에는 메뉴를 유지한다. 최초·상세 로드의 초기화는 loadDetail이 맡는다.
+        // 상세 재조회·권한 갱신 중에는 메뉴 상태를 보존하고, 새 권한 응답이 도착하면 갱신한다.
         managementPermissionsJob = viewModelScope.launch {
             resultResponse(
                 response = getAuthAccessUseCase(ResourceType.NOTICE, requestedNoticeId),
                 successCallback = { access ->
-                    if (requestedNoticeId != noticeId || requestVersion != detailRequestVersion ||
+                    if (requestVersion != detailRequestVersion ||
                         permissionVersion != permissionRequestVersion
                     ) return@resultResponse
                     updateState {
@@ -462,7 +462,7 @@ class NoticeDetailViewModel @Inject constructor(
                     }
                 },
                 errorCallback = {
-                    if (requestedNoticeId != noticeId || requestVersion != detailRequestVersion ||
+                    if (requestVersion != detailRequestVersion ||
                         permissionVersion != permissionRequestVersion
                     ) return@resultResponse
                     updateState { withManagementPermissionResult(requestedNoticeId, ApiState.Fail(it)) }
@@ -486,10 +486,6 @@ class NoticeDetailViewModel @Inject constructor(
         resultResponse(
             response = deleteNoticeUseCase(requestedNoticeId),
             successCallback = {
-                if (requestedNoticeId != noticeId) {
-                    updateState { copy(isDeleting = false) }
-                    return@resultResponse
-                }
                 // 진행 중인 상세·권한 응답이 삭제 성공 뒤 메뉴를 다시 열지 못하게 한다.
                 detailRequestVersion++
                 permissionRequestVersion++
@@ -501,7 +497,6 @@ class NoticeDetailViewModel @Inject constructor(
             },
             errorCallback = {
                 updateState { copy(isDeleting = false) }
-                if (requestedNoticeId != noticeId) return@resultResponse
                 // 일시적 삭제 실패에는 재시도할 메뉴를 유지하고, 서버 권한을 다시 확인한다.
                 updateState { withManagementPermissionResult(requestedNoticeId, ApiState.Fail(it)) }
                 if (!uiState.value.isLoading) {
