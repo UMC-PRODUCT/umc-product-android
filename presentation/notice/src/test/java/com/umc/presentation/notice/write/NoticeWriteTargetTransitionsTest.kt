@@ -22,7 +22,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class NoticeWriteTransitionTest {
+class NoticeWriteTargetTransitionsTest {
     private val active = GisuItem(12, 12, true)
     private val past = GisuItem(9, 9)
     private val gisu = WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU)
