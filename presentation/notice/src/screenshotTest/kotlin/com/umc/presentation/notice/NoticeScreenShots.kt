@@ -27,3 +27,10 @@ fun NoticeScreenPartSelectedShot() {
 fun NoticeScreenEmptyPageRetryShot() {
     UmcTheme { NoticeScreenEmptyPageRetryPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun NoticeScreenPageRetryShot() {
+    UmcTheme { NoticeScreenPageRetryPreview() }
+}

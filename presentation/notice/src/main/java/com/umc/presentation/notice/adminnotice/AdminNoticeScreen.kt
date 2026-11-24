@@ -47,6 +47,8 @@ import com.umc.component.theme.grey700
 import com.umc.component.theme.grey950
 import com.umc.component.theme.main100
 import com.umc.component.theme.main500
+import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.model.notice.NoticeTarget
 import com.umc.presentation.notice.NoticeCard
 import com.umc.presentation.notice.NoticeNextPageItem
 import kotlinx.collections.immutable.persistentListOf
@@ -99,6 +101,8 @@ fun AdminNoticeScreen(
     onClickNotice: (Long) -> Unit = {},
     onLoadNextPage: () -> Unit = {},
 ) {
+    val isEmptyPageRetry = uiState.noticeList.isEmpty() && uiState.isNextPageError
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -200,8 +204,12 @@ fun AdminNoticeScreen(
             else -> {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(
+                        start = 20.dp,
+                        end = 20.dp,
+                        bottom = if (isEmptyPageRetry) 0.dp else 24.dp,
+                    ),
+                    verticalArrangement = if (isEmptyPageRetry) Arrangement.Center else Arrangement.spacedBy(16.dp),
                 ) {
                     items(
                         items = uiState.noticeList,
@@ -347,6 +355,34 @@ internal fun AdminNoticeScreenEmptyPageRetryPreview() {
             visibleTabs = AdminNoticeTab.entries.toImmutableList(),
             selectedTab = AdminNoticeTab.CENTRAL,
             hasLoaded = true,
+            errorMessage = "네트워크 연결을 확인해 주세요",
+            isNextPageError = true,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun AdminNoticeScreenPageRetryPreview() {
+    AdminNoticeScreen(
+        uiState = AdminNoticeUiState(
+            visibleTabs = AdminNoticeTab.entries.toImmutableList(),
+            selectedTab = AdminNoticeTab.CENTRAL,
+            hasLoaded = true,
+            noticeList = persistentListOf(
+                NoticeSummary(
+                    id = 1L,
+                    title = "정기 세션 안내",
+                    content = "이번 주 정기 세션 일정을 확인해 주세요.",
+                    shouldSendNotification = false,
+                    viewCount = 10,
+                    createdAt = "2026-01-01T00:00:00",
+                    targetInfo = NoticeTarget(targetGisuId = 1),
+                    authorChallengerId = 1L,
+                    authorNickname = "운영진",
+                    authorName = "작성자",
+                ),
+            ),
             errorMessage = "네트워크 연결을 확인해 주세요",
             isNextPageError = true,
         ),

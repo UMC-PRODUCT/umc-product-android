@@ -55,6 +55,8 @@ import com.umc.component.theme.main600
 import com.umc.component.theme.main700
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.model.notice.NoticeTarget
 import com.umc.domain.model.organization.GisuItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -144,6 +146,8 @@ fun NoticeScreen(
     onRefresh: () -> Unit = {},
     onClickWriteNotice: () -> Unit = {},
 ) {
+    val isEmptyPageRetry = uiState.noticeList.isEmpty() && uiState.isNextPageError
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -198,8 +202,12 @@ fun NoticeScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(
+                        start = 20.dp,
+                        end = 20.dp,
+                        bottom = if (isEmptyPageRetry) 0.dp else 100.dp,
+                    ),
+                    verticalArrangement = if (isEmptyPageRetry) Arrangement.Center else Arrangement.spacedBy(16.dp),
                 ) {
                     items(
                         items = uiState.noticeList,
@@ -483,6 +491,32 @@ internal fun NoticeScreenEmptyPageRetryPreview() {
     NoticeScreen(
         uiState = NoticeUiState(
             nowTitle = "12기 공지사항",
+            errorMessage = "네트워크 연결을 확인해 주세요",
+            isNextPageError = true,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeScreenPageRetryPreview() {
+    NoticeScreen(
+        uiState = NoticeUiState(
+            nowTitle = "12기 공지사항",
+            noticeList = persistentListOf(
+                NoticeSummary(
+                    id = 1L,
+                    title = "정기 세션 안내",
+                    content = "이번 주 정기 세션 일정을 확인해 주세요.",
+                    shouldSendNotification = false,
+                    viewCount = 10,
+                    createdAt = "2026-01-01T00:00:00",
+                    targetInfo = NoticeTarget(targetGisuId = 1),
+                    authorChallengerId = 1L,
+                    authorNickname = "운영진",
+                    authorName = "작성자",
+                ),
+            ),
             errorMessage = "네트워크 연결을 확인해 주세요",
             isNextPageError = true,
         ),
