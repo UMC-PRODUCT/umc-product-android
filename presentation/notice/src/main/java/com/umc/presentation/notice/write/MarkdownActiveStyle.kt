@@ -20,6 +20,8 @@ data class MarkdownMarker(val open: String, val close: String)
 data class MarkdownActiveStyles(
     val inline: ImmutableSet<MarkdownStyle> = persistentSetOf(),
     val isBullet: Boolean = false,
+    val isDashList: Boolean = false,
+    val isNumberList: Boolean = false,
     val isQuote: Boolean = false,
     val heading: MarkdownHeading = MarkdownHeading.BODY,
 ) {
@@ -54,6 +56,8 @@ object MarkdownScanner {
         "# " to MarkdownHeading.TITLE1,
     )
 
+    private val numberListPrefix = Regex("""^\d+\.\s""")
+
     /** 열려 있는 마커 하나. [close]는 이 마커를 닫는 문자열 */
     private data class OpenMarker(
         val marker: String,
@@ -76,6 +80,8 @@ object MarkdownScanner {
         return MarkdownActiveStyles(
             inline = openMarkers(text, lineStart, at).flatMap { it.styles }.toImmutableSet(),
             isBullet = body.startsWith("- "),
+            isDashList = body.startsWith("– "),
+            isNumberList = numberListPrefix.containsMatchIn(body),
             isQuote = body.startsWith("> "),
             heading = headingPrefix?.let { headingPrefixes[it] } ?: MarkdownHeading.BODY,
         )
@@ -112,6 +118,12 @@ object MarkdownScanner {
         fun fits(marker: String) = text.startsWith(marker, i) && i + marker.length <= end
 
         while (i < end) {
+            // 백슬래시 이스케이프된 문자는 서식 마커로 해석하지 않는다
+            if (text[i] == '\\' && i + 1 < end) {
+                i += 2
+                continue
+            }
+
             val markOpen = MARK_OPEN.matchAt(text, i)?.value?.takeIf { i + it.length <= end }
 
             when {

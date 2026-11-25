@@ -109,7 +109,7 @@ class NoticeWriteViewModel @Inject constructor(
                 updateState {
                     copy(
                         title = detail.title,
-                        content = TextFieldValue(detail.content),
+                        content = TextFieldValue(MarkdownEditActions.sanitizeForSubmit(detail.content)),
                         isLinkVisible = linkText.isNotBlank(),
                         linkText = linkText,
                         // 이미지 교체(PATCH)에는 이미지 행 id가 아니라 서버가 준 fileId를 보내야 한다.
@@ -330,9 +330,9 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(title = title) }
     }
 
-    /** 개행이 들어오면 그 줄에서 열린 마크다운은 닫아서 다음 줄로 넘기지 않는다 */
+    /** 본문 입력 후처리: 붙여넣기 정규화, 목록 Enter 이어쓰기/재번호/탈출, 타이핑 자동 변환, 이스케이프 삭제 보정 */
     fun onContentChanged(content: TextFieldValue) {
-        val adjusted = MarkdownEditActions.closeMarkersOnNewline(uiState.value.content, content)
+        val adjusted = MarkdownEditActions.processContentChange(uiState.value.content, content)
         updateState { copy(content = adjusted) }
     }
 
@@ -539,7 +539,7 @@ class NoticeWriteViewModel @Inject constructor(
                     existingId,
                     NoticeUpdateRequest(
                         title = state.title.trim(),
-                        content = state.content.text,
+                        content = MarkdownEditActions.sanitizeForSubmit(state.content.text),
                         mustRead = state.mustRead,
                     )
                 ),
@@ -563,7 +563,7 @@ class NoticeWriteViewModel @Inject constructor(
             response = createNoticeUseCase(
                 NoticeCreateRequest(
                     title = state.title.trim(),
-                    content = state.content.text,
+                    content = MarkdownEditActions.sanitizeForSubmit(state.content.text),
                     shouldNotify = state.sendNotification,
                     targetInfo = target,
                 )

@@ -32,6 +32,261 @@ internal fun TextFieldValue.endComposition(): TextFieldValue =
 object MarkdownEditActions {
 
     private val headingPrefixes = listOf("### ", "## ", "# ")
+    private val numberListPrefix = Regex("""^(\d+)\. """)
+    private val closingTriggerChars = setOf('`', ')', '*', '~', '_')
+    private val completedInlineAtEnd = listOf(
+        Regex("""(?<!\\)`(?:\\.|[^`\n])+`$"""),
+        Regex("""(?<!\\)\[(?:\\.|[^\]\n])+]\((?:\\.|[^)\n])+\)$"""),
+        Regex("""(?<!\\)\*\*\*(?=\S).+?(?<=\S)\*\*\*$"""),
+        Regex("""(?<!\\)\*\*_(?=\S).+?(?<=\S)_\*\*$"""),
+        Regex("""(?<!\\)(?<!\*)\*\*(?=\S).+?(?<=\S)\*\*$"""),
+        Regex("""(?<!\\)~~(?=\S).+?(?<=\S)~~$"""),
+        Regex("""(?<!\\)(?<!\*)\*(?=\S).+?(?<=\S)\*$"""),
+        Regex("""(?<!\\)(?<!_)_(?=\S).+?(?<=\S)_$"""),
+    )
+
+    /** 저장·수정 전송 및 수정 로드 시 개행(`\r\n`/`\r` → `\n`)과 Zero-Width Space(`\u200B`)를 정리한다 */
+    fun sanitizeForSubmit(raw: String): String =
+        raw.replace("\r\n", "\n")
+            .replace("\r", "\n")
+            .replace("\u200B", "")
+
+    /**
+     * 에디터 입력 변화에 대한 통합 후처리기.
+     *
+     * 1. 붙여넣기 정규화 (`\r\n`/`\u200B`/`• ` → `- `/레거시 공백 마커)
+     * 2. 숨겨진 이스케이프(`\` + 15자) 백스페이스 동시 삭제 보정
+     * 3. 개행(Enter) 시 목록 자동 이어쓰기·번호 재정렬·빈 목록 탈출 및 열린 인라인 마커 닫기
+     * 4. 타이핑 자동 변환 (줄 시작 `* ` → `- `, 닫는 인라인 마커 완성 시 서식 미상속)
+     */
+    fun processContentChange(previous: TextFieldValue, current: TextFieldValue): TextFieldValue {
+        if (previous.text == current.text) return current
+
+        normalizePaste(previous, current)?.let { return it }
+        deleteHiddenEscapeOnBackspace(previous, current)?.let { return it }
+        handleNewline(previous, current)?.let { return it }
+        autoFormatOnTyping(previous, current)?.let { return it }
+
+        return current
+    }
+
+    /** 붙여넣기(2글자 이상 일괄 삽입) 시 개행·ZWS·불릿 기호·레거시 공백 마커를 정규화한다 */
+    private fun normalizePaste(previous: TextFieldValue, current: TextFieldValue): TextFieldValue? {
+        if (!current.selection.collapsed) return null
+        val replaceStart = previous.selection.min
+        val replaceEnd = previous.selection.max
+        val prefix = previous.text.substring(0, replaceStart)
+        val suffix = previous.text.substring(replaceEnd)
+        val insertedEnd = current.text.length - suffix.length
+        if (insertedEnd < replaceStart) return null
+        if (!current.text.startsWith(prefix) || !current.text.endsWith(suffix)) return null
+
+        val inserted = current.text.substring(replaceStart, insertedEnd)
+        if (inserted.length < 2) return null
+
+        val atLineStart = replaceStart == 0 || previous.text[replaceStart - 1] == '\n'
+        val normalized = normalizePastedText(inserted, startsAtLineHead = atLineStart)
+        if (normalized == inserted) return null
+
+        val newText = prefix + normalized + suffix
+        return current.copy(
+            text = newText,
+            selection = TextRange(replaceStart + normalized.length),
+        ).endComposition()
+    }
+
+    private fun normalizePastedText(inserted: String, startsAtLineHead: Boolean): String {
+        val cleaned = sanitizeForSubmit(inserted)
+        val lines = cleaned.split('\n').mapIndexed { index, line ->
+            val canConvertBullet = index > 0 || startsAtLineHead
+            if (canConvertBullet && line.startsWith("• ")) "- " + line.removePrefix("• ") else line
+        }
+        return normalizeLegacyWhitespaceMarkers(lines.joinToString("\n"))
+    }
+
+    /**
+     * 편집기에서 `\`가 숨겨진 이스케이프 시퀀스(`\*`, `\#`, `\.` 등)의 대상 문자를
+     * 백스페이스로 지울 때 앞의 숨겨진 `\`도 함께 제거해 고아 `\` 잔존을 막는다.
+     */
+    private fun deleteHiddenEscapeOnBackspace(
+        previous: TextFieldValue,
+        current: TextFieldValue,
+    ): TextFieldValue? {
+        if (!previous.selection.collapsed || !current.selection.collapsed) return null
+        if (current.text.length != previous.text.length - 1) return null
+
+        val deletedAt = current.selection.min
+        if (deletedAt != previous.selection.min - 1 || deletedAt <= 0) return null
+        if (deletedAt >= previous.text.length) return null
+
+        val deletedChar = previous.text[deletedAt]
+        if (deletedChar !in MARKDOWN_ESCAPABLE_CHARS) return null
+
+        // 바로 앞에 연속된 '\'가 홀수 개일 때만 직전 '\'가 deletedChar를 이스케이프하고 있었다
+        var slashCount = 0
+        var i = deletedAt - 1
+        while (i >= 0 && previous.text[i] == '\\') {
+            slashCount++
+            i--
+        }
+        if (slashCount % 2 == 0) return null
+
+        val newText = current.text.removeRange(deletedAt - 1, deletedAt)
+        return current.copy(
+            text = newText,
+            selection = TextRange(deletedAt - 1),
+        ).endComposition()
+    }
+
+    /**
+     * 단일 개행(Enter) 입력 처리.
+     * - 빈 목록 줄(`- `, `– `, `1. `)에서 Enter → 목록 접두어 제거 및 탈출
+     * - 내용 있는 목록 줄에서 Enter → 열린 인라인 마커 닫기 + 다음 항목 자동 생성(번호 목록은 +1 및 후속 재번호)
+     * - 일반 줄에서 Enter → 열린 인라인 마커 닫기
+     */
+    private fun handleNewline(previous: TextFieldValue, current: TextFieldValue): TextFieldValue? {
+        val cursor = current.selection.min
+        val isSingleNewlineInput = current.text.length == previous.text.length + 1 &&
+            current.selection.collapsed &&
+            cursor in 1..current.text.length &&
+            current.text[cursor - 1] == '\n'
+        if (!isSingleNewlineInput) return null
+
+        val newlineAt = cursor - 1
+        val lineStart = current.text.lastIndexOf('\n', newlineAt - 1) + 1
+        val prevLine = current.text.substring(lineStart, newlineAt)
+        val listMatch = matchListPrefix(prevLine)
+            ?: return closeMarkersOnNewline(previous, current)
+
+        val remainderOnPrevLine = prevLine.substring(listMatch.prefixLength)
+        val afterNewline = current.text.substring(cursor)
+        val nextLineBreak = afterNewline.indexOf('\n').let { if (it == -1) afterNewline.length else it }
+        val splitTail = afterNewline.substring(0, nextLineBreak)
+
+        // 빈 목록 줄에서 Enter → 목록 접두어와 방금 입력한 개행을 제거해 목록에서 탈출한다
+        if (remainderOnPrevLine.isBlank() && splitTail.isEmpty()) {
+            val newText = current.text.substring(0, lineStart) + afterNewline
+            return current.copy(
+                text = newText,
+                selection = TextRange(lineStart),
+            ).endComposition()
+        }
+
+        // 열린 인라인 마커를 줄 끝에서 닫아 다음 목록 항목으로 서식이 번지지 않게 한다
+        val closers = MarkdownScanner.closersAt(current.text, newlineAt)
+        val orphanEnd = if (closers.isNotEmpty() && current.text.startsWith(closers, cursor)) {
+            cursor + closers.length
+        } else {
+            cursor
+        }
+
+        val nextPrefix = listMatch.nextPrefix()
+        val tailAfterOrphan = current.text.substring(orphanEnd)
+        val updatedTail = if (listMatch is ListPrefixMatch.Numbered) {
+            renumberFollowingLines(tailAfterOrphan, startNumber = listMatch.number + 2)
+        } else {
+            tailAfterOrphan
+        }
+
+        val beforeNewline = current.text.substring(0, newlineAt) + closers
+        val newText = beforeNewline + "\n" + nextPrefix + updatedTail
+        val newCursor = beforeNewline.length + 1 + nextPrefix.length
+        return current.copy(
+            text = newText,
+            selection = TextRange(newCursor),
+        ).endComposition()
+    }
+
+    /** 번호 목록 중간에 새 항목이 삽입된 뒤, 바로 이어지는 후속 번호 목록 줄들을 연속 재번호한다 */
+    private fun renumberFollowingLines(tail: String, startNumber: Int): String {
+        val firstNewline = tail.indexOf('\n')
+        if (firstNewline == -1) return tail
+
+        val firstLineRemainder = tail.substring(0, firstNewline)
+        val followingLines = tail.substring(firstNewline + 1).split('\n')
+        var nextNumber = startNumber
+        var renumbering = true
+        val updated = followingLines.map { line ->
+            if (!renumbering) return@map line
+            val match = numberListPrefix.find(line)
+            if (match != null) {
+                val replaced = "${nextNumber}. " + line.substring(match.value.length)
+                nextNumber++
+                replaced
+            } else {
+                renumbering = false
+                line
+            }
+        }
+        return firstLineRemainder + "\n" + updated.joinToString("\n")
+    }
+
+    /**
+     * 단일 문자 타이핑 자동 변환:
+     * - 줄 시작 `* ` 입력 시 `- `로 변환 (화면에는 즉시 `• `로 표시)
+     * - 닫는 인라인 마커 완성 시 composition을 종료해 다음 입력에 서식이 번지지 않게 함
+     */
+    private fun autoFormatOnTyping(previous: TextFieldValue, current: TextFieldValue): TextFieldValue? {
+        if (!current.selection.collapsed || current.text.length != previous.text.length + 1) return null
+        val cursor = current.selection.min
+        if (cursor <= 0 || cursor > current.text.length) return null
+
+        val typedChar = current.text[cursor - 1]
+        val lineStart = current.text.lastIndexOf('\n', cursor - 1) + 1
+        val lineBeforeCursor = current.text.substring(lineStart, cursor)
+
+        // 줄 시작에서 `* `를 치면 글머리 목록 `- `로 자동 변환한다
+        if (typedChar == ' ' && lineBeforeCursor == "* ") {
+            val newText = current.text.replaceRange(lineStart, cursor, "- ")
+            return current.copy(
+                text = newText,
+                selection = TextRange(cursor),
+            ).endComposition()
+        }
+
+        // 닫는 마커가 완성된 직후에는 IME 조합을 끊어 다음 입력에 서식이 상속되지 않게 한다
+        if (typedChar in closingTriggerChars &&
+            completedInlineAtEnd.any { it.containsMatchIn(lineBeforeCursor) }
+        ) {
+            return current.endComposition()
+        }
+
+        return null
+    }
+
+    private sealed class ListPrefixMatch(val prefixLength: Int) {
+        abstract fun nextPrefix(): String
+
+        data object Bullet : ListPrefixMatch(2) {
+            override fun nextPrefix(): String = "- "
+        }
+
+        data object Dash : ListPrefixMatch(2) {
+            override fun nextPrefix(): String = "– "
+        }
+
+        data class Numbered(val number: Int, val rawLength: Int) : ListPrefixMatch(rawLength) {
+            override fun nextPrefix(): String = "${number + 1}. "
+        }
+    }
+
+    private fun matchListPrefix(line: String): ListPrefixMatch? {
+        if (line.startsWith("- ")) return ListPrefixMatch.Bullet
+        if (line.startsWith("– ")) return ListPrefixMatch.Dash
+        val match = numberListPrefix.find(line) ?: return null
+        val number = match.groupValues[1].toIntOrNull() ?: return null
+        return ListPrefixMatch.Numbered(number = number, rawLength = match.value.length)
+    }
+
+    /** 제목·인용구·목록 등 기존 줄 단위 블록 prefix를 찾아 반환한다 */
+    private fun findBlockPrefix(line: String): String {
+        headingPrefixes.firstOrNull { line.startsWith(it) }?.let { return it }
+        if (line.startsWith("> ")) return "> "
+        if (line.startsWith("- ")) return "- "
+        if (line.startsWith("– ")) return "– "
+        numberListPrefix.find(line)?.let { return it.value }
+        return ""
+    }
 
     /**
      * 개행이 입력되면 그 줄에서 열려 있던 인라인 마커를 개행 앞에서 모두 닫는다.
@@ -75,7 +330,7 @@ object MarkdownEditActions {
         val lineEnd = text.indexOf('\n', lineStart).let { if (it == -1) text.length else it }
         val line = text.substring(lineStart, lineEnd)
 
-        val existing = headingPrefixes.firstOrNull { line.startsWith(it) } ?: ""
+        val existing = findBlockPrefix(line)
         if (existing == heading.prefix) return value
 
         val newLine = heading.prefix + line.removePrefix(existing)
@@ -188,13 +443,15 @@ object MarkdownEditActions {
             .let { if (it == -1) text.length else it }
 
         val lines = text.substring(blockStart, blockEnd).split('\n')
-        val bodies = lines.map { line ->
-            line.removePrefix(headingPrefixes.firstOrNull { line.startsWith(it) } ?: "")
-        }
-        val isActive = bodies.all { it.startsWith(prefix) }
+        val isActive = lines.all { it.startsWith(prefix) }
 
-        val newLines = bodies.map { body ->
-            if (isActive) body.removePrefix(prefix) else prefix + body
+        val newLines = lines.map { line ->
+            if (isActive) {
+                line.removePrefix(prefix)
+            } else {
+                val existing = findBlockPrefix(line)
+                prefix + line.removePrefix(existing)
+            }
         }
         val newText = text.replaceRange(blockStart, blockEnd, newLines.joinToString("\n"))
 
