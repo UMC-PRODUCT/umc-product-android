@@ -187,7 +187,7 @@ class MarkdownVisualTransformationTest {
     @Test
     fun `읽기 전용 모드에서 허용 스킴 링크만 클릭 가능하고 비허용 스킴은 라벨만 표시한다`() {
         val opened = mutableListOf<String>()
-        val raw = """[**UMC**](https://umc.example.com/a\(1\)) [메일](mailto:test@umc.dev) [위험](javascript:alert(1))"""
+        val raw = """[**UMC**](https://umc.example.com/a(1\)) [메일](mailto:test@umc.dev) [위험](javascript:alert(1\))"""
         val rendered = readOnlyParser(opened).parse(raw)
         val text = rendered.transformed.text
 
@@ -197,6 +197,26 @@ class MarkdownVisualTransformationTest {
         assertEquals("https://umc.example.com/a(1)", (links[0].item as LinkAnnotation.Clickable).tag)
         assertEquals("mailto:test@umc.dev", (links[1].item as LinkAnnotation.Clickable).tag)
         assertTrue(text.spanStyles.any { it.item.fontWeight == FontWeight.Bold })
+    }
+
+    @Test
+    fun `링크 검사와 클릭 주소는 앞뒤 공백을 제거한 동일 URL을 사용한다`() {
+        val text = readOnlyParser().parse("[링크](  HTTPS://umc.dev/path  )").transformed.text
+        assertEquals("링크", text.text)
+        val link = text.getLinkAnnotations(0, text.length).single().item as LinkAnnotation.Clickable
+        assertEquals("HTTPS://umc.dev/path", link.tag)
+        // URL 구간은 닫는 괄호와 백슬래시만 해제한다. 일반 텍스트의 15자 규칙과 구분한다.
+        assertEquals("""https://a.dev/\(x)\tail""", unescapeLinkUrl("""https://a.dev/\(x\)\\tail"""))
+    }
+
+    @Test
+    fun `자동 링크는 일반 텍스트 이스케이프를 표시와 클릭 주소에서 해제한다`() {
+        val raw = """안내 HTTPS://a.dev/a\(1\)\_b\. 끝"""
+        val text = readOnlyParser().parse(raw).transformed.text
+        assertEquals("안내 HTTPS://a.dev/a(1)_b. 끝", text.text)
+        val link = text.getLinkAnnotations(0, text.length).single()
+        assertEquals("HTTPS://a.dev/a(1)_b", (link.item as LinkAnnotation.Clickable).tag)
+        assertEquals("HTTPS://a.dev/a(1)_b", text.text.substring(link.start, link.end))
     }
 
     @Test

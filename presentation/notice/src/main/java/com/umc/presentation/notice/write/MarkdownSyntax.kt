@@ -31,3 +31,11 @@ internal fun markdownCodeRanges(text: String): List<IntRange> {
     }
     return ranges
 }
+
+internal fun unescapeMarkdownText(text: String): String = buildString(text.length) {
+    var i = 0
+    while (i < text.length) {
+        if (text[i] == '\\' && i + 1 < text.length && text[i + 1] in MARKDOWN_ESCAPABLE_CHARS) i++
+        append(text[i++])
+    }
+}

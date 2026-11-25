@@ -242,7 +242,7 @@ class MarkdownVisualTransformation(
 
             when (token.kind) {
                 InlineTokenKind.LINK -> {
-                    val unescapedUrl = unescapeLinkUrl(token.argument.orEmpty())
+                    val unescapedUrl = unescapeLinkUrl(token.argument.orEmpty()).trim()
                     if (isReadOnly) {
                         hidden += HiddenRange(openStart, innerStart, mapAfter = true)
                         hidden += HiddenRange(innerEnd, closeEnd, mapAfter = false)
@@ -359,15 +359,22 @@ class MarkdownVisualTransformation(
         var cursor = 0
         PLAIN_URL_REGEX.findAll(segment).forEach { match ->
             val rawUrlStart = match.range.first
-            val trimmedUrl = trimTrailingUrlPunctuation(match.value)
+            val trimmedUrl = trimTrailingUrlPunctuation(unescapeMarkdownText(match.value))
             if (trimmedUrl.isEmpty()) return@forEach
-            val rawUrlEnd = rawUrlStart + trimmedUrl.length
+            // 문장부호를 제외한 표시 길이를 원문 좌표로 환산해 '\.'의 '\'만 링크에 남지 않게 한다.
+            var rawLength = 0
+            repeat(trimmedUrl.length) {
+                rawLength += if (match.value[rawLength] == '\\' && rawLength + 1 < match.value.length &&
+                    match.value[rawLength + 1] in MARKDOWN_ESCAPABLE_CHARS) 2 else 1
+            }
+            val rawUrlEnd = rawUrlStart + rawLength
 
             if (rawUrlStart > cursor) {
                 collectPlainUnescape(raw, start + cursor, start + rawUrlStart, hidden)
             }
             val absStart = start + rawUrlStart
             val absEnd = start + rawUrlEnd
+            collectPlainUnescape(raw, absStart, absEnd, hidden)
             links += LinkRange(trimmedUrl, absStart, absEnd)
             spans += SpanRange(
                 SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline),
@@ -699,7 +706,7 @@ private fun trimTrailingUrlPunctuation(url: String): String {
 
 private val ALLOWED_LINK_SCHEMES = setOf("https", "http", "mailto", "tel")
 private val TRAILING_URL_PUNCTUATION = setOf('.', ',', ';', ':', '!', '?')
-private val PLAIN_URL_REGEX = Regex("""https?://[^\s<>]+""")
+private val PLAIN_URL_REGEX = Regex("""https?://[^\s<>]+""", RegexOption.IGNORE_CASE)
 private val LEGACY_BOLD_WHITESPACE = Regex("""(?<!\*)\*\*(?!\*)((?:\\.|(?!\*\*)[^\\\n])+)\*\*(?!\*)""")
 private val LEGACY_STRIKE_WHITESPACE = Regex("""~~((?:\\.|(?!~~)[^\\\n])+)~~""")
 
