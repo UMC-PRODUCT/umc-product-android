@@ -4,9 +4,9 @@ package com.umc.domain.usecase.ai
  * 온디바이스 모델의 출력을 앱이 렌더링할 수 있는 마크다운으로 되돌리는 결정론적 후처리기.
  *
  * 모델에게 형식을 지키라고 프롬프트로 부탁하는 것만으로는 출력이 보장되지 않는다. 특히 작은
- * 온디바이스 모델은 코드펜스로 감싸기, "다음은 요약입니다" 같은 머리말 붙이기, 번호 목록·표·
- * 수평선처럼 이 앱이 지원하지 않는 문법 사용을 자주 한다. 앱의 마크다운 파서는 지원하지 않는
- * 마커를 숨기지 못하므로, 그대로 두면 사용자 화면에 `1.` `|---|` 같은 기호가 노출된다.
+ * 온디바이스 모델은 코드펜스로 감싸기, "다음은 요약입니다" 같은 머리말 붙이기, 표·수평선처럼
+ * 이 앱이 지원하지 않는 문법 사용을 자주 한다. 앱의 마크다운 파서는 지원하지 않는 마커를
+ * 숨기지 못하므로, 그대로 두면 사용자 화면에 `|---|` 같은 기호가 노출된다.
  *
  * 따라서 모델에는 "문장을 다듬는" 일만 맡기고, 형식 보정은 규칙으로 확정한다.
  * 추론 결과를 신뢰 구간 밖으로 내보내지 않는 것이 목적이다.
@@ -17,7 +17,6 @@ object NoticeMarkdownSanitizer {
     private val LEADING_PREAMBLE = Regex(
         "^\\s*(?:다음은|아래는)[^\\n]{0,40}(?:입니다|이에요|예요)[.:]?\\s*\\n+",
     )
-    private val ORDERED_LIST = Regex("^(\\s*)\\d+[.)]\\s+", RegexOption.MULTILINE)
     private val HORIZONTAL_RULE = Regex("^[ \\t]*(?:-{3,}|\\*{3,}|_{3,})[ \\t]*\\r?\\n?", RegexOption.MULTILINE)
     private val TABLE_SEPARATOR = Regex("^[ \\t]*\\|[ \\t:|-]*-{2,}[ \\t:|-]*\\|[ \\t]*\\r?\\n?", RegexOption.MULTILINE)
     private val TABLE_ROW = Regex("^\\s*\\|(.+)\\|\\s*$", RegexOption.MULTILINE)
@@ -30,7 +29,6 @@ object NoticeMarkdownSanitizer {
     fun countViolations(text: String): Int =
         CODE_FENCE.findAll(text).count() +
             LEADING_PREAMBLE.findAll(text).count() +
-            ORDERED_LIST.findAll(text).count() +
             HORIZONTAL_RULE.findAll(text).count() +
             TABLE_SEPARATOR.findAll(text).count() +
             TABLE_ROW.findAll(text).count() +
@@ -51,7 +49,6 @@ object NoticeMarkdownSanitizer {
         }
         text = HORIZONTAL_RULE.replace(text, "")
         text = CHECKBOX.replace(text) { m -> m.groupValues[1] + "- " }
-        text = ORDERED_LIST.replace(text) { m -> m.groupValues[1] + "- " }
         // "** 텍스트 **" 처럼 마커 안쪽에 공백이 있으면 파서가 토큰으로 인정하지 않는다.
         text = MARKER_INNER_SPACE.replace(text) { m ->
             m.groupValues[1] + m.groupValues[2].trim() + m.groupValues[3]
