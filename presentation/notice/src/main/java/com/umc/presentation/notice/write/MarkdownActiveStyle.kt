@@ -118,9 +118,8 @@ object MarkdownScanner {
         fun fits(marker: String) = text.startsWith(marker, i) && i + marker.length <= end
 
         while (i < end) {
-            // 백슬래시 이스케이프된 문자는 서식 마커로 해석하지 않는다
-            if (text[i] == '\\' && i + 1 < end) {
-                i += 2
+            if (isMarkdownEscaped(text, i)) {
+                i++
                 continue
             }
 

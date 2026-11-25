@@ -14,6 +14,39 @@ import org.junit.Test
 
 class MarkdownVisualTransformationTest {
 
+    @Test
+    fun `백슬래시 홀짝과 이스케이프된 닫는 마커를 구분한다`() {
+        val parser = editorParser()
+        val even = parser.parse("""\\**굵게**""").transformed.text
+        assertEquals("""\굵게""", even.text)
+        assertTrue(even.spanStyles.any { it.item.fontWeight == FontWeight.Bold })
+        val odd = parser.parse("""\**리터럴\**""").transformed.text
+        assertEquals("**리터럴**", odd.text)
+        assertTrue(odd.spanStyles.isEmpty())
+
+        listOf(
+            """**a\** b**""" to "a** b",
+            """~~a\~~ b~~""" to "a~~ b",
+            """*a\*b*""" to "a*b",
+            """_a\_b_""" to "a_b",
+            """***a\*** b***""" to "a*** b",
+            """**_a\_** b_**""" to "a_** b",
+            """<u>a\</u>b</u>""" to "a</u>b",
+            """<mark>a\</mark>b</mark>""" to "a</mark>b",
+        ).forEach { (raw, expected) ->
+            assertEquals(raw, expected, readOnlyParser().parse(raw).transformed.text.text)
+        }
+    }
+
+    @Test
+    fun `공백 인접 복합 마커는 다른 서식으로 재해석하지 않는다`() {
+        listOf("*** ***", "*** 강조 ***", "**_ _**", "**_ 강조 _**", "**강조 **").forEach { raw ->
+            val text = editorParser().parse(raw).transformed.text
+            assertEquals(raw, text.text)
+            assertTrue(raw, text.spanStyles.isEmpty())
+        }
+    }
+
     private val markerColor = Color.Gray
     private val linkColor = Color.Blue
 

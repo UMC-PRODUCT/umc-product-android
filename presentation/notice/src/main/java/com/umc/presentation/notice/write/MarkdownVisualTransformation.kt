@@ -386,7 +386,16 @@ class MarkdownVisualTransformation(
 
         InlineTokenKind.entries.forEachIndexed { priority, kind ->
             if (isReadOnly && kind.isEmptyPair) return@forEachIndexed
-            val match = kind.regex.find(region, from) ?: return@forEachIndexed
+            var match = kind.regex.findUnescaped(region, from) ?: return@forEachIndexed
+            // 공백 때문에 무효인 **_ ... _**가 일반 굵게로 재해석되지 않게 한다.
+            if (kind == InlineTokenKind.BOLD) {
+                while (match.groupValues[1].let { it.length >= 2 && it.startsWith('_') && it.endsWith('_') &&
+                        it.substring(1, it.length - 1).let { body -> body.isEmpty() ||
+                            body.first().isWhitespace() || body.last().isWhitespace() } }) {
+                    match = kind.regex.findUnescaped(region, match.range.first + 1)
+                        ?: return@forEachIndexed
+                }
+            }
             val current = best
             if (current == null || match.range.first < current.start ||
                 (match.range.first == current.start && priority < bestPriority)
@@ -718,25 +727,25 @@ private enum class InlineTokenKind(
     val innerGroup: Int = 1,
     val isEmptyPair: Boolean = false,
 ) {
-    EMPTY_UNDERLINE(Regex("""(?<!\\)<u></u>"""), isEmptyPair = true),
+    EMPTY_UNDERLINE(Regex("""<u></u>"""), isEmptyPair = true),
     // 형광펜 안 글자를 모두 지운 경우. 마커가 길어 그대로 드러나면 가장 눈에 띈다
-    EMPTY_HIGHLIGHT(Regex("""(?<!\\)<mark(?:\s+color="[^"]*")?></mark>"""), isEmptyPair = true),
+    EMPTY_HIGHLIGHT(Regex("""<mark(?:\s+color="[^"]*")?></mark>"""), isEmptyPair = true),
     // 밑줄 기울임 빈 쌍 (`_` + `_`)
-    EMPTY_ITALIC_UNDERSCORE(Regex("""(?<!\\)__"""), isEmptyPair = true),
-    EMPTY_STRIKETHROUGH(Regex("""(?<!\\)~~~~"""), isEmptyPair = true),
+    EMPTY_ITALIC_UNDERSCORE(Regex("""__"""), isEmptyPair = true),
+    EMPTY_STRIKETHROUGH(Regex("""~~~~"""), isEmptyPair = true),
     // 굵게+기울임 빈 쌍(`***` + `***`). 굵게 빈 쌍보다 먼저 잡아야 뒤 두 개가 남지 않는다
-    EMPTY_BOLD_ITALIC(Regex("""(?<!\\)\*{6}"""), isEmptyPair = true),
-    EMPTY_BOLD(Regex("""(?<!\\)\*{4}"""), isEmptyPair = true),
-    CODE(Regex("""(?<!\\)`((?:\\.|[^`\n])+?)`""")),
-    LINK(Regex("""(?<!\\)\[((?:\\.|[^\]\n])+?)\]\(((?:\\.|[^)\n])+?)\)"""), listOf(TextDecoration.Underline)),
-    UNDERLINE(Regex("""(?<!\\)<u>(.+?)</u>"""), listOf(TextDecoration.Underline)),
-    STRIKETHROUGH(Regex("""(?<!\\)~~(?=\S)(.+?)(?<=\S)~~"""), listOf(TextDecoration.LineThrough)),
-    HIGHLIGHT(Regex("""(?<!\\)<mark(?:\s+color="([^"]*)")?>(.+?)</mark>"""), innerGroup = 2),
-    BOLD_ITALIC_MIXED(Regex("""(?<!\\)\*\*_(.+?)_\*\*""")),
-    BOLD_ITALIC_TRIPLE(Regex("""(?<!\\)\*\*\*(.+?)\*\*\*""")),
-    BOLD(Regex("""(?<!\\)\*\*(?=\S)(.+?)(?<=\S)\*\*""")),
-    ITALIC_ASTERISK(Regex("""(?<!\\)(?<!\*)\*(?=\S)(.+?)(?<=\S)\*(?!\*)""")),
-    ITALIC_UNDERSCORE(Regex("""(?<!\\)(?<!_)_(?=\S)(.+?)(?<=\S)_(?!_)"""));
+    EMPTY_BOLD_ITALIC(Regex("""\*{6}"""), isEmptyPair = true),
+    EMPTY_BOLD(Regex("""\*{4}"""), isEmptyPair = true),
+    CODE(MARKDOWN_CODE_REGEX),
+    LINK(MARKDOWN_LINK_REGEX, listOf(TextDecoration.Underline)),
+    UNDERLINE(Regex("""<u>((?:\\.|[^\\\n])+?)</u>"""), listOf(TextDecoration.Underline)),
+    STRIKETHROUGH(Regex("""~~(?=\S)((?:\\.|(?!~~)[^\\\n])+?)(?<=\S)~~"""), listOf(TextDecoration.LineThrough)),
+    HIGHLIGHT(Regex("""<mark(?:\s+color="([^"]*)")?>((?:\\.|[^\\\n])+?)</mark>"""), innerGroup = 2),
+    BOLD_ITALIC_MIXED(Regex("""(?<!\*)\*\*_(?=\S)((?:\\.|(?!_\*\*)[^\\\n])+?)(?<=\S)_\*\*(?!\*)""")),
+    BOLD_ITALIC_TRIPLE(Regex("""(?<!\*)\*\*\*(?!\*)(?=\S)((?:\\.|(?!\*\*\*)[^\\\n])+?)(?<=\S)\*\*\*(?!\*)""")),
+    BOLD(Regex("""(?<!\*)\*\*(?!\*)(?=\S)((?:\\.|(?!\*\*)[^\\\n])+?)(?<=\S)\*\*(?!\*)""")),
+    ITALIC_ASTERISK(Regex("""(?<!\*)\*(?!\*)(?=\S)((?:\\.|(?!\*)[^\\\n])+?)(?<=\S)\*(?!\*)""")),
+    ITALIC_UNDERSCORE(Regex("""(?<!_)_(?!_)(?=\S)((?:\\.|(?!_)[^\\\n])+?)(?<=\S)_(?!_)"""));
 
     /** 매치 결과를 마커 길이가 계산된 토큰으로 변환 */
     fun toToken(match: MatchResult): InlineToken? {
