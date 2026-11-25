@@ -41,6 +41,31 @@ class MarkdownVisualTransformation(
 
     override fun filter(text: AnnotatedString): TransformedText = parse(text.text).transformed
 
+    /** 커서가 나누는 기존 토큰의 닫는 마커 좌표. 개행 뒤 고아 마커 제거에 사용한다. */
+    internal fun closingMarkerRangesAt(raw: String, at: Int): List<IntRange> {
+        val lineStart = raw.lastIndexOf('\n', at - 1) + 1
+        val lineEnd = raw.indexOf('\n', at).let { if (it == -1) raw.length else it }
+        val ranges = mutableListOf<IntRange>()
+        fun collect(start: Int, end: Int) {
+            val region = raw.substring(start, end)
+            var cursor = 0
+            while (cursor < region.length) {
+                val token = findEarliestToken(region, cursor) ?: break
+                val innerStart = start + token.start + token.openLength
+                val innerEnd = start + token.end - token.closeLength
+                if (at in innerStart..innerEnd) {
+                    if (token.kind != InlineTokenKind.LINK) {
+                        ranges += innerEnd until (start + token.end)
+                    }
+                    if (token.kind != InlineTokenKind.CODE) collect(innerStart, innerEnd)
+                }
+                cursor = token.end
+            }
+        }
+        collect(lineStart, lineEnd)
+        return ranges
+    }
+
     /** 표시 문자열과 함께 인용 블록 좌표까지 계산 (인용구 세로선을 그리려면 좌표가 필요) */
     fun parse(raw: String): MarkdownRendered {
         val source = if (isReadOnly) preprocessForReadOnly(raw) else raw

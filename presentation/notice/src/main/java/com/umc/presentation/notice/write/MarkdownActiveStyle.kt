@@ -17,6 +17,8 @@ enum class MarkdownStyle {
 /** 열려 있는 마커의 여닫는 문자열 */
 data class MarkdownMarker(val open: String, val close: String)
 
+internal data class MarkdownOpenMarker(val open: String, val close: String, val start: Int, val isCode: Boolean)
+
 data class MarkdownActiveStyles(
     val inline: ImmutableSet<MarkdownStyle> = persistentSetOf(),
     val isBullet: Boolean = false,
@@ -63,7 +65,15 @@ object MarkdownScanner {
         val marker: String,
         val close: String,
         val styles: Set<MarkdownStyle>,
+        val start: Int,
     )
+
+    internal fun openMarkersAt(text: String, at: Int): List<MarkdownOpenMarker> {
+        val lineStart = text.lastIndexOf('\n', at - 1) + 1
+        return openMarkers(text, lineStart, at).map {
+            MarkdownOpenMarker(it.marker, it.close, it.start, MarkdownStyle.CODE in it.styles)
+        }
+    }
 
     /** 커서 위치 기준 활성 스타일 */
     fun activeStyles(value: TextFieldValue): MarkdownActiveStyles {
@@ -114,12 +124,27 @@ object MarkdownScanner {
      */
     private fun openMarkers(text: String, start: Int, end: Int): List<OpenMarker> {
         val open = mutableListOf<OpenMarker>()
+        val urlRanges = mutableListOf<IntRange>()
+        val lineEnd = text.indexOf('\n', start).let { if (it == -1) text.length else it }
+        // URL은 커서 뒤까지 이어질 수 있지만, 다른 줄의 링크는 현재 줄 상태와 무관하다.
+        val line = text.substring(start, lineEnd)
+        var linkCursor = 0
+        while (linkCursor < line.length) {
+            val link = MARKDOWN_LINK_REGEX.findUnescaped(line, linkCursor) ?: break
+            link.groups[2]?.range?.let { urlRanges += (start + it.first)..(start + it.last) }
+            linkCursor = link.range.last + 1
+        }
         var i = start
 
         /** [i]에서 시작하는 [marker]가 [end]를 넘지 않는지 */
         fun fits(marker: String) = text.startsWith(marker, i) && i + marker.length <= end
 
         while (i < end) {
+            val url = urlRanges.firstOrNull { i in it }
+            if (url != null && open.none { MarkdownStyle.CODE in it.styles }) {
+                i = minOf(end, url.last + 1)
+                continue
+            }
             if (isMarkdownEscaped(text, i)) {
                 i++
                 continue
@@ -135,7 +160,7 @@ object MarkdownScanner {
 
             when {
                 markOpen != null -> {
-                    open += OpenMarker(markOpen, "</mark>", setOf(MarkdownStyle.HIGHLIGHT))
+                    open += OpenMarker(markOpen, "</mark>", setOf(MarkdownStyle.HIGHLIGHT), i)
                     i += markOpen.length
                 }
 
@@ -145,7 +170,7 @@ object MarkdownScanner {
                 }
 
                 fits("<u>") -> {
-                    open += OpenMarker("<u>", "</u>", setOf(MarkdownStyle.UNDERLINE))
+                    open += OpenMarker("<u>", "</u>", setOf(MarkdownStyle.UNDERLINE), i)
                     i += "<u>".length
                 }
 
@@ -162,7 +187,7 @@ object MarkdownScanner {
                         val (marker, styles) = symmetric
                         // 같은 마커가 이미 열려 있으면 이번 등장은 닫는 마커다
                         if (!open.removeLastMatching { it.marker == marker }) {
-                            open += OpenMarker(marker, marker, styles)
+                            open += OpenMarker(marker, marker, styles, i)
                         }
                         i += marker.length
                     }

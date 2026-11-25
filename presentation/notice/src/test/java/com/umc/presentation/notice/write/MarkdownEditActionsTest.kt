@@ -11,6 +11,117 @@ import org.junit.Test
 class MarkdownEditActionsTest {
 
     @Test
+    fun `커서 뒤까지 이어지는 현재 줄 URL의 마커만 무시한다`() {
+        val raw = "첫째\n[링크](https://a.dev/**path**) **강조**\n[다음](https://b.dev/_tail_)"
+        val insideUrl = raw.indexOf("path")
+        assertTrue(MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(insideUrl))).inline.isEmpty())
+        val insideBold = raw.indexOf("강조") + 1
+        assertEquals(setOf(MarkdownStyle.BOLD), MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(insideBold))).inline)
+    }
+
+    @Test
+    fun `여는 마커 직후 Enter는 본문 서식을 다음 줄로 보존하고 공백만 있는 미완성 마커는 걷어낸다`() {
+        listOf(
+            Triple("**가나**", 2, "\n**가나**"),
+            Triple("**   ", 5, "   \n"),
+            Triple("<u>**가나**</u>", 5, "\n<u>**가나**</u>"),
+            Triple("**_   ", 6, "   \n"),
+        ).forEach { (raw, at, expected) ->
+            val result = MarkdownEditActions.processContentChange(
+                TextFieldValue(raw, TextRange(at)),
+                TextFieldValue(raw.replaceRange(at, at, "\n"), TextRange(at + 1)),
+            )
+            assertEquals(raw, expected, result.text)
+            assertEquals(TextRange(expected.indexOf('\n') + 1), result.selection)
+        }
+    }
+
+    @Test
+    fun `일반 Enter는 composition을 포함한 현재 값을 그대로 반환한다`() {
+        val previous = TextFieldValue("일반 본문", TextRange(5))
+        val current = TextFieldValue("일반 본문\n", TextRange(6), composition = TextRange(0, 5))
+        assertEquals(current, MarkdownEditActions.processContentChange(previous, current))
+    }
+
+    @Test
+    fun `링크 URL의 보이는 백슬래시는 유지하고 코드의 숨겨진 백슬래시는 함께 삭제한다`() {
+        val link = """[링크](https://a.com/a\(1\))"""
+        val deletedAt = link.indexOf(')')
+        val after = TextFieldValue(link.removeRange(deletedAt, deletedAt + 1), TextRange(deletedAt))
+        assertEquals(after, MarkdownEditActions.processContentChange(
+            TextFieldValue(link, TextRange(deletedAt + 1)), after,
+        ))
+        val code = MarkdownEditActions.processContentChange(
+            TextFieldValue("`\\a`", TextRange(3)), TextFieldValue("`\\`", TextRange(2)),
+        )
+        assertEquals("``", code.text)
+        assertEquals(TextRange(1), code.selection)
+    }
+
+    @Test
+    fun `길이만 바뀐 치환은 단일 삽입 삭제로 보정하지 않는다`() {
+        val replaced = TextFieldValue("\\xb", TextRange(1))
+        assertEquals(replaced, MarkdownEditActions.processContentChange(
+            TextFieldValue("\\*ab", TextRange(2)), replaced,
+        ))
+        val inserted = TextFieldValue("* ", TextRange(2))
+        assertEquals(inserted, MarkdownEditActions.processContentChange(
+            TextFieldValue("x", TextRange(1)), inserted,
+        ))
+        val newline = TextFieldValue("- b\n", TextRange(4))
+        assertEquals(newline, MarkdownEditActions.processContentChange(
+            TextFieldValue("- a", TextRange(3)), newline,
+        ))
+    }
+
+    @Test
+    fun `서식 구간 중간을 개행하면 뒤쪽 닫는 마커를 제거한다`() {
+        val previous = "- **abcd**"
+        val result = MarkdownEditActions.processContentChange(
+            TextFieldValue(previous, TextRange(6)), TextFieldValue("- **ab\ncd**", TextRange(7)),
+        )
+        assertEquals("- **ab**\n- cd", result.text)
+        assertEquals(TextRange(11), result.selection)
+        val nested = "- <u>**abcd**</u>"
+        val at = nested.indexOf("cd")
+        val split = MarkdownEditActions.processContentChange(
+            TextFieldValue(nested, TextRange(at)),
+            TextFieldValue(nested.replaceRange(at, at, "\n"), TextRange(at + 1)),
+        )
+        assertEquals("- <u>**ab**</u>\n- cd", split.text)
+    }
+
+    @Test
+    fun `끝 공백은 닫는 서식 밖으로 이동하고 코드 내부 공백은 유지한다`() {
+        listOf(
+            "- **강조 " to "- **강조** \n- ",
+            "- `코드 " to "- `코드 `\n- ",
+        ).forEach { (raw, expected) ->
+            val result = MarkdownEditActions.processContentChange(
+                TextFieldValue(raw, TextRange(raw.length)),
+                TextFieldValue(raw + "\n", TextRange(raw.length + 1)),
+            )
+            assertEquals(expected, result.text)
+        }
+    }
+
+    @Test
+    fun `Int 경계 번호 목록은 Long으로 증가 재번호하고 Long 상한에서는 오버플로 없이 증가를 생략한다`() {
+        val raw = "2147483647. 항목\n2147483648. 다음"
+        val at = raw.indexOf('\n')
+        val result = MarkdownEditActions.processContentChange(
+            TextFieldValue(raw, TextRange(at)),
+            TextFieldValue(raw.replaceRange(at, at, "\n"), TextRange(at + 1)),
+        )
+        assertEquals("2147483647. 항목\n2147483648. \n2147483649. 다음", result.text)
+        val maxLong = "9223372036854775807. 항목"
+        assertEquals("$maxLong\n", MarkdownEditActions.processContentChange(
+            TextFieldValue(maxLong, TextRange(maxLong.length)),
+            TextFieldValue(maxLong + "\n", TextRange(maxLong.length + 1)),
+        ).text)
+    }
+
+    @Test
     fun `공백만 선택해 서식을 적용하면 원문과 선택 범위를 보존한다`() {
         val value = TextFieldValue("   ", TextRange(0, 3))
         listOf(
