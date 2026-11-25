@@ -15,6 +15,40 @@ import org.junit.Test
 class MarkdownVisualTransformationTest {
 
     @Test
+    fun `기울임과 굵게는 서로 중첩할 수 있다`() {
+        listOf("*가 **나** 다*", "**가 *나* 다**", "_가 **나** 다_").forEach { raw ->
+            listOf(editorParser(), readOnlyParser()).forEach { parser ->
+                val text = parser.parse(raw).transformed.text
+                assertEquals(raw, "가 나 다", text.text)
+                assertTrue(raw, text.spanStyles.any { it.item.fontStyle == FontStyle.Italic && it.start <= 2 && it.end > 2 })
+                assertTrue(raw, text.spanStyles.any { it.item.fontWeight == FontWeight.Bold && it.start <= 2 && it.end > 2 })
+            }
+        }
+    }
+
+    @Test
+    fun `기울임 내부 식별자 밑줄은 닫는 마커로 소비하지 않는다`() {
+        listOf(editorParser(), readOnlyParser()).forEach { parser ->
+            val text = parser.parse("_user_name_").transformed.text
+            assertEquals("user_name", text.text)
+            assertTrue(text.spanStyles.any { it.item.fontStyle == FontStyle.Italic && it.start == 0 && it.end == text.length })
+            assertEquals("user_name", parser.parse("user_name").transformed.text.text)
+        }
+    }
+
+    @Test
+    fun `코드 내부 별표는 바깥 굵게를 닫지 않고 원문으로 표시한다`() {
+        listOf(editorParser(), readOnlyParser()).forEach { parser ->
+            val text = parser.parse("**a `**b**` c**").transformed.text
+            assertEquals("a **b** c", text.text)
+            val codeAt = text.text.indexOf('b')
+            assertTrue(text.spanStyles.any { it.item.fontFamily == FontFamily.Monospace && it.start <= codeAt && it.end > codeAt })
+            assertFalse(text.spanStyles.any { it.item.fontWeight == FontWeight.Bold && it.start <= codeAt && it.end > codeAt })
+            assertTrue(text.spanStyles.any { it.item.fontWeight == FontWeight.Bold && it.start == 0 })
+        }
+    }
+
+    @Test
     fun `링크와 코드 뒤에 붙은 서식은 앞 URL의 일부로 판단하지 않는다`() {
         listOf(
             "[신청서](https://forms.gle/abc)**필수**" to "신청서필수",
@@ -291,5 +325,45 @@ class MarkdownVisualTransformationTest {
             val mapped = editorTransformed.offsetMapping.transformedToOriginal(i)
             assertTrue(mapped in 0..raw.length)
         }
+    }
+
+    @Test
+    fun `굵게와 별표 기울임이 같은 경계에서 열리거나 닫히는 중첩을 올바르게 파싱한다`() {
+        val trailing = readOnlyParser().parse("**가 *나***").transformed.text
+        assertEquals("가 나", trailing.text)
+        assertTrue(trailing.spanStyles.any { it.item.fontWeight == FontWeight.Bold && it.start == 0 && it.end == 3 })
+        assertTrue(trailing.spanStyles.any { it.item.fontStyle == FontStyle.Italic && it.start == 2 && it.end == 3 })
+
+        val leading = readOnlyParser().parse("***가* 나**").transformed.text
+        assertEquals("가 나", leading.text)
+        assertTrue(leading.spanStyles.any { it.item.fontWeight == FontWeight.Bold && it.start == 0 && it.end == 3 })
+        assertTrue(leading.spanStyles.any { it.item.fontStyle == FontStyle.Italic && it.start == 0 && it.end == 1 })
+
+        // 짝이 맞지 않는 별표 꼬리는 앞부분만 닫아 `*`를 남기지 않는다.
+        listOf(
+            "**가***" to "**가***",
+            "**_가_***" to "**가***",
+            "***가****" to "***가****",
+        ).forEach { (raw, expectedText) ->
+            val mismatched = readOnlyParser().parse(raw).transformed.text
+            assertEquals(raw, expectedText, mismatched.text)
+            assertFalse(raw, mismatched.spanStyles.any { it.item.fontWeight == FontWeight.Bold })
+        }
+    }
+
+    @Test
+    fun `닫히지 않은 다중 마커가 섞인 긴 줄에서도 지수 백트래킹 없이 빠르게 완료한다`() {
+        val unclosed = List(10) { "*a _b ***c " }.joinToString("")
+        val mixedEditorUnclosed = List(10) { "*a **b ~~c _d ***e " }.joinToString("")
+        val startNanos = System.nanoTime()
+        val editorText = editorParser().parse(unclosed).transformed.text
+        val readOnlyText = readOnlyParser().parse(unclosed).transformed.text
+        val mixedEditorText = editorParser().parse(mixedEditorUnclosed).transformed.text
+        val elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000L
+
+        assertEquals(unclosed, editorText.text)
+        assertEquals(unclosed, readOnlyText.text)
+        assertEquals(mixedEditorUnclosed, mixedEditorText.text)
+        assertTrue("파싱이 지연됨: ${elapsedMillis}ms", elapsedMillis < 1_000L)
     }
 }

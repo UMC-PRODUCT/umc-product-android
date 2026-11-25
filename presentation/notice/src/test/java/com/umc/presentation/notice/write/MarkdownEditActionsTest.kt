@@ -11,6 +11,14 @@ import org.junit.Test
 class MarkdownEditActionsTest {
 
     @Test
+    fun `기울임 내부 식별자 밑줄은 편집 상태를 닫거나 다시 열지 않는다`() {
+        val raw = "_user_name_"
+        assertTrue(MarkdownStyle.ITALIC in MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(7))))
+        assertTrue(MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(raw.length))).inline.isEmpty())
+        assertTrue(MarkdownScanner.activeStyles(TextFieldValue("user_name", TextRange(9))).inline.isEmpty())
+    }
+
+    @Test
     fun `커서 뒤까지 이어지는 현재 줄 URL의 마커만 무시한다`() {
         val raw = "첫째\n[링크](https://a.dev/**path**) **강조**\n[다음](https://b.dev/_tail_)"
         val insideUrl = raw.indexOf("path")

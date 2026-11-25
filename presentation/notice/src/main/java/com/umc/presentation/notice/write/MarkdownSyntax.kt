@@ -7,6 +7,10 @@ internal fun isMarkdownEscaped(text: String, at: Int): Boolean {
     return (at - 1 - i) % 2 == 1
 }
 
+internal fun isIntrawordUnderscore(text: String, at: Int): Boolean =
+    text.getOrNull(at) == '_' && text.getOrNull(at - 1)?.isLetterOrDigit() == true &&
+        text.getOrNull(at + 1)?.isLetterOrDigit() == true
+
 internal fun Regex.findUnescaped(text: String, from: Int = 0): MatchResult? {
     var cursor = from
     while (cursor <= text.length) {

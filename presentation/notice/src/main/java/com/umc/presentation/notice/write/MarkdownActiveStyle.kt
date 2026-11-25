@@ -155,6 +155,10 @@ object MarkdownScanner {
                 i++
                 continue
             }
+            if (isIntrawordUnderscore(text, i)) {
+                i++
+                continue
+            }
 
             val markOpen = MARK_OPEN.matchAt(text, i)?.value?.takeIf { i + it.length <= end }
 

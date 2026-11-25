@@ -48,9 +48,10 @@ class MarkdownVisualTransformation(
         val ranges = mutableListOf<IntRange>()
         fun collect(start: Int, end: Int) {
             val region = raw.substring(start, end)
+            val failedTokens = HashSet<Long>()
             var cursor = 0
             while (cursor < region.length) {
-                val token = findEarliestToken(region, cursor) ?: break
+                val token = findEarliestToken(region, cursor, failedTokens = failedTokens) ?: break
                 val innerStart = start + token.start + token.openLength
                 val innerEnd = start + token.end - token.closeLength
                 if (at in innerStart..innerEnd) {
@@ -207,10 +208,16 @@ class MarkdownVisualTransformation(
     ) {
         if (regionStart >= regionEnd) return
         val region = raw.substring(regionStart, regionEnd)
+        val failedTokens = HashSet<Long>()
         var searchFrom = 0
 
         while (searchFrom < region.length) {
-            val token = findEarliestToken(region, searchFrom, detectPlainUrls = isReadOnly && !insideLink)
+            val token = findEarliestToken(
+                region = region,
+                from = searchFrom,
+                detectPlainUrls = isReadOnly && !insideLink,
+                failedTokens = failedTokens,
+            )
             if (token == null) {
                 collectPlainText(
                     raw = raw,
@@ -433,7 +440,12 @@ class MarkdownVisualTransformation(
         }
     }
 
-    private fun findEarliestToken(region: String, from: Int, detectPlainUrls: Boolean = false): InlineToken? {
+    private fun findEarliestToken(
+        region: String,
+        from: Int,
+        detectPlainUrls: Boolean = false,
+        failedTokens: MutableSet<Long> = HashSet(),
+    ): InlineToken? {
         var best: InlineToken? = null
         var bestPriority = Int.MAX_VALUE
         // 이미 소비한 링크·코드의 URL은 제외하고, 일반 텍스트 구간에서 한 번만 검색한다.
@@ -441,17 +453,16 @@ class MarkdownVisualTransformation(
 
         InlineTokenKind.entries.forEachIndexed { priority, kind ->
             if (isReadOnly && kind.isEmptyPair) return@forEachIndexed
-            var match = kind.regex.findUnescaped(region, from) ?: return@forEachIndexed
-            while (isInvalidMixedWhitespace(kind, match) ||
-                plainUrls.any { match.range.first > it.first && match.range.first <= it.last }
+            var token = kind.findToken(region, from, failedTokens) ?: return@forEachIndexed
+            while (isInvalidMixedWhitespace(token, region) ||
+                plainUrls.any { token.start > it.first && token.start <= it.last }
             ) {
-                match = kind.regex.findUnescaped(region, match.range.first + 1) ?: return@forEachIndexed
+                token = kind.findToken(region, token.start + 1, failedTokens) ?: return@forEachIndexed
             }
             val current = best
-            if (current == null || match.range.first < current.start ||
-                (match.range.first == current.start && priority < bestPriority)
+            if (current == null || token.start < current.start ||
+                (token.start == current.start && priority < bestPriority)
             ) {
-                val token = kind.toToken(match) ?: return@forEachIndexed
                 best = token
                 bestPriority = priority
             }
@@ -459,9 +470,9 @@ class MarkdownVisualTransformation(
         return best
     }
 
-    private fun isInvalidMixedWhitespace(kind: InlineTokenKind, match: MatchResult): Boolean {
-        if (kind != InlineTokenKind.BOLD) return false
-        val inner = match.groupValues[1]
+    private fun isInvalidMixedWhitespace(token: InlineToken, region: String): Boolean {
+        if (token.kind != InlineTokenKind.BOLD) return false
+        val inner = region.substring(token.start + token.openLength, token.end - token.closeLength)
         if (inner.length < 2 || !inner.startsWith('_') || !inner.endsWith('_')) return false
         val body = inner.substring(1, inner.length - 1)
         // 공백 때문에 무효인 **_ ... _**를 일반 굵게로 재해석하지 않는다.
@@ -807,6 +818,7 @@ private enum class InlineTokenKind(
     /** 본문에 해당하는 정규식 그룹 번호 (형광펜은 색상이 1번이라 2번이 본문) */
     val innerGroup: Int = 1,
     val isEmptyPair: Boolean = false,
+    val closingMarker: String? = null,
 ) {
     EMPTY_UNDERLINE(Regex("""<u></u>"""), isEmptyPair = true),
     // 형광펜 안 글자를 모두 지운 경우. 마커가 길어 그대로 드러나면 가장 눈에 띈다
@@ -820,13 +832,107 @@ private enum class InlineTokenKind(
     CODE(MARKDOWN_CODE_REGEX),
     LINK(MARKDOWN_LINK_REGEX, listOf(TextDecoration.Underline)),
     UNDERLINE(Regex("""<u>((?:\\.|[^\\\n])+?)</u>"""), listOf(TextDecoration.Underline)),
-    STRIKETHROUGH(Regex("""~~(?=\S)((?:\\.|(?!~~)[^\\\n])+?)(?<=\S)~~"""), listOf(TextDecoration.LineThrough)),
+    STRIKETHROUGH(Regex("""~~"""), listOf(TextDecoration.LineThrough), closingMarker = "~~"),
     HIGHLIGHT(Regex("""<mark(?:\s+color="([^"]*)")?>((?:\\.|[^\\\n])+?)</mark>"""), innerGroup = 2),
-    BOLD_ITALIC_MIXED(Regex("""(?<!\*)\*\*_(?=\S)((?:\\.|(?!_\*\*)[^\\\n])+?)(?<=\S)_\*\*(?!\*)""")),
-    BOLD_ITALIC_TRIPLE(Regex("""(?<!\*)\*\*\*(?!\*)(?=\S)((?:\\.|(?!\*\*\*)[^\\\n])+?)(?<=\S)\*\*\*(?!\*)""")),
-    BOLD(Regex("""(?<!\*)\*\*(?!\*)(?=\S)((?:\\.|(?!\*\*)[^\\\n])+?)(?<=\S)\*\*(?!\*)""")),
-    ITALIC_ASTERISK(Regex("""(?<!\*)\*(?!\*)(?=\S)((?:\\.|(?!\*)[^\\\n])+?)(?<=\S)\*(?!\*)""")),
-    ITALIC_UNDERSCORE(Regex("""(?<!_)_(?!_)(?=\S)((?:\\.|(?!_)[^\\\n])+?)(?<=\S)_(?!_)"""));
+    BOLD_ITALIC_MIXED(Regex("""\*\*_"""), closingMarker = "_**"),
+    BOLD_ITALIC_TRIPLE(Regex("""\*\*\*"""), closingMarker = "***"),
+    BOLD(Regex("""\*\*"""), closingMarker = "**"),
+    ITALIC_ASTERISK(Regex("""\*"""), closingMarker = "*"),
+    ITALIC_UNDERSCORE(Regex("""_"""), closingMarker = "_");
+
+    fun findToken(text: String, from: Int, failed: MutableSet<Long> = HashSet()): InlineToken? {
+        var cursor = from
+        while (cursor < text.length) {
+            val match = regex.findUnescaped(text, cursor) ?: return null
+            val token = tokenAt(text, match.range.first, failed)
+            if (token != null) return token
+            cursor = match.range.first + 1
+        }
+        return null
+    }
+
+    private fun tokenAt(text: String, at: Int, failed: MutableSet<Long>): InlineToken? {
+        // 닫히지 않은 다중 마커 줄에서의 지수 백트래킹을 막기 위해 실패한 (종류, 위치)를 캐시한다.
+        val cacheKey = (ordinal.toLong() shl 32) or (at.toLong() and 0xFFFF_FFFFL)
+        if (cacheKey in failed) return null
+        fun fail(): InlineToken? {
+            failed += cacheKey
+            return null
+        }
+
+        if (isMarkdownEscaped(text, at)) return fail()
+        val match = regex.matchAt(text, at) ?: return fail()
+        val close = closingMarker ?: return toToken(match) ?: fail()
+        val open = match.value
+        val innerStart = at + open.length
+        if (innerStart >= text.length || text[innerStart].isWhitespace()) return fail()
+        if (open.startsWith('*')) {
+            if (at > 0 && text[at - 1] == '*') return fail()
+            if (text.getOrNull(innerStart) == '*') {
+                // `***가* 나**`처럼 굵게 시작 직후 별표 기울임이 바로 열릴 때만 허용한다.
+                val nestedItalicStart = this == BOLD &&
+                    text.getOrNull(innerStart + 1)?.let { !it.isWhitespace() && it != '*' } == true
+                if (!nestedItalicStart) return fail()
+            }
+        }
+        if (this == ITALIC_UNDERSCORE && (isIntrawordUnderscore(text, at) ||
+                text.getOrNull(at - 1) == '_' || text.getOrNull(innerStart) == '_')) return fail()
+
+        var cursor = innerStart
+        while (cursor < text.length) {
+            if (text[cursor] == '\n') return fail()
+            if (text[cursor] == '\\' && cursor + 1 < text.length) {
+                cursor += 2
+                continue
+            }
+            if (this == ITALIC_UNDERSCORE && isIntrawordUnderscore(text, cursor)) {
+                cursor++
+                continue
+            }
+            val isOwnClose = when {
+                this == ITALIC_ASTERISK && text[cursor] == '*' -> {
+                    var runEnd = cursor
+                    while (runEnd < text.length && text[runEnd] == '*') runEnd++
+                    val runLength = runEnd - cursor
+                    // 단독 `*` 또는 `**가 *나***`처럼 단어 끝에 붙은 `***`의 첫 `*`로 닫는다.
+                    runLength == 1 || (runLength == 3 && !text[cursor - 1].isWhitespace())
+                }
+                close.endsWith('*') -> {
+                    // `**가***`, `**_가_***`, `***가****`처럼 닫는 별표 뒤에 여분 `*`가 이어지면 닫지 않는다.
+                    text.startsWith(close, cursor) && text.getOrNull(cursor + close.length) != '*'
+                }
+                else -> text.startsWith(close, cursor)
+            }
+            if (isOwnClose) {
+                if (!text[cursor - 1].isWhitespace()) {
+                    return InlineToken(at, cursor + close.length, open.length, close.length, this)
+                }
+                // 안쪽 공백이 붙은 닫는 마커를 넘어 다음 토큰까지 삼키지 않는다.
+                val nested = tokenAt(text, cursor, failed) ?: return fail()
+                cursor = nested.end
+                continue
+            }
+            // 코드·링크·다른 인라인 서식 내부의 마커는 현재 토큰을 닫지 않는다.
+            var nested: InlineToken? = null
+            for (kind in entries) {
+                if (kind.isEmptyPair || kind == this) continue
+                val candidate = kind.tokenAt(text, cursor, failed)
+                if (candidate != null) {
+                    nested = candidate
+                    break
+                }
+            }
+            if (nested != null) {
+                cursor = nested.end
+            } else if (text[cursor] == '*' || text[cursor] == '~') {
+                val marker = text[cursor]
+                do { cursor++ } while (cursor < text.length && text[cursor] == marker)
+            } else {
+                cursor++
+            }
+        }
+        return fail()
+    }
 
     /** 매치 결과를 마커 길이가 계산된 토큰으로 변환 */
     fun toToken(match: MatchResult): InlineToken? {
