@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -296,32 +297,40 @@ fun NoticeDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 본문 (작성 화면과 동일한 마크다운 렌더링)
+            // 본문 (읽기 전용 마크다운 렌더링: 링크 마커 숨김·클릭·Plain URL 자동 링크·본문 복사 지원)
+            val uriHandler = LocalUriHandler.current
             val markerColor = grey400()
             val linkColor = main500()
             val quoteBarColor = grey300()
-            val markdownRenderer = remember(markerColor, linkColor) {
-                MarkdownRenderer(markerColor = markerColor, linkColor = linkColor)
+            val markdownRenderer = remember(markerColor, linkColor, uriHandler) {
+                MarkdownRenderer(
+                    markerColor = markerColor,
+                    linkColor = linkColor,
+                    isReadOnly = true,
+                    onOpenUrl = { url -> runCatching { uriHandler.openUri(url) } },
+                )
             }
             val rendered = remember(detail.content, markdownRenderer) {
                 markdownRenderer.render(detail.content)
             }
             var bodyTextLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
-            UText(
-                text = rendered.transformed.text,
-                onTextLayout = { bodyTextLayout = it },
-                // 인용구 세로선은 좌측 여백(음수 x)에 그려 본문 위치를 그대로 둔다
-                modifier = Modifier.drawBehind {
-                    bodyTextLayout?.let { layout ->
-                        drawMarkdownQuoteBars(layout, rendered.quoteBlocks, quoteBarColor)
-                    }
-                },
-                style = UmcTypographyTokens.Subheadline.copy(
-                    color = grey950(),
-                    lineHeight = TextUnit.Unspecified,
-                ),
-            )
+            SelectionContainer {
+                UText(
+                    text = rendered.transformed.text,
+                    onTextLayout = { bodyTextLayout = it },
+                    // 인용구 세로선은 좌측 여백(음수 x)에 그려 본문 위치를 그대로 둔다
+                    modifier = Modifier.drawBehind {
+                        bodyTextLayout?.let { layout ->
+                            drawMarkdownQuoteBars(layout, rendered.quoteBlocks, quoteBarColor)
+                        }
+                    },
+                    style = UmcTypographyTokens.Subheadline.copy(
+                        color = grey950(),
+                        lineHeight = TextUnit.Unspecified,
+                    ),
+                )
+            }
 
             // 첨부 이미지
             val isInspectionMode = LocalInspectionMode.current
