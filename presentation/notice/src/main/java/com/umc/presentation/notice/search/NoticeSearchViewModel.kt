@@ -11,6 +11,7 @@ import com.umc.domain.usecase.appDataStore.recent.ClearRecentSearchNoticeUseCase
 import com.umc.domain.usecase.appDataStore.recent.GetRecentSearchNoticeUseCase
 import com.umc.domain.usecase.appDataStore.recent.RemoveRecentSearchNoticeUseCase
 import com.umc.domain.usecase.notice.SearchNoticeListUseCase
+import com.umc.presentation.notice.loadUniqueNoticePage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -18,6 +19,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,6 +34,8 @@ class NoticeSearchViewModel @Inject constructor(
 ) : BaseViewModel<NoticeSearchUiState, NoticeSearchEvent>(
     NoticeSearchUiState(),
 ) {
+
+    private var searchJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -58,6 +62,11 @@ class NoticeSearchViewModel @Inject constructor(
         schoolId: Long?,
         part: String?,
     ) {
+        val state = uiState.value
+        if (state.gisuId == gisuId && state.noticeTab == noticeTab &&
+            state.chapterId == chapterId && state.schoolId == schoolId && state.part == part
+        ) return
+
         updateState {
             copy(
                 gisuId = gisuId,
@@ -67,6 +76,7 @@ class NoticeSearchViewModel @Inject constructor(
                 part = part,
             )
         }
+        if (state.isResultMode) searchNotices(isRefresh = true)
     }
 
     fun onQueryChanged(query: String) {
@@ -80,18 +90,7 @@ class NoticeSearchViewModel @Inject constructor(
         viewModelScope.launch {
             addRecentSearchNoticeUseCase(keyword)
         }
-        // 이전 검색 결과가 남아 있으면 검색어를 바꿔도 그대로 보여 오해를 준다
-        updateState {
-            copy(
-                query = keyword,
-                isResultMode = true,
-                resultList = persistentListOf(),
-                currentPage = 0,
-                isLastPage = false,
-                errorMessage = null,
-                isNextPageError = false,
-            )
-        }
+        updateState { copy(query = keyword, isResultMode = true) }
         searchNotices(isRefresh = true)
     }
 
@@ -114,7 +113,8 @@ class NoticeSearchViewModel @Inject constructor(
 
     /** 결과 화면에서 뒤로가기 시 검색어 입력 모드로 복귀 */
     fun backToSearchMode() {
-        updateState { copy(isResultMode = false) }
+        searchJob?.cancel()
+        updateState { copy(isResultMode = false, isPageLoading = false) }
     }
 
     /** 공지 클릭 시 읽음 처리 후 상세로 이동 */
@@ -131,39 +131,54 @@ class NoticeSearchViewModel @Inject constructor(
         }
     }
 
-    private fun searchNotices(isRefresh: Boolean) = viewModelScope.launch {
+    private fun searchNotices(isRefresh: Boolean) {
         val state = uiState.value
+        if (!state.isResultMode || (!isRefresh && (state.isPageLoading || state.isLastPage))) return
+        if (isRefresh) searchJob?.cancel()
 
-        if (state.isPageLoading || (!isRefresh && state.isLastPage)) return@launch
-        // gisuId는 서버 필수값이라 아직 주입 전이면 요청하지 않는다 (400 방지)
-        if (state.gisuId <= 0L) return@launch
+        // gisuId는 서버 필수값이라 아직 주입 전이면 요청하지 않는다.
+        val hasSearchContext = state.gisuId > 0L
+        updateState {
+            copy(
+                resultList = if (isRefresh) persistentListOf() else resultList,
+                currentPage = if (isRefresh) 0 else currentPage,
+                isLastPage = if (isRefresh) false else isLastPage,
+                isPageLoading = hasSearchContext,
+                errorMessage = null,
+                isNextPageError = false,
+            )
+        }
+        if (!hasSearchContext) return
 
-        updateState { copy(isPageLoading = true, errorMessage = null, isNextPageError = false) }
+        searchJob = viewModelScope.launch { fetchNoticeSearch(state, isRefresh) }
+    }
 
-        val pageToFetch = if (isRefresh) 0 else state.currentPage
-
-        resultResponse(
-            response = searchNoticeListUseCase(
+    private suspend fun fetchNoticeSearch(state: NoticeSearchUiState, isRefresh: Boolean) {
+        val pageLoad = loadUniqueNoticePage(
+            existing = if (isRefresh) emptyList() else state.resultList,
+            firstPage = if (isRefresh) 0 else state.currentPage,
+        ) { page ->
+            searchNoticeListUseCase(
                 keyword = state.query,
                 gisuId = state.gisuId,
                 noticeTab = state.noticeTab,
                 chapterId = state.chapterId,
                 schoolId = state.schoolId,
                 part = state.part,
-                page = pageToFetch,
-                size = 20
-            ),
+                page = page,
+                size = 20,
+            )
+        }
+        resultResponse(
+            response = pageLoad.response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
-                        resultList = if (isRefresh) {
-                            noticeSearch.content.toImmutableList()
-                        } else {
-                            (resultList + noticeSearch.content).toImmutableList()
-                        },
-                        currentPage = pageToFetch + 1,
+                        resultList = noticeSearch.content.toImmutableList(),
+                        currentPage = pageLoad.pageNumber + 1,
                         isPageLoading = false,
                         isLastPage = !noticeSearch.hasNext,
+                        isNextPageError = false,
                     )
                 }
             },
@@ -171,7 +186,12 @@ class NoticeSearchViewModel @Inject constructor(
                 // 실패를 삼키면 0건인지 오류인지 구분할 수 없어 "검색이 안 된다"로 보인다.
                 // 다음 페이지 실패는 목록 끝에 다시 시도 버튼을 띄워 직접 다시 부르게 한다
                 updateState {
-                    copy(isPageLoading = false, errorMessage = fail.message, isNextPageError = !isRefresh)
+                    copy(
+                        currentPage = pageLoad.pageNumber,
+                        isPageLoading = false,
+                        errorMessage = fail.message,
+                        isNextPageError = !isRefresh || pageLoad.pageNumber > 0,
+                    )
                 }
             }
         )

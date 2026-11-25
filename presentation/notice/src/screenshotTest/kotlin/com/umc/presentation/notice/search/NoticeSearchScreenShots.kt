@@ -20,3 +20,17 @@ fun NoticeSearchScreenShot() {
 fun NoticeSearchResultScreenShot() {
     UmcTheme { NoticeSearchResultScreenPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun NoticeSearchResultEmptyPageRetryShot() {
+    UmcTheme { NoticeSearchResultEmptyPageRetryPreview() }
+}
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun NoticeSearchResultScreenPageRetryShot() {
+    UmcTheme { NoticeSearchResultScreenPageRetryPreview() }
+}

@@ -20,3 +20,17 @@ fun NoticeScreenShot() {
 fun NoticeScreenPartSelectedShot() {
     UmcTheme { NoticeScreenPartSelectedPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun NoticeScreenEmptyPageRetryShot() {
+    UmcTheme { NoticeScreenEmptyPageRetryPreview() }
+}
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun NoticeScreenPageRetryShot() {
+    UmcTheme { NoticeScreenPageRetryPreview() }
+}

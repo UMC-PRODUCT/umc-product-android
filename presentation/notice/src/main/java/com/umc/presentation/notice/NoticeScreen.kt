@@ -55,6 +55,8 @@ import com.umc.component.theme.main600
 import com.umc.component.theme.main700
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.notice.NoticeChipState
+import com.umc.domain.model.notice.NoticeSummary
+import com.umc.domain.model.notice.NoticeTarget
 import com.umc.domain.model.organization.GisuItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -144,6 +146,8 @@ fun NoticeScreen(
     onRefresh: () -> Unit = {},
     onClickWriteNotice: () -> Unit = {},
 ) {
+    val isEmptyPageRetry = uiState.noticeList.isEmpty() && uiState.isNextPageError
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -188,7 +192,7 @@ fun NoticeScreen(
                 modifier = Modifier.weight(1f),
             ) {
                 // 실패와 0건을 구분해서 보여준다. 아무것도 안 그리면 원인을 알 수 없다
-                if (uiState.noticeList.isEmpty() && !uiState.isPageLoading) {
+                if (uiState.noticeList.isEmpty() && !uiState.isPageLoading && !uiState.isNextPageError) {
                     NoticeListMessage(
                         title = uiState.errorMessage?.let { AppStrings.NOTICE_LIST_ERROR }
                             ?: AppStrings.NOTICE_LIST_EMPTY_TITLE,
@@ -198,8 +202,12 @@ fun NoticeScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(
+                        start = 20.dp,
+                        end = 20.dp,
+                        bottom = if (isEmptyPageRetry) 0.dp else 100.dp,
+                    ),
+                    verticalArrangement = if (isEmptyPageRetry) Arrangement.Center else Arrangement.spacedBy(16.dp),
                 ) {
                     items(
                         items = uiState.noticeList,
@@ -213,7 +221,7 @@ fun NoticeScreen(
                     }
 
                     // 마지막 아이템 노출 시 다음 페이지 로드. 실패하면 다시 시도 버튼으로 바뀐다
-                    if (uiState.noticeList.isNotEmpty() && !uiState.isLastPage) {
+                    if (uiState.isNextPageError || (uiState.noticeList.isNotEmpty() && !uiState.isLastPage)) {
                         item {
                             NoticeNextPageItem(
                                 isError = uiState.isNextPageError,
@@ -473,6 +481,44 @@ internal fun NoticeScreenPartSelectedPreview() {
             selectedChipText = UserPart.PLAN.label,
             selectedPart = UserPart.PLAN,
             canWriteNotice = true,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeScreenEmptyPageRetryPreview() {
+    NoticeScreen(
+        uiState = NoticeUiState(
+            nowTitle = "12기 공지사항",
+            errorMessage = "네트워크 연결을 확인해 주세요",
+            isNextPageError = true,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeScreenPageRetryPreview() {
+    NoticeScreen(
+        uiState = NoticeUiState(
+            nowTitle = "12기 공지사항",
+            noticeList = persistentListOf(
+                NoticeSummary(
+                    id = 1L,
+                    title = "정기 세션 안내",
+                    content = "이번 주 정기 세션 일정을 확인해 주세요.",
+                    shouldSendNotification = false,
+                    viewCount = 10,
+                    createdAt = "2026-01-01T00:00:00",
+                    targetInfo = NoticeTarget(targetGisuId = 1),
+                    authorChallengerId = 1L,
+                    authorNickname = "운영진",
+                    authorName = "작성자",
+                ),
+            ),
+            errorMessage = "네트워크 연결을 확인해 주세요",
+            isNextPageError = true,
         ),
     )
 }
