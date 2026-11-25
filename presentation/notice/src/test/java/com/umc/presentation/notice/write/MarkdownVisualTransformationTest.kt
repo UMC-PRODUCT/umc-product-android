@@ -15,6 +15,28 @@ import org.junit.Test
 class MarkdownVisualTransformationTest {
 
     @Test
+    fun `레거시 정규화는 코드와 이스케이프된 마커를 보존한다`() {
+        val raw = """`** a ** ~~ x ~~` **일시: ** \** 리터럴 \**"""
+        assertEquals(
+            """`** a ** ~~ x ~~` **일시:**  \** 리터럴 \**""",
+            normalizeLegacyWhitespaceMarkers(raw),
+        )
+        assertEquals("** a ** ~~ x ~~", readOnlyParser().parse("`** a ** ~~ x ~~`").transformed.text.text)
+        assertEquals("<u>태그</u>", editorParser().parse("`<u>태그</u>`").transformed.text.text)
+    }
+
+    @Test
+    fun `코드는 바깥 인라인 서식을 무시하고 링크는 유지한다`() {
+        val raw = "[<u>**`코드`**</u>](https://umc.dev)"
+        val text = readOnlyParser().parse(raw).transformed.text
+        assertEquals("코드", text.text)
+        assertFalse(text.spanStyles.any { it.item.fontWeight == FontWeight.Bold })
+        assertTrue(text.spanStyles.any { it.item.fontFamily == FontFamily.Monospace })
+        assertEquals(1, text.getLinkAnnotations(0, text.length).size)
+        assertFalse(text.spanStyles.any { it.item.textDecoration == TextDecoration.LineThrough })
+    }
+
+    @Test
     fun `백슬래시 홀짝과 이스케이프된 닫는 마커를 구분한다`() {
         val parser = editorParser()
         val even = parser.parse("""\\**굵게**""").transformed.text

@@ -11,6 +11,28 @@ import org.junit.Test
 class MarkdownEditActionsTest {
 
     @Test
+    fun `공백만 선택해 서식을 적용하면 원문과 선택 범위를 보존한다`() {
+        val value = TextFieldValue("   ", TextRange(0, 3))
+        listOf(
+            MarkdownEditActions.toggleBold(value),
+            MarkdownEditActions.toggleItalic(value),
+            MarkdownEditActions.toggleUnderline(value),
+            MarkdownEditActions.toggleStrikethrough(value),
+        ).forEach { assertEquals(value, it) }
+    }
+
+    @Test
+    fun `코드 붙여넣기는 내부 레거시 마커의 공백을 바꾸지 않는다`() {
+        val raw = "`** a ** ~~ x ~~` **일시: **"
+        val result = MarkdownEditActions.processContentChange(
+            TextFieldValue(), TextFieldValue(raw, TextRange(raw.length)),
+        )
+        assertEquals("`** a ** ~~ x ~~` **일시:** ", result.text)
+        val code = TextFieldValue("**`<u>코드", TextRange(9))
+        assertEquals(setOf(MarkdownStyle.CODE), MarkdownScanner.activeStyles(code).inline)
+    }
+
+    @Test
     fun `글머리와 대시 목록에서 Enter를 치면 다음 항목을 자동 생성하고 빈 줄이면 탈출한다`() {
         val prevBullet = TextFieldValue("- 항목1", TextRange(5))
         val curBullet = TextFieldValue("- 항목1\n", TextRange(6))

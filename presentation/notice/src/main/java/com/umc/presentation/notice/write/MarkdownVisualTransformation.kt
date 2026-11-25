@@ -108,6 +108,7 @@ class MarkdownVisualTransformation(
                         SpanStyle(fontSize = fontSize, fontWeight = block.fontWeight),
                         contentStart,
                         lineEnd,
+                        isInline = false,
                     )
                 }
 
@@ -135,8 +136,10 @@ class MarkdownVisualTransformation(
      * 마커가 화면에 그대로 드러난다. 이스케이프된 `\<u\>` 등은 건드리지 않는다.
      */
     private fun hideOrphanMarkers(raw: String, hidden: MutableList<HiddenRange>) {
+        val codeRanges = markdownCodeRanges(raw)
         ORPHAN_MARKER.findAll(raw).forEach { match ->
             val start = match.range.first
+            if (isMarkdownEscaped(raw, start) || codeRanges.any { start in it }) return@forEach
             val end = match.range.last + 1
             val alreadyHidden = hidden.any { it.start <= start && end <= it.end }
             if (!alreadyHidden) {
@@ -227,7 +230,7 @@ class MarkdownVisualTransformation(
                         if (isAllowed) {
                             links += LinkRange(unescapedUrl, innerStart, innerEnd)
                             token.kind.spanStyle(linkColor, decorations)?.let { style ->
-                                spans += SpanRange(style, innerStart, innerEnd)
+                                spans += SpanRange(style, innerStart, innerEnd, preserveOnCode = true)
                             }
                         }
                         collectInline(
@@ -246,7 +249,7 @@ class MarkdownVisualTransformation(
                         spans += SpanRange(SpanStyle(color = markerColor), innerEnd, closeEnd)
                         val decorations = inheritedDecorations + token.kind.decorations
                         token.kind.spanStyle(linkColor, decorations)?.let { style ->
-                            spans += SpanRange(style, innerStart, innerEnd)
+                            spans += SpanRange(style, innerStart, innerEnd, preserveOnCode = true)
                         }
                         collectInline(
                             raw = raw,
@@ -264,8 +267,18 @@ class MarkdownVisualTransformation(
                 InlineTokenKind.CODE -> {
                     hidden += HiddenRange(openStart, innerStart, mapAfter = true)
                     hidden += HiddenRange(innerEnd, closeEnd, mapAfter = false)
-                    val decorations = inheritedDecorations + token.kind.decorations
-                    token.kind.spanStyle(linkColor, decorations)?.let { style ->
+                    // 바깥 인라인 서식은 코드 내부에 상속하지 않는다. 단락 서식과 링크는 유지한다.
+                    val outerSpans = spans.toList()
+                    spans.clear()
+                    outerSpans.forEach { span ->
+                        if (!span.isInline || span.preserveOnCode || span.end <= innerStart || span.start >= innerEnd) {
+                            spans += span
+                        } else {
+                            if (span.start < innerStart) spans += span.copy(end = innerStart)
+                            if (span.end > innerEnd) spans += span.copy(start = innerEnd)
+                        }
+                    }
+                    token.kind.spanStyle(linkColor, emptyList())?.let { style ->
                         spans += SpanRange(style, innerStart, innerEnd)
                     }
                     // 코드 스팬 내부는 마크다운 문법을 해석하지 않고 \x → x 해제만 적용한다
@@ -572,11 +585,30 @@ internal fun preprocessForReadOnly(raw: String): String =
  * 단독 `*`/`_`는 `2 * 3`, `user_name` 훼손을 막기 위해 정규화하지 않는다.
  */
 internal fun normalizeLegacyWhitespaceMarkers(text: String): String {
-    var result = LEGACY_BOLD_WHITESPACE.replace(text) { match ->
-        relocateEdgeSpaces(match.groupValues[1], "**")
+    val result = StringBuilder(text.length)
+    var cursor = 0
+    markdownCodeRanges(text).forEach { code ->
+        result.append(normalizeLegacyPlainSegment(text.substring(cursor, code.first)))
+        result.append(text, code.first, code.last + 1)
+        cursor = code.last + 1
     }
-    result = LEGACY_STRIKE_WHITESPACE.replace(result) { match ->
-        relocateEdgeSpaces(match.groupValues[1], "~~")
+    result.append(normalizeLegacyPlainSegment(text.substring(cursor)))
+    return result.toString()
+}
+
+private fun normalizeLegacyPlainSegment(text: String): String {
+    var result = text
+    listOf(LEGACY_BOLD_WHITESPACE to "**", LEGACY_STRIKE_WHITESPACE to "~~").forEach { (regex, marker) ->
+        val normalized = StringBuilder(result.length)
+        var cursor = 0
+        while (cursor < result.length) {
+            val match = regex.findUnescaped(result, cursor) ?: break
+            normalized.append(result, cursor, match.range.first)
+            normalized.append(relocateEdgeSpaces(match.groupValues[1], marker))
+            cursor = match.range.last + 1
+        }
+        normalized.append(result, cursor, result.length)
+        result = normalized.toString()
     }
     return result
 }
@@ -643,11 +675,11 @@ private fun trimTrailingUrlPunctuation(url: String): String {
 private val ALLOWED_LINK_SCHEMES = setOf("https", "http", "mailto", "tel")
 private val TRAILING_URL_PUNCTUATION = setOf('.', ',', ';', ':', '!', '?')
 private val PLAIN_URL_REGEX = Regex("""https?://[^\s<>]+""")
-private val LEGACY_BOLD_WHITESPACE = Regex("""(?<!\\)(?<!\*)\*\*([^\n]+?)\*\*(?!\*)""")
-private val LEGACY_STRIKE_WHITESPACE = Regex("""(?<!\\)~~([^\n]+?)~~""")
+private val LEGACY_BOLD_WHITESPACE = Regex("""(?<!\*)\*\*(?!\*)((?:\\.|(?!\*\*)[^\\\n])+)\*\*(?!\*)""")
+private val LEGACY_STRIKE_WHITESPACE = Regex("""~~((?:\\.|(?!~~)[^\\\n])+)~~""")
 
 /** 짝이 깨져 화면에 드러날 수 있는 태그형 마커 */
-private val ORPHAN_MARKER = Regex("""(?<!\\)(?:<mark(?:\s+color="[^"]*")?>|</mark>|<u>|</u>)""")
+private val ORPHAN_MARKER = Regex("""(?:<mark(?:\s+color="[^"]*")?>|</mark>|<u>|</u>)""")
 
 /** 화면에서 제거되는 마커 범위. [mapAfter]는 경계 커서를 범위 뒤(토큰 안쪽)로 보낼지 여부 */
 private data class HiddenRange(val start: Int, val end: Int, val mapAfter: Boolean)
@@ -659,7 +691,13 @@ private data class ReplacedRange(val start: Int, val end: Int, val text: String)
     }
 }
 
-private data class SpanRange(val style: SpanStyle, val start: Int, val end: Int)
+private data class SpanRange(
+    val style: SpanStyle,
+    val start: Int,
+    val end: Int,
+    val isInline: Boolean = true,
+    val preserveOnCode: Boolean = false,
+)
 private data class LinkRange(val url: String, val start: Int, val end: Int)
 
 /**

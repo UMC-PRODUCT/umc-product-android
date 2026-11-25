@@ -76,9 +76,11 @@ object MarkdownScanner {
 
         val headingPrefix = headingPrefixes.keys.firstOrNull { line.startsWith(it) }
         val body = line.removePrefix(headingPrefix ?: "")
+        val markers = openMarkers(text, lineStart, at)
+        val active = markers.lastOrNull { MarkdownStyle.CODE in it.styles }?.let { listOf(it) } ?: markers
 
         return MarkdownActiveStyles(
-            inline = openMarkers(text, lineStart, at).flatMap { it.styles }.toImmutableSet(),
+            inline = active.flatMap { it.styles }.toImmutableSet(),
             isBullet = body.startsWith("- "),
             isDashList = body.startsWith("– "),
             isNumberList = numberListPrefix.containsMatchIn(body),
@@ -119,6 +121,12 @@ object MarkdownScanner {
 
         while (i < end) {
             if (isMarkdownEscaped(text, i)) {
+                i++
+                continue
+            }
+
+            if (open.any { MarkdownStyle.CODE in it.styles }) {
+                if (text[i] == '`') open.removeLastMatching { MarkdownStyle.CODE in it.styles }
                 i++
                 continue
             }

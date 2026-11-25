@@ -501,6 +501,7 @@ object MarkdownEditActions {
         insertMarker: String = "*".repeat(count),
     ): TextFieldValue {
         val marker = "*".repeat(count)
+        if (!value.selection.collapsed && value.text.substring(value.selection.min, value.selection.max).isBlank()) return value
         val (start, end) = value.trimmedSelection()
             ?: return deactivateOrInsert(value, insertMarker, insertMarker, style)
 
@@ -528,6 +529,7 @@ object MarkdownEditActions {
         close: String,
         style: MarkdownStyle,
     ): TextFieldValue {
+        if (!value.selection.collapsed && value.text.substring(value.selection.min, value.selection.max).isBlank()) return value
         val (start, end) = value.trimmedSelection()
             ?: return deactivateOrInsert(value, open, close, style)
         val text = value.text
