@@ -15,6 +15,41 @@ import org.junit.Test
 class MarkdownVisualTransformationTest {
 
     @Test
+    fun `링크와 코드 뒤에 붙은 서식은 앞 URL의 일부로 판단하지 않는다`() {
+        listOf(
+            "[신청서](https://forms.gle/abc)**필수**" to "신청서필수",
+            "`https://a.com`**굵게**" to "https://a.com굵게",
+            "[https://a.dev/**강조**](https://b.dev)" to "https://a.dev/강조",
+        ).forEach { (raw, expected) ->
+            val text = readOnlyParser().parse(raw).transformed.text
+            assertEquals(raw, expected, text.text)
+            assertTrue(raw, text.spanStyles.any { it.item.fontWeight == FontWeight.Bold })
+        }
+    }
+
+    @Test
+    fun `잘못된 RGBA는 fallback하고 유효한 범위 밖 성분만 clamp한다`() {
+        val fallback = Color(1f, 1f, 0f, 0.4f)
+        listOf("1,invalid,0,0,0.35", "NaN,0,0,0.35", "Infinity,0,0,0.35", "1,0,0", "1,0,0,0.35,0").forEach {
+            assertEquals(it, fallback, parseMarkColor(it))
+        }
+        assertEquals(Color(1f, 0f, 0.5f, 1f), parseMarkColor("2,-1,0.5,3"))
+    }
+
+    @Test
+    fun `빈 줄이나 다른 본문으로 떨어진 인용구는 세로선을 연결하지 않는다`() {
+        listOf(
+            "> 첫째\n\n> 둘째",
+            "> 첫째\nx\n> 둘째",
+            "> 첫째\r\n\r\n> 둘째",
+        ).forEach { raw ->
+            assertEquals(raw, 2, readOnlyParser().parse(raw).quoteBlocks.size)
+            assertEquals(raw, 2, editorParser().parse(raw).quoteBlocks.size)
+        }
+        assertEquals(1, editorParser().parse("> 첫째\r\n> 둘째").quoteBlocks.size)
+    }
+
+    @Test
     fun `레거시 정규화는 코드와 이스케이프된 마커를 보존한다`() {
         val raw = """`** a ** ~~ x ~~` **일시: ** \** 리터럴 \**"""
         assertEquals(
@@ -27,7 +62,7 @@ class MarkdownVisualTransformationTest {
 
     @Test
     fun `코드는 바깥 인라인 서식을 무시하고 링크는 유지한다`() {
-        val raw = "[<u>**`코드`**</u>](https://umc.dev)"
+        val raw = "~~[<u>**`코드`**</u>](https://umc.dev)~~"
         val text = readOnlyParser().parse(raw).transformed.text
         assertEquals("코드", text.text)
         assertFalse(text.spanStyles.any { it.item.fontWeight == FontWeight.Bold })
@@ -217,6 +252,15 @@ class MarkdownVisualTransformationTest {
         val link = text.getLinkAnnotations(0, text.length).single()
         assertEquals("HTTPS://a.dev/a(1)_b", (link.item as LinkAnnotation.Clickable).tag)
         assertEquals("HTTPS://a.dev/a(1)_b", text.text.substring(link.start, link.end))
+    }
+
+    @Test
+    fun `자동 링크 내부 밑줄은 서식으로 소비하지 않는다`() {
+        val raw = "https://a.dev/a_b_c **강조**"
+        val text = readOnlyParser().parse(raw).transformed.text
+        assertEquals("https://a.dev/a_b_c 강조", text.text)
+        assertEquals("https://a.dev/a_b_c", (text.getLinkAnnotations(0, text.length).single().item as LinkAnnotation.Clickable).tag)
+        assertFalse(text.spanStyles.any { it.item.fontStyle == FontStyle.Italic })
     }
 
     @Test

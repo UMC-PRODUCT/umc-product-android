@@ -19,11 +19,13 @@ object NoticeMarkdownSanitizer {
     )
     private val HORIZONTAL_RULE = Regex("^[ \\t]*(?:-{3,}|\\*{3,}|_{3,})[ \\t]*\\r?\\n?", RegexOption.MULTILINE)
     private val TABLE_SEPARATOR = Regex("^[ \\t]*\\|[ \\t:|-]*-{2,}[ \\t:|-]*\\|[ \\t]*\\r?\\n?", RegexOption.MULTILINE)
-    private val TABLE_ROW = Regex("^\\s*\\|(.+)\\|\\s*$", RegexOption.MULTILINE)
+    private val TABLE_ROW = Regex("^[ \\t]*\\|(.+)\\|[ \\t]*$", RegexOption.MULTILINE)
     private val CHECKBOX = Regex("^(\\s*)-\\s+\\[[ xX]]\\s+", RegexOption.MULTILINE)
-    private val MARKER_INNER_SPACE = Regex("(\\*{1,3}|~~)\\s+([^*~][^\\n]*?)\\s+(\\1)")
+    private val MARKER_INNER_SPACE = Regex("(\\*{1,3}|~~)[ \\t]+([^*~\\s][^\\n]*?)[ \\t]+(\\1)")
     private val BLOCK_MARKER_NO_SPACE = Regex("^(#{1,3}|>)([^\\s#>])", RegexOption.MULTILINE)
-    private val EXCESS_BLANK_LINES = Regex("\\n{3,}")
+    private val PAREN_NUMBER_LIST = Regex("^(\\d+)\\)[ \\t]+", RegexOption.MULTILINE)
+    private val CODE_OR_HIGHLIGHT = Regex("`(?:\\\\.|[^\\\\`\\n])+`|<mark>")
+    private const val DEFAULT_HIGHLIGHT = "<mark color=\"0.686,0.322,0.871,0.350\">"
 
     /** 지원하지 않는 문법이 몇 군데 남아 있는지 센다. 보정 전후 비교용. */
     fun countViolations(text: String): Int =
@@ -33,12 +35,14 @@ object NoticeMarkdownSanitizer {
             TABLE_SEPARATOR.findAll(text).count() +
             TABLE_ROW.findAll(text).count() +
             CHECKBOX.findAll(text).count() +
+            PAREN_NUMBER_LIST.findAll(text).count() +
             MARKER_INNER_SPACE.findAll(text).count() +
-            BLOCK_MARKER_NO_SPACE.findAll(text).count()
+            BLOCK_MARKER_NO_SPACE.findAll(text).count() +
+            countColorlessHighlights(text)
 
     /** 모델 출력을 앱이 지원하는 문법만 남도록 보정한다. */
     fun sanitize(raw: String): String {
-        var text = raw.trim()
+        var text = raw.replace("\r\n", "\n").replace("\r", "\n")
         text = CODE_FENCE.replace(text, "")
         text = LEADING_PREAMBLE.replace(text, "")
         // 표는 렌더링 불가 — 구분선은 버리고 셀은 불릿 한 줄로 편다.
@@ -49,14 +53,47 @@ object NoticeMarkdownSanitizer {
         }
         text = HORIZONTAL_RULE.replace(text, "")
         text = CHECKBOX.replace(text) { m -> m.groupValues[1] + "- " }
+        text = PAREN_NUMBER_LIST.replace(text) { m -> m.groupValues[1] + ". " }
         // "** 텍스트 **" 처럼 마커 안쪽에 공백이 있으면 파서가 토큰으로 인정하지 않는다.
         text = MARKER_INNER_SPACE.replace(text) { m ->
             m.groupValues[1] + m.groupValues[2].trim() + m.groupValues[3]
         }
         // "#제목" 처럼 블록 마커 뒤 공백이 빠지면 제목으로 인식되지 않는다.
         text = BLOCK_MARKER_NO_SPACE.replace(text) { m -> m.groupValues[1] + " " + m.groupValues[2] }
-        text = EXCESS_BLANK_LINES.replace(text, "\n\n")
-        return text.trim()
+        return normalizeHighlights(text)
+    }
+
+    /** 코드 스팬과 이스케이프를 제외하고 색상이 없는 `<mark>` 개수를 센다. */
+    private fun countColorlessHighlights(text: String): Int {
+        var count = 0
+        forEachColorlessHighlight(text) { count++ }
+        return count
+    }
+
+    /** 새 AI 출력의 색상 없는 형광펜은 공식 기본 보라로 보정한다. 코드와 기존 RGBA는 유지한다. */
+    private fun normalizeHighlights(text: String): String = buildString(text.length) {
+        var cursor = 0
+        forEachColorlessHighlight(text) { range ->
+            append(text, cursor, range.first)
+            append(DEFAULT_HIGHLIGHT)
+            cursor = range.last + 1
+        }
+        append(text, cursor, text.length)
+    }
+
+    private inline fun forEachColorlessHighlight(text: String, onMatch: (IntRange) -> Unit) {
+        var cursor = 0
+        while (cursor < text.length) {
+            val match = CODE_OR_HIGHLIGHT.find(text, cursor) ?: break
+            var slashStart = match.range.first - 1
+            while (slashStart >= 0 && text[slashStart] == '\\') slashStart--
+            if ((match.range.first - 1 - slashStart) % 2 == 1) {
+                cursor = match.range.first + 1
+                continue
+            }
+            if (match.value == "<mark>") onMatch(match.range)
+            cursor = match.range.last + 1
+        }
     }
 }
 

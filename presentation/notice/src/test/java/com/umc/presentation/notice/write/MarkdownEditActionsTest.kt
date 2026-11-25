@@ -139,7 +139,8 @@ class MarkdownEditActionsTest {
             TextFieldValue(), TextFieldValue(raw, TextRange(raw.length)),
         )
         assertEquals("`** a ** ~~ x ~~` **일시:** ", result.text)
-        val code = TextFieldValue("**`<u>코드", TextRange(9))
+        val codeRaw = "**`<u>코드"
+        val code = TextFieldValue(codeRaw, TextRange(codeRaw.length))
         assertEquals(setOf(MarkdownStyle.CODE), MarkdownScanner.activeStyles(code).inline)
     }
 

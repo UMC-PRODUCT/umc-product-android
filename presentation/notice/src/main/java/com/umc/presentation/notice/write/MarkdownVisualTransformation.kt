@@ -89,7 +89,7 @@ class MarkdownVisualTransformation(
 
         return MarkdownRendered(
             transformed = transformed,
-            quoteBlocks = mergeQuoteBlocks(quoteLines).map { block ->
+            quoteBlocks = mergeQuoteBlocks(quoteLines, source).map { block ->
                 mapping.originalToTransformed(block.first)..mapping.originalToTransformed(block.last)
             },
         )
@@ -175,15 +175,16 @@ class MarkdownVisualTransformation(
     }
 
     /** 연속된 인용 줄을 하나의 블록으로 병합 (iOS도 연속 인용을 한 덩어리로 그린다) */
-    private fun mergeQuoteBlocks(lines: List<IntRange>): List<IntRange> {
+    private fun mergeQuoteBlocks(lines: List<IntRange>, raw: String): List<IntRange> {
         if (lines.isEmpty()) return emptyList()
 
         val merged = mutableListOf<IntRange>()
         var current = lines.first()
 
         lines.drop(1).forEach { line ->
-            // 원문에서 바로 다음 줄이면(개행 1개 + \r 가능 + prefix 2) 이어붙인다
-            val isAdjacent = line.first > current.last && line.first - current.last <= MAX_QUOTE_GAP
+            // 빈 줄이나 다른 본문이 끼면 간격이 짧더라도 서로 다른 인용 블록이다.
+            val gap = raw.substring(current.last, line.first)
+            val isAdjacent = gap == "\n> " || gap == "\r\n> "
             current = if (isAdjacent) current.first..line.last else {
                 merged += current
                 line
@@ -209,7 +210,7 @@ class MarkdownVisualTransformation(
         var searchFrom = 0
 
         while (searchFrom < region.length) {
-            val token = findEarliestToken(region, searchFrom)
+            val token = findEarliestToken(region, searchFrom, detectPlainUrls = isReadOnly && !insideLink)
             if (token == null) {
                 collectPlainText(
                     raw = raw,
@@ -296,11 +297,18 @@ class MarkdownVisualTransformation(
                     val outerSpans = spans.toList()
                     spans.clear()
                     outerSpans.forEach { span ->
-                        if (!span.isInline || span.preserveOnCode || span.end <= innerStart || span.start >= innerEnd) {
+                        if (!span.isInline || span.end <= innerStart || span.start >= innerEnd) {
                             spans += span
                         } else {
                             if (span.start < innerStart) spans += span.copy(end = innerStart)
                             if (span.end > innerEnd) spans += span.copy(start = innerEnd)
+                            if (span.preserveOnCode) {
+                                spans += span.copy(
+                                    style = span.style.copy(textDecoration = TextDecoration.Underline),
+                                    start = maxOf(span.start, innerStart),
+                                    end = minOf(span.end, innerEnd),
+                                )
+                            }
                         }
                     }
                     token.kind.spanStyle(linkColor, emptyList())?.let { style ->
@@ -425,21 +433,19 @@ class MarkdownVisualTransformation(
         }
     }
 
-    private fun findEarliestToken(region: String, from: Int): InlineToken? {
+    private fun findEarliestToken(region: String, from: Int, detectPlainUrls: Boolean = false): InlineToken? {
         var best: InlineToken? = null
         var bestPriority = Int.MAX_VALUE
+        // 이미 소비한 링크·코드의 URL은 제외하고, 일반 텍스트 구간에서 한 번만 검색한다.
+        val plainUrls = if (detectPlainUrls) PLAIN_URL_REGEX.findAll(region, from).map { it.range }.toList() else emptyList()
 
         InlineTokenKind.entries.forEachIndexed { priority, kind ->
             if (isReadOnly && kind.isEmptyPair) return@forEachIndexed
             var match = kind.regex.findUnescaped(region, from) ?: return@forEachIndexed
-            // 공백 때문에 무효인 **_ ... _**가 일반 굵게로 재해석되지 않게 한다.
-            if (kind == InlineTokenKind.BOLD) {
-                while (match.groupValues[1].let { it.length >= 2 && it.startsWith('_') && it.endsWith('_') &&
-                        it.substring(1, it.length - 1).let { body -> body.isEmpty() ||
-                            body.first().isWhitespace() || body.last().isWhitespace() } }) {
-                    match = kind.regex.findUnescaped(region, match.range.first + 1)
-                        ?: return@forEachIndexed
-                }
+            while (isInvalidMixedWhitespace(kind, match) ||
+                plainUrls.any { match.range.first > it.first && match.range.first <= it.last }
+            ) {
+                match = kind.regex.findUnescaped(region, match.range.first + 1) ?: return@forEachIndexed
             }
             val current = best
             if (current == null || match.range.first < current.start ||
@@ -451,6 +457,15 @@ class MarkdownVisualTransformation(
             }
         }
         return best
+    }
+
+    private fun isInvalidMixedWhitespace(kind: InlineTokenKind, match: MatchResult): Boolean {
+        if (kind != InlineTokenKind.BOLD) return false
+        val inner = match.groupValues[1]
+        if (inner.length < 2 || !inner.startsWith('_') || !inner.endsWith('_')) return false
+        val body = inner.substring(1, inner.length - 1)
+        // 공백 때문에 무효인 **_ ... _**를 일반 굵게로 재해석하지 않는다.
+        return body.isEmpty() || body.first().isWhitespace() || body.last().isWhitespace()
     }
 
     /** 숨김 범위를 시작 좌표 순으로 정렬하고 혹시 겹치는 구간이 있으면 정리한다 */
@@ -516,10 +531,6 @@ class MarkdownVisualTransformation(
         return builder.toAnnotatedString()
     }
 
-    private companion object {
-        /** 인용 줄 병합 시 허용하는 원문 간격 (\r\n + prefix 2) */
-        const val MAX_QUOTE_GAP = 4
-    }
 }
 
 /** 파싱 결과. [quoteBlocks]는 표시 좌표 기준이라 TextLayoutResult에 그대로 쓸 수 있다 */
@@ -890,8 +901,11 @@ private val HIGHLIGHT_FALLBACK_COLOR = Color(1f, 1f, 0f, 0.4f)
 
 /** `<mark color="R,G,B,A">`의 색상 코드. 각 값은 0~1 실수. 기존 7색 포함 모든 RGBA를 그대로 렌더링한다 */
 internal fun parseMarkColor(code: String?): Color {
-    val parts = code?.split(',')?.mapNotNull { it.toFloatOrNull() } ?: return HIGHLIGHT_FALLBACK_COLOR
-    if (parts.size != 4) return HIGHLIGHT_FALLBACK_COLOR
+    val components = code?.split(',') ?: return HIGHLIGHT_FALLBACK_COLOR
+    if (components.size != 4) return HIGHLIGHT_FALLBACK_COLOR
+    val parts = components.map {
+        it.trim().toFloatOrNull()?.takeIf { value -> value.isFinite() } ?: return HIGHLIGHT_FALLBACK_COLOR
+    }
     return Color(
         red = parts[0].coerceIn(0f, 1f),
         green = parts[1].coerceIn(0f, 1f),
