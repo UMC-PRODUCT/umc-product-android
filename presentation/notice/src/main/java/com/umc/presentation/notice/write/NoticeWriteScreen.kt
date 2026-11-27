@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -44,6 +46,7 @@ import androidx.compose.runtime.Composable
 import com.umc.component.base.CollectUiEvents
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +57,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -107,6 +112,7 @@ import com.umc.domain.model.notice.NoticeImageAttachment
 import com.umc.domain.model.notice.WriteCategory
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.math.roundToInt
 
 /** 공지 작성 화면 바텀시트 종류 */
 private enum class WriteSheetType { CATEGORY, CHAPTER, SCHOOL, PART, VOTE }
@@ -762,18 +768,14 @@ private fun MarkdownToolbar(
             MarkdownMenu(
                 expanded = showHighlightMenu,
                 onDismissRequest = { showHighlightMenu = false },
-                modifier = Modifier.heightIn(max = HIGHLIGHT_MENU_MAX_HEIGHT),
             ) {
-                MarkdownHighlightColor.entries.forEach { color ->
-                    MarkdownMenuItem(
-                        label = color.label,
-                        swatch = color.swatch,
-                        isSelected = color == highlightColor,
-                    ) {
+                HighlightMenuItems(
+                    highlightColor = highlightColor,
+                    onSelectHighlight = { color ->
                         showHighlightMenu = false
                         onSelectHighlight(color)
-                    }
-                }
+                    },
+                )
             }
         }
 
@@ -796,8 +798,8 @@ private fun MarkdownToolbar(
 /** 툴바 아이콘 간격. 기존 균등 분배(SpaceBetween) 때의 간격을 유지 */
 private val MARKDOWN_TOOLBAR_ICON_GAP = 20.dp
 
-/** 형광펜 메뉴는 4행까지만 보이고 나머지는 스크롤 (디자인 기준 192dp) */
-private val HIGHLIGHT_MENU_MAX_HEIGHT = 192.dp
+/** 가로 모드·분할 화면 등 툴바 위 여유 공간이 좁을 때도 최소 1행은 보이도록 보장 */
+private val MARKDOWN_MENU_MIN_HEIGHT = 48.dp
 
 /**
  * 아이콘 위쪽으로 메뉴를 띄울 거리.
@@ -812,7 +814,8 @@ private val MARKDOWN_MENU_SCREEN_MARGIN = 16.dp
  * 툴바 아이콘에서 펼쳐지는 메뉴 카드.
  *
  * Material3 DropdownMenu는 시스템 바 높이만큼 위로 밀려 툴바와 멀어지므로
- * 위치를 직접 계산한다. 가로는 누른 아이콘에 맞추고, 세로는 툴바 바로 위에 붙인다
+ * 위치를 직접 계산한다. 가로는 누른 아이콘에 맞추고, 세로는 툴바 바로 위에 붙인다.
+ * 창 높이가 낮거나 키보드가 올라와 툴바 위 공간이 부족할 때만 그 가용 높이에 맞춰 스크롤한다
  */
 @Composable
 private fun MarkdownMenu(
@@ -824,7 +827,25 @@ private fun MarkdownMenu(
     if (!expanded) return
 
     val density = LocalDensity.current
-    val positionProvider = remember(density) {
+    val statusBarTopPx = WindowInsets.statusBars.getTop(density)
+    val marginPx = with(density) { MARKDOWN_MENU_SCREEN_MARGIN.roundToPx() }
+    val liftPx = with(density) { MARKDOWN_MENU_LIFT.roundToPx() }
+    val minHeightPx = with(density) { MARKDOWN_MENU_MIN_HEIGHT.roundToPx() }
+    val topBoundPx = statusBarTopPx + marginPx
+    var maxMenuHeightPx by remember { mutableIntStateOf(Int.MAX_VALUE) }
+
+    // 첫 프레임부터 툴바 위 가용 높이를 반영해 짧은 창에서도 툴바·키보드를 덮지 않게 한다
+    Spacer(
+        modifier = Modifier.onGloballyPositioned { coordinates ->
+            val anchorTop = coordinates.positionInWindow().y.roundToInt()
+            val available = (anchorTop - liftPx - topBoundPx).coerceAtLeast(minHeightPx)
+            if (maxMenuHeightPx != available) {
+                maxMenuHeightPx = available
+            }
+        }
+    )
+
+    val positionProvider = remember(marginPx, liftPx, minHeightPx, topBoundPx) {
         object : PopupPositionProvider {
             override fun calculatePosition(
                 anchorBounds: IntRect,
@@ -832,16 +853,25 @@ private fun MarkdownMenu(
                 layoutDirection: LayoutDirection,
                 popupContentSize: IntSize,
             ): IntOffset {
-                val margin = with(density) { MARKDOWN_MENU_SCREEN_MARGIN.roundToPx() }
-                val lift = with(density) { MARKDOWN_MENU_LIFT.roundToPx() }
-                val maxX = (windowSize.width - popupContentSize.width - margin)
-                    .coerceAtLeast(margin)
+                val available = (anchorBounds.top - liftPx - topBoundPx).coerceAtLeast(minHeightPx)
+                if (maxMenuHeightPx != available) {
+                    maxMenuHeightPx = available
+                }
+                val maxX = (windowSize.width - popupContentSize.width - marginPx)
+                    .coerceAtLeast(marginPx)
                 return IntOffset(
-                    x = anchorBounds.left.coerceIn(margin, maxX),
-                    y = (anchorBounds.top - popupContentSize.height - lift).coerceAtLeast(margin),
+                    x = anchorBounds.left.coerceIn(marginPx, maxX),
+                    y = (anchorBounds.top - popupContentSize.height - liftPx)
+                        .coerceAtLeast(topBoundPx),
                 )
             }
         }
+    }
+
+    val heightConstrainedModifier = if (maxMenuHeightPx < Int.MAX_VALUE) {
+        modifier.heightIn(max = with(density) { maxMenuHeightPx.toDp() })
+    } else {
+        modifier
     }
 
     Popup(
@@ -849,19 +879,46 @@ private fun MarkdownMenu(
         onDismissRequest = onDismissRequest,
         properties = PopupProperties(focusable = true),
     ) {
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = grey50(),
-            shadowElevation = 8.dp,
+        MarkdownMenuCard(
+            modifier = heightConstrainedModifier,
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun MarkdownMenuCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = grey50(),
+        shadowElevation = 8.dp,
+    ) {
+        // Popup 안에서는 최대 폭이 화면 전체라 항목의 fillMaxWidth가 화면을 다 채운다.
+        // 가장 넓은 항목 기준으로 카드 폭을 잡는다
+        Column(
+            modifier = modifier
+                .width(IntrinsicSize.Max)
+                .verticalScroll(rememberScrollState()),
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun HighlightMenuItems(
+    highlightColor: MarkdownHighlightColor?,
+    onSelectHighlight: (MarkdownHighlightColor) -> Unit = {},
+) {
+    MarkdownHighlightColor.entries.forEach { color ->
+        MarkdownMenuItem(
+            label = color.label,
+            swatch = color.swatch,
+            isSelected = color == highlightColor,
         ) {
-            // Popup 안에서는 최대 폭이 화면 전체라 항목의 fillMaxWidth가 화면을 다 채운다.
-            // 가장 넓은 항목 기준으로 카드 폭을 잡는다
-            Column(
-                modifier = modifier
-                    .width(IntrinsicSize.Max)
-                    .verticalScroll(rememberScrollState()),
-                content = content,
-            )
+            onSelectHighlight(color)
         }
     }
 }
@@ -1182,6 +1239,16 @@ internal fun NoticeWriteScreenSuperAdminPreview() {
             writerRole = NoticeWriterRole.SUPER_ADMIN,
         ),
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeHighlightMenuPreview() {
+    Box(modifier = Modifier.padding(16.dp)) {
+        MarkdownMenuCard {
+            HighlightMenuItems(highlightColor = MarkdownHighlightColor.PURPLE)
+        }
+    }
 }
 
 /**

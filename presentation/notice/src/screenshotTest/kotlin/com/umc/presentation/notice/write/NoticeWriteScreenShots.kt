@@ -20,3 +20,10 @@ fun NoticeWriteScreenShot() {
 fun NoticeWriteScreenSuperAdminShot() {
     UmcTheme { NoticeWriteScreenSuperAdminPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true)
+@Composable
+fun NoticeHighlightMenuShot() {
+    UmcTheme { NoticeHighlightMenuPreview() }
+}

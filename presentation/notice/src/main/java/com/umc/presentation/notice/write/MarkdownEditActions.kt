@@ -32,6 +32,281 @@ internal fun TextFieldValue.endComposition(): TextFieldValue =
 object MarkdownEditActions {
 
     private val headingPrefixes = listOf("### ", "## ", "# ")
+    private val numberListPrefix = Regex("""^(\d+)\. """)
+    private val closingTriggerChars = setOf('`', ')', '*', '~', '_', '>')
+    /** 입력·수정 로드용 정규화. 원문 서식은 유지하고 개행과 ZWS만 정리한다. */
+    fun normalizeEditorInput(raw: String): String =
+        raw.replace("\r\n", "\n").replace("\r", "\n").replace("\u200B", "")
+
+    /** 전송에서만 빈 서식·고아 태그를 제거한다. 리터럴 코드와 이스케이프는 보존한다. */
+    fun sanitizeForSubmit(raw: String): String =
+        MarkdownParser.removeEditorArtifacts(normalizeEditorInput(raw))
+
+    /**
+     * 에디터 입력 변화에 대한 통합 후처리기.
+     *
+     * 1. 붙여넣기 정규화 (`\r\n`/`\u200B`/`• ` → `- `/레거시 공백 마커)
+     * 2. 숨겨진 이스케이프(`\` + 15자) 백스페이스 동시 삭제 보정
+     * 3. 개행(Enter) 시 목록 자동 이어쓰기·번호 재정렬·빈 목록 탈출 및 열린 인라인 마커 닫기
+     * 4. 타이핑 자동 변환 (줄 시작 `* ` → `- `, 닫는 인라인 마커 완성 시 서식 미상속)
+     */
+    fun processContentChange(previous: TextFieldValue, current: TextFieldValue): TextFieldValue {
+        if (previous.text == current.text) return current
+
+        normalizePaste(previous, current)?.let { return it }
+        deleteHiddenEscapeOnBackspace(previous, current)?.let { return it }
+        handleNewline(previous, current)?.let { return it }
+        autoFormatOnTyping(previous, current)?.let { return it }
+
+        return current
+    }
+
+    /** 붙여넣기(2글자 이상 일괄 삽입) 시 개행·ZWS·불릿 기호·레거시 공백 마커를 정규화한다 */
+    private fun normalizePaste(previous: TextFieldValue, current: TextFieldValue): TextFieldValue? {
+        if (!current.selection.collapsed) return null
+        val replaceStart = previous.selection.min
+        val replaceEnd = previous.selection.max
+        val prefix = previous.text.substring(0, replaceStart)
+        val suffix = previous.text.substring(replaceEnd)
+        val insertedEnd = current.text.length - suffix.length
+        if (insertedEnd < replaceStart) return null
+        if (!current.text.startsWith(prefix) || !current.text.endsWith(suffix)) return null
+
+        val inserted = current.text.substring(replaceStart, insertedEnd)
+        if (inserted.length < 2) return null
+
+        val atLineStart = replaceStart == 0 || previous.text[replaceStart - 1] == '\n'
+        val normalized = normalizePastedText(
+            inserted, startsAtLineHead = atLineStart, prefix = prefix, suffix = suffix,
+            startsInsideCode = MarkdownScanner.openMarkersAt(previous.text, replaceStart).any { it.isCode },
+        )
+        if (normalized == inserted) return null
+
+        val newText = prefix + normalized + suffix
+        return current.copy(
+            text = newText,
+            selection = TextRange(replaceStart + normalized.length),
+        ).endComposition()
+    }
+
+    private fun normalizePastedText(
+        inserted: String,
+        startsAtLineHead: Boolean,
+        prefix: String,
+        suffix: String,
+        startsInsideCode: Boolean,
+    ): String {
+        val cleaned = normalizeEditorInput(inserted)
+        // 다른 줄의 토큰은 삽입 위치의 코드 문맥과 무관하다.
+        val linePrefix = prefix.substring(prefix.lastIndexOf('\n') + 1)
+        val lineSuffix = suffix.substringBefore('\n')
+        val contextual = linePrefix + cleaned + lineSuffix
+        val protected = MarkdownParser.descendants(MarkdownParser.parseInline(contextual))
+            .filter { it.kind == InlineTokenKind.CODE }
+            .map { (it.start - linePrefix.length).coerceAtLeast(0) until
+                (it.end - linePrefix.length).coerceAtMost(cleaned.length) }
+            .filterNot { it.isEmpty() }
+            .toMutableList()
+
+        // 닫는 백틱이 아직 없더라도 커서가 코드 안에서 시작했다면 첫 줄의 원문을 보존한다.
+        // 삽입 중 코드를 닫았다면 그 뒤의 일반 텍스트는 다시 정규화할 수 있다.
+        if (startsInsideCode) {
+            val end = cleaned.indices.firstOrNull {
+                cleaned[it] == '\n' || (cleaned[it] == '`' && !isMarkdownEscaped(contextual, linePrefix.length + it))
+            } ?: cleaned.length
+            if (end > 0) protected += 0 until end
+        }
+
+        fun normalizePlain(start: Int, end: Int): String {
+            val startsAtHead = if (start == 0) startsAtLineHead else cleaned[start - 1] == '\n'
+            val lines = cleaned.substring(start, end).split('\n').mapIndexed { index, line ->
+                if ((index > 0 || startsAtHead) && line.startsWith("• ")) {
+                    "- " + line.removePrefix("• ")
+                } else line
+            }
+            return normalizeLegacyWhitespaceMarkers(lines.joinToString("\n"))
+        }
+
+        return buildString(cleaned.length) {
+            var cursor = 0
+            for (range in protected.sortedBy { it.first }) {
+                if (range.first > cursor) append(normalizePlain(cursor, range.first))
+                val start = maxOf(cursor, range.first)
+                if (start <= range.last) append(cleaned, start, range.last + 1)
+                cursor = maxOf(cursor, range.last + 1)
+            }
+            append(normalizePlain(cursor, cleaned.length))
+        }
+    }
+
+    /**
+     * 편집기에서 `\`가 숨겨진 이스케이프 시퀀스(`\*`, `\#`, `\.` 등)의 대상 문자를
+     * 백스페이스로 지울 때 앞의 숨겨진 `\`도 함께 제거해 고아 `\` 잔존을 막는다.
+     */
+    private fun deleteHiddenEscapeOnBackspace(
+        previous: TextFieldValue,
+        current: TextFieldValue,
+    ): TextFieldValue? {
+        if (!previous.selection.collapsed || !current.selection.collapsed) return null
+        if (current.text.length != previous.text.length - 1) return null
+
+        val deletedAt = current.selection.min
+        if (deletedAt != previous.selection.min - 1 || deletedAt <= 0) return null
+        if (deletedAt >= previous.text.length) return null
+
+        if (previous.text.removeRange(deletedAt, deletedAt + 1) != current.text) return null
+        if (previous.text[deletedAt - 1] != '\\' || !isMarkdownEscaped(previous.text, deletedAt)) return null
+        if (!MarkdownParser.isHiddenEscapeAt(previous.text, deletedAt - 1)) return null
+
+        val newText = current.text.removeRange(deletedAt - 1, deletedAt)
+        return current.copy(
+            text = newText,
+            selection = TextRange(deletedAt - 1),
+        ).endComposition()
+    }
+
+    /**
+     * 단일 개행(Enter) 입력 처리.
+     * - 빈 목록 줄(`- `, `– `, `1. `)에서 Enter → 목록 접두어 제거 및 탈출
+     * - 내용 있는 목록 줄에서 Enter → 열린 인라인 마커 닫기 + 다음 항목 자동 생성(번호 목록은 +1 및 후속 재번호)
+     * - 일반 줄에서 Enter → 열린 인라인 마커 닫기
+     */
+    private fun handleNewline(previous: TextFieldValue, current: TextFieldValue): TextFieldValue? {
+        val cursor = current.selection.min
+        if (singleInsertedChar(previous, current) != '\n') return null
+
+        val newlineAt = cursor - 1
+        val lineStart = current.text.lastIndexOf('\n', newlineAt - 1) + 1
+        val prevLine = current.text.substring(lineStart, newlineAt)
+        val listMatch = matchListPrefix(prevLine)
+            ?: return closeMarkersOnNewline(previous, current)
+
+        val remainderOnPrevLine = prevLine.substring(listMatch.prefixLength)
+        val afterNewline = current.text.substring(cursor)
+        val nextLineBreak = afterNewline.indexOf('\n').let { if (it == -1) afterNewline.length else it }
+        val splitTail = afterNewline.substring(0, nextLineBreak)
+
+        // 빈 목록 줄에서 Enter → 목록 접두어와 방금 입력한 개행을 제거해 목록에서 탈출한다
+        if (remainderOnPrevLine.isBlank() && splitTail.isEmpty()) {
+            val newText = current.text.substring(0, lineStart) + afterNewline
+            return current.copy(
+                text = newText,
+                selection = TextRange(lineStart),
+            ).endComposition()
+        }
+
+        val nextPrefix = listMatch.nextPrefix()
+            ?: return closeMarkersOnNewline(previous, current)
+        val split = splitInlineAt(previous.text, newlineAt)
+        val updatedTail = if (listMatch is ListPrefixMatch.Numbered && listMatch.number <= Long.MAX_VALUE - 2L) {
+            renumberFollowingLines(split.second, startNumber = listMatch.number + 2L)
+        } else {
+            split.second
+        }
+
+        val beforeNewline = split.first
+        val newText = beforeNewline + "\n" + nextPrefix + updatedTail
+        val newCursor = beforeNewline.length + 1 + nextPrefix.length
+        return current.copy(
+            text = newText,
+            selection = TextRange(newCursor),
+        ).endComposition()
+    }
+
+    /** 번호 목록 중간에 새 항목이 삽입된 뒤, 바로 이어지는 후속 번호 목록 줄들을 연속 재번호한다 */
+    private fun renumberFollowingLines(tail: String, startNumber: Long): String {
+        val firstNewline = tail.indexOf('\n')
+        if (firstNewline == -1) return tail
+
+        val firstLineRemainder = tail.substring(0, firstNewline)
+        val followingLines = tail.substring(firstNewline + 1).split('\n')
+        var nextNumber = startNumber
+        var renumbering = true
+        val updated = followingLines.map { line ->
+            if (!renumbering) return@map line
+            val match = numberListPrefix.find(line)
+            if (match != null) {
+                val replaced = "${nextNumber}. " + line.substring(match.value.length)
+                if (nextNumber == Long.MAX_VALUE) {
+                    renumbering = false
+                } else {
+                    nextNumber++
+                }
+                replaced
+            } else {
+                renumbering = false
+                line
+            }
+        }
+        return firstLineRemainder + "\n" + updated.joinToString("\n")
+    }
+
+    /**
+     * 단일 문자 타이핑 자동 변환:
+     * - 줄 시작 `* ` 입력 시 `- `로 변환 (화면에는 즉시 `• `로 표시)
+     * - 닫는 인라인 마커 완성 시 composition을 종료해 다음 입력에 서식이 번지지 않게 함
+     */
+    private fun autoFormatOnTyping(previous: TextFieldValue, current: TextFieldValue): TextFieldValue? {
+        val typedChar = singleInsertedChar(previous, current) ?: return null
+        val cursor = current.selection.min
+        if (cursor <= 0 || cursor > current.text.length) return null
+
+        val lineStart = current.text.lastIndexOf('\n', cursor - 1) + 1
+        val lineBeforeCursor = current.text.substring(lineStart, cursor)
+
+        // 줄 시작에서 `* `를 치면 글머리 목록 `- `로 자동 변환한다
+        if (typedChar == ' ' && lineBeforeCursor == "* ") {
+            val newText = current.text.replaceRange(lineStart, cursor, "- ")
+            return current.copy(
+                text = newText,
+                selection = TextRange(cursor),
+            ).endComposition()
+        }
+
+        // 닫는 마커가 완성된 직후에는 IME 조합을 끊어 다음 입력에 서식이 상속되지 않게 한다
+        if (typedChar in closingTriggerChars &&
+            MarkdownParser.parseInline(lineBeforeCursor, includeEmptyPairs = false).any { it.end == lineBeforeCursor.length }
+        ) {
+            return current.endComposition()
+        }
+
+        return null
+    }
+
+    private sealed class ListPrefixMatch(val prefixLength: Int) {
+        abstract fun nextPrefix(): String?
+
+        data object Bullet : ListPrefixMatch(2) {
+            override fun nextPrefix(): String = "- "
+        }
+
+        data object Dash : ListPrefixMatch(2) {
+            override fun nextPrefix(): String = "– "
+        }
+
+        data class Numbered(val number: Long, val rawLength: Int) : ListPrefixMatch(rawLength) {
+            override fun nextPrefix(): String? =
+                if (number < Long.MAX_VALUE) "${number + 1L}. " else null
+        }
+    }
+
+    private fun matchListPrefix(line: String): ListPrefixMatch? {
+        if (line.startsWith("- ")) return ListPrefixMatch.Bullet
+        if (line.startsWith("– ")) return ListPrefixMatch.Dash
+        val match = numberListPrefix.find(line) ?: return null
+        val number = match.groupValues[1].toLongOrNull() ?: return null
+        return ListPrefixMatch.Numbered(number = number, rawLength = match.value.length)
+    }
+
+    /** 제목·인용구·목록 등 기존 줄 단위 블록 prefix를 찾아 반환한다 */
+    private fun findBlockPrefix(line: String): String {
+        headingPrefixes.firstOrNull { line.startsWith(it) }?.let { return it }
+        if (line.startsWith("> ")) return "> "
+        if (line.startsWith("- ")) return "- "
+        if (line.startsWith("– ")) return "– "
+        numberListPrefix.find(line)?.let { return it.value }
+        return ""
+    }
 
     /**
      * 개행이 입력되면 그 줄에서 열려 있던 인라인 마커를 개행 앞에서 모두 닫는다.
@@ -41,31 +316,64 @@ object MarkdownEditActions {
      * 형광펜은 "가나다"까지만 적용되어야 한다
      */
     fun closeMarkersOnNewline(previous: TextFieldValue, current: TextFieldValue): TextFieldValue {
-        val cursor = current.selection.min
-        val isSingleNewlineInput = current.text.length == previous.text.length + 1 &&
-                current.selection.collapsed &&
-                cursor in 1..current.text.length &&
-                current.text[cursor - 1] == '\n'
-        if (!isSingleNewlineInput) return current
-
-        val closers = MarkdownScanner.closersAt(current.text, cursor - 1)
-        if (closers.isEmpty()) return current
-
-        val newlineAt = cursor - 1
-        // 마커 안에서 엔터를 치면 짝이 되던 닫는 마커가 다음 줄로 밀려 고아가 된다.
-        // (`<mark>가나|</mark>` -> `<mark>가나</mark>\n</mark>`)
-        // 줄 끝에서 스타일을 닫고, 뒤에 남는 같은 마커는 걷어내 다음 줄은 일반 텍스트로 시작한다
-        val orphanEnd = if (current.text.startsWith(closers, cursor)) cursor + closers.length else cursor
-
+        if (singleInsertedChar(previous, current) != '\n') return current
+        if (MarkdownScanner.closersAt(previous.text, previous.selection.min).isEmpty()) return current
+        val split = splitInlineAt(previous.text, previous.selection.min)
         return current.copy(
-            text = current.text.substring(0, newlineAt) + closers + "\n" +
-                    current.text.substring(orphanEnd),
-            selection = TextRange(newlineAt + closers.length + 1),
-        )
+            text = split.first + "\n" + split.second,
+            selection = TextRange(split.first.length + 1),
+        ).endComposition()
     }
 
-    /** 색상 인자가 없는 `<mark>`도 렌더러가 받아주므로 동일하게 인식한다 */
-    private val MARK_OPEN = Regex("""<mark(?:\s+color="[^"]*")?>""")
+    private fun singleInsertedChar(previous: TextFieldValue, current: TextFieldValue): Char? {
+        if (!previous.selection.collapsed || !current.selection.collapsed) return null
+        val at = previous.selection.min
+        if (current.text.length != previous.text.length + 1 || current.selection.min != at + 1) return null
+        if (current.text.removeRange(at, at + 1) != previous.text) return null
+        return current.text[at]
+    }
+
+    private fun splitInlineAt(text: String, at: Int): Pair<String, String> {
+        val markers = MarkdownScanner.openMarkersAt(text, at)
+        if (markers.isEmpty()) return text.substring(0, at) to text.substring(at)
+        val originalClosers = markers.asReversed().joinToString("") { it.close }
+        val retained = markers.toMutableList()
+        val ranges = markers.mapNotNull { marker -> marker.closeStart?.let { it until it + marker.close.length } }
+        val rangesToRemove = ranges.sortedBy { it.first }.toMutableList()
+        val lineEnd = text.indexOf('\n', at).let { if (it == -1) text.length else it }
+        val firstCloseStart = rangesToRemove.firstOrNull()?.first ?: lineEnd
+        val hasTailBody = text.substring(at, firstCloseStart).isNotBlank()
+        val movedOpens = StringBuilder()
+        var before = text.substring(0, at)
+        // 여는 마커 직후에 본문이 이어지면 서식을 다음 줄로 옮겨 보존하고, 내용 없는 빈 서식만 걷어낸다.
+        markers.asReversed().forEach { marker ->
+            val body = before.substring(marker.start + marker.open.length)
+            if (body.isBlank() && (!marker.isCode || body.isEmpty())) {
+                before = before.removeRange(marker.start, marker.start + marker.open.length)
+                retained.remove(marker)
+                if (body.isEmpty() && hasTailBody) {
+                    val closeIndex = rangesToRemove.indexOfFirst { it.first == marker.closeStart }
+                    if (closeIndex != -1) {
+                        rangesToRemove.removeAt(closeIndex)
+                        movedOpens.insert(0, marker.open)
+                    }
+                }
+            }
+        }
+        val closers = retained.asReversed().joinToString("") { it.close }
+        var tail = text.substring(at)
+        rangesToRemove.sortedByDescending { it.first }.forEach { range ->
+            tail = tail.removeRange(range.first - at, range.last + 1 - at)
+        }
+        if (ranges.isEmpty() && tail.startsWith(originalClosers)) {
+            tail = tail.removePrefix(originalClosers)
+        }
+        tail = movedOpens.toString() + tail
+        // 코드 내부 공백은 원문이다. 다른 서식은 끝 공백을 닫는 마커 밖으로 옮긴다.
+        val trimmed = if (closers.startsWith('`')) before else before.trimEnd(' ', '\t')
+        return (trimmed + closers + before.substring(trimmed.length)) to tail
+    }
+
     private const val MARK_CLOSE = "</mark>"
 
     /** 커서(선택 시작)가 위치한 줄의 제목 prefix를 교체. BODY는 prefix 제거 */
@@ -75,7 +383,7 @@ object MarkdownEditActions {
         val lineEnd = text.indexOf('\n', lineStart).let { if (it == -1) text.length else it }
         val line = text.substring(lineStart, lineEnd)
 
-        val existing = headingPrefixes.firstOrNull { line.startsWith(it) } ?: ""
+        val existing = findBlockPrefix(line)
         if (existing == heading.prefix) return value
 
         val newLine = heading.prefix + line.removePrefix(existing)
@@ -116,50 +424,11 @@ object MarkdownEditActions {
      * 형광펜(`<mark color="...">`) 토글.
      * 같은 색이 이미 걸려 있으면 해제하고, 다른 색이면 색만 교체한다
      */
-    fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue {
-        val open = """<mark color="${color.markColorCode}">"""
-        // 형광펜 마커는 `<mark color="...">`로 길어서, 빈 쌍을 넣어두면 줄을 넘기며
-        // 화면에 그대로 드러난다. 그래서 선택 영역이 있을 때만 적용한다
-        val (start, end) = value.trimmedSelection() ?: return value
-        val text = value.text
-        val selected = text.substring(start, end)
-
-        // 선택 영역이 마커째 선택된 경우
-        val innerOpen = MARK_OPEN.matchAt(selected, 0)
-        if (innerOpen != null && selected.endsWith(MARK_CLOSE) &&
-            selected.length > innerOpen.value.length + MARK_CLOSE.length
-        ) {
-            val body = selected.substring(innerOpen.value.length, selected.length - MARK_CLOSE.length)
-            val replacement = if (innerOpen.value == open) body else open + body + MARK_CLOSE
-            return value.copy(
-                text = text.replaceRange(start, end, replacement),
-                selection = TextRange(start, start + replacement.length),
-            )
-        }
-
-        // 선택 영역 바로 바깥에 마커가 있는 경우
-        val outerOpen = MARK_OPEN.findAll(text.substring(0, start))
-            .lastOrNull()
-            ?.takeIf { it.range.last == start - 1 && text.startsWith(MARK_CLOSE, end) }
-        if (outerOpen != null) {
-            return if (outerOpen.value == open) {
-                val newText = text.replaceRange(end, end + MARK_CLOSE.length, "")
-                    .replaceRange(outerOpen.range.first, start, "")
-                value.copy(
-                    text = newText,
-                    selection = TextRange(outerOpen.range.first, end - outerOpen.value.length),
-                )
-            } else {
-                val delta = open.length - outerOpen.value.length
-                value.copy(
-                    text = text.replaceRange(outerOpen.range.first, start, open),
-                    selection = TextRange(start + delta, end + delta),
-                )
-            }
-        }
-
-        return wrapRange(value, start, end, open, MARK_CLOSE)
-    }
+    fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue =
+        editSelectedMarkdownStyle(
+            value, InlineTokenKind.HIGHLIGHT,
+            """<mark color="${color.markColorCode}">""", MARK_CLOSE, color.markColorCode,
+        )
 
     /** 커서 위치(선택 영역이 있으면 그 자리)에 [text]를 넣고 커서를 끝으로 옮긴다 */
     fun insertText(value: TextFieldValue, text: String): TextFieldValue {
@@ -188,13 +457,15 @@ object MarkdownEditActions {
             .let { if (it == -1) text.length else it }
 
         val lines = text.substring(blockStart, blockEnd).split('\n')
-        val bodies = lines.map { line ->
-            line.removePrefix(headingPrefixes.firstOrNull { line.startsWith(it) } ?: "")
-        }
-        val isActive = bodies.all { it.startsWith(prefix) }
+        val isActive = lines.all { it.startsWith(prefix) }
 
-        val newLines = bodies.map { body ->
-            if (isActive) body.removePrefix(prefix) else prefix + body
+        val newLines = lines.map { line ->
+            if (isActive) {
+                line.removePrefix(prefix)
+            } else {
+                val existing = findBlockPrefix(line)
+                prefix + line.removePrefix(existing)
+            }
         }
         val newText = text.replaceRange(blockStart, blockEnd, newLines.joinToString("\n"))
 
@@ -244,6 +515,7 @@ object MarkdownEditActions {
         insertMarker: String = "*".repeat(count),
     ): TextFieldValue {
         val marker = "*".repeat(count)
+        if (!value.selection.collapsed && value.text.substring(value.selection.min, value.selection.max).isBlank()) return value
         val (start, end) = value.trimmedSelection()
             ?: return deactivateOrInsert(value, insertMarker, insertMarker, style)
 
@@ -271,33 +543,9 @@ object MarkdownEditActions {
         close: String,
         style: MarkdownStyle,
     ): TextFieldValue {
-        val (start, end) = value.trimmedSelection()
-            ?: return deactivateOrInsert(value, open, close, style)
-        val text = value.text
-        val selected = text.substring(start, end)
-
-        return when {
-            // 선택 영역이 마커째 선택된 경우 해제
-            selected.length > open.length + close.length &&
-                    selected.startsWith(open) && selected.endsWith(close) -> {
-                val inner = selected.substring(open.length, selected.length - close.length)
-                val newText = text.replaceRange(start, end, inner)
-                value.copy(text = newText, selection = TextRange(start, start + inner.length))
-            }
-
-            // 선택 영역 바로 바깥에 마커가 있는 경우 해제
-            start >= open.length && end + close.length <= text.length &&
-                    text.startsWith(open, start - open.length) && text.startsWith(close, end) -> {
-                val newText = text.replaceRange(end, end + close.length, "")
-                    .replaceRange(start - open.length, start, "")
-                value.copy(
-                    text = newText,
-                    selection = TextRange(start - open.length, end - open.length),
-                )
-            }
-
-            else -> wrapRange(value, start, end, open, close)
-        }
+        if (value.selection.collapsed) return deactivateOrInsert(value, open, close, style)
+        val kind = if (style == MarkdownStyle.UNDERLINE) InlineTokenKind.UNDERLINE else InlineTokenKind.STRIKETHROUGH
+        return editSelectedMarkdownStyle(value, kind, open, close)
     }
 
     /** 선택 영역에서 양끝 공백을 제외한 범위. 유효한 선택이 없으면 null */
