@@ -33,14 +33,16 @@ class NoticeManagementPermissionsTest {
     }
 
     @Test fun `상세 조회가 명시적으로 거부되면 이전 메뉴를 다시 노출하지 않는다`() {
-        val state = allowed.copy(detail = NoticeDetail(id = 99L), isLoading = true)
-            .withDetailLoadFailure(FailState(code = "403", message = "거부"))
-        assertFalse(state.isLoading)
-        assertFalse(state.canEdit)
-        assertFalse(state.canDelete)
-        val retried = state.copy(isLoading = true).withDetailLoadFailure(FailState(code = "503", message = "실패"))
-        assertFalse(retried.canEdit)
-        assertFalse(retried.canDelete)
+        listOf("403", "COMMON-403").forEach { code ->
+            val state = allowed.copy(detail = NoticeDetail(id = 99L), isLoading = true)
+                .withDetailLoadFailure(FailState(code = code, message = "거부"))
+            assertFalse(state.isLoading)
+            assertFalse(state.canEdit)
+            assertFalse(state.canDelete)
+            val retried = state.copy(isLoading = true).withDetailLoadFailure(FailState(code = "503", message = "실패"))
+            assertFalse(retried.canEdit)
+            assertFalse(retried.canDelete)
+        }
     }
 
     @Test fun `네트워크 단절로 갱신에 실패해도 기존 메뉴를 유지한다`() {
@@ -65,17 +67,21 @@ class NoticeManagementPermissionsTest {
     }
 
     @Test fun `명시적 권한 거부는 작성자여도 기존 관리 권한을 지운다`() {
-        val state = allowed.copy(isAuthor = true).withManagementPermissionResult(99L, failure("403"))
-        assertFalse(state.canEdit)
-        assertFalse(state.canDelete)
-        assertTrue(state.isAuthor)
+        listOf("403", "COMMON-403").forEach { code ->
+            val state = allowed.copy(isAuthor = true).withManagementPermissionResult(99L, failure(code))
+            assertFalse(state.canEdit)
+            assertFalse(state.canDelete)
+            assertTrue(state.isAuthor)
+        }
     }
 
     @Test fun `권한 거부 뒤 재조회가 실패해도 이전 허용 상태를 복원하지 않는다`() {
-        val denied = allowed.withManagementPermissionResult(99L, failure("403"))
-        val state = denied.withManagementPermissionResult(99L, failure(NETWORK_ERROR_CODE))
-        assertFalse(state.canEdit)
-        assertFalse(state.canDelete)
+        listOf("403", "COMMON-403").forEach { code ->
+            val denied = allowed.withManagementPermissionResult(99L, failure(code))
+            val state = denied.withManagementPermissionResult(99L, failure(NETWORK_ERROR_CODE))
+            assertFalse(state.canEdit)
+            assertFalse(state.canDelete)
+        }
     }
 
     @Test fun `갱신 응답의 거부 권한은 기존 허용 권한을 대체한다`() {

@@ -28,5 +28,5 @@ internal fun NoticeDetailUiState.withManagementPermissionResult(
 
 private fun NoticeDetailUiState.withManagementPermissionFailure(failure: FailState): NoticeDetailUiState {
     // HTTP 상태 대신 서버 본문 코드가 올 수 있어, 미확인 업무 코드를 권한 거부로 추측하지 않는다.
-    return if (failure.code == "403") copy(canEdit = false, canDelete = false) else this
+    return if (failure.code == "403" || failure.code.endsWith("-403")) copy(canEdit = false, canDelete = false) else this
 }
