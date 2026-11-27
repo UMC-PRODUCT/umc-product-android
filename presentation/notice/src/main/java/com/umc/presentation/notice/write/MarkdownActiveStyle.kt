@@ -84,14 +84,14 @@ object MarkdownScanner {
         })
 
         val headingPrefix = headingPrefixes.keys.firstOrNull { line.startsWith(it) }
-        val body = line.removePrefix(headingPrefix ?: "")
+        val block = MarkdownBlock.at(line)
         val markers = openMarkers(text, lineStart, at)
         val active = markers.lastOrNull { MarkdownStyle.CODE in it.styles }?.let { listOf(it) } ?: markers
 
         return MarkdownActiveStyles(
             inline = active.flatMap { it.styles }.toImmutableSet(),
-            isBullet = body.startsWith("- "),
-            isQuote = body.startsWith("> "),
+            isBullet = block == MarkdownBlock.BULLET,
+            isQuote = block == MarkdownBlock.QUOTE,
             heading = headingPrefix?.let { headingPrefixes[it] } ?: MarkdownHeading.BODY,
         )
     }

@@ -11,6 +11,135 @@ import org.junit.Test
 class MarkdownEditActionsTest {
 
     @Test
+    fun `표시 텍스트 재선택으로 중첩 밑줄과 같은 형광펜을 해제한다`() {
+        val underline = "<u>**word**</u>"
+        val highlight = "<mark color=\"${MarkdownHighlightColor.PURPLE.markColorCode}\">**word**</mark>"
+        assertEquals("**word**", MarkdownEditActions.toggleUnderline(displaySelection(underline, 0, 4)).text)
+        assertEquals("**word**", MarkdownEditActions.toggleHighlight(displaySelection(highlight, 0, 4), MarkdownHighlightColor.PURPLE).text)
+        assertEquals("**word**", MarkdownEditActions.toggleStrikethrough(displaySelection("~~**word**~~", 0, 4)).text)
+    }
+
+    @Test
+    fun `부분 선택 해제는 양옆 본문의 기존 서식을 보존한다`() {
+        val result = MarkdownEditActions.toggleUnderline(displaySelection("<u>**word**</u>", 1, 3))
+        assertEquals("<u>**w**</u>**or**<u>**d**</u>", result.text)
+        assertEquals("word", editorText(result.text))
+        assertEquals("or", result.text.substring(result.selection.min, result.selection.max))
+    }
+
+    @Test
+    fun `부분 형광펜 색 변경과 새 밑줄 적용은 표준 래핑 순서를 따른다`() {
+        val purple = "<mark color=\"${MarkdownHighlightColor.PURPLE.markColorCode}\">"
+        val pink = "<mark color=\"${MarkdownHighlightColor.PINK.markColorCode}\">"
+        val result = MarkdownEditActions.toggleHighlight(displaySelection(purple + "**word**</mark>", 1, 3), MarkdownHighlightColor.PINK)
+        assertEquals(purple + "**w**</mark>" + pink + "**or**</mark>" + purple + "**d**</mark>", result.text)
+        assertEquals("<u>**word**</u>", MarkdownEditActions.toggleUnderline(displaySelection("**word**", 0, 4)).text)
+    }
+
+    @Test
+    fun `선택 토글은 코드와 링크 URL 및 이스케이프를 보존한다`() {
+        val code = displaySelection("`<u>word</u>`", 3, 7)
+        assertEquals(code, MarkdownEditActions.toggleUnderline(code))
+        val link = "[**word**](https://a.dev/_path_)"
+        assertEquals("[<u>**word**</u>](https://a.dev/_path_)", MarkdownEditActions.toggleUnderline(displaySelection(link, 1, 5)).text)
+        val escaped = MarkdownEditActions.toggleUnderline(displaySelection("\\*literal", 0, 1))
+        assertEquals("<u>\\*</u>literal", escaped.text)
+        assertEquals("*literal", editorText(escaped.text))
+        val beforeEscape = MarkdownEditActions.toggleUnderline(displaySelection("a\\*", 0, 1))
+        assertEquals("<u>a</u>\\*", beforeEscape.text)
+        assertEquals("a*", editorText(beforeEscape.text))
+    }
+
+    @Test
+    fun `공백 경계와 여러 줄 선택은 블록과 유효한 인라인 마커를 유지한다`() {
+        val result = MarkdownEditActions.toggleUnderline(displaySelection("**a b**", 0, 1))
+        assertEquals("<u>**a**</u> **b**", result.text)
+        val raw = "# **one**\n- **two**"
+        val value = TextFieldValue(raw, TextRange(0, raw.length))
+        assertEquals("# <u>**one**</u>\n- <u>**two**</u>", MarkdownEditActions.toggleUnderline(value).text)
+    }
+
+    @Test
+    fun `원문 3000자 이내의 여러 줄 본문에서 붙여넣기와 인라인 분석 결과를 보존한다`() {
+        val raw = List(180) { "**body** `code`" }.joinToString("\n").padEnd(2998, 'x')
+        val before = TextFieldValue(raw, TextRange(raw.length))
+        val after = TextFieldValue(raw + "xy", TextRange(raw.length + 2))
+        assertEquals(3000, after.text.length)
+        assertEquals(after, MarkdownEditActions.processContentChange(before, after))
+
+        val pasted = raw.replace("\n", "\r\n")
+        val normalized = MarkdownEditActions.processContentChange(
+            TextFieldValue(), TextFieldValue(pasted, TextRange(pasted.length)),
+        )
+        assertEquals(raw, normalized.text)
+        assertEquals(TextRange(raw.length), normalized.selection)
+
+        val tokens = MarkdownParser.parseInline(after.text)
+        assertEquals(180, tokens.count { it.kind == InlineTokenKind.BOLD })
+        assertEquals(180, tokens.count { it.kind == InlineTokenKind.CODE })
+        assertEquals(List(180) { "body code" }.joinToString("\n") + "x".repeat(119) + "xy",
+            MarkdownParser.plainText(after.text))
+    }
+
+    @Test
+    fun `제목은 목록 인용 활성 표시와 겹치지 않고 태그 닫힘은 조합을 종료한다`() {
+        listOf("# - title", "## > title").forEach { raw ->
+            val state = MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(raw.length)))
+            assertFalse(state.isBullet)
+            assertFalse(state.isQuote)
+        }
+        val raw = "<u>x</u>"
+        val result = MarkdownEditActions.processContentChange(
+            TextFieldValue(raw.dropLast(1), TextRange(raw.length - 1)),
+            TextFieldValue(raw, TextRange(raw.length), composition = TextRange(3, raw.length)),
+        )
+        assertNull(result.composition)
+    }
+
+    @Test
+    fun `선택 안팎의 연속 조상 서식은 내부 공백에서도 유지한다`() {
+        val mark = "<mark color=\"${MarkdownHighlightColor.PURPLE.markColorCode}\">"
+        assertEquals(mark + "<u>안녕</u> 하세요</mark>",
+            MarkdownEditActions.toggleUnderline(displaySelection(mark + "안녕 하세요</mark>", 0, 2)).text)
+        val raw = mark + "앞 **굵게** 뒤</mark> 끝"
+        assertEquals(mark + "앞 **굵게** 뒤</mark> <u>끝</u>",
+            MarkdownEditActions.toggleUnderline(displaySelection(raw, 7, 8)).text)
+        assertEquals("**앞** <u>**가**</u> **뒤**",
+            MarkdownEditActions.toggleUnderline(displaySelection("**앞 가 뒤**", 2, 3)).text)
+        assertEquals("~~앞 <u>가</u> 뒤~~",
+            MarkdownEditActions.toggleUnderline(displaySelection("~~앞 가 뒤~~", 2, 3)).text)
+    }
+
+    @Test
+    fun `리터럴 백슬래시 뒤에 새 경계 마커를 넣어도 표시와 선택을 보존한다`() {
+        val raw = "a\\ b"
+        val selection = TextFieldValue(raw, TextRange(0, 2))
+        val strike = MarkdownEditActions.toggleStrikethrough(selection)
+        assertEquals("~~a\\\\~~ b", strike.text)
+        assertEquals(raw, editorText(strike.text))
+        assertEquals("a\\\\", strike.text.substring(strike.selection.min, strike.selection.max))
+        val underline = MarkdownEditActions.toggleUnderline(selection)
+        assertEquals("<u>a\\\\</u> b", underline.text)
+        assertEquals(raw, editorText(underline.text))
+        val finalSlash = MarkdownEditActions.toggleUnderline(TextFieldValue("a\\", TextRange(0, 2)))
+        assertEquals("a\\\\", finalSlash.text.substring(finalSlash.selection.min, finalSlash.selection.max))
+        val reversed = MarkdownEditActions.toggleStrikethrough(selection.copy(selection = TextRange(2, 0)))
+        assertEquals(strike.text, reversed.text)
+        assertTrue(reversed.selection.start > reversed.selection.end)
+    }
+
+    private fun editorText(raw: String): String = MarkdownVisualTransformation(
+        androidx.compose.ui.graphics.Color.Unspecified, androidx.compose.ui.graphics.Color.Unspecified,
+    ).parse(raw).transformed.text.text
+
+    private fun displaySelection(raw: String, start: Int, end: Int): TextFieldValue {
+        val mapping = MarkdownVisualTransformation(
+            androidx.compose.ui.graphics.Color.Unspecified, androidx.compose.ui.graphics.Color.Unspecified,
+        ).parse(raw).transformed.offsetMapping
+        return TextFieldValue(raw, TextRange(mapping.transformedToOriginal(start), mapping.transformedToOriginal(end)))
+    }
+
+    @Test
     fun `코드를 닫는 붙여넣기는 코드 원문과 이후 일반 서식을 구분한다`() {
         val raw = "`prefix "
         val at = raw.length

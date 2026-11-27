@@ -10,6 +10,17 @@ internal object MarkdownParser {
         detectPlainUrls: Boolean = false,
         insideLink: Boolean = false,
     ): List<InlineToken> {
+        val firstBreak = raw.indexOf('\n', start)
+        if (firstBreak in start until end) {
+            return buildList {
+                var lineStart = start
+                while (lineStart < end) {
+                    val lineEnd = raw.indexOf('\n', lineStart).let { if (it < 0 || it > end) end else it }
+                    addAll(parseInline(raw, lineStart, lineEnd, includeEmptyPairs, detectPlainUrls, insideLink))
+                    lineStart = lineEnd + 1
+                }
+            }
+        }
         val region = raw.substring(start, end)
         val failed = HashSet<Long>()
         val tokens = mutableListOf<InlineToken>()
@@ -64,6 +75,106 @@ internal object MarkdownParser {
             cursor = token.end
         }
         append(unescapeMarkdownText(raw.substring(cursor, end)))
+    }
+
+    /** 코드·URL·이스케이프를 보존하고 에디터가 숨긴 빈 서식과 고아 태그만 저장에서 걷어낸다. */
+    fun removeEditorArtifacts(raw: String): String = raw.split('\n').joinToString("\n") { line ->
+        val cleaned = cleanRegion(line, 0, line.length, parseInline(line))
+        // 숨긴 태그 제거로 줄 첫머리의 일반 문장이 새 블록이 되는 것을 막는다.
+        if (blockPrefix(line).isEmpty() && blockPrefix(cleaned).isNotEmpty()) {
+            val number = NUMBER_BLOCK_PREFIX.find(cleaned)
+            if (number == null) "\\$cleaned" else cleaned.replaceRange(number.value.length - 2, number.value.length - 1, "\\.")
+        } else cleaned
+    }
+
+    private fun cleanRegion(raw: String, start: Int, end: Int, tokens: List<InlineToken>): String {
+        val output = StringBuilder()
+        var cursor = start
+        var removed = false
+        for (token in tokens) {
+            val plain = removeOrphanTags(raw, cursor, token.start)
+            output.append(plain)
+            removed = removed || raw.substring(cursor, token.start) != plain
+            val part = when {
+                token.kind == InlineTokenKind.CODE -> raw.substring(token.start, token.end)
+                token.kind.isEmptyPair -> ""
+                else -> {
+                    val inner = cleanRegion(raw, token.innerStart, token.innerEnd, token.children)
+                    if (inner.isBlank()) inner else wrapCleanToken(raw, token, inner)
+                }
+            }
+            if (removed && part.isNotEmpty()) {
+                output.replace(0, output.length, joinCleanBoundary(output.toString(), part))
+            } else output.append(part)
+            removed = part.isBlank()
+            cursor = token.end
+        }
+        return output.append(removeOrphanTags(raw, cursor, end)).toString()
+    }
+
+    private fun wrapCleanToken(raw: String, token: InlineToken, inner: String): String = buildString {
+        appendMarkdownBoundary(this, raw.substring(token.start, token.innerStart))
+        append(inner)
+        appendMarkdownBoundary(this, raw.substring(token.innerEnd, token.end))
+    }
+
+    /** 제거된 아티팩트 양옆의 토큰만 살피며, 일반 본문은 다시 직렬화하지 않는다. */
+    private fun joinCleanBoundary(left: String, right: String): String {
+        val before = parseInline(left).lastOrNull()?.takeIf { it.end == left.length }
+        val after = parseInline(right).firstOrNull()?.takeIf { it.start == 0 }
+        if (before != null && after != null && before.kind != InlineTokenKind.CODE && after.kind != InlineTokenKind.CODE) {
+            val open = left.substring(before.start, before.innerStart)
+            val close = left.substring(before.innerEnd, before.end)
+            val same = open == right.substring(0, after.innerStart) && close == right.substring(after.innerEnd, after.end)
+            val bold = open.startsWith("**") && right.startsWith("**")
+            if (same || bold) {
+                fun inner(raw: String, token: InlineToken): String {
+                    val body = raw.substring(token.innerStart, token.innerEnd)
+                    return if (bold && !same && token.kind != InlineTokenKind.BOLD) "_${escapePlainUnderscores(body)}_" else body
+                }
+                val body = joinCleanBoundary(inner(left, before), inner(right, after))
+                val merged = if (same) wrapCleanToken(left, before, body) else "**$body**"
+                return left.substring(0, before.start) + merged + right.substring(after.end)
+            }
+            // 서로 다른 별표 서식이 맞닿을 때만 기울임 표기를 구분한다.
+            if (close.endsWith('*') && right.startsWith('*')) {
+                fun distinguish(raw: String, token: InlineToken): String = if (token.kind == InlineTokenKind.ITALIC_ASTERISK) {
+                    raw.substring(0, token.start) + "_${escapePlainUnderscores(raw.substring(token.innerStart, token.innerEnd))}_" + raw.substring(token.end)
+                } else raw
+                return distinguish(left, before) + distinguish(right, after)
+            }
+        }
+        val escape = if (after != null && isMarkdownEscaped(left, left.length)) "\\" else ""
+        return left + escape + right
+    }
+
+    private fun escapePlainUnderscores(raw: String): String = buildString {
+        val tokens = parseInline(raw)
+        var tokenIndex = 0
+        // 자식 토큰의 마커·코드·URL은 그대로 두고 현재 문맥의 평문만 escape한다.
+        raw.forEachIndexed { index, char ->
+            while (tokenIndex < tokens.size && tokens[tokenIndex].end <= index) tokenIndex++
+            val inToken = tokenIndex < tokens.size && index >= tokens[tokenIndex].start
+            if (!inToken && char == '_' && !isMarkdownEscaped(raw, index)) append('\\')
+            append(char)
+        }
+    }
+
+    private fun blockPrefix(line: String): String = MarkdownBlock.at(line)?.prefix
+        ?: if (line.startsWith("– ")) "– " else NUMBER_BLOCK_PREFIX.find(line)?.value.orEmpty()
+
+    private val NUMBER_BLOCK_PREFIX = Regex("""^\d+\. """)
+
+    private fun removeOrphanTags(raw: String, start: Int, end: Int): String = buildString {
+        var cursor = start
+        MARKDOWN_TAG_MARKER.findAll(raw.substring(start, end)).forEach { match ->
+            val at = start + match.range.first
+            if (!isMarkdownEscaped(raw, at)) {
+                append(raw, cursor, at)
+                cursor = start + match.range.last + 1
+            }
+        }
+        append(raw, cursor, end)
     }
 
     /** 편집 모드에서 숨겨지는 escape인지 판별한다. 링크 URL의 escape는 화면에 남는다. */

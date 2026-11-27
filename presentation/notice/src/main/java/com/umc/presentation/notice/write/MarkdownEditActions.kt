@@ -33,12 +33,14 @@ object MarkdownEditActions {
 
     private val headingPrefixes = listOf("### ", "## ", "# ")
     private val numberListPrefix = Regex("""^(\d+)\. """)
-    private val closingTriggerChars = setOf('`', ')', '*', '~', '_')
-    /** 저장·수정 전송 및 수정 로드 시 개행(`\r\n`/`\r` → `\n`)과 Zero-Width Space(`\u200B`)를 정리한다 */
+    private val closingTriggerChars = setOf('`', ')', '*', '~', '_', '>')
+    /** 입력·수정 로드용 정규화. 원문 서식은 유지하고 개행과 ZWS만 정리한다. */
+    fun normalizeEditorInput(raw: String): String =
+        raw.replace("\r\n", "\n").replace("\r", "\n").replace("\u200B", "")
+
+    /** 전송에서만 빈 서식·고아 태그를 제거한다. 리터럴 코드와 이스케이프는 보존한다. */
     fun sanitizeForSubmit(raw: String): String =
-        raw.replace("\r\n", "\n")
-            .replace("\r", "\n")
-            .replace("\u200B", "")
+        MarkdownParser.removeEditorArtifacts(normalizeEditorInput(raw))
 
     /**
      * 에디터 입력 변화에 대한 통합 후처리기.
@@ -94,12 +96,15 @@ object MarkdownEditActions {
         suffix: String,
         startsInsideCode: Boolean,
     ): String {
-        val cleaned = sanitizeForSubmit(inserted)
-        val contextual = prefix + cleaned + suffix
+        val cleaned = normalizeEditorInput(inserted)
+        // 다른 줄의 토큰은 삽입 위치의 코드 문맥과 무관하다.
+        val linePrefix = prefix.substring(prefix.lastIndexOf('\n') + 1)
+        val lineSuffix = suffix.substringBefore('\n')
+        val contextual = linePrefix + cleaned + lineSuffix
         val protected = MarkdownParser.descendants(MarkdownParser.parseInline(contextual))
             .filter { it.kind == InlineTokenKind.CODE }
-            .map { (it.start - prefix.length).coerceAtLeast(0) until
-                (it.end - prefix.length).coerceAtMost(cleaned.length) }
+            .map { (it.start - linePrefix.length).coerceAtLeast(0) until
+                (it.end - linePrefix.length).coerceAtMost(cleaned.length) }
             .filterNot { it.isEmpty() }
             .toMutableList()
 
@@ -107,7 +112,7 @@ object MarkdownEditActions {
         // 삽입 중 코드를 닫았다면 그 뒤의 일반 텍스트는 다시 정규화할 수 있다.
         if (startsInsideCode) {
             val end = cleaned.indices.firstOrNull {
-                cleaned[it] == '\n' || (cleaned[it] == '`' && !isMarkdownEscaped(contextual, prefix.length + it))
+                cleaned[it] == '\n' || (cleaned[it] == '`' && !isMarkdownEscaped(contextual, linePrefix.length + it))
             } ?: cleaned.length
             if (end > 0) protected += 0 until end
         }
@@ -369,8 +374,6 @@ object MarkdownEditActions {
         return (trimmed + closers + before.substring(trimmed.length)) to tail
     }
 
-    /** 색상 인자가 없는 `<mark>`도 렌더러가 받아주므로 동일하게 인식한다 */
-    private val MARK_OPEN = MARKDOWN_HIGHLIGHT_OPEN
     private const val MARK_CLOSE = "</mark>"
 
     /** 커서(선택 시작)가 위치한 줄의 제목 prefix를 교체. BODY는 prefix 제거 */
@@ -421,50 +424,11 @@ object MarkdownEditActions {
      * 형광펜(`<mark color="...">`) 토글.
      * 같은 색이 이미 걸려 있으면 해제하고, 다른 색이면 색만 교체한다
      */
-    fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue {
-        val open = """<mark color="${color.markColorCode}">"""
-        // 형광펜 마커는 `<mark color="...">`로 길어서, 빈 쌍을 넣어두면 줄을 넘기며
-        // 화면에 그대로 드러난다. 그래서 선택 영역이 있을 때만 적용한다
-        val (start, end) = value.trimmedSelection() ?: return value
-        val text = value.text
-        val selected = text.substring(start, end)
-
-        // 선택 영역이 마커째 선택된 경우
-        val innerOpen = MARK_OPEN.matchAt(selected, 0)
-        if (innerOpen != null && selected.endsWith(MARK_CLOSE) &&
-            selected.length > innerOpen.value.length + MARK_CLOSE.length
-        ) {
-            val body = selected.substring(innerOpen.value.length, selected.length - MARK_CLOSE.length)
-            val replacement = if (innerOpen.value == open) body else open + body + MARK_CLOSE
-            return value.copy(
-                text = text.replaceRange(start, end, replacement),
-                selection = TextRange(start, start + replacement.length),
-            )
-        }
-
-        // 선택 영역 바로 바깥에 마커가 있는 경우
-        val outerOpen = MARK_OPEN.findAll(text.substring(0, start))
-            .lastOrNull()
-            ?.takeIf { it.range.last == start - 1 && text.startsWith(MARK_CLOSE, end) }
-        if (outerOpen != null) {
-            return if (outerOpen.value == open) {
-                val newText = text.replaceRange(end, end + MARK_CLOSE.length, "")
-                    .replaceRange(outerOpen.range.first, start, "")
-                value.copy(
-                    text = newText,
-                    selection = TextRange(outerOpen.range.first, end - outerOpen.value.length),
-                )
-            } else {
-                val delta = open.length - outerOpen.value.length
-                value.copy(
-                    text = text.replaceRange(outerOpen.range.first, start, open),
-                    selection = TextRange(start + delta, end + delta),
-                )
-            }
-        }
-
-        return wrapRange(value, start, end, open, MARK_CLOSE)
-    }
+    fun toggleHighlight(value: TextFieldValue, color: MarkdownHighlightColor): TextFieldValue =
+        editSelectedMarkdownStyle(
+            value, InlineTokenKind.HIGHLIGHT,
+            """<mark color="${color.markColorCode}">""", MARK_CLOSE, color.markColorCode,
+        )
 
     /** 커서 위치(선택 영역이 있으면 그 자리)에 [text]를 넣고 커서를 끝으로 옮긴다 */
     fun insertText(value: TextFieldValue, text: String): TextFieldValue {
@@ -579,34 +543,9 @@ object MarkdownEditActions {
         close: String,
         style: MarkdownStyle,
     ): TextFieldValue {
-        if (!value.selection.collapsed && value.text.substring(value.selection.min, value.selection.max).isBlank()) return value
-        val (start, end) = value.trimmedSelection()
-            ?: return deactivateOrInsert(value, open, close, style)
-        val text = value.text
-        val selected = text.substring(start, end)
-
-        return when {
-            // 선택 영역이 마커째 선택된 경우 해제
-            selected.length > open.length + close.length &&
-                    selected.startsWith(open) && selected.endsWith(close) -> {
-                val inner = selected.substring(open.length, selected.length - close.length)
-                val newText = text.replaceRange(start, end, inner)
-                value.copy(text = newText, selection = TextRange(start, start + inner.length))
-            }
-
-            // 선택 영역 바로 바깥에 마커가 있는 경우 해제
-            start >= open.length && end + close.length <= text.length &&
-                    text.startsWith(open, start - open.length) && text.startsWith(close, end) -> {
-                val newText = text.replaceRange(end, end + close.length, "")
-                    .replaceRange(start - open.length, start, "")
-                value.copy(
-                    text = newText,
-                    selection = TextRange(start - open.length, end - open.length),
-                )
-            }
-
-            else -> wrapRange(value, start, end, open, close)
-        }
+        if (value.selection.collapsed) return deactivateOrInsert(value, open, close, style)
+        val kind = if (style == MarkdownStyle.UNDERLINE) InlineTokenKind.UNDERLINE else InlineTokenKind.STRIKETHROUGH
+        return editSelectedMarkdownStyle(value, kind, open, close)
     }
 
     /** 선택 영역에서 양끝 공백을 제외한 범위. 유효한 선택이 없으면 null */

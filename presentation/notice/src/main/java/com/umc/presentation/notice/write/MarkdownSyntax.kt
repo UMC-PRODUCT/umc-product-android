@@ -156,3 +156,16 @@ private val LEGACY_STRIKE_WHITESPACE = Regex("""~~((?:\\.|(?!~~)[^\\\n])+)~~""")
 
 
 internal val MARKDOWN_HIGHLIGHT_OPEN = Regex("""<mark(?:\s+color="[^"]*")?>""")
+
+/** 짝이 깨져 화면에 드러날 수 있는 태그형 마커 */
+internal val MARKDOWN_TAG_MARKER = Regex("""(?:<mark(?:\s+color="[^"]*")?>|</mark>|<u>|</u>)""")
+
+/** 새 경계 마커가 직전 리터럴 백슬래시에 이스케이프되지 않도록 원문을 보존한다. */
+internal fun appendMarkdownBoundary(output: StringBuilder, marker: String) {
+    if (marker.isNotEmpty() && marker.first() in MARKDOWN_ESCAPABLE_CHARS &&
+        isMarkdownEscaped(output.toString(), output.length)
+    ) {
+        output.append('\\')
+    }
+    output.append(marker)
+}

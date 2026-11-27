@@ -136,7 +136,7 @@ class MarkdownVisualTransformation(
      */
     private fun hideOrphanMarkers(raw: String, hidden: MutableList<HiddenRange>) {
         val codeRanges = markdownCodeRanges(raw)
-        ORPHAN_MARKER.findAll(raw).forEach { match ->
+        MARKDOWN_TAG_MARKER.findAll(raw).forEach { match ->
             val start = match.range.first
             if (isMarkdownEscaped(raw, start) || codeRanges.any { start in it }) return@forEach
             val end = match.range.last + 1
@@ -527,9 +527,6 @@ fun DrawScope.drawMarkdownQuoteBars(
         )
     }
 }
-
-/** 짝이 깨져 화면에 드러날 수 있는 태그형 마커 */
-private val ORPHAN_MARKER = Regex("""(?:<mark(?:\s+color="[^"]*")?>|</mark>|<u>|</u>)""")
 
 /** 화면에서 제거되는 마커 범위. [mapAfter]는 경계 커서를 범위 뒤(토큰 안쪽)로 보낼지 여부 */
 private data class HiddenRange(val start: Int, val end: Int, val mapAfter: Boolean)

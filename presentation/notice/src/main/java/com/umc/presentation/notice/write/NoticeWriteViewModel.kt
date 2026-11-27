@@ -109,7 +109,6 @@ class NoticeWriteViewModel @Inject constructor(
                 updateState {
                     copy(
                         title = detail.title,
-                        content = TextFieldValue(MarkdownEditActions.sanitizeForSubmit(detail.content)),
                         isLinkVisible = linkText.isNotBlank(),
                         linkText = linkText,
                         // 이미지 교체(PATCH)에는 이미지 행 id가 아니라 서버가 준 fileId를 보내야 한다.
@@ -127,7 +126,7 @@ class NoticeWriteViewModel @Inject constructor(
                         serverVote = serverVote,
                         // 필독 여부를 들고 있지 않으면 수정 저장 시 고정이 풀린다
                         mustRead = detail.mustRead,
-                    )
+                    ).withContent(TextFieldValue(MarkdownEditActions.normalizeEditorInput(detail.content)))
                 }
             },
             errorCallback = {
@@ -333,7 +332,7 @@ class NoticeWriteViewModel @Inject constructor(
     /** 본문 입력 후처리: 붙여넣기 정규화, 목록 Enter 이어쓰기/재번호/탈출, 타이핑 자동 변환, 이스케이프 삭제 보정 */
     fun onContentChanged(content: TextFieldValue) {
         val adjusted = MarkdownEditActions.processContentChange(uiState.value.content, content)
-        updateState { copy(content = adjusted) }
+        updateState { withContent(adjusted) }
     }
 
     /** 알림 발송 여부 토글 (종 아이콘) */
@@ -365,8 +364,7 @@ class NoticeWriteViewModel @Inject constructor(
                     copy(
                         isAiProcessing = false,
                         aiDownloadPercent = null,
-                        content = TextFieldValue(refined, TextRange(refined.length)),
-                    )
+                    ).withContent(TextFieldValue(refined, TextRange(refined.length)))
                 }
             },
             errorCallback = {
@@ -398,8 +396,7 @@ class NoticeWriteViewModel @Inject constructor(
                     copy(
                         isAiProcessing = false,
                         aiDownloadPercent = null,
-                        content = MarkdownEditActions.insertText(content, summary).endComposition(),
-                    )
+                    ).withContent(MarkdownEditActions.insertText(content, summary).endComposition())
                 }
             },
             errorCallback = {
@@ -415,31 +412,31 @@ class NoticeWriteViewModel @Inject constructor(
 
     /** 텍스트 크기 변경. 커서가 위치한 줄의 제목 prefix 교체 */
     fun onSelectHeading(heading: MarkdownHeading) {
-        updateState { copy(content = MarkdownEditActions.applyHeading(content, heading).endComposition()) }
+        updateState { withContent(MarkdownEditActions.applyHeading(content, heading).endComposition()) }
     }
 
     fun onClickBold() {
-        updateState { copy(content = MarkdownEditActions.toggleBold(content).endComposition()) }
+        updateState { withContent(MarkdownEditActions.toggleBold(content).endComposition()) }
     }
 
     fun onClickItalic() {
-        updateState { copy(content = MarkdownEditActions.toggleItalic(content).endComposition()) }
+        updateState { withContent(MarkdownEditActions.toggleItalic(content).endComposition()) }
     }
 
     fun onClickUnderline() {
-        updateState { copy(content = MarkdownEditActions.toggleUnderline(content).endComposition()) }
+        updateState { withContent(MarkdownEditActions.toggleUnderline(content).endComposition()) }
     }
 
     fun onClickStrikethrough() {
-        updateState { copy(content = MarkdownEditActions.toggleStrikethrough(content).endComposition()) }
+        updateState { withContent(MarkdownEditActions.toggleStrikethrough(content).endComposition()) }
     }
 
     fun onClickBullet() {
-        updateState { copy(content = MarkdownEditActions.toggleBullet(content).endComposition()) }
+        updateState { withContent(MarkdownEditActions.toggleBullet(content).endComposition()) }
     }
 
     fun onClickQuote() {
-        updateState { copy(content = MarkdownEditActions.toggleQuote(content).endComposition()) }
+        updateState { withContent(MarkdownEditActions.toggleQuote(content).endComposition()) }
     }
 
     /** 형광펜 색상 선택. 고른 색을 적용하고 다음 선택의 기본값으로 기억한다 */
@@ -450,7 +447,7 @@ class NoticeWriteViewModel @Inject constructor(
             emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_HIGHLIGHT_NEEDS_SELECTION))
             return
         }
-        updateState { copy(highlightColor = color, content = applied.endComposition()) }
+        updateState { withContent(applied.endComposition()).copy(highlightColor = color) }
     }
 
     // ---------------------------------------------------------------
@@ -539,7 +536,7 @@ class NoticeWriteViewModel @Inject constructor(
                     existingId,
                     NoticeUpdateRequest(
                         title = state.title.trim(),
-                        content = MarkdownEditActions.sanitizeForSubmit(state.content.text),
+                        content = state.preparedContent,
                         mustRead = state.mustRead,
                     )
                 ),
@@ -563,7 +560,7 @@ class NoticeWriteViewModel @Inject constructor(
             response = createNoticeUseCase(
                 NoticeCreateRequest(
                     title = state.title.trim(),
-                    content = MarkdownEditActions.sanitizeForSubmit(state.content.text),
+                    content = state.preparedContent,
                     shouldNotify = state.sendNotification,
                     targetInfo = target,
                 )
@@ -774,6 +771,7 @@ data class NoticeWriteUiState(
     val schoolList: ImmutableList<SchoolInfo> = persistentListOf(),
     val title: String = "",
     val content: TextFieldValue = TextFieldValue(),
+    val hasSubmitContent: Boolean = MarkdownParser.plainText(MarkdownEditActions.sanitizeForSubmit(content.text)).isNotBlank(),
     val sendNotification: Boolean = true,
     /** 상세에서 불러온 필독 여부. 수정 저장 시 그대로 돌려보낸다 */
     val mustRead: Boolean = false,
@@ -809,11 +807,22 @@ data class NoticeWriteUiState(
     val isTargetLocked: Boolean
         get() = isEditMode || createdNoticeId != null
 
+    // 전송용 문자열은 제출 시 생성한다. 커서·제목 변경은 기존 본문 검증 결과를 유지한다.
+    val preparedContent: String
+        get() = MarkdownEditActions.sanitizeForSubmit(content.text)
+
+    /** 본문 갱신은 이 경로를 사용해 문자열이 달라질 때만 등록 검증을 다시 계산한다. */
+    fun withContent(value: TextFieldValue): NoticeWriteUiState = copy(
+        content = value,
+        hasSubmitContent = if (content.text == value.text) hasSubmitContent else
+            MarkdownParser.plainText(MarkdownEditActions.sanitizeForSubmit(value.text)).isNotBlank(),
+    )
+
     // 수신 대상이 잠겨 있으면 카테고리/분류 조건 제외
     val enableRegister: Boolean
         get() = (isTargetLocked || (selectedCategory != null && (boardChips.isEmpty() || hasBoardSelection)))
                 && title.isNotBlank()
-                && content.text.isNotBlank()
+                && hasSubmitContent
                 && !isSubmitting
 }
 
