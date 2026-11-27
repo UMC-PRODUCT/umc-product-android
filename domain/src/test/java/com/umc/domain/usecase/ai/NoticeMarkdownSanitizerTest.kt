@@ -7,6 +7,28 @@ import org.junit.Test
 class NoticeMarkdownSanitizerTest {
 
     @Test
+    fun `체크박스 뒤의 빈 줄과 빈 항목을 유지한다`() {
+        assertEquals("- \n\nnext", NoticeMarkdownSanitizer.sanitize("- [ ]\n\nnext"))
+        assertEquals("\n\n- done\n\nnext", NoticeMarkdownSanitizer.sanitize("\n\n- [x] done\n\nnext"))
+        assertEquals("- ", NoticeMarkdownSanitizer.sanitize("- [ ]"))
+    }
+
+    @Test
+    fun `코드 스팬의 공백 마커와 태그 및 escape는 그대로 유지한다`() {
+        val raw = "`** a ** ~~ x ~~ <mark>코드</mark> \\a` ** b **"
+        assertEquals("`** a ** ~~ x ~~ <mark>코드</mark> \\a` **b**", NoticeMarkdownSanitizer.sanitize(raw))
+        assertEquals(0, NoticeMarkdownSanitizer.countViolations("`** a ** <mark>코드</mark>`"))
+        val escaped = "\\** a **"
+        assertEquals(escaped, NoticeMarkdownSanitizer.sanitize(escaped))
+    }
+
+    @Test
+    fun `링크 프롬프트는 URL 닫는 괄호와 백슬래시 escape를 명시한다`() {
+        assertTrue(NOTICE_MARKDOWN_FORMAT_RULES.contains("x(1\\))"))
+        assertTrue(NOTICE_MARKDOWN_FORMAT_RULES.contains("\\\\"))
+    }
+
+    @Test
     fun `AI 결과의 앞뒤와 중간 빈 줄을 보존하고 개행만 통일한다`() {
         val input = "\r\n\r\n첫째\r\n\r\n\r\n둘째\r\n\r\n"
         assertEquals("\n\n첫째\n\n\n둘째\n\n", NoticeMarkdownSanitizer.sanitize(input))
@@ -72,4 +94,31 @@ class NoticeMarkdownSanitizerTest {
 
         assertEquals(expected, NoticeMarkdownSanitizer.sanitize(input))
     }
+    @Test
+    fun `코드를 포함한 표와 외곽 서식은 보정하고 코드 내부 파이프는 유지한다`() {
+        assertEquals("- 파트 · `Android`", NoticeMarkdownSanitizer.sanitize("| 파트 | `Android` |"))
+        assertEquals("- 파트 · `A|B` · 내용", NoticeMarkdownSanitizer.sanitize("| 파트 | `A|B` | 내용 |"))
+        assertEquals("- `A\\|B` · C\\|D", NoticeMarkdownSanitizer.sanitize("| `A\\|B` | C\\|D |"))
+        assertEquals("**`code`**", NoticeMarkdownSanitizer.sanitize("** `code` **"))
+        assertEquals("`** code **`", NoticeMarkdownSanitizer.sanitize("`** code **`"))
+        assertEquals("`| 파트 | Android |`", NoticeMarkdownSanitizer.sanitize("`| 파트 | Android |`"))
+        assertEquals(1, NoticeMarkdownSanitizer.countViolations("| 파트 | `Android` |"))
+        assertEquals(1, NoticeMarkdownSanitizer.countViolations("** `code` **"))
+        assertEquals(0, NoticeMarkdownSanitizer.countViolations("`** code **`"))
+    }
+
+    @Test
+    fun `위반 수 집계도 개행을 통일하고 표 구분선을 중복 집계하지 않는다`() {
+        assertEquals(1, NoticeMarkdownSanitizer.countViolations("| --- | --- |"))
+        val lf = "| 항목 | `코드` |\n| --- | --- |\n- [ ]\n\n#제목"
+        assertEquals(4, NoticeMarkdownSanitizer.countViolations(lf))
+        listOf(lf, lf.replace("\n", "\r\n"), lf.replace("\n", "\r")).forEach { raw ->
+            assertEquals(4, NoticeMarkdownSanitizer.countViolations(raw))
+            assertEquals(0, NoticeMarkdownSanitizer.countViolations(NoticeMarkdownSanitizer.sanitize(raw)))
+        }
+        val crInCode = "`a\r#제목`"
+        assertEquals(NoticeMarkdownSanitizer.countViolations(crInCode.replace('\r', '\n')),
+            NoticeMarkdownSanitizer.countViolations(crInCode))
+    }
+
 }

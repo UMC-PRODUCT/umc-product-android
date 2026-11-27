@@ -2,6 +2,7 @@ package com.umc.presentation.notice.write
 
 import androidx.compose.ui.text.input.TextFieldValue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -101,6 +102,26 @@ class NoticeWriteSubmissionTest {
         assertFalse(cursorOnly.withContent(TextFieldValue("<u></u>")).enableRegister)
         assertTrue(cursorOnly.withContent(TextFieldValue("**변경**")).enableRegister)
         assertFalse(state.javaClass.declaredFields.any { it.type == Lazy::class.java })
+    }
+
+    @Test
+    fun `빈 목록과 마커뿐인 본문은 등록과 AI 입력에서 모두 거부한다`() {
+        listOf("- ", "– ", "1. ", "123. ", "# ", "> ", "<u></u>", "\u200B", "\n- \n1. \n> ").forEach { raw ->
+            val state = NoticeWriteUiState(isEditMode = true, title = "제목", content = TextFieldValue(raw))
+            assertFalse(raw, state.enableRegister)
+            assertNull(raw, prepareNoticeAiInput(raw))
+            assertFalse(state.withContent(TextFieldValue("본문")).withContent(TextFieldValue(raw)).enableRegister)
+        }
+    }
+
+    @Test
+    fun `코드와 이스케이프의 목록 모양 리터럴은 유효한 본문과 AI 입력이다`() {
+        listOf("`- `", "`1. `", "\\- ", "1\\. ", "\\> ", "# - ", "- 본문", "1. 본문").forEach { raw ->
+            val state = NoticeWriteUiState(isEditMode = true, title = "제목", content = TextFieldValue(raw))
+            assertTrue(raw, state.enableRegister)
+            assertEquals(raw, prepareNoticeAiInput(raw))
+        }
+        assertEquals("**본문**\n", prepareNoticeAiInput("<u></u>**본문**\u200B\r\n"))
     }
 
 }

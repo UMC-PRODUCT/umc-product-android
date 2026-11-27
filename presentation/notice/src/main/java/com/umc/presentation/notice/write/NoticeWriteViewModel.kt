@@ -348,7 +348,8 @@ class NoticeWriteViewModel @Inject constructor(
     fun onClickAiRefine() = viewModelScope.launch {
         val state = uiState.value
         if (state.isAiProcessing) return@launch
-        if (state.content.text.isBlank()) {
+        val input = prepareNoticeAiInput(state.content.text)
+        if (input == null) {
             emitEvent(NoticeWriteEvent.ShowError(AppStrings.AI_EMPTY_CONTENT))
             return@launch
         }
@@ -356,7 +357,7 @@ class NoticeWriteViewModel @Inject constructor(
         updateState { copy(isAiProcessing = true, aiDownloadPercent = null) }
 
         resultResponse(
-            response = refineNoticeMarkdownUseCase(state.content.text) { percent ->
+            response = refineNoticeMarkdownUseCase(input) { percent ->
                 updateState { copy(aiDownloadPercent = percent) }
             },
             successCallback = { refined ->
@@ -771,7 +772,7 @@ data class NoticeWriteUiState(
     val schoolList: ImmutableList<SchoolInfo> = persistentListOf(),
     val title: String = "",
     val content: TextFieldValue = TextFieldValue(),
-    val hasSubmitContent: Boolean = MarkdownParser.plainText(MarkdownEditActions.sanitizeForSubmit(content.text)).isNotBlank(),
+    val hasSubmitContent: Boolean = MarkdownParser.hasMeaningfulBody(MarkdownEditActions.sanitizeForSubmit(content.text)),
     val sendNotification: Boolean = true,
     /** 상세에서 불러온 필독 여부. 수정 저장 시 그대로 돌려보낸다 */
     val mustRead: Boolean = false,
@@ -815,7 +816,7 @@ data class NoticeWriteUiState(
     fun withContent(value: TextFieldValue): NoticeWriteUiState = copy(
         content = value,
         hasSubmitContent = if (content.text == value.text) hasSubmitContent else
-            MarkdownParser.plainText(MarkdownEditActions.sanitizeForSubmit(value.text)).isNotBlank(),
+            MarkdownParser.hasMeaningfulBody(MarkdownEditActions.sanitizeForSubmit(value.text)),
     )
 
     // 수신 대상이 잠겨 있으면 카테고리/분류 조건 제외
@@ -831,3 +832,7 @@ sealed interface NoticeWriteEvent : UiEvent {
     data class SubmitSuccess(val message: String) : NoticeWriteEvent
     data class ShowError(val message: String) : NoticeWriteEvent
 }
+
+/** 등록과 같은 정리를 적용해 표시할 본문이 없는 초안은 모델에 전달하지 않는다. */
+internal fun prepareNoticeAiInput(raw: String): String? = MarkdownEditActions.sanitizeForSubmit(raw)
+    .takeIf { MarkdownParser.hasMeaningfulBody(it) }

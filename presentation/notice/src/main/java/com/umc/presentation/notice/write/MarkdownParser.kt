@@ -63,6 +63,12 @@ internal object MarkdownParser {
         }
     }
 
+    /** 실제 블록 접두어만 제외한다. 코드나 이스케이프로 쓴 목록 모양 리터럴은 본문이다. */
+    fun hasMeaningfulBody(sanitized: String): Boolean = preprocessForReadOnly(sanitized).lineSequence().any { line ->
+        val body = line.substring(blockPrefix(line).length)
+        plainRegion(body, 0, body.length, parseInline(body, includeEmptyPairs = false)).isNotBlank()
+    }
+
     private fun plainRegion(raw: String, start: Int, end: Int, tokens: List<InlineToken>): String = buildString {
         var cursor = start
         for (token in tokens) {
