@@ -11,12 +11,80 @@ import org.junit.Test
 class MarkdownEditActionsTest {
 
     @Test
+    fun `코드를 닫는 붙여넣기는 코드 원문과 이후 일반 서식을 구분한다`() {
+        val raw = "`prefix "
+        val at = raw.length
+        val inserted = "** a **` ** b **"
+        val result = MarkdownEditActions.processContentChange(
+            TextFieldValue(raw, TextRange(at)),
+            TextFieldValue(raw + inserted, TextRange(at + inserted.length)),
+        )
+        assertEquals("`prefix ** a **`  **b** ", result.text)
+        assertEquals(TextRange(result.text.length), result.selection)
+    }
+
+    @Test
+    fun `선택 치환과 미완성 코드 안 붙여넣기도 원문을 보존한다`() {
+        listOf("`old`" to TextRange(1, 4), "`" to TextRange(1)).forEach { (raw, selection) ->
+            val inserted = "~~ x ~~"
+            val current = TextFieldValue(raw.replaceRange(selection.min, selection.max, inserted), TextRange(selection.min + inserted.length))
+            assertEquals(current, MarkdownEditActions.processContentChange(TextFieldValue(raw, selection), current))
+        }
+    }
+
+    @Test
+    fun `중첩 서식의 시작 중간 끝과 목록 Enter는 본문과 토큰 경계를 보존한다`() {
+        listOf(
+            Triple("***a* b**", 4, "***a***\n b"),
+            Triple("***a* b**", 9, "***a* b**\n"),
+            Triple("- ***a* b**", 5, "- \n- ***a* b**"),
+            Triple("**_abc_**", 3, "\n**_abc_**"),
+            Triple("<mark><u>abc</u></mark>", 9, "\n<mark><u>abc</u></mark>"),
+            Triple("`abc`", 1, "\n`abc`"),
+            Triple("`abc`", 3, "`ab`\nc"),
+            Triple("****", 2, "\n"),
+        ).forEach { (raw, at, expected) ->
+            val result = MarkdownEditActions.processContentChange(
+                TextFieldValue(raw, TextRange(at)),
+                TextFieldValue(raw.replaceRange(at, at, "\n"), TextRange(at + 1)),
+            )
+            assertEquals("$raw at $at", expected, result.text)
+            assertNull(result.composition)
+        }
+    }
+
+    @Test
+    fun `조합 중 한글 갱신은 문자열과 selection composition을 그대로 보존한다`() {
+        val previous = TextFieldValue("**한**", TextRange(3), composition = TextRange(2, 3))
+        val current = TextFieldValue("**한글**", TextRange(4), composition = TextRange(2, 4))
+        assertEquals(current, MarkdownEditActions.processContentChange(previous, current))
+    }
+
+    @Test
     fun `밑줄은 식별자 내부에서도 SSOT 토큰 경계로 처리한다`() {
         val raw = "_user_name_"
         assertTrue(MarkdownStyle.ITALIC in MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(3))))
         assertTrue(MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(7))).inline.isEmpty())
         val intraword = "prefix_mid_suffix"
         assertTrue(MarkdownStyle.ITALIC in MarkdownScanner.activeStyles(TextFieldValue(intraword, TextRange(9))))
+    }
+
+    @Test
+    fun `기존 코드 안에 붙여넣을 때 리터럴 공백과 마커를 보존한다`() {
+        val raw = "`prefix `"
+        val at = raw.length - 1
+        val inserted = "** a **"
+        val current = TextFieldValue(raw.replaceRange(at, at, inserted), TextRange(at + inserted.length))
+        assertEquals(current, MarkdownEditActions.processContentChange(TextFieldValue(raw, TextRange(at)), current))
+    }
+
+    @Test
+    fun `서로 다른 길이로 닫히는 중첩 서식 시작점에서 Enter는 다음 줄 서식을 보존한다`() {
+        val raw = "***a* b**"
+        val current = TextFieldValue(raw.replaceRange(3, 3, "\n"), TextRange(4))
+        val result = MarkdownEditActions.processContentChange(TextFieldValue(raw, TextRange(3)), current)
+        assertEquals("\n$raw", result.text)
+        assertEquals(TextRange(1), result.selection)
     }
 
     @Test

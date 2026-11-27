@@ -34,17 +34,6 @@ object MarkdownEditActions {
     private val headingPrefixes = listOf("### ", "## ", "# ")
     private val numberListPrefix = Regex("""^(\d+)\. """)
     private val closingTriggerChars = setOf('`', ')', '*', '~', '_')
-    private val completedInlineAtEnd = listOf(
-        Regex("""(?<!\\)`(?:\\.|[^`\n])+`$"""),
-        Regex("""(?<!\\)\[(?:\\.|[^\]\n])+]\((?:\\.|[^)\n])+\)$"""),
-        Regex("""(?<!\\)\*\*\*(?=\S).+?(?<=\S)\*\*\*$"""),
-        Regex("""(?<!\\)\*\*_(?=\S).+?(?<=\S)_\*\*$"""),
-        Regex("""(?<!\\)(?<!\*)\*\*(?=\S).+?(?<=\S)\*\*$"""),
-        Regex("""(?<!\\)~~(?=\S).+?(?<=\S)~~$"""),
-        Regex("""(?<!\\)(?<!\*)\*(?=\S).+?(?<=\S)\*$"""),
-        Regex("""(?<!\\)(?<!_)_(?=\S).+?(?<=\S)_$"""),
-    )
-
     /** 저장·수정 전송 및 수정 로드 시 개행(`\r\n`/`\r` → `\n`)과 Zero-Width Space(`\u200B`)를 정리한다 */
     fun sanitizeForSubmit(raw: String): String =
         raw.replace("\r\n", "\n")
@@ -85,7 +74,10 @@ object MarkdownEditActions {
         if (inserted.length < 2) return null
 
         val atLineStart = replaceStart == 0 || previous.text[replaceStart - 1] == '\n'
-        val normalized = normalizePastedText(inserted, startsAtLineHead = atLineStart)
+        val normalized = normalizePastedText(
+            inserted, startsAtLineHead = atLineStart, prefix = prefix, suffix = suffix,
+            startsInsideCode = MarkdownScanner.openMarkersAt(previous.text, replaceStart).any { it.isCode },
+        )
         if (normalized == inserted) return null
 
         val newText = prefix + normalized + suffix
@@ -95,13 +87,51 @@ object MarkdownEditActions {
         ).endComposition()
     }
 
-    private fun normalizePastedText(inserted: String, startsAtLineHead: Boolean): String {
+    private fun normalizePastedText(
+        inserted: String,
+        startsAtLineHead: Boolean,
+        prefix: String,
+        suffix: String,
+        startsInsideCode: Boolean,
+    ): String {
         val cleaned = sanitizeForSubmit(inserted)
-        val lines = cleaned.split('\n').mapIndexed { index, line ->
-            val canConvertBullet = index > 0 || startsAtLineHead
-            if (canConvertBullet && line.startsWith("• ")) "- " + line.removePrefix("• ") else line
+        val contextual = prefix + cleaned + suffix
+        val protected = MarkdownParser.descendants(MarkdownParser.parseInline(contextual))
+            .filter { it.kind == InlineTokenKind.CODE }
+            .map { (it.start - prefix.length).coerceAtLeast(0) until
+                (it.end - prefix.length).coerceAtMost(cleaned.length) }
+            .filterNot { it.isEmpty() }
+            .toMutableList()
+
+        // 닫는 백틱이 아직 없더라도 커서가 코드 안에서 시작했다면 첫 줄의 원문을 보존한다.
+        // 삽입 중 코드를 닫았다면 그 뒤의 일반 텍스트는 다시 정규화할 수 있다.
+        if (startsInsideCode) {
+            val end = cleaned.indices.firstOrNull {
+                cleaned[it] == '\n' || (cleaned[it] == '`' && !isMarkdownEscaped(contextual, prefix.length + it))
+            } ?: cleaned.length
+            if (end > 0) protected += 0 until end
         }
-        return normalizeLegacyWhitespaceMarkers(lines.joinToString("\n"))
+
+        fun normalizePlain(start: Int, end: Int): String {
+            val startsAtHead = if (start == 0) startsAtLineHead else cleaned[start - 1] == '\n'
+            val lines = cleaned.substring(start, end).split('\n').mapIndexed { index, line ->
+                if ((index > 0 || startsAtHead) && line.startsWith("• ")) {
+                    "- " + line.removePrefix("• ")
+                } else line
+            }
+            return normalizeLegacyWhitespaceMarkers(lines.joinToString("\n"))
+        }
+
+        return buildString(cleaned.length) {
+            var cursor = 0
+            for (range in protected.sortedBy { it.first }) {
+                if (range.first > cursor) append(normalizePlain(cursor, range.first))
+                val start = maxOf(cursor, range.first)
+                if (start <= range.last) append(cleaned, start, range.last + 1)
+                cursor = maxOf(cursor, range.last + 1)
+            }
+            append(normalizePlain(cursor, cleaned.length))
+        }
     }
 
     /**
@@ -230,7 +260,7 @@ object MarkdownEditActions {
 
         // 닫는 마커가 완성된 직후에는 IME 조합을 끊어 다음 입력에 서식이 상속되지 않게 한다
         if (typedChar in closingTriggerChars &&
-            completedInlineAtEnd.any { it.containsMatchIn(lineBeforeCursor) }
+            MarkdownParser.parseInline(lineBeforeCursor, includeEmptyPairs = false).any { it.end == lineBeforeCursor.length }
         ) {
             return current.endComposition()
         }
@@ -317,9 +347,7 @@ object MarkdownEditActions {
                 before = before.removeRange(marker.start, marker.start + marker.open.length)
                 retained.remove(marker)
                 if (body.isEmpty() && hasTailBody) {
-                    val closeIndex = rangesToRemove.indexOfFirst {
-                        text.substring(it.first, it.last + 1) == marker.close
-                    }
+                    val closeIndex = rangesToRemove.indexOfFirst { it.first == marker.closeStart }
                     if (closeIndex != -1) {
                         rangesToRemove.removeAt(closeIndex)
                         movedOpens.insert(0, marker.open)
