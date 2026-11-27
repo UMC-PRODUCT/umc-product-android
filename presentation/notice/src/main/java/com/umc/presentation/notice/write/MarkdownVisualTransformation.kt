@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.Locale
 
 /**
  * 마크다운 원문에서 마커 문자를 숨기고 스타일만 입혀 보여주는 VisualTransformation.
@@ -40,32 +39,6 @@ class MarkdownVisualTransformation(
 ) : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText = parse(text.text).transformed
-
-    /** 커서가 나누는 기존 토큰의 닫는 마커 좌표. 개행 뒤 고아 마커 제거에 사용한다. */
-    internal fun closingMarkerRangesAt(raw: String, at: Int): List<IntRange> {
-        val lineStart = raw.lastIndexOf('\n', at - 1) + 1
-        val lineEnd = raw.indexOf('\n', at).let { if (it == -1) raw.length else it }
-        val ranges = mutableListOf<IntRange>()
-        fun collect(start: Int, end: Int) {
-            val region = raw.substring(start, end)
-            val failedTokens = HashSet<Long>()
-            var cursor = 0
-            while (cursor < region.length) {
-                val token = findEarliestToken(region, cursor, failedTokens = failedTokens) ?: break
-                val innerStart = start + token.start + token.openLength
-                val innerEnd = start + token.end - token.closeLength
-                if (at in innerStart..innerEnd) {
-                    if (token.kind != InlineTokenKind.LINK) {
-                        ranges += innerEnd until (start + token.end)
-                    }
-                    if (token.kind != InlineTokenKind.CODE) collect(innerStart, innerEnd)
-                }
-                cursor = token.end
-            }
-        }
-        collect(lineStart, lineEnd)
-        return ranges
-    }
 
     /** 표시 문자열과 함께 인용 블록 좌표까지 계산 (인용구 세로선을 그리려면 좌표가 필요) */
     fun parse(raw: String): MarkdownRendered {
@@ -116,7 +89,7 @@ class MarkdownVisualTransformation(
                 hidden += HiddenRange(lineEnd, rawLineEnd, mapAfter = false)
             }
 
-            val block = BlockSpec.entries.firstOrNull { line.startsWith(it.prefix) }
+            val block = MarkdownBlock.at(line)
             var contentStart = lineStart
 
             if (block != null) {
@@ -138,7 +111,7 @@ class MarkdownVisualTransformation(
                     )
                 }
 
-                if (block == BlockSpec.QUOTE) quoteLines += contentStart..lineEnd
+                if (block == MarkdownBlock.QUOTE) quoteLines += contentStart..lineEnd
             }
 
             collectInline(
@@ -205,48 +178,18 @@ class MarkdownVisualTransformation(
         hidden: MutableList<HiddenRange>,
         spans: MutableList<SpanRange>,
         links: MutableList<LinkRange>,
+        tokens: List<InlineToken> = MarkdownParser.parseInline(
+            raw, regionStart, regionEnd, includeEmptyPairs = !isReadOnly,
+            detectPlainUrls = isReadOnly, insideLink = insideLink,
+        ),
     ) {
-        if (regionStart >= regionEnd) return
-        val region = raw.substring(regionStart, regionEnd)
-        val failedTokens = HashSet<Long>()
-        var searchFrom = 0
-
-        while (searchFrom < region.length) {
-            val token = findEarliestToken(
-                region = region,
-                from = searchFrom,
-                detectPlainUrls = isReadOnly && !insideLink,
-                failedTokens = failedTokens,
-            )
-            if (token == null) {
-                collectPlainText(
-                    raw = raw,
-                    start = regionStart + searchFrom,
-                    end = regionEnd,
-                    insideLink = insideLink,
-                    hidden = hidden,
-                    spans = spans,
-                    links = links,
-                )
-                break
-            }
-
-            if (token.start > searchFrom) {
-                collectPlainText(
-                    raw = raw,
-                    start = regionStart + searchFrom,
-                    end = regionStart + token.start,
-                    insideLink = insideLink,
-                    hidden = hidden,
-                    spans = spans,
-                    links = links,
-                )
-            }
-
-            val openStart = regionStart + token.start
-            val innerStart = openStart + token.openLength
-            val innerEnd = regionStart + token.end - token.closeLength
-            val closeEnd = regionStart + token.end
+        var searchFrom = regionStart
+        for (token in tokens) {
+            collectPlainText(raw, searchFrom, token.start, insideLink, hidden, spans, links)
+            val openStart = token.start
+            val innerStart = token.innerStart
+            val innerEnd = token.innerEnd
+            val closeEnd = token.end
 
             when (token.kind) {
                 InlineTokenKind.LINK -> {
@@ -275,6 +218,7 @@ class MarkdownVisualTransformation(
                             hidden = hidden,
                             spans = spans,
                             links = links,
+                            tokens = token.children,
                         )
                     } else {
                         // 편집 모드에서는 URL 확인·편집이 가능하도록 마커를 숨기지 않고 흐리게 표시한다
@@ -293,6 +237,7 @@ class MarkdownVisualTransformation(
                             hidden = hidden,
                             spans = spans,
                             links = links,
+                            tokens = token.children,
                         )
                     }
                 }
@@ -341,12 +286,14 @@ class MarkdownVisualTransformation(
                         hidden = hidden,
                         spans = spans,
                         links = links,
+                        tokens = token.children,
                     )
                 }
             }
 
             searchFrom = token.end
         }
+        collectPlainText(raw, searchFrom, regionEnd, insideLink, hidden, spans, links)
     }
 
     /**
@@ -438,45 +385,6 @@ class MarkdownVisualTransformation(
                 i++
             }
         }
-    }
-
-    private fun findEarliestToken(
-        region: String,
-        from: Int,
-        detectPlainUrls: Boolean = false,
-        failedTokens: MutableSet<Long> = HashSet(),
-    ): InlineToken? {
-        var best: InlineToken? = null
-        var bestPriority = Int.MAX_VALUE
-        // 이미 소비한 링크·코드의 URL은 제외하고, 일반 텍스트 구간에서 한 번만 검색한다.
-        val plainUrls = if (detectPlainUrls) PLAIN_URL_REGEX.findAll(region, from).map { it.range }.toList() else emptyList()
-
-        InlineTokenKind.entries.forEachIndexed { priority, kind ->
-            if (isReadOnly && kind.isEmptyPair) return@forEachIndexed
-            var token = kind.findToken(region, from, failedTokens) ?: return@forEachIndexed
-            while (isInvalidMixedWhitespace(token, region) ||
-                plainUrls.any { token.start > it.first && token.start <= it.last }
-            ) {
-                token = kind.findToken(region, token.start + 1, failedTokens) ?: return@forEachIndexed
-            }
-            val current = best
-            if (current == null || token.start < current.start ||
-                (token.start == current.start && priority < bestPriority)
-            ) {
-                best = token
-                bestPriority = priority
-            }
-        }
-        return best
-    }
-
-    private fun isInvalidMixedWhitespace(token: InlineToken, region: String): Boolean {
-        if (token.kind != InlineTokenKind.BOLD) return false
-        val inner = region.substring(token.start + token.openLength, token.end - token.closeLength)
-        if (inner.length < 2 || !inner.startsWith('_') || !inner.endsWith('_')) return false
-        val body = inner.substring(1, inner.length - 1)
-        // 공백 때문에 무효인 **_ ... _**를 일반 굵게로 재해석하지 않는다.
-        return body.isEmpty() || body.first().isWhitespace() || body.last().isWhitespace()
     }
 
     /** 숨김 범위를 시작 좌표 순으로 정렬하고 혹시 겹치는 구간이 있으면 정리한다 */
@@ -620,118 +528,6 @@ fun DrawScope.drawMarkdownQuoteBars(
     }
 }
 
-/** iOS 스펙 기준 일반 텍스트에서 백슬래시 이스케이프 해제 대상 15자 */
-internal val MARKDOWN_ESCAPABLE_CHARS: Set<Char> = setOf(
-    '\\', '*', '_', '[', ']', '(', ')', '~', '`', '<', '>', '#', '-', '.', '–',
-)
-
-/** 읽기 전용 렌더링 전 개행·Zero-Width Space·레거시 공백 마커를 정규화한다 */
-internal fun preprocessForReadOnly(raw: String): String =
-    normalizeLegacyWhitespaceMarkers(
-        raw.replace("\r\n", "\n")
-            .replace("\r", "\n")
-            .replace("\u200B", ""),
-    )
-
-/**
- * 과거 저장된 `**일시: **`, `** **`, `~~취소 ~~`, `~~ ~~`처럼
- * 마커 안쪽에 공백이 붙은 레거시 표현을 파싱 전에 마커 바깥으로 분리한다.
- * 단독 `*`/`_`는 `2 * 3`, `user_name` 훼손을 막기 위해 정규화하지 않는다.
- */
-internal fun normalizeLegacyWhitespaceMarkers(text: String): String {
-    val result = StringBuilder(text.length)
-    var cursor = 0
-    markdownCodeRanges(text).forEach { code ->
-        result.append(normalizeLegacyPlainSegment(text.substring(cursor, code.first)))
-        result.append(text, code.first, code.last + 1)
-        cursor = code.last + 1
-    }
-    result.append(normalizeLegacyPlainSegment(text.substring(cursor)))
-    return result.toString()
-}
-
-private fun normalizeLegacyPlainSegment(text: String): String {
-    var result = text
-    listOf(LEGACY_BOLD_WHITESPACE to "**", LEGACY_STRIKE_WHITESPACE to "~~").forEach { (regex, marker) ->
-        val normalized = StringBuilder(result.length)
-        var cursor = 0
-        while (cursor < result.length) {
-            val match = regex.findUnescaped(result, cursor) ?: break
-            normalized.append(result, cursor, match.range.first)
-            normalized.append(relocateEdgeSpaces(match.groupValues[1], marker))
-            cursor = match.range.last + 1
-        }
-        normalized.append(result, cursor, result.length)
-        result = normalized.toString()
-    }
-    return result
-}
-
-private fun relocateEdgeSpaces(inner: String, marker: String): String {
-    val leadingCount = inner.takeWhile { it == ' ' || it == '\t' }.length
-    val trailingCount = inner.takeLastWhile { it == ' ' || it == '\t' }.length
-    if (leadingCount == 0 && trailingCount == 0) return "$marker$inner$marker"
-
-    val trimmed = inner.trim(' ', '\t')
-    if (trimmed.isEmpty()) return inner
-
-    val leading = inner.substring(0, leadingCount)
-    val trailing = inner.substring(inner.length - trailingCount)
-    return "$leading$marker$trimmed$marker$trailing"
-}
-
-/** 링크 URL 내부의 `\)`, `\\` 이스케이프를 해제한다 */
-internal fun unescapeLinkUrl(rawUrl: String): String {
-    if ('\\' !in rawUrl) return rawUrl
-    val sb = StringBuilder(rawUrl.length)
-    var i = 0
-    while (i < rawUrl.length) {
-        if (rawUrl[i] == '\\' && i + 1 < rawUrl.length && (rawUrl[i + 1] == ')' || rawUrl[i + 1] == '\\')) {
-            sb.append(rawUrl[i + 1])
-            i += 2
-        } else {
-            sb.append(rawUrl[i])
-            i++
-        }
-    }
-    return sb.toString()
-}
-
-/** 허용 스킴(`https`, `http`, `mailto`, `tel`, 대소문자 무관)만 링크로 인정한다 */
-internal fun isAllowedLinkScheme(url: String): Boolean {
-    val trimmed = url.trim()
-    val colonIndex = trimmed.indexOf(':')
-    if (colonIndex <= 0) return false
-    val scheme = trimmed.substring(0, colonIndex).lowercase(Locale.ROOT)
-    return scheme in ALLOWED_LINK_SCHEMES
-}
-
-/** Plain URL 끝에 붙은 문장부호(`.`, `,`, `;`, `:`, `!`, `?` 및 짝 없는 `)`)를 제거한다 */
-private fun trimTrailingUrlPunctuation(url: String): String {
-    var end = url.length
-    while (end > 0) {
-        val last = url[end - 1]
-        when {
-            last in TRAILING_URL_PUNCTUATION -> end--
-            last == ')' -> {
-                val slice = url.substring(0, end)
-                val openCount = slice.count { it == '(' }
-                val closeCount = slice.count { it == ')' }
-                if (closeCount > openCount) end-- else break
-            }
-
-            else -> break
-        }
-    }
-    return url.substring(0, end)
-}
-
-private val ALLOWED_LINK_SCHEMES = setOf("https", "http", "mailto", "tel")
-private val TRAILING_URL_PUNCTUATION = setOf('.', ',', ';', ':', '!', '?')
-private val PLAIN_URL_REGEX = Regex("""https?://[^\s<>]+""", RegexOption.IGNORE_CASE)
-private val LEGACY_BOLD_WHITESPACE = Regex("""(?<!\*)\*\*(?!\*)((?:\\.|(?!\*\*)[^\\\n])+)\*\*(?!\*)""")
-private val LEGACY_STRIKE_WHITESPACE = Regex("""~~((?:\\.|(?!~~)[^\\\n])+)~~""")
-
 /** 짝이 깨져 화면에 드러날 수 있는 태그형 마커 */
 private val ORPHAN_MARKER = Regex("""(?:<mark(?:\s+color="[^"]*")?>|</mark>|<u>|</u>)""")
 
@@ -794,211 +590,42 @@ private class MarkdownOffsetMapping(
  * iOS는 대시(`– ` U+2013)와 번호 목록(`1. `)의 마커를 평문 그대로 남기므로
  * 별도 처리 없이 렌더링하면 결과가 일치한다
  */
-private enum class BlockSpec(
-    val prefix: String,
-    val fontSize: TextUnit? = null,
-    val fontWeight: FontWeight = FontWeight.Bold,
-    /** 마커를 숨기는 대신 같은 길이의 문자로 바꿀 경우의 치환 문자열 */
-    val replacement: String? = null,
-) {
-    TITLE3("### ", fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
-    TITLE2("## ", fontSize = 22.sp, fontWeight = FontWeight.Bold),
-    TITLE1("# ", fontSize = 28.sp, fontWeight = FontWeight.Bold),
-    QUOTE("> "),
-    BULLET("- ", replacement = "• "),
-}
-
-/**
- * 인라인 토큰 종류. 선언 순서가 동일 위치에서의 우선순위 (iOS 파서와 동일).
- * EMPTY_*는 툴바로 삽입 직후의 빈 마커 쌍 — 편집 모드에서만 내용 없이 숨겨 커서만 남긴다
- */
-private enum class InlineTokenKind(
-    val regex: Regex,
-    val decorations: List<TextDecoration> = emptyList(),
-    /** 본문에 해당하는 정규식 그룹 번호 (형광펜은 색상이 1번이라 2번이 본문) */
-    val innerGroup: Int = 1,
-    val isEmptyPair: Boolean = false,
-    val closingMarker: String? = null,
-) {
-    EMPTY_UNDERLINE(Regex("""<u></u>"""), isEmptyPair = true),
-    // 형광펜 안 글자를 모두 지운 경우. 마커가 길어 그대로 드러나면 가장 눈에 띈다
-    EMPTY_HIGHLIGHT(Regex("""<mark(?:\s+color="[^"]*")?></mark>"""), isEmptyPair = true),
-    // 밑줄 기울임 빈 쌍 (`_` + `_`)
-    EMPTY_ITALIC_UNDERSCORE(Regex("""__"""), isEmptyPair = true),
-    EMPTY_STRIKETHROUGH(Regex("""~~~~"""), isEmptyPair = true),
-    // 굵게+기울임 빈 쌍(`***` + `***`). 굵게 빈 쌍보다 먼저 잡아야 뒤 두 개가 남지 않는다
-    EMPTY_BOLD_ITALIC(Regex("""\*{6}"""), isEmptyPair = true),
-    EMPTY_BOLD(Regex("""\*{4}"""), isEmptyPair = true),
-    CODE(MARKDOWN_CODE_REGEX),
-    LINK(MARKDOWN_LINK_REGEX, listOf(TextDecoration.Underline)),
-    UNDERLINE(Regex("""<u>((?:\\.|[^\\\n])+?)</u>"""), listOf(TextDecoration.Underline)),
-    STRIKETHROUGH(Regex("""~~"""), listOf(TextDecoration.LineThrough), closingMarker = "~~"),
-    HIGHLIGHT(Regex("""<mark(?:\s+color="([^"]*)")?>((?:\\.|[^\\\n])+?)</mark>"""), innerGroup = 2),
-    BOLD_ITALIC_MIXED(Regex("""\*\*_"""), closingMarker = "_**"),
-    BOLD_ITALIC_TRIPLE(Regex("""\*\*\*"""), closingMarker = "***"),
-    BOLD(Regex("""\*\*"""), closingMarker = "**"),
-    ITALIC_ASTERISK(Regex("""\*"""), closingMarker = "*"),
-    ITALIC_UNDERSCORE(Regex("""_"""), closingMarker = "_");
-
-    fun findToken(text: String, from: Int, failed: MutableSet<Long> = HashSet()): InlineToken? {
-        var cursor = from
-        while (cursor < text.length) {
-            val match = regex.findUnescaped(text, cursor) ?: return null
-            val token = tokenAt(text, match.range.first, failed)
-            if (token != null) return token
-            cursor = match.range.first + 1
-        }
-        return null
+private val MarkdownBlock.fontSize: TextUnit?
+    get() = when (this) {
+        MarkdownBlock.TITLE3 -> 17.sp
+        MarkdownBlock.TITLE2 -> 22.sp
+        MarkdownBlock.TITLE1 -> 28.sp
+        else -> null
     }
 
-    private fun tokenAt(text: String, at: Int, failed: MutableSet<Long>): InlineToken? {
-        // 닫히지 않은 다중 마커 줄에서의 지수 백트래킹을 막기 위해 실패한 (종류, 위치)를 캐시한다.
-        val cacheKey = (ordinal.toLong() shl 32) or (at.toLong() and 0xFFFF_FFFFL)
-        if (cacheKey in failed) return null
-        fun fail(): InlineToken? {
-            failed += cacheKey
-            return null
-        }
+private val MarkdownBlock.fontWeight: FontWeight
+    get() = if (this == MarkdownBlock.TITLE3) FontWeight.SemiBold else FontWeight.Bold
 
-        if (isMarkdownEscaped(text, at)) return fail()
-        val match = regex.matchAt(text, at) ?: return fail()
-        val close = closingMarker ?: return toToken(match) ?: fail()
-        val open = match.value
-        val innerStart = at + open.length
-        if (innerStart >= text.length || text[innerStart].isWhitespace()) return fail()
-        if (open.startsWith('*')) {
-            if (at > 0 && text[at - 1] == '*') return fail()
-            if (text.getOrNull(innerStart) == '*') {
-                // `***가* 나**`처럼 굵게 시작 직후 별표 기울임이 바로 열릴 때만 허용한다.
-                val nestedItalicStart = this == BOLD &&
-                    text.getOrNull(innerStart + 1)?.let { !it.isWhitespace() && it != '*' } == true
-                if (!nestedItalicStart) return fail()
-            }
-        }
-        if (this == ITALIC_UNDERSCORE && (isIntrawordUnderscore(text, at) ||
-                text.getOrNull(at - 1) == '_' || text.getOrNull(innerStart) == '_')) return fail()
-
-        var cursor = innerStart
-        while (cursor < text.length) {
-            if (text[cursor] == '\n') return fail()
-            if (text[cursor] == '\\' && cursor + 1 < text.length) {
-                cursor += 2
-                continue
-            }
-            if (this == ITALIC_UNDERSCORE && isIntrawordUnderscore(text, cursor)) {
-                cursor++
-                continue
-            }
-            val isOwnClose = when {
-                this == ITALIC_ASTERISK && text[cursor] == '*' -> {
-                    var runEnd = cursor
-                    while (runEnd < text.length && text[runEnd] == '*') runEnd++
-                    val runLength = runEnd - cursor
-                    // 단독 `*` 또는 `**가 *나***`처럼 단어 끝에 붙은 `***`의 첫 `*`로 닫는다.
-                    runLength == 1 || (runLength == 3 && !text[cursor - 1].isWhitespace())
-                }
-                close.endsWith('*') -> {
-                    // `**가***`, `**_가_***`, `***가****`처럼 닫는 별표 뒤에 여분 `*`가 이어지면 닫지 않는다.
-                    text.startsWith(close, cursor) && text.getOrNull(cursor + close.length) != '*'
-                }
-                else -> text.startsWith(close, cursor)
-            }
-            if (isOwnClose) {
-                if (!text[cursor - 1].isWhitespace()) {
-                    return InlineToken(at, cursor + close.length, open.length, close.length, this)
-                }
-                // 안쪽 공백이 붙은 닫는 마커를 넘어 다음 토큰까지 삼키지 않는다.
-                val nested = tokenAt(text, cursor, failed) ?: return fail()
-                cursor = nested.end
-                continue
-            }
-            // 코드·링크·다른 인라인 서식 내부의 마커는 현재 토큰을 닫지 않는다.
-            var nested: InlineToken? = null
-            for (kind in entries) {
-                if (kind.isEmptyPair || kind == this) continue
-                val candidate = kind.tokenAt(text, cursor, failed)
-                if (candidate != null) {
-                    nested = candidate
-                    break
-                }
-            }
-            if (nested != null) {
-                cursor = nested.end
-            } else if (text[cursor] == '*' || text[cursor] == '~') {
-                val marker = text[cursor]
-                do { cursor++ } while (cursor < text.length && text[cursor] == marker)
-            } else {
-                cursor++
-            }
-        }
-        return fail()
+private val InlineTokenKind.decorations: List<TextDecoration>
+    get() = when (this) {
+        InlineTokenKind.LINK, InlineTokenKind.UNDERLINE -> listOf(TextDecoration.Underline)
+        InlineTokenKind.STRIKETHROUGH -> listOf(TextDecoration.LineThrough)
+        else -> emptyList()
     }
 
-    /** 매치 결과를 마커 길이가 계산된 토큰으로 변환 */
-    fun toToken(match: MatchResult): InlineToken? {
-        val start = match.range.first
-        val end = match.range.last + 1
-        return when (this) {
-            EMPTY_UNDERLINE -> InlineToken(start, end, openLength = 3, closeLength = 4, kind = this)
-            // 여는 태그 길이는 색상 유무에 따라 달라지므로 전체에서 `</mark>`를 뺀 만큼
-            EMPTY_HIGHLIGHT -> InlineToken(
-                start,
-                end,
-                openLength = (end - start) - 7,
-                closeLength = 7,
-                kind = this,
-            )
-
-            EMPTY_ITALIC_UNDERSCORE, EMPTY_STRIKETHROUGH, EMPTY_BOLD, EMPTY_BOLD_ITALIC -> {
-                val half = (end - start) / 2
-                InlineToken(start, end, openLength = half, closeLength = half, kind = this)
-            }
-
-            LINK -> {
-                val innerRange = match.groups[1]?.range ?: return null
-                InlineToken(
-                    start = start,
-                    end = end,
-                    openLength = innerRange.first - start,
-                    closeLength = match.range.last - innerRange.last,
-                    kind = this,
-                    argument = match.groups[2]?.value,
-                )
-            }
-
-            else -> {
-                val innerRange = match.groups[innerGroup]?.range ?: return null
-                InlineToken(
-                    start = start,
-                    end = end,
-                    openLength = innerRange.first - start,
-                    closeLength = match.range.last - innerRange.last,
-                    kind = this,
-                    argument = if (this == HIGHLIGHT) match.groups[1]?.value else null,
-                )
-            }
-        }
-    }
-
-    fun spanStyle(
-        linkColor: Color,
-        decorations: List<TextDecoration>,
-        argument: String? = null,
-    ): SpanStyle? {
-        val decoration = decorations.takeIf { it.isNotEmpty() }?.let { TextDecoration.combine(it) }
-        return when (this) {
-            EMPTY_UNDERLINE, EMPTY_HIGHLIGHT, EMPTY_ITALIC_UNDERSCORE, EMPTY_STRIKETHROUGH,
-            EMPTY_BOLD, EMPTY_BOLD_ITALIC -> null
-
-            CODE -> SpanStyle(fontFamily = FontFamily.Monospace)
-            HIGHLIGHT -> SpanStyle(background = parseMarkColor(argument))
-            LINK -> SpanStyle(color = linkColor, textDecoration = decoration)
-            UNDERLINE, STRIKETHROUGH -> SpanStyle(textDecoration = decoration)
-            BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
-            ITALIC_ASTERISK, ITALIC_UNDERSCORE -> SpanStyle(fontStyle = FontStyle.Italic)
-            BOLD_ITALIC_MIXED, BOLD_ITALIC_TRIPLE ->
-                SpanStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)
-        }
+private fun InlineTokenKind.spanStyle(
+    linkColor: Color,
+    decorations: List<TextDecoration>,
+    argument: String? = null,
+): SpanStyle? {
+    val decoration = decorations.takeIf { it.isNotEmpty() }?.let { TextDecoration.combine(it) }
+    return when (this) {
+        InlineTokenKind.EMPTY_UNDERLINE, InlineTokenKind.EMPTY_HIGHLIGHT,
+        InlineTokenKind.EMPTY_ITALIC_UNDERSCORE, InlineTokenKind.EMPTY_STRIKETHROUGH,
+        InlineTokenKind.EMPTY_BOLD, InlineTokenKind.EMPTY_BOLD_ITALIC -> null
+        InlineTokenKind.CODE -> SpanStyle(fontFamily = FontFamily.Monospace)
+        InlineTokenKind.HIGHLIGHT -> SpanStyle(background = parseMarkColor(argument))
+        InlineTokenKind.LINK -> SpanStyle(color = linkColor, textDecoration = decoration)
+        InlineTokenKind.UNDERLINE, InlineTokenKind.STRIKETHROUGH -> SpanStyle(textDecoration = decoration)
+        InlineTokenKind.BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
+        InlineTokenKind.ITALIC_ASTERISK, InlineTokenKind.ITALIC_UNDERSCORE -> SpanStyle(fontStyle = FontStyle.Italic)
+        InlineTokenKind.BOLD_ITALIC_MIXED, InlineTokenKind.BOLD_ITALIC_TRIPLE ->
+            SpanStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)
     }
 }
 
@@ -1019,12 +646,3 @@ internal fun parseMarkColor(code: String?): Color {
         alpha = parts[3].coerceIn(0f, 1f),
     )
 }
-
-private data class InlineToken(
-    val start: Int,
-    val end: Int,
-    val openLength: Int,
-    val closeLength: Int,
-    val kind: InlineTokenKind,
-    val argument: String? = null,
-)

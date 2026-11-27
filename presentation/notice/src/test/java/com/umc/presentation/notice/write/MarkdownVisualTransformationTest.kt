@@ -15,6 +15,32 @@ import org.junit.Test
 class MarkdownVisualTransformationTest {
 
     @Test
+    fun `중첩 빈 마커 이스케이프와 CRLF의 좌표 매핑은 범위 안에서 단조 증가한다`() {
+        listOf("***a* b**", "**_abc_**", "<u></u>", "****", "\\*a", "# **a**\r\n> b").forEach { raw ->
+            val transformed = editorParser().parse(raw).transformed
+            val original = (0..raw.length).map { transformed.offsetMapping.originalToTransformed(it) }
+            val visible = (0..transformed.text.length).map { transformed.offsetMapping.transformedToOriginal(it) }
+            assertTrue(raw, original.all { it in 0..transformed.text.length })
+            assertTrue(raw, visible.all { it in 0..raw.length })
+            assertTrue(raw, original.zipWithNext().all { (a, b) -> a <= b })
+            assertTrue(raw, visible.zipWithNext().all { (a, b) -> a <= b })
+        }
+    }
+
+    @Test
+    fun `평문 투영은 스타일과 링크 좌표를 만들지 않아도 읽기 표시 문자열과 같다`() {
+        listOf(
+            "# **a**\n\n> _b_",
+            "**a `**b**` c**",
+            "[**a**](https://a.dev/_x_) https://a.dev/a_b_c",
+            "\\**literal\\** <mark>c</mark>",
+            "** a ** ~~ b ~~",
+        ).forEach { raw ->
+            assertEquals(raw, readOnlyParser().parse(raw).transformed.text.text, MarkdownParser.plainText(raw))
+        }
+    }
+
+    @Test
     fun `기울임과 굵게는 서로 중첩할 수 있다`() {
         listOf("*가 **나** 다*", "**가 *나* 다**", "_가 **나** 다_").forEach { raw ->
             listOf(editorParser(), readOnlyParser()).forEach { parser ->
@@ -27,11 +53,14 @@ class MarkdownVisualTransformationTest {
     }
 
     @Test
-    fun `기울임 내부 식별자 밑줄은 닫는 마커로 소비하지 않는다`() {
+    fun `밑줄 기울임 경계는 식별자 예외 없이 SSOT를 따른다`() {
         listOf(editorParser(), readOnlyParser()).forEach { parser ->
             val text = parser.parse("_user_name_").transformed.text
-            assertEquals("user_name", text.text)
-            assertTrue(text.spanStyles.any { it.item.fontStyle == FontStyle.Italic && it.start == 0 && it.end == text.length })
+            assertEquals("username_", text.text)
+            assertTrue(text.spanStyles.any { it.item.fontStyle == FontStyle.Italic && it.start == 0 && it.end == 4 })
+            val intraword = parser.parse("prefix_mid_suffix").transformed.text
+            assertEquals("prefixmidsuffix", intraword.text)
+            assertTrue(intraword.spanStyles.any { it.item.fontStyle == FontStyle.Italic && it.start == 6 && it.end == 9 })
             assertEquals("user_name", parser.parse("user_name").transformed.text.text)
         }
     }

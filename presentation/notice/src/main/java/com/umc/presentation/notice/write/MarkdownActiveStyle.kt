@@ -10,20 +10,20 @@ enum class MarkdownStyle {
     BOLD, ITALIC, UNDERLINE, STRIKETHROUGH, HIGHLIGHT, CODE,
 }
 
-/**
- * 커서 위치에서 켜져 있는 마크다운 상태.
- * 인라인 스타일은 마커 스캔으로, 줄 단위 스타일은 줄 prefix로 판단한다
- */
 /** 열려 있는 마커의 여닫는 문자열 */
 data class MarkdownMarker(val open: String, val close: String)
 
-internal data class MarkdownOpenMarker(val open: String, val close: String, val start: Int, val isCode: Boolean)
+internal data class MarkdownOpenMarker(
+    val open: String,
+    val close: String,
+    val start: Int,
+    val isCode: Boolean,
+    val closeStart: Int? = null,
+)
 
 data class MarkdownActiveStyles(
     val inline: ImmutableSet<MarkdownStyle> = persistentSetOf(),
     val isBullet: Boolean = false,
-    val isDashList: Boolean = false,
-    val isNumberList: Boolean = false,
     val isQuote: Boolean = false,
     val heading: MarkdownHeading = MarkdownHeading.BODY,
 ) {
@@ -40,7 +40,7 @@ data class MarkdownActiveStyles(
 object MarkdownScanner {
 
     /** `<mark>`는 색상 인자가 없어도 유효하다 */
-    private val MARK_OPEN = Regex("""<mark(?:\s+color="[^"]*")?>""")
+    private val MARK_OPEN = MARKDOWN_HIGHLIGHT_OPEN
 
     /** 여닫는 마커가 같은 문법. 긴 마커를 먼저 검사해야 `***`가 `**`로 잘리지 않는다 */
     private val SYMMETRIC = listOf(
@@ -58,20 +58,19 @@ object MarkdownScanner {
         "# " to MarkdownHeading.TITLE1,
     )
 
-    private val numberListPrefix = Regex("""^\d+\.\s""")
-
     /** 열려 있는 마커 하나. [close]는 이 마커를 닫는 문자열 */
     private data class OpenMarker(
         val marker: String,
         val close: String,
         val styles: Set<MarkdownStyle>,
         val start: Int,
+        val closeStart: Int? = null,
     )
 
     internal fun openMarkersAt(text: String, at: Int): List<MarkdownOpenMarker> {
         val lineStart = text.lastIndexOf('\n', at - 1) + 1
         return openMarkers(text, lineStart, at).map {
-            MarkdownOpenMarker(it.marker, it.close, it.start, MarkdownStyle.CODE in it.styles)
+            MarkdownOpenMarker(it.marker, it.close, it.start, MarkdownStyle.CODE in it.styles, it.closeStart)
         }
     }
 
@@ -92,8 +91,6 @@ object MarkdownScanner {
         return MarkdownActiveStyles(
             inline = active.flatMap { it.styles }.toImmutableSet(),
             isBullet = body.startsWith("- "),
-            isDashList = body.startsWith("– "),
-            isNumberList = numberListPrefix.containsMatchIn(body),
             isQuote = body.startsWith("> "),
             heading = headingPrefix?.let { headingPrefixes[it] } ?: MarkdownHeading.BODY,
         )
@@ -115,89 +112,97 @@ object MarkdownScanner {
         return MarkdownMarker(open = open.marker, close = open.close)
     }
 
-    /**
-     * [start]부터 [end]까지 훑어 아직 닫히지 않은 마커를 바깥→안쪽 순서로 반환한다.
-     * 같은 마커가 다시 나오면 닫힌 것으로 보고 목록에서 제거한다.
-     *
-     * 마커는 [end] 안에 온전히 들어올 때만 인정한다. 커서가 `**|**` 처럼 마커 쌍
-     * 가운데 있을 때 뒤쪽 마커까지 삼켜 `***`(굵게+기울임)로 잘못 읽는 것을 막는다
-     */
+    /** 완성 토큰은 공통 파서로 판별하고, 토큰 사이의 미완성 입력만 보완한다. */
     private fun openMarkers(text: String, start: Int, end: Int): List<OpenMarker> {
         val open = mutableListOf<OpenMarker>()
-        val urlRanges = mutableListOf<IntRange>()
-        val lineEnd = text.indexOf('\n', start).let { if (it == -1) text.length else it }
-        // URL은 커서 뒤까지 이어질 수 있지만, 다른 줄의 링크는 현재 줄 상태와 무관하다.
-        val line = text.substring(start, lineEnd)
-        var linkCursor = 0
-        while (linkCursor < line.length) {
-            val link = MARKDOWN_LINK_REGEX.findUnescaped(line, linkCursor) ?: break
-            link.groups[2]?.range?.let { urlRanges += (start + it.first)..(start + it.last) }
-            linkCursor = link.range.last + 1
-        }
-        var i = start
+        val lineEnd = text.indexOf('\n', start).let { if (it < 0) text.length else it }
 
-        /** [i]에서 시작하는 [marker]가 [end]를 넘지 않는지 */
-        fun fits(marker: String) = text.startsWith(marker, i) && i + marker.length <= end
+        fun scanUnfinished(from: Int, until: Int) {
+            var i = from
 
-        while (i < end) {
-            val url = urlRanges.firstOrNull { i in it }
-            if (url != null && open.none { MarkdownStyle.CODE in it.styles }) {
-                i = minOf(end, url.last + 1)
-                continue
-            }
-            if (isMarkdownEscaped(text, i)) {
-                i++
-                continue
-            }
+            // 미완성 구간의 끝을 넘는 마커는 아직 입력되지 않은 것으로 취급한다.
+            fun fits(marker: String) = text.startsWith(marker, i) && i + marker.length <= until
 
-            if (open.any { MarkdownStyle.CODE in it.styles }) {
-                if (text[i] == '`') open.removeLastMatching { MarkdownStyle.CODE in it.styles }
-                i++
-                continue
-            }
-            if (isIntrawordUnderscore(text, i)) {
-                i++
-                continue
-            }
-
-            val markOpen = MARK_OPEN.matchAt(text, i)?.value?.takeIf { i + it.length <= end }
-
-            when {
-                markOpen != null -> {
-                    open += OpenMarker(markOpen, "</mark>", setOf(MarkdownStyle.HIGHLIGHT), i)
-                    i += markOpen.length
+            while (i < until) {
+                if (isMarkdownEscaped(text, i)) {
+                    i++
+                    continue
                 }
 
-                fits("</mark>") -> {
-                    open.removeLastMatching { MarkdownStyle.HIGHLIGHT in it.styles }
-                    i += "</mark>".length
+                if (open.any { MarkdownStyle.CODE in it.styles }) {
+                    if (text[i] == '`') open.removeLastMatching { MarkdownStyle.CODE in it.styles }
+                    i++
+                    continue
                 }
 
-                fits("<u>") -> {
-                    open += OpenMarker("<u>", "</u>", setOf(MarkdownStyle.UNDERLINE), i)
-                    i += "<u>".length
-                }
+                val markOpen = MARK_OPEN.matchAt(text, i)?.value?.takeIf { i + it.length <= until }
 
-                fits("</u>") -> {
-                    open.removeLastMatching { MarkdownStyle.UNDERLINE in it.styles }
-                    i += "</u>".length
-                }
+                when {
+                    markOpen != null -> {
+                        open += OpenMarker(markOpen, "</mark>", setOf(MarkdownStyle.HIGHLIGHT), i)
+                        i += markOpen.length
+                    }
 
-                else -> {
-                    val symmetric = SYMMETRIC.firstOrNull { fits(it.first) }
-                    if (symmetric == null) {
-                        i++
-                    } else {
-                        val (marker, styles) = symmetric
-                        // 같은 마커가 이미 열려 있으면 이번 등장은 닫는 마커다
-                        if (!open.removeLastMatching { it.marker == marker }) {
-                            open += OpenMarker(marker, marker, styles, i)
+                    fits("</mark>") -> {
+                        open.removeLastMatching { MarkdownStyle.HIGHLIGHT in it.styles }
+                        i += "</mark>".length
+                    }
+
+                    fits("<u>") -> {
+                        open += OpenMarker("<u>", "</u>", setOf(MarkdownStyle.UNDERLINE), i)
+                        i += "<u>".length
+                    }
+
+                    fits("</u>") -> {
+                        open.removeLastMatching { MarkdownStyle.UNDERLINE in it.styles }
+                        i += "</u>".length
+                    }
+
+                    else -> {
+                        val symmetric = SYMMETRIC.firstOrNull { fits(it.first) }
+                        if (symmetric == null) {
+                            i++
+                        } else {
+                            val (marker, styles) = symmetric
+                            // 같은 마커가 이미 열려 있으면 이번 등장은 닫는 마커다
+                            if (!open.removeLastMatching { it.marker == marker }) {
+                                open += OpenMarker(marker, marker, styles, i)
+                            }
+                            i += marker.length
                         }
-                        i += marker.length
                     }
                 }
             }
         }
+
+        fun collect(from: Int, until: Int, tokens: List<InlineToken>) {
+            var cursor = from
+            for (token in tokens) {
+                if (token.start >= until) break
+                scanUnfinished(cursor, token.start)
+                if (open.any { MarkdownStyle.CODE in it.styles }) {
+                    scanUnfinished(token.start, minOf(token.end, until))
+                } else if (until in token.innerStart..token.innerEnd) {
+                    val styles = token.kind.editStyles
+                    if (styles.isNotEmpty()) {
+                        open += OpenMarker(
+                            text.substring(token.start, token.innerStart),
+                            text.substring(token.innerEnd, token.end),
+                            styles, token.start, token.innerEnd,
+                        )
+                    }
+                    if (token.kind != InlineTokenKind.CODE) collect(token.innerStart, until, token.children)
+                    return
+                } else if (until < token.end) {
+                    // 숨겨진 닫는 마커 중간은 서식 본문에 포함하지 않는다.
+                    return
+                }
+                cursor = token.end
+                if (cursor >= until) return
+            }
+            scanUnfinished(cursor, until)
+        }
+        collect(start, end, MarkdownParser.parseInline(text, start, lineEnd))
         return open
     }
 
@@ -211,3 +216,17 @@ object MarkdownScanner {
         return true
     }
 }
+
+private val InlineTokenKind.editStyles: Set<MarkdownStyle>
+    get() = when (this) {
+        InlineTokenKind.BOLD, InlineTokenKind.EMPTY_BOLD -> setOf(MarkdownStyle.BOLD)
+        InlineTokenKind.BOLD_ITALIC_MIXED, InlineTokenKind.BOLD_ITALIC_TRIPLE,
+        InlineTokenKind.EMPTY_BOLD_ITALIC -> setOf(MarkdownStyle.BOLD, MarkdownStyle.ITALIC)
+        InlineTokenKind.ITALIC_ASTERISK, InlineTokenKind.ITALIC_UNDERSCORE,
+        InlineTokenKind.EMPTY_ITALIC_UNDERSCORE -> setOf(MarkdownStyle.ITALIC)
+        InlineTokenKind.UNDERLINE, InlineTokenKind.EMPTY_UNDERLINE -> setOf(MarkdownStyle.UNDERLINE)
+        InlineTokenKind.STRIKETHROUGH, InlineTokenKind.EMPTY_STRIKETHROUGH -> setOf(MarkdownStyle.STRIKETHROUGH)
+        InlineTokenKind.HIGHLIGHT, InlineTokenKind.EMPTY_HIGHLIGHT -> setOf(MarkdownStyle.HIGHLIGHT)
+        InlineTokenKind.CODE -> setOf(MarkdownStyle.CODE)
+        InlineTokenKind.LINK -> emptySet()
+    }

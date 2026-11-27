@@ -17,7 +17,7 @@ private val markdownPreviewContent = """
     # 제목
     ## 머리말
     ### 부머리말
-    *가 **나** 다* · _user_name_
+    *가 **나** 다* · _user_name_ · prefix_mid_suffix
     **a `**b**` c**
     <u>밑줄</u> · ~~취소선~~
     > 연속 인용 1

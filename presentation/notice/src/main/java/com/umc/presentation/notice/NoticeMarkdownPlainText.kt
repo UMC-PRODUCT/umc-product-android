@@ -1,7 +1,6 @@
 package com.umc.presentation.notice
 
-import androidx.compose.ui.graphics.Color
-import com.umc.presentation.notice.write.MarkdownVisualTransformation
+import com.umc.presentation.notice.write.MarkdownParser
 
 /**
  * 공지 목록 카드 미리보기용 마크다운 평문 추출기.
@@ -11,13 +10,7 @@ import com.umc.presentation.notice.write.MarkdownVisualTransformation
  */
 fun extractNoticePlainText(raw: String): String {
     if (raw.isBlank()) return ""
-    val firstPass = PLAIN_TEXT_PARSER.parse(raw).transformed.text.text
-    val secondPass = PLAIN_TEXT_PARSER.parse(firstPass).transformed.text.text
+    val firstPass = MarkdownParser.plainText(raw)
+    val secondPass = MarkdownParser.plainText(firstPass)
     return secondPass.trim()
 }
-
-private val PLAIN_TEXT_PARSER = MarkdownVisualTransformation(
-    markerColor = Color.Unspecified,
-    linkColor = Color.Unspecified,
-    isReadOnly = true,
-)

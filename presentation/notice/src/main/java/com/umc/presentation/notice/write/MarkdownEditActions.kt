@@ -1,7 +1,6 @@
 package com.umc.presentation.notice.write
 
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import com.umc.component.theme.AppStrings
 
@@ -31,8 +30,6 @@ internal fun TextFieldValue.endComposition(): TextFieldValue =
  * 선택 영역 양끝 공백은 마커 바깥에 남긴다.
  */
 object MarkdownEditActions {
-
-    private val editorParser = MarkdownVisualTransformation(Color.Unspecified, Color.Unspecified)
 
     private val headingPrefixes = listOf("### ", "## ", "# ")
     private val numberListPrefix = Regex("""^(\d+)\. """)
@@ -124,12 +121,7 @@ object MarkdownEditActions {
 
         if (previous.text.removeRange(deletedAt, deletedAt + 1) != current.text) return null
         if (previous.text[deletedAt - 1] != '\\' || !isMarkdownEscaped(previous.text, deletedAt)) return null
-        // 링크 URL에는 보이는 '\'가 있고, 코드는 15자 외의 문자도 해제하므로 현재 줄의 표시 매핑을 기준으로 한다.
-        val lineStart = previous.text.lastIndexOf('\n', deletedAt - 1) + 1
-        val lineEnd = previous.text.indexOf('\n', deletedAt).let { if (it == -1) previous.text.length else it }
-        val localDeletedAt = deletedAt - lineStart
-        val mapping = editorParser.parse(previous.text.substring(lineStart, lineEnd)).transformed.offsetMapping
-        if (mapping.originalToTransformed(localDeletedAt - 1) != mapping.originalToTransformed(localDeletedAt)) return null
+        if (!MarkdownParser.isHiddenEscapeAt(previous.text, deletedAt - 1)) return null
 
         val newText = current.text.removeRange(deletedAt - 1, deletedAt)
         return current.copy(
@@ -311,7 +303,7 @@ object MarkdownEditActions {
         if (markers.isEmpty()) return text.substring(0, at) to text.substring(at)
         val originalClosers = markers.asReversed().joinToString("") { it.close }
         val retained = markers.toMutableList()
-        val ranges = editorParser.closingMarkerRangesAt(text, at)
+        val ranges = markers.mapNotNull { marker -> marker.closeStart?.let { it until it + marker.close.length } }
         val rangesToRemove = ranges.sortedBy { it.first }.toMutableList()
         val lineEnd = text.indexOf('\n', at).let { if (it == -1) text.length else it }
         val firstCloseStart = rangesToRemove.firstOrNull()?.first ?: lineEnd
@@ -350,7 +342,7 @@ object MarkdownEditActions {
     }
 
     /** 색상 인자가 없는 `<mark>`도 렌더러가 받아주므로 동일하게 인식한다 */
-    private val MARK_OPEN = Regex("""<mark(?:\s+color="[^"]*")?>""")
+    private val MARK_OPEN = MARKDOWN_HIGHLIGHT_OPEN
     private const val MARK_CLOSE = "</mark>"
 
     /** 커서(선택 시작)가 위치한 줄의 제목 prefix를 교체. BODY는 prefix 제거 */

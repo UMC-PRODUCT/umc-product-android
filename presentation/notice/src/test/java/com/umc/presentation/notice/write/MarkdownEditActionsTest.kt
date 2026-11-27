@@ -11,11 +11,12 @@ import org.junit.Test
 class MarkdownEditActionsTest {
 
     @Test
-    fun `기울임 내부 식별자 밑줄은 편집 상태를 닫거나 다시 열지 않는다`() {
+    fun `밑줄은 식별자 내부에서도 SSOT 토큰 경계로 처리한다`() {
         val raw = "_user_name_"
-        assertTrue(MarkdownStyle.ITALIC in MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(7))))
-        assertTrue(MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(raw.length))).inline.isEmpty())
-        assertTrue(MarkdownScanner.activeStyles(TextFieldValue("user_name", TextRange(9))).inline.isEmpty())
+        assertTrue(MarkdownStyle.ITALIC in MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(3))))
+        assertTrue(MarkdownScanner.activeStyles(TextFieldValue(raw, TextRange(7))).inline.isEmpty())
+        val intraword = "prefix_mid_suffix"
+        assertTrue(MarkdownStyle.ITALIC in MarkdownScanner.activeStyles(TextFieldValue(intraword, TextRange(9))))
     }
 
     @Test
@@ -245,14 +246,9 @@ class MarkdownEditActionsTest {
     }
 
     @Test
-    fun `MarkdownScanner는 이스케이프된 마커를 무시하고 대시·번호 목록 상태를 판별한다`() {
+    fun `MarkdownScanner는 이스케이프된 마커를 무시한다`() {
         val escaped = TextFieldValue("""\*기울임아님""", TextRange(7))
         assertFalse(MarkdownStyle.ITALIC in MarkdownScanner.activeStyles(escaped))
 
-        val dash = TextFieldValue("– 대시항목", TextRange(6))
-        assertTrue(MarkdownScanner.activeStyles(dash).isDashList)
-
-        val number = TextFieldValue("12. 번호항목", TextRange(8))
-        assertTrue(MarkdownScanner.activeStyles(number).isNumberList)
     }
 }
