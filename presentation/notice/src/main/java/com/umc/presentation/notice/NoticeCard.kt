@@ -1,5 +1,6 @@
 package com.umc.presentation.notice
 
+import com.umc.domain.model.UDomainFormat.parseDateTime
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.enums.UserPart
 import androidx.compose.foundation.background
@@ -184,9 +185,9 @@ private fun NoticeTag(
     }
 }
 
-/** createdAt(ISO)에서 yyyy.MM.dd 형태로 변환 */
+/** 서버 UTC ISO 시각(createdAt)을 기기 시간대 기준 yyyy.MM.dd 형태로 변환 */
 fun formatNoticeDate(createdAt: String): String {
-    return createdAt.take(10).replace("-", ".")
+    return createdAt.parseDateTime().first
 }
 
 @Preview(showBackground = true)
@@ -199,7 +200,7 @@ internal fun NoticeCardPreview() {
             content = "이번주 토요일 세션 후 뒤풀이가 있습니다. 장소는 강남역 인근 맛있는 고기집입니다.",
             shouldSendNotification = true,
             viewCount = 1000,
-            createdAt = "2024-03-01T00:00:00",
+            createdAt = "2024-03-01T00:00:00Z",
             targetInfo = NoticeTarget(
                 targetGisuId = 1,
                 targetChapterId = 1,

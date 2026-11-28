@@ -17,6 +17,13 @@ fun NoticeVoteSheetShot() {
 @PreviewTest
 @Preview(showBackground = true)
 @Composable
+fun NoticeVoteSheetWithScheduleShot() {
+    UmcTheme { NoticeVoteSheetWithSchedulePreview() }
+}
+
+@PreviewTest
+@Preview(showBackground = true)
+@Composable
 fun NoticeVoteRowShot() {
     UmcTheme { NoticeVoteRowPreview() }
 }
