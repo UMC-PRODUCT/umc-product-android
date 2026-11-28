@@ -26,6 +26,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -64,6 +66,7 @@ class NoticeViewModel @Inject constructor(
     private var allGisus: List<GisuItem> = emptyList()
     private var isLoadingAllGisus = false
     private var serverActiveGisuId: Long? = null
+    private var isLoadingActiveGisu = false
 
     // 진행 중인 목록 요청. 필터를 바꾸면 취소해 이전 조건의 응답이 새 목록에 섞이지 않게 한다
     private var listJob: Job? = null
@@ -75,14 +78,24 @@ class NoticeViewModel @Inject constructor(
     }
 
     /** 작성 권한은 서버 활성 기수로 판단한다. 프로필이 먼저 도착했으면 응답 후 버튼 노출을 다시 계산한다. */
-    private fun loadActiveGisu() = viewModelScope.launch {
-        resultResponse(
-            response = getActiveGisuUseCase(),
-            successCallback = { gisu ->
-                serverActiveGisuId = gisu.gisuId.takeIf { it > 0 }?.toLong()
-                cachedUserInfo?.let(::updateWritePermission)
-            },
-        )
+    private fun loadActiveGisu() {
+        if (serverActiveGisuId != null || isLoadingActiveGisu) return
+        isLoadingActiveGisu = true
+        viewModelScope.launch {
+            try {
+                val response = getActiveGisuUseCase()
+                currentCoroutineContext().ensureActive()
+                resultResponse(
+                    response = response,
+                    successCallback = { gisu ->
+                        serverActiveGisuId = gisu.gisuId.takeIf { it > 0 }?.toLong()
+                        cachedUserInfo?.let(::updateWritePermission)
+                    },
+                )
+            } finally {
+                isLoadingActiveGisu = false
+            }
+        }
     }
 
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
@@ -290,6 +303,9 @@ class NoticeViewModel @Inject constructor(
                 currentPage = 0,
                 isLastPage = false,
                 errorMessage = null,
+                isNextPageError = false,
+                isPageLoading = false,
+                isRefreshing = false,
             )
         }
         cachedUserInfo?.let { userInfo ->
@@ -341,7 +357,11 @@ class NoticeViewModel @Inject constructor(
      * 칩을 바꾼 직후엔 이전 요청이 진행 중이어도 새 조건이 우선이므로 가드를 건너뛴다
      */
     private fun refreshNoticeList() {
-        if (uiState.value.selectedGisu <= 0L) return
+        if (uiState.value.selectedGisu <= 0L) {
+            listJob?.cancel()
+            updateState { clearNoticeList(this) }
+            return
+        }
         getNoticeList(isRefresh = true, isUserRefresh = true)
     }
 
@@ -350,13 +370,17 @@ class NoticeViewModel @Inject constructor(
      * 진행 중인 조회가 있어도 최신 목록이 우선이므로 가드를 무시하고 다시 요청한다
      */
     fun onRefresh() {
+        loadActiveGisu()
         updateState { copy(isRefreshing = true) }
         if (uiState.value.selectedGisu <= 0L) {
-            updateState { copy(isRefreshing = false) }
+            listJob?.cancel()
+            updateState { clearNoticeList(this) }
             if (cachedUserInfo?.isSuperAdmin == true) loadAllGisus()
             return
         }
         getNoticeList(isRefresh = true, isUserRefresh = true)
+        // 프로필 폴백으로 기수가 선택되어 있어도 전체 기수 목록 조회의 실패는 복구한다.
+        if (cachedUserInfo?.isSuperAdmin == true && allGisus.isEmpty()) loadAllGisus()
     }
 
     fun loadNextPage() {
@@ -369,7 +393,8 @@ class NoticeViewModel @Inject constructor(
         val state = uiState.value
 
         // 가드를 launch 밖에서 확인한다. 걸린 호출이 listJob을 덮어쓰면 진행 중인 요청을 더는 취소할 수 없다
-        if (!isUserRefresh && (state.isPageLoading || (!isRefresh && state.isLastPage))) return
+        if (state.selectedGisu <= 0L) return
+        if (!isUserRefresh && (listJob?.isActive == true || state.isPageLoading || (!isRefresh && state.isLastPage))) return
 
         // 늦게 끝난 이전 필터의 요청(특히 다음 페이지)이 새 목록에 결과나 실패 표시를 남기지 않게 먼저 취소한다
         listJob?.cancel()
@@ -404,6 +429,9 @@ class NoticeViewModel @Inject constructor(
                 size = 20,
             )
         }
+        currentCoroutineContext().ensureActive()
+        if (uiState.value.selectedGisu != state.selectedGisu ||
+            buildNoticeQuery(uiState.value, computeStaffNoticeTab()) != query) return@launch
         resultResponse(
             response = pageLoad.response,
             successCallback = { noticeSearch ->
@@ -451,6 +479,11 @@ class NoticeViewModel @Inject constructor(
     }
 }
 
+internal fun clearNoticeList(state: NoticeUiState): NoticeUiState = state.copy(
+    noticeList = persistentListOf(), currentPage = 0, isLastPage = false,
+    isPageLoading = false, isRefreshing = false, errorMessage = null, isNextPageError = false,
+)
+
 internal fun resolveNoticeGisuOptions(
     state: NoticeUiState,
     userInfo: UserInfo,
@@ -471,6 +504,10 @@ internal fun resolveNoticeGisuOptions(
         noticeList = if (changedGisu) persistentListOf() else state.noticeList,
         currentPage = if (changedGisu) 0 else state.currentPage,
         isLastPage = if (changedGisu) false else state.isLastPage,
+        errorMessage = if (changedGisu) null else state.errorMessage,
+        isNextPageError = if (changedGisu) false else state.isNextPageError,
+        isPageLoading = if (changedGisu) false else state.isPageLoading,
+        isRefreshing = if (changedGisu) false else state.isRefreshing,
     )
 }
 

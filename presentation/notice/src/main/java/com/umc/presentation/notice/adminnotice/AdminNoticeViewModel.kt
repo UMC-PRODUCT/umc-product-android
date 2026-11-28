@@ -112,7 +112,7 @@ class AdminNoticeViewModel @Inject constructor(
     fun onResumed() {
         if (!refreshOnReturn) return
         refreshOnReturn = false
-        refreshIfReady()
+        refreshIfReady(replaceRunning = true)
     }
 
     /** 읽은 공지 ID를 dataStore에서 구독해 상태에 반영 (읽지 않은 공지 빨간 점 표시용) */
@@ -194,19 +194,22 @@ class AdminNoticeViewModel @Inject constructor(
     }
 
     /** 기수·탭이 모두 준비된 경우에만 목록 새로고침 */
-    private fun refreshIfReady() {
+    private fun refreshIfReady(replaceRunning: Boolean = false) {
         val state = uiState.value
         if (state.canQuery) {
-            getNoticeList(isRefresh = true)
+            getNoticeList(isRefresh = true, replaceRunning = replaceRunning)
         }
     }
 
-    private fun getNoticeList(isRefresh: Boolean) {
+    private fun getNoticeList(isRefresh: Boolean, replaceRunning: Boolean = false) {
         val state = uiState.value
         val selectedTab = state.selectedTab ?: return
 
         // 가드를 launch 밖에서 확인한다. 걸린 호출이 listJob을 덮어쓰면 탭 전환 때 진행 중인 요청을 취소하지 못한다
-        if (!state.canQuery || listJob?.isActive == true || state.isPageLoading || (!isRefresh && state.isLastPage)) return
+        if (!state.canQuery || (!isRefresh && state.isLastPage)) return
+        if (!replaceRunning && (listJob?.isActive == true || state.isPageLoading)) return
+
+        listJob?.cancel()
 
         listJob = fetchNoticeList(state, selectedTab, isRefresh)
     }
