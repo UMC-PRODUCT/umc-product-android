@@ -105,11 +105,13 @@ import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.enums.WriteCategoryType
 import com.umc.domain.model.notice.NoticeImageAttachment
 import com.umc.domain.model.notice.WriteCategory
+import com.umc.domain.model.organization.GisuItem
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /** 공지 작성 화면 바텀시트 종류 */
-private enum class WriteSheetType { CATEGORY, CHAPTER, SCHOOL, PART, VOTE }
+private enum class WriteSheetType { CATEGORY, GISU, CHAPTER, SCHOOL, PART, VOTE }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -157,11 +159,24 @@ fun NoticeWriteRoute(
         onClickBack = navigateToBack,
         onToggleNotification = viewModel::onToggleNotification,
         onClickRegister = viewModel::onClickRegister,
-        onClickCategory = { sheetType = WriteSheetType.CATEGORY },
+        onClickCategory = {
+            viewModel.onOpenCategorySelector()
+            sheetType = WriteSheetType.CATEGORY
+        },
+        onClickGisu = {
+            viewModel.onOpenCategorySelector()
+            sheetType = WriteSheetType.GISU
+        },
         onToggleAll = viewModel::onToggleAll,
         onToggleStaff = viewModel::onToggleStaff,
-        onClickChapterChip = { sheetType = WriteSheetType.CHAPTER },
-        onClickSchoolChip = { sheetType = WriteSheetType.SCHOOL },
+        onClickChapterChip = {
+            viewModel.onOpenOrganizationSelector()
+            sheetType = WriteSheetType.CHAPTER
+        },
+        onClickSchoolChip = {
+            viewModel.onOpenOrganizationSelector()
+            sheetType = WriteSheetType.SCHOOL
+        },
         onClickPartChip = { sheetType = WriteSheetType.PART },
         onTitleChanged = viewModel::onTitleChanged,
         onContentChanged = viewModel::onContentChanged,
@@ -228,6 +243,20 @@ fun NoticeWriteRoute(
                     },
                 )
 
+                WriteSheetType.GISU -> {
+                    val selectableGisus = uiState.selectableTargetGisus
+                    USelectSheetContent(
+                        title = AppStrings.CHALLENGER_GISU_SELECT_TITLE,
+                        items = selectableGisus.map {
+                            AppStrings.COMMON_GENERATION_FORMAT.format(it.generation)
+                        }.toImmutableList(),
+                        onSelect = { index ->
+                            viewModel.onSelectGisu(selectableGisus[index])
+                            sheetType = null
+                        },
+                    )
+                }
+
                 WriteSheetType.CHAPTER -> USelectSheetContent(
                     title = AppStrings.NOTICE_WRITE_CHAPTER_SELECT,
                     items = uiState.chapterList.map { it.name }.toImmutableList(),
@@ -247,7 +276,7 @@ fun NoticeWriteRoute(
                 )
 
                 WriteSheetType.PART -> {
-                    val parts = UserPart.filters
+                    val parts = UserPart.selectable
                     USelectSheetContent(
                         title = AppStrings.NOTICE_BOTTOMSHEET_TITLE,
                         items = parts.map { it.label }.toImmutableList(),
@@ -282,6 +311,7 @@ fun NoticeWriteScreen(
     onToggleNotification: () -> Unit = {},
     onClickRegister: () -> Unit = {},
     onClickCategory: () -> Unit = {},
+    onClickGisu: () -> Unit = {},
     onToggleAll: () -> Unit = {},
     onToggleStaff: () -> Unit = {},
     onClickChapterChip: () -> Unit = {},
@@ -307,6 +337,7 @@ fun NoticeWriteScreen(
     onCloseLinkPanel: () -> Unit = {},
     onClickAiRefine: () -> Unit = {},
 ) {
+    val toast = LocalUToast.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -368,11 +399,24 @@ fun NoticeWriteScreen(
 
             // 수정 모드·생성 완료 후 재등록에서는 수신 대상(카테고리/게시판 분류) 변경 불가
             if (!uiState.isTargetLocked) {
-                UText(
-                    text = AppStrings.NOTICE_WRITE_CATEGORY_TITLE,
-                    style = UmcTypographyTokens.HeadlineBold,
-                    color = grey950(),
-                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    UText(
+                        text = AppStrings.NOTICE_WRITE_CATEGORY_TITLE,
+                        style = UmcTypographyTokens.HeadlineBold,
+                        color = grey950(),
+                    )
+                    uiState.categoryHint?.let { hint ->
+                        UText(
+                            text = hint,
+                            style = UmcTypographyTokens.Footnote,
+                            color = grey600(),
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -400,24 +444,54 @@ fun NoticeWriteScreen(
                     )
                 }
 
+                if (uiState.showTargetGisuSelector) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, grey200(), RoundedCornerShape(8.dp))
+                            .clickable { onClickGisu() }
+                            .padding(horizontal = 16.dp, vertical = 15.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val selectedGisu = uiState.availableGisus.firstOrNull { it.gisuId == uiState.targetGisuId }
+                        UText(
+                            text = selectedGisu?.let { AppStrings.COMMON_GENERATION_FORMAT.format(it.generation) }
+                                ?: AppStrings.CHALLENGER_GISU_SELECT_TITLE,
+                            style = UmcTypographyTokens.Headline,
+                            color = if (selectedGisu == null) grey400() else grey800(),
+                            modifier = Modifier.weight(1f),
+                        )
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_next),
+                            contentDescription = null,
+                            tint = grey400(),
+                        )
+                    }
+                }
+
                 // 게시판 분류 (권한/카테고리에 따라 노출)
-                if (uiState.boardChips.isNotEmpty()) {
+                if (uiState.visibleBoardChips.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
                         UText(
                             text = AppStrings.NOTICE_WRITE_CLASS_TITLE,
                             style = UmcTypographyTokens.HeadlineBold,
                             color = grey950(),
                         )
 
-                        uiState.boardHint?.let { hint ->
-                            Spacer(modifier = Modifier.width(8.dp))
-
+                        uiState.displayBoardHint?.let { hint ->
                             UText(
                                 text = hint,
                                 style = UmcTypographyTokens.Footnote,
                                 color = grey600(),
+                                modifier = Modifier.align(Alignment.CenterVertically),
                             )
                         }
                     }
@@ -428,7 +502,7 @@ fun NoticeWriteScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        uiState.boardChips.forEach { chipType ->
+                        uiState.visibleBoardChips.forEach { chipType ->
                             when (chipType) {
                                 BoardChipType.ALL -> WriteBoardChip(
                                     text = AppStrings.COMMON_ALL,
@@ -474,6 +548,12 @@ fun NoticeWriteScreen(
             UTextField(
                 value = uiState.title,
                 onValueChange = onTitleChanged,
+                acceptInput = {
+                    isNoticeTextChangeAllowed(uiState.title, it, NoticeWriteViewModel.MAX_TITLE_LENGTH)
+                },
+                onInputRejected = {
+                    toast.show(AppStrings.NOTICE_WRITE_TITLE_TOO_LONG, UToastState.ERROR)
+                },
                 placeholder = AppStrings.NOTICE_WRITE_TITLE_PLACEHOLDER,
                 placeholderColor = grey400(),
                 textStyle = UmcTypographyTokens.Title3Bold,
@@ -1161,15 +1241,41 @@ private fun WriteBoardChip(
 internal fun NoticeWriteScreenPreview() {
     NoticeWriteScreen(
         uiState = NoticeWriteUiState(
-            writerRole = NoticeWriterRole.CENTRAL_STAFF,
-            selectedCategory = WriteCategory(
-                WriteCategoryType.CENTRAL_STAFF,
-                AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL
+            writerRole = NoticeWriterRole.CENTRAL_CORE,
+            availableCategories = persistentListOf(
+                WriteCategory(WriteCategoryType.ALL_GISU, AppStrings.NOTICE_WRITE_ALL_GISU),
+                WriteCategory(WriteCategoryType.GISU, AppStrings.NOTICE_WRITE_SPECIFIC_GISU),
+                WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL),
+                WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
+                WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER),
             ),
-            boardChips = persistentListOf(
-                BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART, BoardChipType.CHAPTER
+            // 중앙운영진 카테고리는 대상 칩 없이 CENTRAL_MEMBER로 발행한다.
+            selectedCategory = WriteCategory(WriteCategoryType.CENTRAL_STAFF, AppStrings.NOTICE_WRITE_CATEGORY_CENTRAL),
+            availableGisus = persistentListOf(
+                GisuItem(gisuId = 12, generation = 12),
+                GisuItem(gisuId = 9, generation = 9),
             ),
-            boardHint = AppStrings.NOTICE_WRITE_CLASS_HINT,
+            targetGisuId = 12,
+            authorityGisuId = 12,
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeWriteScreenFixedGisuPreview() {
+    NoticeWriteScreen(
+        uiState = NoticeWriteUiState(
+            writerRole = NoticeWriterRole.SCHOOL_CORE,
+            selectedCategory = WriteCategory(WriteCategoryType.SCHOOL_CORE, AppStrings.NOTICE_WRITE_CATEGORY_SCHOOL_CORE),
+            boardChips = persistentListOf(BoardChipType.ALL, BoardChipType.STAFF, BoardChipType.PART),
+            // 운영진 공지는 본교 운영진 전체(SCHOOL_PART_LEADER)를 대상으로 한다.
+            isStaffSelected = true,
+            writerSchoolId = 7,
+            writerSchoolName = "중앙대학교",
+            availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
+            targetGisuId = 12,
+            authorityGisuId = 12,
         ),
     )
 }
@@ -1180,6 +1286,8 @@ internal fun NoticeWriteScreenSuperAdminPreview() {
     NoticeWriteScreen(
         uiState = NoticeWriteUiState(
             writerRole = NoticeWriterRole.SUPER_ADMIN,
+            selectedCategory = WriteCategory(WriteCategoryType.ALL_GISU, AppStrings.NOTICE_WRITE_ALL_GISU),
+            availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
         ),
     )
 }
@@ -1196,4 +1304,21 @@ private fun readClipboardText(context: Context): String {
         .mapNotNull { clip.getItemAt(it)?.coerceToText(context)?.toString() }
         .joinToString("\n")
         .trim()
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+internal fun NoticeWriteSingleCategoryPreview() {
+    val category = WriteCategory(WriteCategoryType.SCHOOL_PART_LEADER, AppStrings.NOTICE_WRITE_CATEGORY_PART_LEADER)
+    NoticeWriteScreen(uiState = NoticeWriteUiState(
+        writerRole = NoticeWriterRole.SCHOOL_PART_LEADER,
+        selectedCategory = category,
+        availableCategories = persistentListOf(category),
+        boardChips = persistentListOf(BoardChipType.PART),
+        availableGisus = persistentListOf(GisuItem(gisuId = 12, generation = 12)),
+        authorityGisuId = 12,
+        targetGisuId = 12,
+        writerSchoolId = 7,
+        writerSchoolName = "UMC 대학교",
+    ))
 }
