@@ -6,6 +6,7 @@ import com.umc.domain.model.enums.BoardChipType
 import com.umc.domain.model.enums.UserChallengerRole
 import com.umc.domain.model.notice.WriteCategory
 import com.umc.domain.model.notice.noticeRolesForGisu
+import com.umc.domain.model.notice.noticeWriterChapterName
 import com.umc.domain.model.notice.noticeWriterChapterId
 import com.umc.domain.model.notice.noticeWriterRole
 import com.umc.domain.model.notice.noticeWriterSchoolId
@@ -31,7 +32,7 @@ internal fun resolveNoticeWriteSelection(
 ): NoticeWriteSelection {
     val roleChanged = state.writerRole != writerRole
     val authorityChanged = state.authorityGisuId != authorityGisuId
-    val authorityWasKnown = state.authorityGisuId != null
+    val authorityWasKnown = state.isAuthorityGisuConfirmed
     val resetUserSelection = roleChanged || (authorityChanged && authorityWasKnown)
     val resetTargetGisu = resetUserSelection || (authorityChanged && !hasSelectedTargetGisu)
     val resetCategory = resetUserSelection || (authorityChanged && !hasSelectedCategory)
@@ -70,8 +71,15 @@ internal fun applyProfileTarget(
     val generation = serverActiveGisu?.generation?.toLong() ?: userInfo.currentGisuMemberInfo?.generation
     // roles는 전 기수 이력이므로 대상 기수와 관계없이 활성 기수의 작성 권한을 사용한다.
     val role = userInfo.noticeWriterRole(activeId ?: 0L) ?: return NoticeWriteTargetTransition(
-        state.copy(writerRole = null, availableCategories = persistentListOf(),
-            selectedCategory = null, boardChips = persistentListOf()),
+        state.copy(
+            writerRole = null, availableCategories = persistentListOf(), selectedCategory = null,
+            boardChips = persistentListOf(), boardHint = null, targetGisuId = null,
+            authorityGisuId = activeId?.toInt(), isAuthorityGisuConfirmed = serverActiveGisu != null,
+            canWriteAsSchoolCore = false, writerSchoolId = null, writerSchoolName = null,
+            writerChapterId = null, writerChapterName = null, isAllSelected = false,
+            isStaffSelected = false, selectedPart = null, selectedChapter = null, selectedSchool = null,
+        ),
+        resetUserSelection = true,
     )
     val canWriteAsSchoolCore = userInfo.noticeRolesForGisu(activeId ?: 0L).any {
         it == UserChallengerRole.SCHOOL_PRESIDENT || it == UserChallengerRole.SCHOOL_VICE_PRESIDENT
@@ -88,25 +96,27 @@ internal fun applyProfileTarget(
         writerRole = role,
         canWriteAsSchoolCore = canWriteAsSchoolCore,
         authorityGisuId = activeId?.toInt(),
+        isAuthorityGisuConfirmed = serverActiveGisu != null,
         availableGisus = gisus.toImmutableList(),
         // 발행 대상의 소속은 활성 기수 역할의 ID를 사용한다.
         writerSchoolId = schoolId?.toInt(),
         writerSchoolName = userInfo.schoolName.takeIf { userInfo.schoolId == schoolId && it.isNotBlank() },
         writerChapterId = userInfo.noticeWriterChapterId(activeId ?: 0L)?.toInt(),
-        writerChapterName = userInfo.roles.firstOrNull {
-            it.gisuId == activeId && it.roleType == UserChallengerRole.CHAPTER_PRESIDENT.name
-        }?.chapterName?.takeIf { it.isNotBlank() },
+        writerChapterName = userInfo.noticeWriterChapterName(activeId ?: 0L),
     )
     val next = rebuildTarget(context, selection.targetGisuId, selection.previousCategory)
     // 프로필 반영에서만 역할·겸임 변경도 칩 구성 변경으로 취급한다.
     val categoryChanged = state.selectedCategory?.type != next.selectedCategory?.type ||
         state.writerRole != next.writerRole || state.canWriteAsSchoolCore != next.canWriteAsSchoolCore
+    val updated = applyTargetSelection(
+        state, next,
+        refreshBoard = categoryChanged,
+        resetSelection = categoryChanged || state.targetGisuId != next.targetGisuId,
+    )
+    // 권한 기수의 첫 확정에서 상위 선택을 보존해도 과거 기수 파트 선택은 발행할 수 없다.
+    val authorityChanged = state.authorityGisuId != updated.authorityGisuId
     return NoticeWriteTargetTransition(
-        applyTargetSelection(
-            state, next,
-            refreshBoard = categoryChanged,
-            resetSelection = categoryChanged || state.targetGisuId != next.targetGisuId,
-        ),
+        if (authorityChanged && !updated.canSelectPart) updated.copy(selectedPart = null) else updated,
         resetUserSelection = selection.resetUserSelection,
     )
 }

@@ -23,7 +23,7 @@ fun UserInfo.noticeWriterSchoolId(authorityGisuId: Long): Long? =
             UserChallengerRole.SCHOOL_PRESIDENT, UserChallengerRole.SCHOOL_VICE_PRESIDENT,
             UserChallengerRole.SCHOOL_ETC_ADMIN, UserChallengerRole.SCHOOL_PART_LEADER,
         )
-    }.mapNotNull { it.organizationId?.takeIf { id -> id > 0 } }.firstOrNull()
+    }.mapNotNull { it.organizationId?.takeIf { id -> it.organizationType == "SCHOOL" && id > 0 } }.firstOrNull()
         ?: schoolId.takeIf { it > 0 }
         ?: challengerRecords.firstOrNull { it.gisuId == authorityGisuId }
             ?.schoolId?.takeIf { it > 0 }
@@ -45,6 +45,18 @@ fun UserInfo.noticeWriterChapterId(authorityGisuId: Long): Long? {
             ?: role.chapterId?.takeIf { it > 0 }
     } ?: challengerRecords.firstOrNull { it.gisuId == authorityGisuId }
         ?.chapterId?.takeIf { it > 0 }
+}
+
+/** 최종 지부 ID와 같은 소속의 이름만 반환한다. ID만 복원할 수 있으면 이름은 null이다. */
+fun UserInfo.noticeWriterChapterName(authorityGisuId: Long): String? {
+    val chapterId = noticeWriterChapterId(authorityGisuId) ?: return null
+    return roles.asSequence().filter {
+        it.gisuId == authorityGisuId && UserChallengerRole.from(it.roleType) == UserChallengerRole.CHAPTER_PRESIDENT &&
+            (it.chapterId == chapterId || (it.chapterId == null &&
+                it.organizationType == CHAPTER_ORGANIZATION_TYPE && it.organizationId == chapterId))
+    }.mapNotNull { it.chapterName?.takeIf(String::isNotBlank) }.firstOrNull()
+        ?: challengerRecords.firstOrNull { it.gisuId == authorityGisuId && it.chapterId == chapterId }
+            ?.chapterName?.takeIf(String::isNotBlank)
 }
 
 private const val CHAPTER_ORGANIZATION_TYPE = "CHAPTER"

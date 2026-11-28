@@ -86,9 +86,9 @@ class NoticeAccessTest {
     fun `첫 학교 역할 소속이 없으면 같은 기수의 다음 유효 역할을 먼저 사용한다`() {
         listOf(null, 0L, -1L).forEach { invalidId ->
             val user = UserInfo(schoolId = 99, roles = listOf(
-                role(UserChallengerRole.SCHOOL_PRESIDENT, 11).copy(organizationId = invalidId),
-                role(UserChallengerRole.SCHOOL_PART_LEADER, 10).copy(organizationId = 8),
-                role(UserChallengerRole.SCHOOL_PART_LEADER, 11).copy(organizationId = 7),
+                role(UserChallengerRole.SCHOOL_PRESIDENT, 11).copy(organizationType = "SCHOOL", organizationId = invalidId),
+                role(UserChallengerRole.SCHOOL_PART_LEADER, 10).copy(organizationType = "SCHOOL", organizationId = 8),
+                role(UserChallengerRole.SCHOOL_PART_LEADER, 11).copy(organizationType = "SCHOOL", organizationId = 7),
             ))
             assertEquals(7L, user.noticeWriterSchoolId(11))
         }
@@ -126,6 +126,41 @@ class NoticeAccessTest {
                 organizationType = "SCHOOL", organizationId = 99, chapterId = 5),
         ))
         assertEquals(5L, user.noticeWriterChapterId(11))
+    }
+
+    @Test
+    fun `학교 역할이라도 다른 조직 타입의 ID를 학교 ID로 사용하지 않는다`() {
+        val user = UserInfo(schoolId = 99, roles = listOf(
+            role(UserChallengerRole.SCHOOL_PRESIDENT, 12).copy(organizationType = "CHAPTER", organizationId = 8),
+            role(UserChallengerRole.SCHOOL_PART_LEADER, 12).copy(organizationType = "SCHOOL", organizationId = 7),
+        ))
+        assertEquals(7L, user.noticeWriterSchoolId(12))
+        assertEquals(99L, user.copy(roles = user.roles.take(1)).noticeWriterSchoolId(12))
+        assertNull(user.copy(schoolId = 0, roles = user.roles.take(1)).noticeWriterSchoolId(12))
+    }
+
+    @Test
+    fun `지부 이름은 최종 ID와 일치하는 역할에서만 복원한다`() {
+        val first = role(UserChallengerRole.CHAPTER_PRESIDENT, 12).copy(
+            organizationType = "CHAPTER", organizationId = 8, chapterId = 5, chapterName = "다른 지부",
+        )
+        val second = first.copy(organizationId = 8, chapterId = 8, chapterName = "담당 지부")
+        val user = UserInfo(roles = listOf(first, second))
+        assertEquals(8L, user.noticeWriterChapterId(12))
+        assertEquals("담당 지부", user.noticeWriterChapterName(12))
+        assertNull(user.copy(roles = listOf(first)).noticeWriterChapterName(12))
+    }
+
+    @Test
+    fun `v1 지부 ID가 조직에만 있어도 충돌하지 않는 담당 지부명은 복원한다`() {
+        val role = role(UserChallengerRole.CHAPTER_PRESIDENT, 12).copy(
+            organizationType = "CHAPTER", organizationId = 8, chapterId = null, chapterName = "담당 지부",
+        )
+        val user = UserInfo(roles = listOf(role))
+        assertEquals(8L, user.noticeWriterChapterId(12))
+        assertEquals("담당 지부", user.noticeWriterChapterName(12))
+        assertNull(user.copy(roles = listOf(role.copy(chapterId = 5))).noticeWriterChapterName(12))
+        assertNull(user.copy(roles = listOf(role.copy(chapterName = " "))).noticeWriterChapterName(12))
     }
 
     private fun role(type: UserChallengerRole, gisuId: Long) = UserRole(

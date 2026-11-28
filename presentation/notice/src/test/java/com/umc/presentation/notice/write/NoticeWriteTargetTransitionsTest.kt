@@ -221,8 +221,47 @@ class NoticeWriteTargetTransitionsTest {
     }
 
     @Test
+    fun `프로필 임시 9기에서 직접 선택한 대상은 서버 12기 확정 후 보존하고 과거 파트만 해제한다`() {
+        val user = UserInfo(
+            isSuperAdmin = true,
+            currentGisuMemberInfo = CurrentGisuMemberInfo(9, 9, null, true, emptyList()),
+        )
+        val initial = NoticeWriteUiState(
+            availableGisus = persistentListOf(active, past),
+            schoolList = persistentListOf(school),
+            title = "작성 중인 제목", content = TextFieldValue("작성 중인 본문"),
+        )
+        val fallback = applyProfileTarget(initial, user, null, false, false).state
+        assertEquals(9, fallback.authorityGisuId)
+        assertFalse(fallback.isAuthorityGisuConfirmed)
+
+        val selectedGisu = selectTargetGisu(fallback, past).state
+        val before = selectTargetCategory(selectedGisu, gisu).state.copy(
+            selectedSchool = school, selectedPart = UserPart.PLAN,
+        )
+        assertTrue(before.canSelectPart)
+        val beforeRequest = requireNotNull(buildNoticeTargetRequest(before))
+        assertEquals(listOf(UserPart.PLAN.name), beforeRequest.targetParts)
+
+        val result = applyProfileTarget(before, user, active, true, true)
+        val after = result.state
+        assertTrue(result.accepted)
+        assertFalse(result.resetUserSelection)
+        assertEquals(12, after.authorityGisuId)
+        assertTrue(after.isAuthorityGisuConfirmed)
+        assertEquals(9, after.targetGisuId)
+        assertEquals(before.selectedCategory, after.selectedCategory)
+        assertEquals(school, after.selectedSchool)
+        assertEquals(before.boardChips, after.boardChips)
+        assertNull(after.selectedPart)
+        assertFalse(after.canSelectPart)
+        assertUnrelated(before, after)
+        assertEquals(beforeRequest.copy(targetParts = emptyList()), buildNoticeTargetRequest(after))
+    }
+
+    @Test
     fun `확정된 권한 기수가 바뀌면 두 직접 선택 플래그 초기화를 요청한다`() {
-        val before = state.copy(authorityGisuId = 9, targetGisuId = 9, selectedCategory = core)
+        val before = state.copy(authorityGisuId = 9, isAuthorityGisuConfirmed = true, targetGisuId = 9, selectedCategory = core)
         val result = profile()(before)
         assertTrue(result.resetUserSelection)
         assertEquals(12, result.state.targetGisuId)
@@ -231,12 +270,17 @@ class NoticeWriteTargetTransitionsTest {
     }
 
     @Test
-    fun `프로필 권한 상실은 기존 네 필드만 비우고 나머지 선택과 메타데이터는 보존한다`() {
+    fun `프로필 권한 상실은 대상 선택과 직접 선택 플래그를 초기화한다`() {
         val result = profile(UserInfo())(state)
         assertTrue(result.accepted)
-        assertFalse(result.resetUserSelection)
-        assertEquals(state.copy(writerRole = null, availableCategories = persistentListOf(),
-            selectedCategory = null, boardChips = persistentListOf()), result.state)
+        assertTrue(result.resetUserSelection)
+        assertNull(result.state.writerRole)
+        assertNull(result.state.selectedCategory)
+        assertNull(result.state.targetGisuId)
+        assertTrue(result.state.boardChips.isEmpty())
+        assertReset(result.state)
+        assertEquals(state.title, result.state.title)
+        assertEquals(state.content, result.state.content)
     }
 
     @Test

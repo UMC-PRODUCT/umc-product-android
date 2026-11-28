@@ -21,6 +21,27 @@ import org.junit.Test
 
 class NoticePermissionQueryTest {
     @Test
+    fun `자동 기수 변경은 오류와 로딩 상태를 비우고 같은 기수 갱신은 보존한다`() {
+        val before = NoticeUiState(selectedGisu = 9, currentPage = 3, isLastPage = true,
+            errorMessage = "offline", isNextPageError = true, isPageLoading = true, isRefreshing = true)
+        val user = UserInfo(isSuperAdmin = true)
+        val same = resolveNoticeGisuOptions(before, user, listOf(GisuItem(9, 9)))
+        assertEquals("offline", same.errorMessage)
+        assertTrue(same.isPageLoading)
+        val changed = resolveNoticeGisuOptions(before, user, listOf(GisuItem(12, 12)))
+        val empty = resolveNoticeGisuOptions(before, user, emptyList())
+        listOf(changed, empty).forEach {
+            assertNull(it.errorMessage)
+            assertFalse(it.isNextPageError)
+            assertFalse(it.isPageLoading)
+            assertFalse(it.isRefreshing)
+            assertEquals(0, it.currentPage)
+            assertFalse(it.isLastPage)
+        }
+        assertEquals(0L, empty.selectedGisu)
+    }
+
+    @Test
     fun `운영진 공지 아이콘은 선택 기수에 운영진 역할이 있을 때만 보인다`() {
         val user = UserInfo(roles = listOf(
             role(UserChallengerRole.CHALLENGER, 12),
