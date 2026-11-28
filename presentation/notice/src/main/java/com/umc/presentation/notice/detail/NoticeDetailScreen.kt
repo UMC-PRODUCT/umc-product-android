@@ -195,7 +195,7 @@ fun NoticeDetailScreen(
             .fillMaxSize()
             .background(grey50()),
     ) {
-        // 상단 바: 뒤로가기 + 타이틀 + (작성자 전용) 케밥 메뉴
+        // 상단 바: 뒤로가기 + 타이틀 + (관리 권한이 있는 경우) 케밥 메뉴
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -221,8 +221,11 @@ fun NoticeDetailScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            if (uiState.isAuthor) {
+            if (!uiState.isLoading && (uiState.canEdit || uiState.canDelete)) {
                 NoticeDetailMenu(
+                    canEdit = uiState.canEdit,
+                    canDelete = uiState.canDelete,
+                    enabled = !uiState.isDeleting,
                     onClickEdit = onClickEdit,
                     onClickDelete = onClickDelete,
                 )
@@ -385,9 +388,12 @@ fun NoticeDetailScreen(
     }
 }
 
-/** 작성자 전용 케밥 메뉴 (수정하기/삭제하기) */
+/** 서버가 허용한 수정·삭제 항목만 표시한다. */
 @Composable
 private fun NoticeDetailMenu(
+    canEdit: Boolean,
+    canDelete: Boolean,
+    enabled: Boolean,
     onClickEdit: () -> Unit = {},
     onClickDelete: () -> Unit = {},
 ) {
@@ -397,34 +403,38 @@ private fun NoticeDetailMenu(
         Icon(
             modifier = Modifier
                 .padding(12.dp)
-                .clickable { isMenuVisible = true },
+                .clickable(enabled = enabled) { isMenuVisible = true },
             painter = painterResource(id = R.drawable.ic_menu_kebab),
             contentDescription = null,
             tint = grey950(),
         )
 
         DropdownMenu(
-            expanded = isMenuVisible,
+            expanded = isMenuVisible && enabled,
             onDismissRequest = { isMenuVisible = false },
             containerColor = grey50(),
             shape = RoundedCornerShape(16.dp),
         ) {
-            NoticeDetailMenuItem(
-                label = AppStrings.NOTICE_DETAIL_MENU_EDIT,
-                iconRes = R.drawable.ic_edit,
-                color = grey950(),
-            ) {
-                isMenuVisible = false
-                onClickEdit()
+            if (canEdit) {
+                NoticeDetailMenuItem(
+                    label = AppStrings.NOTICE_DETAIL_MENU_EDIT,
+                    iconRes = R.drawable.ic_edit,
+                    color = grey950(),
+                ) {
+                    isMenuVisible = false
+                    onClickEdit()
+                }
             }
 
-            NoticeDetailMenuItem(
-                label = AppStrings.NOTICE_DETAIL_MENU_DELETE,
-                iconRes = R.drawable.ic_trash_can,
-                color = red500(),
-            ) {
-                isMenuVisible = false
-                onClickDelete()
+            if (canDelete) {
+                NoticeDetailMenuItem(
+                    label = AppStrings.NOTICE_DETAIL_MENU_DELETE,
+                    iconRes = R.drawable.ic_trash_can,
+                    color = red500(),
+                ) {
+                    isMenuVisible = false
+                    onClickDelete()
+                }
             }
         }
     }
@@ -629,10 +639,26 @@ internal fun NoticeDetailScreenPreview() {
             ),
             isLoading = false,
             isAuthor = true,
+            canEdit = true,
+            canDelete = true,
             authorName = "운영진",
             receiverText = "수신대상: 12기/전체",
             voteStatus = NoticeVoteStatus.OPEN,
             readStatistics = NoticeReadStatistics(totalCount = 1000, readCount = 801, unreadCount = 199, readRate = 80.0),
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeDetailSuperAdminPreview() {
+    NoticeDetailScreen(
+        uiState = NoticeDetailUiState(
+            detail = NoticeDetail(id = 1L, title = "다른 작성자의 공지"),
+            isLoading = false,
+            canEdit = true,
+            canDelete = true,
+            authorName = "작성자",
         ),
     )
 }

@@ -48,3 +48,17 @@ fun AdminNoticeChapterPresidentShot() {
 fun AdminNoticeAccessPendingShot() {
     UmcTheme { AdminNoticeScreenAccessPendingPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun AdminNoticeScreenEmptyPageRetryShot() {
+    UmcTheme { AdminNoticeScreenEmptyPageRetryPreview() }
+}
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun AdminNoticeScreenPageRetryShot() {
+    UmcTheme { AdminNoticeScreenPageRetryPreview() }
+}

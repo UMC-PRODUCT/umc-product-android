@@ -12,6 +12,7 @@ import com.umc.domain.model.notice.NoticeSummary
 import com.umc.domain.repository.AppDataStoreRepository
 import com.umc.domain.usecase.appDataStore.GetUserInfoUseCase
 import com.umc.domain.usecase.notice.GetNoticeListUseCase
+import com.umc.presentation.notice.loadUniqueNoticePage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -217,31 +218,30 @@ class AdminNoticeViewModel @Inject constructor(
     ) = viewModelScope.launch {
         updateState { copy(isPageLoading = true, errorMessage = null, isNextPageError = false) }
 
-        val pageToFetch = if (isRefresh) 0 else state.currentPage
-
         // 학교 미지정 시 서버가 역할별 조회 범위를 적용한다. 지부장은 schoolId 지정 조회가 403이다.
-        val response = getNoticeListUseCase(
-            gisuId = state.gisuId,
-            noticeTab = selectedTab.noticeTab,
-            schoolId = null,
-            page = pageToFetch,
-            size = 20
-        )
+        val pageLoad = loadUniqueNoticePage(
+            existing = if (isRefresh) emptyList() else state.noticeList,
+            firstPage = if (isRefresh) 0 else state.currentPage,
+        ) { page ->
+            getNoticeListUseCase(
+                gisuId = state.gisuId,
+                noticeTab = selectedTab.noticeTab,
+                schoolId = null,
+                page = page,
+                size = 20,
+            )
+        }
         // apiCall이 취소를 실패 응답으로 바꿔도 이전 조회가 새 탭의 상태를 덮어쓰지 않게 한다.
         currentCoroutineContext().ensureActive()
         if (!uiState.value.canQuery || uiState.value.gisuId != state.gisuId ||
             uiState.value.selectedTab != selectedTab) return@launch
         resultResponse(
-            response = response,
+            response = pageLoad.response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
-                        noticeList = if (isRefresh) {
-                            noticeSearch.content.toImmutableList()
-                        } else {
-                            (noticeList + noticeSearch.content).toImmutableList()
-                        },
-                        currentPage = pageToFetch + 1,
+                        noticeList = noticeSearch.content.toImmutableList(),
+                        currentPage = pageLoad.pageNumber + 1,
                         isPageLoading = false,
                         hasLoaded = true,
                         isLastPage = !noticeSearch.hasNext,
@@ -252,12 +252,17 @@ class AdminNoticeViewModel @Inject constructor(
             errorCallback = { fail ->
                 // 실패 사유를 남기지 않으면 "0건" 빈 상태와 구분되지 않는다
                 // 다음 페이지 실패는 목록 끝에 다시 시도 버튼을 띄워 직접 다시 부르게 한다
+                val isNextPageError = !isRefresh || pageLoad.pageNumber > 0
                 updateState {
                     copy(
+                        // 새 조회의 첫 페이지가 비어 있었다면 이전 목록을 새 조회 결과와 섞지 않는다.
+                        noticeList = if (isRefresh && isNextPageError) persistentListOf() else noticeList,
+                        currentPage = if (isNextPageError) pageLoad.pageNumber else currentPage,
+                        isLastPage = !isNextPageError && isLastPage,
                         isPageLoading = false,
                         hasLoaded = true,
                         errorMessage = fail.message,
-                        isNextPageError = !isRefresh,
+                        isNextPageError = isNextPageError,
                     )
                 }
             }

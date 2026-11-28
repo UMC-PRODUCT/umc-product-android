@@ -13,3 +13,10 @@ import com.umc.component.theme.UmcTheme
 fun NoticeDetailScreenShot() {
     UmcTheme { NoticeDetailScreenPreview() }
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 900)
+@Composable
+fun NoticeDetailSuperAdminShot() {
+    UmcTheme { NoticeDetailSuperAdminPreview() }
+}

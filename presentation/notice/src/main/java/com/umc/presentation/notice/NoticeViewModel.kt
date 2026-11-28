@@ -28,8 +28,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
 import javax.inject.Inject
 
 // 공지 목록 조회 탭 (서버 스펙)
@@ -381,8 +379,7 @@ class NoticeViewModel @Inject constructor(
     private fun fetchNoticeList(state: NoticeUiState, isRefresh: Boolean) = viewModelScope.launch {
         val query = buildNoticeQuery(state, computeStaffNoticeTab())
 
-        // 새로고침이면 페이징 상태도 함께 되돌린다.
-        // 이전 필터가 마지막 페이지였는데 그대로 두면 다음 페이지를 영영 못 부른다
+        // 이전 목록이 마지막 페이지였어도 새 조회 결과에 따라 다음 페이지를 다시 요청할 수 있게 한다.
         updateState {
             copy(
                 isPageLoading = true,
@@ -393,30 +390,27 @@ class NoticeViewModel @Inject constructor(
             )
         }
 
-        val pageToFetch = if (isRefresh) 0 else state.currentPage
-
-        val response = getNoticeListUseCase(
-            gisuId = state.selectedGisu,
-            noticeTab = query.noticeTab,
-            chapterId = query.chapterId,
-            schoolId = query.schoolId,
-            part = query.part,
-            page = pageToFetch,
-            size = 20
-        )
-        // 취소된 이전 조회가 새 조회의 목록·로딩·오류 상태를 덮어쓰지 않게 한다.
-        currentCoroutineContext().ensureActive()
+        val pageLoad = loadUniqueNoticePage(
+            existing = if (isRefresh) emptyList() else state.noticeList,
+            firstPage = if (isRefresh) 0 else state.currentPage,
+        ) { page ->
+            getNoticeListUseCase(
+                gisuId = state.selectedGisu,
+                noticeTab = query.noticeTab,
+                chapterId = query.chapterId,
+                schoolId = query.schoolId,
+                part = query.part,
+                page = page,
+                size = 20,
+            )
+        }
         resultResponse(
-            response = response,
+            response = pageLoad.response,
             successCallback = { noticeSearch ->
                 updateState {
                     copy(
-                        noticeList = if (isRefresh) {
-                            noticeSearch.content.toImmutableList()
-                        } else {
-                            (noticeList + noticeSearch.content).toImmutableList()
-                        },
-                        currentPage = pageToFetch + 1,
+                        noticeList = noticeSearch.content.toImmutableList(),
+                        currentPage = pageLoad.pageNumber + 1,
                         isPageLoading = false,
                         isRefreshing = false,
                         isLastPage = !noticeSearch.hasNext,
@@ -427,12 +421,16 @@ class NoticeViewModel @Inject constructor(
             errorCallback = { fail ->
                 // 실패를 삼키면 "0건"과 구분되지 않아 원인 파악이 불가능하다
                 // 다음 페이지 실패는 목록 끝에 다시 시도 버튼을 띄워 당겨서 새로고침 없이도 다시 부를 수 있게 한다
+                val isNextPageError = !isRefresh || pageLoad.pageNumber > 0
                 updateState {
                     copy(
+                        // 새 조회의 첫 페이지가 비어 있었다면 이전 목록을 새 조회 결과와 섞지 않는다.
+                        noticeList = if (isRefresh && isNextPageError) persistentListOf() else noticeList,
+                        currentPage = if (isNextPageError) pageLoad.pageNumber else currentPage,
                         isPageLoading = false,
                         isRefreshing = false,
                         errorMessage = fail.message,
-                        isNextPageError = !isRefresh,
+                        isNextPageError = isNextPageError,
                     )
                 }
             }
