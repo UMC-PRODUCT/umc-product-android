@@ -626,7 +626,7 @@ internal fun NoticeDetailScreenPreview() {
                 content = "안녕하세요. 운영진입니다.\n[필독] 12기 활동 규정 안내에 대해 안내드립니다.\n\n자세한 내용은 첨부파일을 확인해주세요.\n문의사항은 운영진에게 연락 바랍니다.\n감사합니다.",
                 targetInfo = NoticeTarget(targetGisuId = 1),
                 viewCount = 100,
-                createdAt = "2026-01-01T00:00:00",
+                createdAt = "2026-01-01T00:00:00Z",
                 vote = NoticeVote(
                     voteId = 1L,
                     title = "회식 메뉴 투표",

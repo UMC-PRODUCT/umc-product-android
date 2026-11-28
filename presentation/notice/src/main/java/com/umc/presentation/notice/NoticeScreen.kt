@@ -526,7 +526,7 @@ internal fun NoticeScreenPageRetryPreview() {
                     content = "이번 주 정기 세션 일정을 확인해 주세요.",
                     shouldSendNotification = false,
                     viewCount = 10,
-                    createdAt = "2026-01-01T00:00:00",
+                    createdAt = "2026-01-01T00:00:00Z",
                     targetInfo = NoticeTarget(targetGisuId = 1),
                     authorChallengerId = 1L,
                     authorNickname = "운영진",
