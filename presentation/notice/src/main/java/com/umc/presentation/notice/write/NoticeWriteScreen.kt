@@ -337,6 +337,7 @@ fun NoticeWriteScreen(
     onCloseLinkPanel: () -> Unit = {},
     onClickAiRefine: () -> Unit = {},
 ) {
+    val toast = LocalUToast.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -547,6 +548,12 @@ fun NoticeWriteScreen(
             UTextField(
                 value = uiState.title,
                 onValueChange = onTitleChanged,
+                acceptInput = {
+                    isNoticeTextChangeAllowed(uiState.title, it, NoticeWriteViewModel.MAX_TITLE_LENGTH)
+                },
+                onInputRejected = {
+                    toast.show(AppStrings.NOTICE_WRITE_TITLE_TOO_LONG, UToastState.ERROR)
+                },
                 placeholder = AppStrings.NOTICE_WRITE_TITLE_PLACEHOLDER,
                 placeholderColor = grey400(),
                 textStyle = UmcTypographyTokens.Title3Bold,

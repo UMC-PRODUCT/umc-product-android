@@ -84,6 +84,8 @@ class NoticeWriteViewModel @Inject constructor(
     private var organizationRequestToken = 0
 
     companion object {
+        const val MAX_TITLE_LENGTH = 255
+        const val MAX_CONTENT_LENGTH = 3_000
         const val MAX_IMAGE_COUNT = 10
         const val MAX_VOTE_OPTION_COUNT = 5
     }
@@ -580,13 +582,26 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     fun onTitleChanged(title: String) {
+        if (!isNoticeTextChangeAllowed(uiState.value.title, title, MAX_TITLE_LENGTH)) {
+            emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_TITLE_TOO_LONG))
+            return
+        }
         updateState { copy(title = title) }
+    }
+
+    private fun updateContent(transform: (TextFieldValue) -> TextFieldValue) {
+        var rejected = false
+        updateState {
+            val next = transform(content)
+            rejected = !isNoticeTextChangeAllowed(content.text, next.text, MAX_CONTENT_LENGTH)
+            if (rejected) this else copy(content = next)
+        }
+        if (rejected) emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_CONTENT_TOO_LONG))
     }
 
     /** 개행이 들어오면 그 줄에서 열린 마크다운은 닫아서 다음 줄로 넘기지 않는다 */
     fun onContentChanged(content: TextFieldValue) {
-        val adjusted = MarkdownEditActions.closeMarkersOnNewline(uiState.value.content, content)
-        updateState { copy(content = adjusted) }
+        updateContent { previous -> MarkdownEditActions.closeMarkersOnNewline(previous, content) }
     }
 
     /** 알림 발송 여부 토글 (종 아이콘) */
@@ -614,11 +629,11 @@ class NoticeWriteViewModel @Inject constructor(
                 updateState { copy(aiDownloadPercent = percent) }
             },
             successCallback = { refined ->
+                updateContent { TextFieldValue(refined, TextRange(refined.length)) }
                 updateState {
                     copy(
                         isAiProcessing = false,
                         aiDownloadPercent = null,
-                        content = TextFieldValue(refined, TextRange(refined.length)),
                     )
                 }
             },
@@ -647,11 +662,11 @@ class NoticeWriteViewModel @Inject constructor(
                 updateState { copy(aiDownloadPercent = percent) }
             },
             successCallback = { summary ->
+                updateContent { MarkdownEditActions.insertText(it, summary).endComposition() }
                 updateState {
                     copy(
                         isAiProcessing = false,
                         aiDownloadPercent = null,
-                        content = MarkdownEditActions.insertText(content, summary).endComposition(),
                     )
                 }
             },
@@ -668,31 +683,31 @@ class NoticeWriteViewModel @Inject constructor(
 
     /** 텍스트 크기 변경. 커서가 위치한 줄의 제목 prefix 교체 */
     fun onSelectHeading(heading: MarkdownHeading) {
-        updateState { copy(content = MarkdownEditActions.applyHeading(content, heading).endComposition()) }
+        updateContent { MarkdownEditActions.applyHeading(it, heading).endComposition() }
     }
 
     fun onClickBold() {
-        updateState { copy(content = MarkdownEditActions.toggleBold(content).endComposition()) }
+        updateContent { MarkdownEditActions.toggleBold(it).endComposition() }
     }
 
     fun onClickItalic() {
-        updateState { copy(content = MarkdownEditActions.toggleItalic(content).endComposition()) }
+        updateContent { MarkdownEditActions.toggleItalic(it).endComposition() }
     }
 
     fun onClickUnderline() {
-        updateState { copy(content = MarkdownEditActions.toggleUnderline(content).endComposition()) }
+        updateContent { MarkdownEditActions.toggleUnderline(it).endComposition() }
     }
 
     fun onClickStrikethrough() {
-        updateState { copy(content = MarkdownEditActions.toggleStrikethrough(content).endComposition()) }
+        updateContent { MarkdownEditActions.toggleStrikethrough(it).endComposition() }
     }
 
     fun onClickBullet() {
-        updateState { copy(content = MarkdownEditActions.toggleBullet(content).endComposition()) }
+        updateContent { MarkdownEditActions.toggleBullet(it).endComposition() }
     }
 
     fun onClickQuote() {
-        updateState { copy(content = MarkdownEditActions.toggleQuote(content).endComposition()) }
+        updateContent { MarkdownEditActions.toggleQuote(it).endComposition() }
     }
 
     /** 형광펜 색상 선택. 고른 색을 적용하고 다음 선택의 기본값으로 기억한다 */
@@ -701,6 +716,10 @@ class NoticeWriteViewModel @Inject constructor(
         // 선택 영역이 없으면 toggleHighlight가 원본을 그대로 돌려준다. 이때는 색도 기록하지 않는다
         if (applied == uiState.value.content) {
             emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_HIGHLIGHT_NEEDS_SELECTION))
+            return
+        }
+        if (!isNoticeTextChangeAllowed(uiState.value.content.text, applied.text, MAX_CONTENT_LENGTH)) {
+            emitEvent(NoticeWriteEvent.ShowError(AppStrings.NOTICE_WRITE_CONTENT_TOO_LONG))
             return
         }
         updateState { copy(highlightColor = color, content = applied.endComposition()) }
@@ -780,7 +799,16 @@ class NoticeWriteViewModel @Inject constructor(
     /** 공지 등록/수정: 본문 저장 후 이미지 → 링크 → 투표 순서로 연결 */
     fun onClickRegister() = viewModelScope.launch {
         val state = uiState.value
-        if (!state.enableRegister || state.isSubmitting) return@launch
+        if (state.isSubmitting) return@launch
+        // 생성·수정·부분 실패 재시도 모두 같은 제한으로 요청을 차단한다.
+        if (!state.isTextLengthValid) {
+            val message = if (state.title.length > MAX_TITLE_LENGTH) {
+                AppStrings.NOTICE_WRITE_TITLE_TOO_LONG
+            } else AppStrings.NOTICE_WRITE_CONTENT_TOO_LONG
+            emitEvent(NoticeWriteEvent.ShowError(message))
+            return@launch
+        }
+        if (!state.enableRegister) return@launch
 
         // 수정 모드이거나, 이미 생성은 됐지만 일부 항목 연결에 실패해 다시 등록을 누른 경우에는
         // 새로 만들지 않고 만들어진 공지를 수정(PATCH)하는 경로로 재시도한다
@@ -1030,9 +1058,15 @@ data class NoticeWriteUiState(
     val isTargetLocked: Boolean
         get() = isEditMode || createdNoticeId != null
 
+    // 본문은 마크다운 기호를 포함한 전송 원문 길이로 검사한다.
+    val isTextLengthValid: Boolean
+        get() = title.length <= NoticeWriteViewModel.MAX_TITLE_LENGTH &&
+                content.text.length <= NoticeWriteViewModel.MAX_CONTENT_LENGTH
+
     // 수신 대상이 잠겨 있으면 카테고리/분류 조건 제외
     val enableRegister: Boolean
         get() = (isTargetLocked || buildNoticeTargetRequest(this) != null)
+                && isTextLengthValid
                 && title.isNotBlank()
                 && content.text.isNotBlank()
                 && !isSubmitting
@@ -1043,3 +1077,8 @@ sealed interface NoticeWriteEvent : UiEvent {
     data class SubmitSuccess(val message: String) : NoticeWriteEvent
     data class ShowError(val message: String) : NoticeWriteEvent
 }
+
+// 기존 초과 내용을 불러온 경우 삭제로 제한 안까지 복구할 수 있도록 줄이는 편집은 허용한다.
+// 같은 텍스트의 커서 이동·IME 조합 상태 변경도 허용한다.
+internal fun isNoticeTextChangeAllowed(previous: String, next: String, maxLength: Int): Boolean =
+    next.length <= maxLength || next.length < previous.length || next == previous
