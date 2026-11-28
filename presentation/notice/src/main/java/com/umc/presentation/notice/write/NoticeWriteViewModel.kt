@@ -14,8 +14,10 @@ import com.umc.domain.model.enums.UploadFileCategory
 import com.umc.domain.model.enums.UserPart
 import com.umc.domain.model.enums.WriteCategoryType
 import com.umc.domain.model.notice.NoticeImageAttachment
+import com.umc.domain.model.notice.NoticeVote
 import com.umc.domain.model.notice.NoticeVoteForm
 import com.umc.domain.model.notice.WriteCategory
+import com.umc.domain.model.UDomainFormat
 import com.umc.domain.model.UserInfo
 import com.umc.domain.model.organization.Chapter
 import com.umc.domain.model.request.notice.NoticeCreateRequest
@@ -105,16 +107,7 @@ class NoticeWriteViewModel @Inject constructor(
         resultResponse(
             response = getNoticeDetailUseCase(noticeId),
             successCallback = { detail ->
-                val serverVote = detail.vote?.let { vote ->
-                    NoticeVoteForm(
-                        title = vote.title,
-                        options = vote.options.map { it.content },
-                        isAnonymous = vote.isAnonymous,
-                        allowMultipleChoice = vote.allowMultipleChoice,
-                        startsAt = vote.startsAt.takeIf { it.isNotBlank() },
-                        endsAt = vote.endsAtExclusive.takeIf { it.isNotBlank() },
-                    )
-                }
+                val serverVote = detail.vote?.toVoteForm()
                 val linkText = detail.links
                     .sortedBy { it.displayOrder }
                     .joinToString(", ") { it.url }
@@ -822,3 +815,13 @@ sealed interface NoticeWriteEvent : UiEvent {
 // 같은 텍스트의 커서 이동·IME 조합 상태 변경도 허용한다.
 internal fun isNoticeTextChangeAllowed(previous: String, next: String, maxLength: Int): Boolean =
     next.length <= maxLength || next.length < previous.length || next == previous
+
+/** 서버 투표 응답 시각을 피커와 동일한 UTC 밀리초 형식으로 정규화해 수정 변경 비교 기준을 맞춘다. */
+internal fun NoticeVote.toVoteForm(): NoticeVoteForm = NoticeVoteForm(
+    title = title,
+    options = options.map { it.content },
+    isAnonymous = isAnonymous,
+    allowMultipleChoice = allowMultipleChoice,
+    startsAt = UDomainFormat.normalizeUtcDateTime(startsAt),
+    endsAt = UDomainFormat.normalizeUtcDateTime(endsAtExclusive),
+)

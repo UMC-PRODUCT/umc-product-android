@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.umc.component.R
 import com.umc.component.theme.*
+import com.umc.domain.model.UDomainFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -42,6 +43,7 @@ import java.util.TimeZone
  * @param onDismiss 취소 버튼 클릭 또는 다이얼로그 바깥 영역 클릭 시 호출되는 콜백.
  * @param isAllday 하루 종일 여부. `true` 설정 시 시간 입력 필드가 숨겨지고 날짜만 입력받습니다. (기본값: false)
  * @param isStartTime 하루 종일(`isAllday = true`)일 때, 시간의 시작(00:00:00.000)인지 종료(23:59:59.999)인지 지정합니다. (기본값: true)
+ * @param initialUtcDateTime 다이얼로그를 열 때 미리 채울 UTC ISO 시각 문자열. `null`이거나 파싱할 수 없으면 빈 입력으로 시작합니다.
  *
   **/
 
@@ -52,11 +54,15 @@ fun UDateTimePickerDialog(
     onDismiss: () -> Unit,
     isAllday: Boolean = false, //하루 종일일 경우의 true/false
     isStartTime: Boolean = true, //해당 시간이 시작 시간인지 아닌지 (기본 시작 시간 = 00:00 / 종료 시간 = 23:59)
+    initialUtcDateTime: String? = null,
 ) {
+    val initial = remember(initialUtcDateTime) {
+        UDomainFormat.parseDateTimePickerInitial(initialUtcDateTime)
+    }
     //상태 관리 (순수 숫자만 저장하도록 처리)
-    var dateInput by remember { mutableStateOf("") }
-    var timeInput by remember { mutableStateOf("") }
-    var isAm by remember { mutableStateOf(true) }
+    var dateInput by remember(initialUtcDateTime) { mutableStateOf(initial?.dateDigits.orEmpty()) }
+    var timeInput by remember(initialUtcDateTime) { mutableStateOf(initial?.timeDigits12h.orEmpty()) }
+    var isAm by remember(initialUtcDateTime) { mutableStateOf(initial?.isAm ?: true) }
 
     //실시간 날짜 유혀성 검증 로직
     val isValidDateTime by remember(dateInput, timeInput) {

@@ -49,10 +49,8 @@ import com.umc.component.theme.main100
 import com.umc.component.theme.main500
 import com.umc.component.theme.red100
 import com.umc.component.theme.red500
+import com.umc.domain.model.UDomainFormat
 import com.umc.domain.model.notice.NoticeVoteForm
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
 /**
  * 투표 만들기/수정 바텀시트.
@@ -64,6 +62,7 @@ fun NoticeVoteSheetContent(
     existingVote: NoticeVoteForm?,
     onComplete: (NoticeVoteForm) -> Unit = {},
     onDelete: () -> Unit = {},
+    zoneId: String? = null,
 ) {
     var form by remember { mutableStateOf(existingVote ?: NoticeVoteForm()) }
     var showStartPicker by remember { mutableStateOf(false) }
@@ -201,7 +200,7 @@ fun NoticeVoteSheetContent(
         ) {
             VoteDateRow(
                 label = AppStrings.COMMON_START,
-                dateText = formatVoteDateTime(form.startsAt),
+                dateText = formatVoteDateTime(form.startsAt, zoneId),
                 onClick = { showStartPicker = true },
             )
 
@@ -209,7 +208,7 @@ fun NoticeVoteSheetContent(
 
             VoteDateRow(
                 label = AppStrings.COMMON_END,
-                dateText = formatVoteDateTime(form.endsAt),
+                dateText = formatVoteDateTime(form.endsAt, zoneId),
                 onClick = { showEndPicker = true },
             )
         }
@@ -254,6 +253,7 @@ fun NoticeVoteSheetContent(
                 showStartPicker = false
             },
             onDismiss = { showStartPicker = false },
+            initialUtcDateTime = form.startsAt,
         )
     }
 
@@ -264,6 +264,7 @@ fun NoticeVoteSheetContent(
                 showEndPicker = false
             },
             onDismiss = { showEndPicker = false },
+            initialUtcDateTime = form.endsAt,
         )
     }
 }
@@ -473,16 +474,9 @@ private fun voteConditionText(vote: NoticeVoteForm): String {
     return "$anonymity, $multiple, $count"
 }
 
-/** UDateTimePickerDialog가 주는 UTC ISO 문자열을 "2025.01.01 ･ 오후 4:00" 로컬 표기로 변환 */
-internal fun formatVoteDateTime(utcDateTime: String?): String? {
-    if (utcDateTime.isNullOrBlank()) return null
-    return runCatching {
-        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        val date = parser.parse(utcDateTime) ?: return null
-        SimpleDateFormat("yyyy.MM.dd ･ a h:mm", Locale.KOREAN).format(date)
-    }.getOrNull()
+/** UTC ISO 시각 문자열을 "2025.01.01 ･ 오후 4:00" 로컬 표기로 변환 */
+internal fun formatVoteDateTime(utcDateTime: String?, zoneId: String? = null): String? {
+    return UDomainFormat.formatVoteDateTime(utcDateTime, zoneId)
 }
 
 @Preview(showBackground = true)
@@ -494,6 +488,22 @@ internal fun NoticeVoteSheetPreview() {
                 title = "회식 메뉴",
                 options = listOf("치킨", "피자", ""),
             ),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeVoteSheetWithSchedulePreview() {
+    Column {
+        NoticeVoteSheetContent(
+            existingVote = NoticeVoteForm(
+                title = "회식 메뉴",
+                options = listOf("치킨", "피자"),
+                startsAt = "2026-01-01T07:00:00Z",
+                endsAt = "2026-01-03T14:59:00Z",
+            ),
+            zoneId = "Asia/Seoul",
         )
     }
 }
