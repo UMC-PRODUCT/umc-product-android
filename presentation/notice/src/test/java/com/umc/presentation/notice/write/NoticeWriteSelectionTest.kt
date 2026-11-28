@@ -97,7 +97,7 @@ class NoticeWriteSelectionTest {
 
     @Test
     fun `이미 확정된 권한 기수가 바뀌면 기존 선택을 초기화한다`() {
-        val selection = resolve(selectedState.copy(authorityGisuId = 9))
+        val selection = resolve(selectedState.copy(authorityGisuId = 9, isAuthorityGisuConfirmed = true))
 
         assertEquals(12, selection.targetGisuId)
         assertNull(selection.previousCategory)

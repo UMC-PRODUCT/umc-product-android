@@ -222,7 +222,7 @@ class NoticeWriteTargetTransitionsTest {
 
     @Test
     fun `확정된 권한 기수가 바뀌면 두 직접 선택 플래그 초기화를 요청한다`() {
-        val before = state.copy(authorityGisuId = 9, targetGisuId = 9, selectedCategory = core)
+        val before = state.copy(authorityGisuId = 9, isAuthorityGisuConfirmed = true, targetGisuId = 9, selectedCategory = core)
         val result = profile()(before)
         assertTrue(result.resetUserSelection)
         assertEquals(12, result.state.targetGisuId)
@@ -231,12 +231,17 @@ class NoticeWriteTargetTransitionsTest {
     }
 
     @Test
-    fun `프로필 권한 상실은 기존 네 필드만 비우고 나머지 선택과 메타데이터는 보존한다`() {
+    fun `프로필 권한 상실은 대상 선택과 직접 선택 플래그를 초기화한다`() {
         val result = profile(UserInfo())(state)
         assertTrue(result.accepted)
-        assertFalse(result.resetUserSelection)
-        assertEquals(state.copy(writerRole = null, availableCategories = persistentListOf(),
-            selectedCategory = null, boardChips = persistentListOf()), result.state)
+        assertTrue(result.resetUserSelection)
+        assertNull(result.state.writerRole)
+        assertNull(result.state.selectedCategory)
+        assertNull(result.state.targetGisuId)
+        assertTrue(result.state.boardChips.isEmpty())
+        assertReset(result.state)
+        assertEquals(state.title, result.state.title)
+        assertEquals(state.content, result.state.content)
     }
 
     @Test

@@ -149,3 +149,10 @@ private fun singleSchoolRoleState(role: NoticeWriterRole, schoolName: String): N
         writerSchoolId = 7, writerSchoolName = schoolName,
     )
 }
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 400, heightDp = 200)
+@Composable
+fun NoticeOrganizationEmptyShot() {
+    UmcTheme { NoticeOrganizationEmptyPreview() }
+}

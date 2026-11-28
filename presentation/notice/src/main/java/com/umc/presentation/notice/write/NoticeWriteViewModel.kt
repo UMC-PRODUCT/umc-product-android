@@ -43,6 +43,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -67,6 +69,7 @@ class NoticeWriteViewModel @Inject constructor(
 ) : BaseViewModel<NoticeWriteUiState, NoticeWriteEvent>(
     NoticeWriteUiState(),
 ) {
+    private var isLoadingActiveGisu = false
     private var isLoadingTargetGisus = false
     private var hasLoadedTargetGisus = false
     private var cachedUserInfo: UserInfo? = null
@@ -156,14 +159,25 @@ class NoticeWriteViewModel @Inject constructor(
         }
     }
 
-    private fun loadActiveGisu() = viewModelScope.launch {
-        resultResponse(
-            response = getActiveGisuUseCase(),
-            successCallback = { gisu ->
-                serverActiveGisu = gisu.takeIf { it.gisuId > 0 }
-                cachedUserInfo?.let(::applyUserInfo)
-            },
-        )
+    private fun loadActiveGisu() {
+        if (serverActiveGisu != null || isLoadingActiveGisu) return
+        isLoadingActiveGisu = true
+        viewModelScope.launch {
+            try {
+                val response = getActiveGisuUseCase()
+                currentCoroutineContext().ensureActive()
+                resultResponse(
+                    response = response,
+                    successCallback = { gisu ->
+                        serverActiveGisu = gisu.takeIf { it.gisuId > 0 }
+                        cachedUserInfo?.let(::applyUserInfo)
+                    },
+                    errorCallback = { fail -> emitEvent(NoticeWriteEvent.ShowError(fail.message)) },
+                )
+            } finally {
+                isLoadingActiveGisu = false
+            }
+        }
     }
 
     private fun updateTarget(
@@ -185,14 +199,14 @@ class NoticeWriteViewModel @Inject constructor(
         val transition = updateTarget { state ->
             applyProfileTarget(state, userInfo, activeGisu, selectedGisu, selectedCategory)
         }
-        val writerRole = transition.state.writerRole ?: run {
-            loadTargetOrganization(null)
-            return
-        }
         resolvedAuthorityGisuId = activeGisuId
         if (transition.resetUserSelection) {
             hasSelectedTargetGisu = false
             hasSelectedCategory = false
+        }
+        val writerRole = transition.state.writerRole ?: run {
+            loadTargetOrganization(null)
+            return
         }
         loadTargetOrganization(transition.state.targetGisuId)
         if (writerRole == NoticeWriterRole.SUPER_ADMIN || writerRole == NoticeWriterRole.CENTRAL_CORE) {
@@ -205,23 +219,30 @@ class NoticeWriteViewModel @Inject constructor(
         if (isLoadingTargetGisus || hasLoadedTargetGisus) return
         isLoadingTargetGisus = true
         viewModelScope.launch {
-            resultResponse(
-                response = getSearchGisusUseCase(),
-                successCallback = { result ->
-                    val transition = updateTarget { state ->
-                        applyLoadedGisus(state, result.gisuList, preferredGisuId)
-                    }
-                    loadTargetOrganization(transition.state.targetGisuId)
-                    hasLoadedTargetGisus = true
-                },
-                errorCallback = { fail -> emitEvent(NoticeWriteEvent.ShowError(fail.message)) },
-            )
-            isLoadingTargetGisus = false
+            try {
+                val response = getSearchGisusUseCase()
+                currentCoroutineContext().ensureActive()
+                resultResponse(
+                    response = response,
+                    successCallback = { result ->
+                        val transition = updateTarget { state ->
+                            applyLoadedGisus(state, result.gisuList, preferredGisuId)
+                        }
+                        loadTargetOrganization(transition.state.targetGisuId)
+                        hasLoadedTargetGisus = true
+                    },
+                    errorCallback = { fail -> emitEvent(NoticeWriteEvent.ShowError(fail.message)) },
+                )
+            } finally {
+                isLoadingTargetGisus = false
+            }
         }
     }
 
     /** 목록 조회가 실패했으면 선택기를 다시 열 때 재시도한다. */
     fun onOpenCategorySelector() {
+        if (uiState.value.isTargetLocked) return
+        loadActiveGisu()
         if (uiState.value.writerRole == NoticeWriterRole.SUPER_ADMIN ||
             uiState.value.writerRole == NoticeWriterRole.CENTRAL_CORE) {
             loadTargetGisus(resolvedAuthorityGisuId)
@@ -241,7 +262,7 @@ class NoticeWriteViewModel @Inject constructor(
             organizationRequestToken++
             loadingOrganizationGisuId = null
             loadedOrganizationGisuId = null
-            updateState { copy(chapterList = persistentListOf(), schoolList = persistentListOf()) }
+            updateState { copy(chapterList = persistentListOf(), schoolList = persistentListOf(), organizationGisuId = null) }
             return
         }
         if (loadingOrganizationGisuId == gisuId || loadedOrganizationGisuId == gisuId) return
@@ -249,35 +270,44 @@ class NoticeWriteViewModel @Inject constructor(
         val requestToken = ++organizationRequestToken
         loadingOrganizationGisuId = gisuId
         loadedOrganizationGisuId = null
-        updateState { copy(chapterList = persistentListOf(), schoolList = persistentListOf()) }
+        updateState { copy(chapterList = persistentListOf(), schoolList = persistentListOf(), organizationGisuId = null) }
         viewModelScope.launch {
-            resultResponse(
-                response = getChapterWithSchoolUseCase(gisuId),
-                successCallback = { organization ->
-                    // 기수 변경 전 요청이 늦게 끝나도 현재 기수의 선택지를 덮어쓰지 않는다.
-                    if (requestToken == organizationRequestToken && uiState.value.targetGisuId == gisuId) {
-                        loadingOrganizationGisuId = null
-                        loadedOrganizationGisuId = gisuId
-                        updateState {
-                            copy(
-                                chapterList = organization.chapterList.toImmutableList(),
-                                schoolList = organization.schoolList.toImmutableList(),
-                            )
+            try {
+                val response = getChapterWithSchoolUseCase(gisuId)
+                currentCoroutineContext().ensureActive()
+                resultResponse(
+                    response = response,
+                    successCallback = { organization ->
+                        // 기수 변경 전 요청이 늦게 끝나도 현재 기수의 선택지를 덮어쓰지 않는다.
+                        if (requestToken == organizationRequestToken && uiState.value.targetGisuId == gisuId) {
+                            loadingOrganizationGisuId = null
+                            loadedOrganizationGisuId = gisuId
+                            updateState {
+                                copy(
+                                    chapterList = organization.chapterList.toImmutableList(),
+                                    schoolList = organization.schoolList.toImmutableList(),
+                                    organizationGisuId = gisuId,
+                                )
+                            }
                         }
-                    }
-                },
-                errorCallback = { fail ->
-                    if (requestToken == organizationRequestToken) {
-                        loadingOrganizationGisuId = null
-                        emitEvent(NoticeWriteEvent.ShowError(fail.message))
-                    }
-                },
-            )
+                    },
+                    errorCallback = { fail ->
+                        if (requestToken == organizationRequestToken) {
+                            loadingOrganizationGisuId = null
+                            emitEvent(NoticeWriteEvent.ShowError(fail.message))
+                        }
+                    },
+                )
+            } finally {
+                if (requestToken == organizationRequestToken) loadingOrganizationGisuId = null
+            }
         }
     }
 
     /** 대상 기수의 지부·학교 목록 조회가 실패했으면 칩을 다시 열 때 재시도한다. */
     fun onOpenOrganizationSelector() {
+        if (uiState.value.isTargetLocked) return
+        loadActiveGisu()
         loadTargetOrganization(uiState.value.targetGisuId)
     }
 
@@ -292,6 +322,7 @@ class NoticeWriteViewModel @Inject constructor(
     /** 전체는 나머지 분류와 배타적이다. 켜는 순간 다른 선택을 모두 해제한다 */
     fun onToggleAll() {
         updateState {
+            if (isTargetLocked || BoardChipType.ALL !in boardChips) return@updateState this
             val turningOn = !isAllSelected
             copy(
                 isAllSelected = turningOn,
@@ -308,35 +339,40 @@ class NoticeWriteViewModel @Inject constructor(
     }
 
     /** 지부 선택. 기수 카테고리에서는 학교와 동시 선택 불가 */
-    fun onSelectChapter(chapter: Chapter) {
-        if (uiState.value.isTargetLocked || uiState.value.chapterList.none { it.id == chapter.id }) return
-        val isExclusive = uiState.value.selectedCategory?.type == WriteCategoryType.GISU
+    fun onSelectChapter(chapter: Chapter, sourceGisuId: Int? = uiState.value.targetGisuId) {
         updateState {
+            if (isTargetLocked || BoardChipType.CHAPTER !in boardChips || targetGisuId != sourceGisuId) {
+                return@updateState this
+            }
+            val current = chapterList.firstOrNull { it.id == chapter.id } ?: return@updateState this
             copy(
-                selectedChapter = chapter,
-                selectedSchool = if (isExclusive) null else selectedSchool,
+                selectedChapter = current,
+                selectedSchool = if (selectedCategory?.type == WriteCategoryType.GISU) null else selectedSchool,
                 isAllSelected = false,
             )
         }
     }
 
-    /** 학교 선택. 기수 카테고리에서는 지부와 동시 선택 불가 */
-    fun onSelectSchool(school: SchoolInfo) {
-        val state = uiState.value
-        if (state.isTargetLocked || state.schoolList.none { it.schoolId == school.schoolId }) return
-        val isExclusive = uiState.value.selectedCategory?.type == WriteCategoryType.GISU
+    /** 학교 선택은 표시했던 기수와 현재 기수가 같고 최신 목록에도 포함될 때만 적용한다. */
+    fun onSelectSchool(school: SchoolInfo, sourceGisuId: Int? = uiState.value.targetGisuId) {
         updateState {
+            if (isTargetLocked || BoardChipType.SCHOOL !in boardChips || targetGisuId != sourceGisuId) {
+                return@updateState this
+            }
+            val current = schoolList.firstOrNull { it.schoolId == school.schoolId } ?: return@updateState this
             copy(
-                selectedSchool = school,
-                selectedChapter = if (isExclusive) null else selectedChapter,
+                selectedSchool = current,
+                selectedChapter = if (selectedCategory?.type == WriteCategoryType.GISU) null else selectedChapter,
                 isAllSelected = false,
             )
         }
     }
 
     fun onSelectPart(part: UserPart) {
-        if (uiState.value.isTargetLocked || !uiState.value.canSelectPart || part !in UserPart.selectable) return
-        updateState { copy(selectedPart = part, isAllSelected = false) }
+        updateState {
+            if (isTargetLocked || !canSelectPart || part !in UserPart.selectable) return@updateState this
+            copy(selectedPart = part, isAllSelected = false)
+        }
     }
 
     fun onTitleChanged(title: String) {
@@ -730,6 +766,8 @@ data class NoticeWriteUiState(
     val selectedPart: UserPart? = null,
     val chapterList: ImmutableList<Chapter> = persistentListOf(),
     val schoolList: ImmutableList<SchoolInfo> = persistentListOf(),
+    /** 빈 목록도 정상 조회 결과로 구분하기 위한 조직 목록의 기수. */
+    val organizationGisuId: Int? = null,
     val title: String = "",
     val content: TextFieldValue = TextFieldValue(),
     val sendNotification: Boolean = true,
@@ -750,6 +788,8 @@ data class NoticeWriteUiState(
     val targetGisuId: Int? = null,
     /** 작성 권한을 부여받은 기수. Super Admin·총괄단 외에는 이 기수에만 발행한다. */
     val authorityGisuId: Int? = null,
+    /** 프로필 폴백과 구분하는 서버 활성 기수의 확정 여부. */
+    val isAuthorityGisuConfirmed: Boolean = false,
     val writerSchoolId: Int? = null,
     val writerSchoolName: String? = null,
     val writerChapterId: Int? = null,
@@ -765,6 +805,9 @@ data class NoticeWriteUiState(
     val isEditMode: Boolean = false,
     val editNoticeId: Long = 0L,
 ) : UiState {
+    val isOrganizationLoaded: Boolean
+        get() = targetGisuId != null && targetGisuId == organizationGisuId
+
     // 화면 선택지와 선택 처리에서 같은 권한 정책을 사용한다. 권한이 없으면 선택지를 제공하지 않는다.
     val selectableTargetGisus: ImmutableList<GisuItem>
         get() = writerRole?.let { role ->

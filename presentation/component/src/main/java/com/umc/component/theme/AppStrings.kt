@@ -623,6 +623,8 @@ object AppStrings {
     const val NOTICE_WRITE_CATEGORY_SCHOOL_CORE = "학교 회장단"
     const val NOTICE_WRITE_CATEGORY_PART_LEADER = "학교 파트장"
     const val NOTICE_WRITE_GISU_CLASS_HINT = "지부와 학교는 동시에 선택할 수 없습니다."
+    const val NOTICE_WRITE_NO_CHAPTERS = "선택한 기수에 등록된 지부가 없습니다."
+    const val NOTICE_WRITE_NO_SCHOOLS = "선택한 기수에 등록된 학교가 없습니다."
     const val NOTICE_WRITE_CHAPTER_SELECT = "지부를 선택하세요"
     const val NOTICE_EMPTY_TITLE = "아직 등록된 공지사항이 없어요"
     const val NOTICE_EMPTY_CONTENT = "운영진 공지사항이 등록되면 이곳에 표시됩니다."

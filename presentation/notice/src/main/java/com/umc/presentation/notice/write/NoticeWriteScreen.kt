@@ -141,6 +141,10 @@ fun NoticeWriteRoute(
         if (editNoticeId > 0L) viewModel.initEditMode(editNoticeId)
     }
 
+    LaunchedEffect(uiState.isTargetLocked) {
+        if (uiState.isTargetLocked && sheetType != WriteSheetType.VOTE) sheetType = null
+    }
+
     CollectUiEvents(viewModel.uiEvent) { event ->
         when (event) {
             is NoticeWriteEvent.SubmitSuccess -> {
@@ -161,23 +165,38 @@ fun NoticeWriteRoute(
         onClickRegister = viewModel::onClickRegister,
         onClickCategory = {
             viewModel.onOpenCategorySelector()
-            sheetType = WriteSheetType.CATEGORY
+            val snapshot = viewModel.uiState.value
+            if (!snapshot.isTargetLocked && snapshot.availableCategories.isNotEmpty()) {
+                sheetType = WriteSheetType.CATEGORY
+            }
         },
         onClickGisu = {
             viewModel.onOpenCategorySelector()
-            sheetType = WriteSheetType.GISU
+            val snapshot = viewModel.uiState.value
+            if (!snapshot.isTargetLocked && snapshot.selectableTargetGisus.isNotEmpty()) {
+                sheetType = WriteSheetType.GISU
+            }
         },
         onToggleAll = viewModel::onToggleAll,
         onToggleStaff = viewModel::onToggleStaff,
         onClickChapterChip = {
             viewModel.onOpenOrganizationSelector()
-            sheetType = WriteSheetType.CHAPTER
+            val snapshot = viewModel.uiState.value
+            if (!snapshot.isTargetLocked && (snapshot.chapterList.isNotEmpty() || snapshot.isOrganizationLoaded)) {
+                sheetType = WriteSheetType.CHAPTER
+            }
         },
         onClickSchoolChip = {
             viewModel.onOpenOrganizationSelector()
-            sheetType = WriteSheetType.SCHOOL
+            val snapshot = viewModel.uiState.value
+            if (!snapshot.isTargetLocked && (snapshot.schoolList.isNotEmpty() || snapshot.isOrganizationLoaded)) {
+                sheetType = WriteSheetType.SCHOOL
+            }
         },
-        onClickPartChip = { sheetType = WriteSheetType.PART },
+        onClickPartChip = {
+            val state = viewModel.uiState.value
+            if (!state.isTargetLocked && state.canSelectPart) sheetType = WriteSheetType.PART
+        },
         onTitleChanged = viewModel::onTitleChanged,
         onContentChanged = viewModel::onContentChanged,
         onSelectHeading = viewModel::onSelectHeading,
@@ -234,46 +253,59 @@ fun NoticeWriteRoute(
             containerColor = grey50(),
         ) {
             when (type) {
-                WriteSheetType.CATEGORY -> USelectSheetContent(
-                    title = AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER,
-                    items = uiState.availableCategories.map { it.label }.toImmutableList(),
-                    onSelect = { index ->
-                        viewModel.onSelectCategory(uiState.availableCategories[index])
-                        sheetType = null
-                    },
-                )
-
-                WriteSheetType.GISU -> {
-                    val selectableGisus = uiState.selectableTargetGisus
+                WriteSheetType.CATEGORY -> {
+                    val categories = uiState.availableCategories
                     USelectSheetContent(
-                        title = AppStrings.CHALLENGER_GISU_SELECT_TITLE,
-                        items = selectableGisus.map {
-                            AppStrings.COMMON_GENERATION_FORMAT.format(it.generation)
-                        }.toImmutableList(),
+                        title = AppStrings.NOTICE_WRITE_CATEGORY_PLACEHOLDER,
+                        items = categories.map { it.label }.toImmutableList(),
                         onSelect = { index ->
-                            viewModel.onSelectGisu(selectableGisus[index])
+                            categories.getOrNull(index)?.let(viewModel::onSelectCategory)
                             sheetType = null
                         },
                     )
                 }
 
-                WriteSheetType.CHAPTER -> USelectSheetContent(
-                    title = AppStrings.NOTICE_WRITE_CHAPTER_SELECT,
-                    items = uiState.chapterList.map { it.name }.toImmutableList(),
-                    onSelect = { index ->
-                        viewModel.onSelectChapter(uiState.chapterList[index])
-                        sheetType = null
-                    },
-                )
+                WriteSheetType.GISU -> {
+                    val gisus = uiState.selectableTargetGisus
+                    USelectSheetContent(
+                        title = AppStrings.CHALLENGER_GISU_SELECT_TITLE,
+                        items = gisus.map { AppStrings.COMMON_GENERATION_FORMAT.format(it.generation) }.toImmutableList(),
+                        onSelect = { index ->
+                            gisus.getOrNull(index)?.let(viewModel::onSelectGisu)
+                            sheetType = null
+                        },
+                    )
+                }
 
-                WriteSheetType.SCHOOL -> USelectSheetContent(
-                    title = AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER,
-                    items = uiState.schoolList.map { it.schoolName }.toImmutableList(),
-                    onSelect = { index ->
-                        viewModel.onSelectSchool(uiState.schoolList[index])
-                        sheetType = null
-                    },
-                )
+                WriteSheetType.CHAPTER -> {
+                    val chapters = uiState.chapterList
+                    val sourceGisuId = uiState.targetGisuId
+                    NoticeOrganizationSheetContent(
+                        title = AppStrings.NOTICE_WRITE_CHAPTER_SELECT,
+                        items = chapters.map { it.name }.toImmutableList(),
+                        isLoaded = uiState.isOrganizationLoaded,
+                        emptyText = AppStrings.NOTICE_WRITE_NO_CHAPTERS,
+                        onSelect = { index ->
+                            chapters.getOrNull(index)?.let { viewModel.onSelectChapter(it, sourceGisuId) }
+                            sheetType = null
+                        },
+                    )
+                }
+
+                WriteSheetType.SCHOOL -> {
+                    val schools = uiState.schoolList
+                    val sourceGisuId = uiState.targetGisuId
+                    NoticeOrganizationSheetContent(
+                        title = AppStrings.SIGN_UP_SELECT_SCHOOL_PLACEHOLDER,
+                        items = schools.map { it.schoolName }.toImmutableList(),
+                        isLoaded = uiState.isOrganizationLoaded,
+                        emptyText = AppStrings.NOTICE_WRITE_NO_SCHOOLS,
+                        onSelect = { index ->
+                            schools.getOrNull(index)?.let { viewModel.onSelectSchool(it, sourceGisuId) }
+                            sheetType = null
+                        },
+                    )
+                }
 
                 WriteSheetType.PART -> {
                     val parts = UserPart.selectable
@@ -281,7 +313,7 @@ fun NoticeWriteRoute(
                         title = AppStrings.NOTICE_BOTTOMSHEET_TITLE,
                         items = parts.map { it.label }.toImmutableList(),
                         onSelect = { index ->
-                            viewModel.onSelectPart(parts[index])
+                            parts.getOrNull(index)?.let(viewModel::onSelectPart)
                             sheetType = null
                         },
                     )
@@ -1321,4 +1353,35 @@ internal fun NoticeWriteSingleCategoryPreview() {
         writerSchoolId = 7,
         writerSchoolName = "UMC 대학교",
     ))
+}
+
+@Composable
+internal fun NoticeOrganizationSheetContent(
+    title: String,
+    items: ImmutableList<String>,
+    isLoaded: Boolean,
+    emptyText: String,
+    onSelect: (Int) -> Unit = {},
+) {
+    USelectSheetContent(
+        title = title,
+        items = items,
+        onSelect = onSelect,
+        emptyContent = {
+            if (isLoaded) {
+                UText(text = emptyText, style = UmcTypographyTokens.Body, color = grey600())
+            } else {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = main500())
+            }
+        },
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun NoticeOrganizationEmptyPreview() {
+    NoticeOrganizationSheetContent(
+        title = AppStrings.NOTICE_WRITE_CHAPTER_SELECT,
+        items = persistentListOf(), isLoaded = true, emptyText = AppStrings.NOTICE_WRITE_NO_CHAPTERS,
+    )
 }
